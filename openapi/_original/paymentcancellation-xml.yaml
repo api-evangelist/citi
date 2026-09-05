@@ -1,0 +1,3067 @@
+swagger: '2.0'
+info:
+  description: >-
+    The FI Payment APIs lets you reconfirm or cancel payment requests against FI
+    payments in payment insight.
+
+
+    Download our SDKs:
+
+
+    * [Python
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=python&apiTitle=all&isClientSecReq=true)
+
+    * [Java
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=java&apiTitle=all&isClientSecReq=true)
+
+    * [.Net
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=dotnet&apiTitle=all&isClientSecReq=true)
+
+    * [Ruby
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ruby&apiTitle=all&isClientSecReq=true)
+
+    * [NodeJS
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=nodejs&apiTitle=all&isClientSecReq=true)
+
+    * [Go
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=go&apiTitle=all&isClientSecReq=true)
+
+    * [CLI Tool
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ccapi-cli&apiTitle=all&isClientSecReq=true)
+
+
+    Note: You must be logged in to download the SDKs.
+  version: 3.0.0
+  title: FI Payment Services
+security:
+  - clientCredentials: []
+servers:
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/paymentservices/v3
+    description: production gateway URL
+  - url: https://tts.apib2b.citi.com/citiconnect/sb/paymentservices/v3
+    description: sandbox URL
+paths:
+  /payments/stops:
+    post:
+      summary: Payment Cancellation
+      description: >-
+        This API specification document provides descriptions of the request and
+        response parameters for XML content.<br><br> The FI Cancellation API
+        lets you stop or recall payment requests against FI payments in payment
+        insight. It supports custom JSON & ISO XML(camt.056.001.09) formats.
+        Initiating an FI Cancellation using the CitiConnect API requires a
+        well-defined POST request specifying the endpoint URL to call the API.
+        Additionally, you need to specify the values for input parameters in the
+        body of your JSON/XML document. Finally, you will encrypt the payload,
+        place it in your request and send it via your application. The response
+        follows ISO XML "pacs.002.001.10" standards.
+      operationId: FICancellationAPI
+      consumes:
+        - application/xml
+      produces:
+        - application/xml
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          type: string
+        - name: Content-type
+          in: header
+          description: Supports "application/xml"
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          type: string
+        - name: request_type
+          description: Operation name. The possible value for this header is STOP_REQUEST.
+          in: header
+          required: true
+          type: string
+      requestBody:
+        description: Describes the request body in ISO XML 'camt.056.001.09' format.
+        content:
+          application/xml:
+            schema:
+              $ref: '#/definitions/FICancellationRequest'
+            example: >-
+              <?xml version="1.0" encoding="UTF-8"?><Document
+              xmlns="urn:iso:std:iso:20022:tech:xsd:camt.056.001.09"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><FIToFIPmtCxlReq><Assgnmt><Id>AB20050417CANC</Id><Assgnr><Pty><Id><OrgId><AnyBIC>CUSBFRPP</AnyBIC></OrgId></Id></Pty></Assgnr><Assgne><Agt><FinInstnId><BICFI>FFFFFRPP</BICFI></FinInstnId></Agt></Assgne><CreDtTm>2012-03-19T10:09:30</CreDtTm></Assgnmt><Case><Id>CUSB201203001</Id><Cretr><Pty><Id><OrgId><AnyBIC>CUSBFRPP</AnyBIC></OrgId></Id></Pty></Cretr></Case><Undrlyg><OrgnlGrpInfAndCxl><OrgnlMsgId>CBPAY09876543</OrgnlMsgId><OrgnlMsgNmId>MT103</OrgnlMsgNmId></OrgnlGrpInfAndCxl><TxInf><OrgnlInstrId>CBPAY09876543</OrgnlInstrId><OrgnlEndToEndId>EndtoEndReferenceId</OrgnlEndToEndId><OrgnlIntrBkSttlmDt>2021-03-04</OrgnlIntrBkSttlmDt><CxlRsnInf><Rsn><Cd>AC05</Cd></Rsn></CxlRsnInf></TxInf></Undrlyg></FIToFIPmtCxlReq></Document>
+        required: true
+      security:
+        - clientCredentials: []
+      responses:
+        '200':
+          description: OK > Success response
+          schema:
+            $ref: '#/definitions/Document'
+          examples:
+            application/xml: >-
+              <?xml version="1.0"
+              encoding="UTF-8"?><Document><FIToFIPmtStsRpt><TxInfAndSts><TxSts>ACCP</TxSts><AddtlInf>Your
+              request has been registered. We will notify you once the
+              transaction is
+              stopped/recalled.</AddtlInf></TxInfAndSts></FIToFIPmtStsRpt></Document>
+        '400':
+          description: BAD REQUEST
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/xml: >-
+              <?xml version="1.0"
+              encoding="UTF-8"?><error_response><status>FAILED</status><http_code>400</http_code><errors><error><issue>NbOfTxs
+              cannot be null or empty.</issue><action>Please provide valid value
+              for NbOfTxs.</action></error></errors></error_response>
+        '401':
+          description: UNAUTHORIZED
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/xml: >-
+              <?xml version="1.0"
+              encoding="UTF-8"?><error_response><status>FAILED</status><http_code>401</http_code><errors><error><issue>Authorization
+              failed.</issue><action>Please try again with valid
+              credentials.</action></error></errors></error_response>
+        '404':
+          description: NOT FOUND
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/xml: >-
+              <?xml version="1.0"
+              encoding="UTF-8"?><error_response><status>FAILED</status><http_code>404</http_code><errors><error><issue>Not
+              found</issue><action>Please check the URL and try again
+              later.</action></error></errors></error_response>
+        '405':
+          description: METHOD NOT ALLOWED
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/xml: >-
+              <?xml version="1.0"
+              encoding="UTF-8"?><error_response><status>FAILED</status><http_code>405</http_code><errors><error><issue>Method
+              not allowed.</issue><action>Please use valid HTTP supported verb
+              only.</action></error></errors></error_response>
+        '415':
+          description: FORBIDDEN
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/xml: >-
+              <?xml version="1.0"
+              encoding="UTF-8"?><error_response><status>FAILED</status><http_code>415</http_code><errors><error><issue>Provided
+              content-type of the request is not valid.</issue><action>Resend
+              request in valid
+              format.</action></error></errors></error_response>
+        '500':
+          description: INTERNAL SERVER ERROR
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/xml: >-
+              <?xml version="1.0"
+              encoding="UTF-8"?><error_response><status>FAILED</status><http_code>500</http_code><errors><error><issue>Unable
+              to process your request at this moment.</issue><action>Please try
+              again after sometime.</action></error></errors></error_response>
+definitions:
+  error_response:
+    type: object
+    description: Error response body.
+    properties:
+      status:
+        type: string
+        description: >-
+          This parameter indicates the status of the reconfirm/reject or
+          cancel/recall request with set of values. for example- FAILED.
+        maxLength: 6
+      http_code:
+        type: integer
+        description: Indicates http status code to specify http response. status
+        format: int32
+        pattern: ^[0-9]{3}$
+      errors:
+        type: array
+        description: >-
+          Indicates actual error details with issues and corresponding actions
+          to resolve the issue.
+        items:
+          $ref: '#/definitions/ErrorDetail'
+        xml:
+          wrapped: true
+  ErrorDetail:
+    type: object
+    properties:
+      issue:
+        type: string
+        description: More details about the  issue.
+        maxLength: 200
+      action:
+        type: string
+        description: Corrective action to be taken to resolve above issue.
+        maxLength: 350
+    xml:
+      name: error
+  FICancellationRequest:
+    type: object
+    description: FI cancellation request body in ISO XML camt.056.001.09 format.
+    properties:
+      FIToFIPmtCxlReq:
+        $ref: '#/definitions/FIToFIPaymentCancellationRequestV09'
+    required:
+      - FIToFIPmtCxlReq
+  FIToFIPaymentCancellationRequestV09:
+    type: object
+    properties:
+      Assgnmt:
+        $ref: '#/definitions/CaseAssignment5'
+      Case:
+        $ref: '#/definitions/Case5'
+      CtrlData:
+        $ref: '#/definitions/ControlData1'
+      Undrlyg:
+        type: array
+        description: >-
+          Identifies the underlying (group of) transaction(s) to which the
+          investigation applies.
+        items:
+          $ref: '#/definitions/UnderlyingTransaction26'
+        minItems: 1
+      SplmtryData:
+        type: array
+        description: >-
+          Additional information that can not be captured in the structured
+          parameters and/or any other specific block.
+        items:
+          $ref: '#/definitions/SupplementaryData1'
+    required:
+      - Assgnmt
+      - Undrlyg
+  Document:
+    required:
+      - FIToFIPmtStsRpt
+    type: object
+    properties:
+      FIToFIPmtStsRpt:
+        $ref: '#/definitions/FIToFIPaymentStatusReportV10'
+    description: FI cancellation response body in ISO XML pacs.002.001.10 format.
+  FIToFIPaymentStatusReportV10:
+    type: object
+    properties:
+      GrpHdr:
+        $ref: '#/definitions/GroupHeader91'
+      OrgnlGrpInfAndSts:
+        type: array
+        description: Provides details on the original group, to which the message refers.
+        items:
+          $ref: '#/definitions/OriginalGroupHeader17'
+      TxInfAndSts:
+        type: array
+        description: >-
+          Provides further details on the original transactions, to which the
+          status report message refers.
+        items:
+          $ref: '#/definitions/PaymentTransaction110'
+      SplmtryData:
+        type: array
+        description: >-
+          Additional information that can not be captured in the structured
+          parameters and/or any other specific block.
+        items:
+          $ref: '#/definitions/SupplementaryData1'
+    required:
+      - GrpHdr
+  CaseAssignment5:
+    type: object
+    description: Represents the assignment of a case to a party.
+    properties:
+      Id:
+        description: Uniquely identifies the case assignment.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Assgnr:
+        description: >-
+          Party who assigns the case. One of the 2 parameter values(Pty/Agt)
+          should be passed in the request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      Assgne:
+        description: >-
+          Party to which the case is assigned. One of the 2 parameter
+          values(Pty/Agt) should be passed in the request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      CreDtTm:
+        type: string
+        format: date-time
+        description: Date and time at which the assignment was created.
+    required:
+      - Id
+      - Assgnr
+      - Assgne
+      - CreDtTm
+  Party40Choice:
+    type: object
+    properties:
+      Pty:
+        description: Specifies the identification of a person or an organization.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      Agt:
+        description: >-
+          Unique and unambiguous identification of a financial institution or a
+          branch of a financial institution.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+  PartyIdentification135:
+    type: object
+    properties:
+      Nm:
+        description: >-
+          Name by which a party is known and which is usually used to identify
+          that party.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      PstlAdr:
+        $ref: '#/definitions/PostalAddress24'
+      Id:
+        type: object
+        description: >-
+          Unique and unambiguous identification of a party. One of the 2
+          parameter values(OrgId/PrvtId) should be passed in the request for
+          organization or private party respectively in the request.
+        properties:
+          OrgId:
+            $ref: '#/definitions/OrganisationIdentification29'
+          PrvtId:
+            $ref: '#/definitions/PersonIdentification13'
+      CtryOfRes:
+        description: >-
+          Country in which a person resides (the place of a person's home). In
+          the case of a company, it is the country from which the affairs of
+          that company are directed.
+        allOf:
+          - $ref: '#/definitions/CountryCode'
+      CtctDtls:
+        $ref: '#/definitions/Contact4'
+  PostalAddress24:
+    type: object
+    description: >-
+      Information that locates and identifies a specific address, as defined by
+      postal services.
+    properties:
+      AdrTp:
+        $ref: '#/definitions/AddressType3Choice'
+      Dept:
+        description: Identification of a division of a large organization or building.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      SubDept:
+        description: Identification of a sub-division of a large organization or building.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      StrtNm:
+        description: Name of a street or thoroughfare.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      BldgNb:
+        description: Number that identifies the position of a building on a street.
+        allOf:
+          - $ref: '#/definitions/Max16Text'
+      BldgNm:
+        description: Name of the building or house.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Flr:
+        description: Floor or storey within a building.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      PstBx:
+        description: >-
+          Numbered box in a post office, assigned to a person or organization,
+          where letters are kept until called for.
+        allOf:
+          - $ref: '#/definitions/Max16Text'
+      Room:
+        description: Building room number.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      PstCd:
+        description: >-
+          Identifier consisting of a group of letters and/or numbers that is
+          added to a postal address to assist the sorting of mail.
+        allOf:
+          - $ref: '#/definitions/Max16Text'
+      TwnNm:
+        description: >-
+          Name of a built-up area, with defined boundaries, and a local
+          government.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      TwnLctnNm:
+        description: Specific location name within the town.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      DstrctNm:
+        description: Identifies a subdivision within a country sub-division.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      CtrySubDvsn:
+        description: Identifies a subdivision of a country such as state, region, county.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Ctry:
+        $ref: '#/definitions/CountryCode'
+      AdrLine:
+        type: array
+        description: >-
+          Information that locates and identifies a specific address, as defined
+          by postal services, presented in free format text.
+        items:
+          $ref: '#/definitions/Max70Text'
+        maxItems: 7
+  AddressType3Choice:
+    type: object
+    description: >-
+      Identifies the nature of the postal address. One of the 2 parameter
+      values(Cd/Prtry) should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the type of address.<br><br><b>ADDR</b> : Address is the
+          complete postal address. <br><br><b>PBOX</b> : Address is a postal
+          office (PO) box. <br><br><b>HOME</b> : Address is the home address.
+          <br><br><b>BIZZ</b> : Address is the business
+          address.<br><br><b>MLTO</b> : Address is the address to which mail is
+          sent.<br><br><b>DLVY</b> : Address is the address to which delivery is
+          to take place.
+        type: string
+        enum:
+          - ADDR
+          - PBOX
+          - HOME
+          - BIZZ
+          - MLTO
+          - DLVY
+      Prtry:
+        $ref: '#/definitions/GenericIdentification30'
+  GenericIdentification30:
+    type: object
+    description: >-
+      Information related to an identification, for example, party
+      identification or account identification.
+    properties:
+      Id:
+        description: >-
+          Proprietary information, often a code, issued by the data source
+          scheme issuer.
+        pattern: '[a-zA-Z0-9]{4}'
+        type: string
+      Issr:
+        description: Entity that assigns the identification.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      SchmeNm:
+        description: Short textual description of the scheme.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    required:
+      - Id
+      - Issr
+  OrganisationIdentification29:
+    type: object
+    description: Unique and unambiguous way to identify an organization.
+    properties:
+      AnyBIC:
+        description: >-
+          Code allocated to a financial or non-financial institution by the ISO
+          9362 Registration Authority, as described in ISO 9362: 2014 - "Banking
+          - Banking telecommunication messages - Business identifier code
+          (BIC)".
+        pattern: '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
+        type: string
+      Othr:
+        description: >-
+          Unique identification of an organization, as assigned by an
+          institution, using an identification scheme.
+        items:
+          $ref: '#/definitions/GenericOrganisationIdentification1'
+        type: array
+      LEI:
+        description: >-
+          Legal entity identification as an alternate identification for a
+          party.
+        pattern: '[A-Z0-9]{18,18}[0-9]{2,2}'
+        type: string
+  GenericOrganisationIdentification1:
+    type: object
+    properties:
+      Id:
+        description: Identification assigned by an institution.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      SchmeNm:
+        description: Name of the identification scheme.
+        allOf:
+          - $ref: '#/definitions/IdentificationSchemeName1Choice'
+      Issr:
+        description: Entity that assigns the identification.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    required:
+      - Id
+  IdentificationSchemeName1Choice:
+    type: object
+    description: >-
+      Name of the identification scheme. One of the 2 parameter values
+      (Cd/Prtry) should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Name of the identification scheme, in a coded form as published in an
+          external list.
+        type: string
+        maxLength: 4
+        minLength: 1
+      Prtry:
+        description: Name of the identification scheme, in a free text form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  PersonIdentification13:
+    type: object
+    description: Unique and unambiguous way to identify a person.
+    properties:
+      DtAndPlcOfBirth:
+        $ref: '#/definitions/DateAndPlaceOfBirth'
+      Othr:
+        description: >-
+          Unique identification of a person, as assigned by an institution,
+          using an identification scheme.
+        items:
+          $ref: '#/definitions/GenericPersonIdentification1'
+        type: array
+  DateAndPlaceOfBirth:
+    type: object
+    description: Date and place of birth of a person.
+    properties:
+      BirthDt:
+        description: Date on which a person is born.
+        type: string
+        format: date
+      PrvcOfBirth:
+        description: Province where a person was born.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      CityOfBirth:
+        description: City where a person was born.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      CtryOfBirth:
+        description: Country where a person was born.
+        allOf:
+          - $ref: '#/definitions/CountryCode'
+    required:
+      - BirthDt
+      - CityOfBirth
+      - CtryOfBirth
+  GenericPersonIdentification1:
+    type: object
+    description: >-
+      Unique identification of a person, as assigned by an institution, using an
+      identification scheme.
+    properties:
+      Id:
+        description: Unique and unambiguous identification of a person.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      SchmeNm:
+        description: Name of the identification scheme.
+        allOf:
+          - $ref: '#/definitions/IdentificationSchemeName1Choice'
+      Issr:
+        description: Entity that assigns the identification.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    required:
+      - Id
+  CountryCode:
+    pattern: '[A-Z]{2,2}'
+    type: string
+    description: >-
+      Nation with its own government. The code is checked against the list of
+      country names obtained from the United Nations (ISO 3166, Alpha-2 code).
+  Contact4:
+    type: object
+    description: Set of elements used to indicate how to contact the party.
+    properties:
+      NmPrfx:
+        $ref: '#/definitions/NamePrefix2Code'
+      Nm:
+        description: >-
+          Name by which a party is known and which is usually used to identify
+          that party.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      PhneNb:
+        description: >-
+          Collection of information that identifies a phone number, as defined
+          by telecom services.
+        allOf:
+          - $ref: '#/definitions/PhoneNumber'
+      MobNb:
+        description: >-
+          Collection of information that identifies a mobile phone number, as
+          defined by telecom services.
+        allOf:
+          - $ref: '#/definitions/PhoneNumber'
+      FaxNb:
+        description: >-
+          Collection of information that identifies a FAX number, as defined by
+          telecom services.
+        allOf:
+          - $ref: '#/definitions/PhoneNumber'
+      EmailAdr:
+        description: Address for electronic mail (e-mail).
+        allOf:
+          - $ref: '#/definitions/Max2048Text'
+      EmailPurp:
+        description: Purpose for which an email address may be used.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      JobTitl:
+        description: Title of the function.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Rspnsblty:
+        description: Role of a person in an organization.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Dept:
+        description: Identification of a division of a large organization or building.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      Othr:
+        type: array
+        description: Contact details in another form.
+        items:
+          $ref: '#/definitions/OtherContact1'
+      PrefrdMtd:
+        $ref: '#/definitions/PreferredContactMethod1Code'
+  NamePrefix2Code:
+    enum:
+      - DOCT
+      - MIST
+      - MISS
+      - MADM
+      - MIKS
+    type: string
+    description: >-
+      Specifies the terms used to formally address a person. 
+      <br><br><b>DOCT</b> : Title of the person is Doctor or Dr.
+      <br><br><b>MIST</b> : Title of the person is Mister or Mr.
+      <br><br><b>MISS</b> : Title of the person is Miss. <br><br><b>MADM</b> :
+      Title of the person is Madam.<br><br><b>MIKS</b> : Title of the person is
+      gender neutral (Mx).
+  PhoneNumber:
+    pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
+    type: string
+  OtherContact1:
+    type: object
+    properties:
+      ChanlTp:
+        description: >-
+          Method used to contact the financial institution’s contact for the
+          specific tax region.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      Id:
+        type: string
+        description: Communication value such as phone number or email address.
+        maxLength: 128
+        minLength: 1
+    required:
+      - ChanlTp
+  PreferredContactMethod1Code:
+    description: >-
+      Preferred method used to reach the contact.<br><br><b>LETT</b> : Preferred
+      method used to reach the contact is per letter.<br><br><b>MAIL</b> :
+      Preferred method used to reach the contact is per email.
+      <br><br><b>PHON</b> : Preferred method used to reach the contact is per
+      phone.<br><br><b>FAXX</b> : Preferred method used to reach the contact is
+      per fax.<br><br><b>CELL</b> : Preferred method used to reach the contact
+      is per mobile or cell phone.
+    enum:
+      - LETT
+      - MAIL
+      - PHON
+      - FAXX
+      - CELL
+    type: string
+  BranchAndFinancialInstitutionIdentification6:
+    type: object
+    properties:
+      BrnchId:
+        $ref: '#/definitions/BranchData3'
+      FinInstnId:
+        $ref: '#/definitions/FinancialInstitutionIdentification18'
+    required:
+      - FinInstnId
+  BranchData3:
+    type: object
+    description: Identifies a specific branch of a financial institution.
+    properties:
+      Id:
+        description: >-
+          Unique and unambiguous identification of a branch of a financial
+          institution.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      LEI:
+        description: Legal entity identifier of the financial institution.
+        pattern: '[A-Z0-9]{18,18}[0-9]{2,2}'
+        type: string
+      Nm:
+        description: >-
+          Name by which an agent is known and which is usually used to identify
+          that agent.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      PstlAdr:
+        $ref: '#/definitions/PostalAddress24'
+  FinancialInstitutionIdentification18:
+    type: object
+    description: >-
+      Unique and unambiguous identification of a financial institution, as
+      assigned under an internationally recognised or proprietary identification
+      scheme.
+    properties:
+      BICFI:
+        description: >-
+          Code allocated to a financial institution by the ISO 9362 Registration
+          Authority as described in ISO 9362 "Banking - Banking
+          telecommunication messages - Business identifier code (BIC)".
+        pattern: '[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}'
+        type: string
+      ClrSysMmbId:
+        $ref: '#/definitions/ClearingSystemMemberIdentification2'
+      LEI:
+        description: Legal entity identifier of the financial institution.
+        pattern: '[A-Z0-9]{18,18}[0-9]{2,2}'
+        type: string
+      Nm:
+        description: >-
+          Name by which an agent is known and which is usually used to identify
+          that agent.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      Othr:
+        $ref: '#/definitions/GenericFinancialIdentification1'
+      PstlAdr:
+        $ref: '#/definitions/PostalAddress24'
+  ClearingSystemMemberIdentification2:
+    type: object
+    description: Information used to identify a member within a clearing system.
+    properties:
+      ClrSysId:
+        type: object
+        description: >-
+          Specification of a pre-agreed offering between clearing agents or the
+          channel through which the payment instruction is processed. One of the
+          2 parameter values(Cd/Prtry) should be passed in the request.
+        properties:
+          Cd:
+            description: >-
+              Identification of a clearing system, in a coded form as published
+              in an external clearing system identification code list. External
+              code sets can be downloaded from www.iso20022.org.
+            type: string
+            maxLength: 5
+            minLength: 1
+          Prtry:
+            description: >-
+              Identification code for a clearing system, that has not yet been
+              identified in the list of clearing systems.
+            allOf:
+              - $ref: '#/definitions/Max35Text'
+      MmbId:
+        description: Identification of a member of a clearing system.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    required:
+      - MmbId
+  GenericFinancialIdentification1:
+    type: object
+    description: >-
+      Unique identification of an agent, as assigned by an institution, using an
+      identification scheme.
+    properties:
+      Id:
+        description: Unique and unambiguous identification of a person.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Issr:
+        description: Entity that assigns the identification.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      SchmeNm:
+        $ref: '#/definitions/FinancialIdentificationSchemeName1Choice'
+    required:
+      - Id
+  FinancialIdentificationSchemeName1Choice:
+    type: object
+    description: >-
+      Name of the identification scheme. One of the 2 parameter values(Cd/Prtry)
+      should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the external account identification scheme name code in the
+          format of character string with a maximum length of 4 characters. The
+          list of valid codes is an external code list published separately.
+          External code sets can be downloaded from www.iso20022.org.
+        type: string
+        maxLength: 4
+        minLength: 1
+      Prtry:
+        description: Name of the identification scheme, in a free text form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  Case5:
+    type: object
+    description: Provides further details to identify an investigation case.
+    properties:
+      Id:
+        description: Uniquely identifies the case.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Cretr:
+        description: >-
+          Party that created the investigation case. One of the 2 parameter
+          values (Pty/Agt) should be passed in the request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      ReopCaseIndctn:
+        description: >-
+          Indicates whether or not the case was previously closed and is now
+          re-opened.
+        type: boolean
+    required:
+      - Id
+      - Cretr
+  ControlData1:
+    type: object
+    description: >-
+      Provides details of the number of transactions and the control sum of the
+      message.
+    properties:
+      NbOfTxs:
+        description: Number of individual transactions contained in the message.
+        allOf:
+          - $ref: '#/definitions/Max15NumericText'
+      CtrlSum:
+        maxLength: 18
+        type: number
+        description: >-
+          Total of all individual amounts included in the message, irrespective
+          of currencies. The number of fractional digits should not be more than
+          17.
+    required:
+      - NbOfTxs
+  UnderlyingTransaction26:
+    type: object
+    properties:
+      OrgnlGrpInfAndCxl:
+        $ref: '#/definitions/OriginalGroupHeader15'
+      TxInf:
+        type: array
+        description: >-
+          Provides information on the original transactions to which the
+          cancellation request message refers.
+        items:
+          $ref: '#/definitions/PaymentTransaction120'
+  OriginalGroupHeader15:
+    type: object
+    description: >-
+      Provides information on the original message, to which the cancellation
+      refers.
+    properties:
+      GrpCxlId:
+        description: >-
+          Unique identification, as assigned by the assigner, to unambiguously
+          identify the group cancellation request.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Case:
+        description: >-
+          Uniquely and unambiguously identifies an exception or an investigation
+          workflow.
+        allOf:
+          - $ref: '#/definitions/Case5'
+      OrgnlMsgId:
+        description: >-
+          Point to point reference, as assigned by the original instructing
+          party, to unambiguously identify the original message.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlMsgNmId:
+        description: >-
+          Specifies the original message name identifier to which the message
+          refers.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlCreDtTm:
+        type: string
+        format: date-time
+        description: Date and time at which the original message was created.
+      NbOfTxs:
+        description: Number of individual transactions contained in the original message.
+        allOf:
+          - $ref: '#/definitions/Max15NumericText'
+      CtrlSum:
+        description: >-
+          Total of all individual amounts included in the message, irrespective
+          of currencies. The number of fractional digits should not be more than
+          17.
+        type: number
+        maxLength: 18
+      GrpCxl:
+        type: boolean
+        description: >-
+          Indicates whether the cancellation request applies to a whole group of
+          transactions or to individual transactions within an original group.
+      CxlRsnInf:
+        type: array
+        description: Provides detailed information on the cancellation reason.
+        items:
+          $ref: '#/definitions/PaymentCancellationReason5'
+    required:
+      - OrgnlMsgId
+      - OrgnlMsgNmId
+  PaymentCancellationReason5:
+    type: object
+    properties:
+      Orgtr:
+        description: Party that issues the cancellation request.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      Rsn:
+        $ref: '#/definitions/CancellationReason33Choice'
+      AddtlInf:
+        type: array
+        description: Further details on the cancellation request reason.
+        items:
+          $ref: '#/definitions/Max105Text'
+  CancellationReason33Choice:
+    type: object
+    description: >-
+      Specifies the reason for the cancellation. One of the 2 parameter values
+      (Cd/Prtry) should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the cancellation reason, as published in an external
+          cancellation reason code set. External code sets can be downloaded
+          from www.iso20022.org.
+        type: string
+        maxLength: 4
+        minLength: 1
+      Prtry:
+        description: Specifies the cancellation reason, in a free text form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  PaymentTransaction120:
+    type: object
+    properties:
+      CxlId:
+        description: >-
+          Unique and unambiguous identifier of a cancellation request, as
+          assigned by the assigner.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Case:
+        description: >-
+          Set of elements to uniquely and unambiguously identify an exception or
+          an investigation workflow.
+        allOf:
+          - $ref: '#/definitions/Case5'
+      OrgnlGrpInf:
+        $ref: '#/definitions/OriginalGroupInformation29'
+      OrgnlInstrId:
+        description: >-
+          Unique identification, as assigned by the original instructing party
+          for the original instructed party, to unambiguously identify the
+          original instruction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlEndToEndId:
+        description: >-
+          Unique identification, as assigned by the original initiating party,
+          to unambiguously identify the original transaction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlTxId:
+        description: >-
+          Unique identification, as assigned by the original first instructing
+          agent, to unambiguously identify the transaction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlUETR:
+        description: >-
+          Universally unique identifier to provide the original end-to-end
+          reference of a payment transaction.
+        pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}'
+        type: string
+      OrgnlClrSysRef:
+        description: >-
+          Unique reference, as assigned by the original clearing system, to
+          unambiguously identify the original instruction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlIntrBkSttlmAmt:
+        description: >-
+          Amount of money moved between the instructing agent and the instructed
+          agent, as provided in the original instruction.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      OrgnlIntrBkSttlmDt:
+        type: string
+        format: date
+        description: >-
+          Date, as provided in the original transaction, on which the amount of
+          money ceases to be available to the agent that owes it and when the
+          amount of money becomes available to the agent to which it is due.
+      Assgnr:
+        description: Party who assigns the case.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      Assgne:
+        description: Party to which the case is assigned.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      CxlRsnInf:
+        type: array
+        description: Provides detailed information on the cancellation reason.
+        items:
+          $ref: '#/definitions/PaymentCancellationReason5'
+      OrgnlTxRef:
+        description: >-
+          Key elements used to identify the original transaction that is being
+          referred to.
+        allOf:
+          - $ref: '#/definitions/OriginalTransactionReference31'
+      SplmtryData:
+        type: array
+        description: >-
+          Additional information that can not be captured in the structured
+          parameters and/or any other specific block.
+        items:
+          $ref: '#/definitions/SupplementaryData1'
+  OriginalGroupInformation29:
+    type: object
+    description: Provides information on the original message.
+    properties:
+      OrgnlMsgId:
+        description: >-
+          Point to point reference, as assigned by the original instructing
+          party, to unambiguously identify the original message.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlMsgNmId:
+        description: >-
+          Specifies the original message name identifier to which the message
+          refers, for example, pacs.003.001.01 or MT103.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlCreDtTm:
+        type: string
+        format: date-time
+        description: Original date and time at which the message was created.
+    required:
+      - OrgnlMsgId
+      - OrgnlMsgNmId
+  OriginalTransactionReference31:
+    type: object
+    properties:
+      IntrBkSttlmAmt:
+        description: >-
+          Amount of money moved between the instructing agent and the instructed
+          agent.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      Amt:
+        $ref: '#/definitions/AmountType4Choice'
+      IntrBkSttlmDt:
+        type: string
+        format: date
+        description: >-
+          Date on which the amount of money ceases to be available to the agent
+          that owes it and when the amount of money becomes available to the
+          agent to which it is due.
+      ReqdColltnDt:
+        type: string
+        format: date
+        description: >-
+          Date and time at which the creditor requests that the amount of money
+          is to be collected from the debtor.
+      ReqdExctnDt:
+        description: >-
+          Date at which the initiating party requests the clearing agent to
+          process the payment. Either Dt or DtTm parameter value should be
+          passed in request.
+        allOf:
+          - $ref: '#/definitions/DateAndDateTime2Choice'
+      CdtrSchmeId:
+        description: Credit party that signs the mandate.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      SttlmInf:
+        $ref: '#/definitions/SettlementInstruction7'
+      PmtTpInf:
+        $ref: '#/definitions/PaymentTypeInformation27'
+      PmtMtd:
+        $ref: '#/definitions/PaymentMethod4Code'
+      MndtRltdInf:
+        $ref: '#/definitions/MandateRelatedData1Choice'
+      RmtInf:
+        description: >-
+          Information supplied to enable the matching of an entry with the items
+          that the transfer is intended to settle, such as commercial invoices
+          in an accounts' receivable system.
+        allOf:
+          - $ref: '#/definitions/RemittanceInformation16'
+      UltmtDbtr:
+        description: >-
+          Ultimate party that owes an amount of money to the (ultimate)
+          creditor. One of the 2 parameter values (Pty/Agt) should be passed in
+          request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      Dbtr:
+        description: >-
+          Party that owes an amount of money to the creditor. One of the 2
+          parameter values (Pty/Agt) should be passed in request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      DbtrAcct:
+        description: >-
+          Unambiguous identification of the account of the debtor to which a
+          debit entry will be made as a result of the transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      DbtrAgt:
+        description: Financial institution servicing an account for the debtor.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      DbtrAgtAcct:
+        description: >-
+          Unambiguous identification of the account of the debtor agent at its
+          servicing agent in the payment chain.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      CdtrAgt:
+        description: Financial institution servicing an account for the creditor.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      CdtrAgtAcct:
+        description: >-
+          Unambiguous identification of the account of the creditor agent at its
+          servicing agent to which a credit entry will be made as a result of
+          the payment transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      Cdtr:
+        description: >-
+          Party to which an amount of money is due. One of the 2 parameter
+          values (Pty/Agt) should be passed in request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      CdtrAcct:
+        description: >-
+          Unambiguous identification of the account of the creditor to which a
+          credit entry will be posted as a result of the payment transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      UltmtCdtr:
+        description: >-
+          Ultimate party to which an amount of money is due. One of the 2
+          parameter values (Pty/Agt) should be passed in request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      Purp:
+        $ref: '#/definitions/Purpose2Choice'
+  AmountType4Choice:
+    type: object
+    description: >-
+      Amount of money to be moved between the debtor and creditor, before
+      deduction of charges, expressed in the currency as ordered by the
+      initiating party. One of the 2 parameter values (EqvtAmt/InstdAmt) should
+      be passed in the request.
+    properties:
+      EqvtAmt:
+        $ref: '#/definitions/EquivalentAmount2'
+      InstdAmt:
+        description: >-
+          A number of monetary units specified in an active or a historic
+          currency where the unit of currency is explicit and compliant with ISO
+          4217.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+  EquivalentAmount2:
+    type: object
+    description: >-
+      Amount of money to be moved between the debtor and creditor, expressed in
+      the currency of the debtor's account, and the currency in which the amount
+      is to be moved.
+    properties:
+      Amt:
+        description: >-
+          Amount of money to be moved between debtor and creditor, before
+          deduction of charges, expressed in the currency of the debtor's
+          account, and to be moved in a different currency.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      CcyOfTrf:
+        description: >-
+          Specifies the currency of the to be transferred amount, which is
+          different from the currency of the debtor's account.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyCode'
+    required:
+      - Amt
+      - CcyOfTrf
+  DateAndDateTime2Choice:
+    type: object
+    description: >-
+      Date and time at which a transaction is completed and cleared, that is,
+      payment is effected. Either Dt or DtTm parameter value should be passed in
+      request.
+    properties:
+      Dt:
+        description: Date
+        type: string
+        format: date
+      DtTm:
+        description: Date and Time
+        type: string
+        format: date-time
+  SettlementInstruction7:
+    type: object
+    description: >-
+      Specifies the details on how the settlement of the original transaction(s)
+      between the instructing agent and the instructed agent was completed.
+    properties:
+      SttlmMtd:
+        $ref: '#/definitions/SettlementMethod1Code'
+      SttlmAcct:
+        description: >-
+          A specific purpose account used to post debit and credit entries as a
+          result of the transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      ClrSys:
+        $ref: '#/definitions/ClearingSystemIdentification3Choice'
+      InstgRmbrsmntAgt:
+        description: >-
+          Agent through which the instructing agent will reimburse the
+          instructed agent.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      InstgRmbrsmntAgtAcct:
+        description: >-
+          Unambiguous identification of the account of the instructing
+          reimbursement agent account at its servicing agent in the payment
+          chain.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      InstdRmbrsmntAgt:
+        description: Agent at which the instructed agent will be reimbursed.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      InstdRmbrsmntAgtAcct:
+        description: >-
+          Unambiguous identification of the account of the instructed
+          reimbursement agent account at its servicing agent in the payment
+          chain.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      ThrdRmbrsmntAgt:
+        description: Agent at which the instructed agent will be reimbursed.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      ThrdRmbrsmntAgtAcct:
+        description: >-
+          Unambiguous identification of the account of the third reimbursement
+          agent account at its servicing agent in the payment chain.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+    required:
+      - SttlmMtd
+  SettlementMethod1Code:
+    description: >-
+      Method used to settle the (batch of) payment instructions.
+      <br><br><b>INDA</b> : Settlement is done by the agent instructed to
+      execute a payment instruction. <br><br><b>INGA</b> : Settlement is done by
+      the agent instructing and forwarding the payment to the next party in the
+      payment chain. <br><br><b>COVE</b> : Settlement is done through a cover
+      payment. <br><br><b>CLRG</b> : Settlement is done through a payment
+      clearing system.
+    enum:
+      - INDA
+      - INGA
+      - COVE
+      - CLRG
+    type: string
+  CashAccount38:
+    type: object
+    properties:
+      Ccy:
+        description: Identification of the currency in which the account is held.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyCode'
+      Id:
+        $ref: '#/definitions/AccountIdentification4Choice'
+      Nm:
+        description: >-
+          Name of the account, as assigned by the account servicing institution,
+          in agreement with the account owner in order to provide an additional
+          means of identification of the account.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      Tp:
+        $ref: '#/definitions/CashAccountType2Choice'
+      Prxy:
+        $ref: '#/definitions/ProxyAccountIdentification1'
+    required:
+      - Id
+  AccountIdentification4Choice:
+    type: object
+    description: >-
+      Unique and unambiguous identification for the account between the account
+      owner and the account servicer. One of the 2 parameter values(IBAN/Othr)
+      should be passed in the request.
+    properties:
+      IBAN:
+        $ref: '#/definitions/IBAN2007Identifier'
+      Othr:
+        $ref: '#/definitions/GenericAccountIdentification1'
+  IBAN2007Identifier:
+    description: >-
+      >- International Bank Account Number (IBAN) - identifier used
+      internationally by financial institutions to uniquely identify the account
+      of a customer. Further specifications of the format and content of the
+      IBAN can be found in the standard ISO 13616 "Banking and related financial
+      services - International Bank Account Number (IBAN)" version 1997-10-01,
+      or later revisions.
+    pattern: ^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$
+    type: string
+  GenericAccountIdentification1:
+    type: object
+    description: >-
+      Unique identification of an account, as assigned by the account servicer,
+      using an identification scheme.
+    properties:
+      Id:
+        description: Identification assigned by an institution.
+        allOf:
+          - $ref: '#/definitions/Max34Text'
+      Issr:
+        description: Entity that assigns the identification.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      SchmeNm:
+        description: Name of the identification scheme.
+        allOf:
+          - $ref: '#/definitions/FinancialIdentificationSchemeName1Choice'
+    required:
+      - Id
+  CashAccountType2Choice:
+    type: object
+    description: >-
+      Specifies the nature, or use of the account. Either Code or Proprietary
+      parameter value should be passed in request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the nature, or use, of the cash account in the format of
+          character string with a maximum length of 4 characters. The list of
+          valid codes is an external code list published separately. External
+          code sets can be downloaded from www.iso20022.org.
+        type: string
+        maxLength: 4
+        minLength: 1
+      Prtry:
+        description: Name of the cash account, in a free text form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  ProxyAccountIdentification1:
+    type: object
+    description: Specifies an alternate assumed name for the identification of the account.
+    properties:
+      Tp:
+        $ref: '#/definitions/ProxyAccountType1Choice'
+      Id:
+        description: >-
+          Identification used to indicate the account identification under
+          another specified name.
+        allOf:
+          - $ref: '#/definitions/Max2048Text'
+    required:
+      - Id
+  ProxyAccountType1Choice:
+    type: object
+    description: >-
+      Type of the proxy identification. Either Code or Proprietary parameter
+      value should be passed in request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the external proxy account type code, as published in the
+          proxy account type external code set. External code sets can be
+          downloaded from www.iso20022.org.
+        type: string
+        maxLength: 4
+        minLength: 1
+      Prtry:
+        description: External proxy account type, in a free text form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  ClearingSystemIdentification3Choice:
+    type: object
+    description: >-
+      Specification of a pre-agreed offering between clearing agents or the
+      channel through which the payment instruction is processed. Either Code or
+      Proprietary parameter value should be passed in request.
+    properties:
+      Cd:
+        description: >-
+          Infrastructure through which the payment instruction is processed, as
+          published in an external clearing system identification code list.
+          External code sets can be downloaded from www.iso20022.org.
+        type: string
+        maxLength: 3
+        minLength: 1
+      Prtry:
+        description: Clearing system identification in a proprietary form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  PaymentTypeInformation27:
+    type: object
+    description: Set of elements used to further specify the type of transaction.
+    properties:
+      CtgyPurp:
+        $ref: '#/definitions/CategoryPurpose1Choice'
+      InstrPrty:
+        $ref: '#/definitions/Priority2Code'
+      LclInstrm:
+        $ref: '#/definitions/LocalInstrument2Choice'
+      SvcLvl:
+        description: >-
+          Agreement under which or rules under which the transaction should be
+          processed.
+        items:
+          $ref: '#/definitions/ServiceLevel8Choice'
+        type: array
+      SeqTp:
+        $ref: '#/definitions/SequenceType3Code'
+      ClrChanl:
+        $ref: '#/definitions/ClearingChannel2Code'
+  CategoryPurpose1Choice:
+    type: object
+    description: >-
+      Specifies the high level purpose of the instruction based on a set of
+      pre-defined categories. One of the 2 parameter values (Cd/Prtry) should be
+      passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Category purpose, as published in an external category purpose code
+          list.
+        type: string
+        maxLength: 4
+        minLength: 1
+      Prtry:
+        description: Category purpose, in a proprietary form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  Priority2Code:
+    description: >-
+      Indicator of the urgency or order of importance that the instructing party
+      would like the instructed party to apply to the processing of the
+      instruction.<br><br><b>HIGH</b> : Priority level is high.
+      <br><br><b>NORM</b> : Priority level is normal.
+    enum:
+      - HIGH
+      - NORM
+    type: string
+  LocalInstrument2Choice:
+    type: object
+    description: >-
+      User community specific instrument. One of the 2 parameter values
+      (Cd/Prtry) should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the local instrument, as published in an external local
+          instrument code list.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Prtry:
+        description: Specifies the local instrument, as a proprietary code.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  ServiceLevel8Choice:
+    type: object
+    description: >-
+      Agreement under which or rules under which the transaction should be
+      processed. Either code or proprietary parameter values should be sent in
+      request.
+    properties:
+      Cd:
+        description: >-
+          Specifies a pre-agreed service or level of service between the
+          parties, as published in an external service level code list.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      Prtry:
+        description: >-
+          Specifies a pre-agreed service or level of service between the
+          parties, as a proprietary code.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  SequenceType3Code:
+    description: >-
+      Identifies the direct debit sequence, such as first, recurrent, final
+      ,one-off or previously reversed.<br><br><b>FRST</b> : First collection of
+      a series of direct debit instructions.<br><br><b>RCUR</b> : Direct debit
+      instruction where the debtor's authorisation is used for regular direct
+      debit transactions initiated by the creditor.<br><br><b>FNAL</b> : Final
+      collection of a series of direct debit instructions.<br><br><b>OOFF</b> :
+      Direct debit instruction where the debtor's authorisation is used to
+      initiate one single direct debit transaction.<br><br><b>RPRE</b> :
+      Collection used to re-present previously reversed or returned direct debit
+      transactions.
+    enum:
+      - FRST
+      - RCUR
+      - FNAL
+      - OOFF
+      - RPRE
+    type: string
+  ClearingChannel2Code:
+    type: string
+    description: >-
+      Specifies the clearing channel to be used to process the payment
+      instruction. <br><br><b>RTGS</b> : Clearing channel is a real-time gross
+      settlement system. <br><br><b>RTNS</b> : Clearing channel is a real-time
+      net settlement system. <br><br><b>MPNS</b> : Clearing channel is a mass
+      payment net settlement system. <br><br><b>BOOK</b> : Payment through
+      internal book transfer.
+    enum:
+      - RTGS
+      - RTNS
+      - MPNS
+      - BOOK
+  PaymentMethod4Code:
+    description: >-
+      Specifies the means of payment that will be used to move the amount of
+      money.<br><br><b>CHK</b> : Written order to a bank to pay a certain amount
+      of money from one person to another person. <br><br><b>TRF</b> : Transfer
+      of an amount of money in the books of the account servicer.
+      <br><br><b>DD</b> : Collection of an amount of money from the debtor's
+      bank account by the creditor. The amount of money and dates of collections
+      may vary. <br><br><b>TRA</b> : Transfer of an amount of money in the books
+      of the account servicer. An advice should be sent back to the account
+      owner.
+    enum:
+      - CHK
+      - TRF
+      - DD
+      - TRA
+    type: string
+  MandateRelatedData1Choice:
+    type: object
+    properties:
+      DrctDbtMndt:
+        $ref: '#/definitions/MandateRelatedInformation14'
+      CdtTrfMndt:
+        $ref: '#/definitions/CreditTransferMandateData1'
+  MandateRelatedInformation14:
+    type: object
+    description: >-
+      Provides further details of the mandate signed between the creditor and
+      the debtor.
+    properties:
+      MndtId:
+        description: >-
+          Unique identification, as assigned by the creditor, to unambiguously
+          identify the mandate.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      DtOfSgntr:
+        type: string
+        format: date
+        description: Date on which the direct debit mandate has been signed by the debtor.
+      AmdmntInd:
+        type: boolean
+        description: Indicator notifying whether the underlying mandate is amended or not.
+      AmdmntInfDtls:
+        $ref: '#/definitions/AmendmentInformationDetails13'
+      ElctrncSgntr:
+        description: >-
+          Additional security provisions, such as a digital signature, as
+          provided by the debtor.
+        minLength: 1
+        maxLength: 1025
+        type: string
+      FrstColltnDt:
+        type: string
+        format: date
+        description: Date of the first collection of a direct debit as per the mandate.
+      FnlColltnDt:
+        type: string
+        format: date
+        description: Date of the final collection of a direct debit as per the mandate.
+      Frqcy:
+        $ref: '#/definitions/Frequency36Choice'
+      Rsn:
+        $ref: '#/definitions/MandateSetupReason1Choice'
+      TrckgDays:
+        type: string
+        description: >-
+          Specifies the number of days the direct debit instruction must be
+          tracked.
+        pattern: '[0-9]{2}'
+  AmendmentInformationDetails13:
+    type: object
+    description: List of mandate elements that have been modified.
+    properties:
+      OrgnlMndtId:
+        description: >-
+          Unique identification, as assigned by the creditor, to unambiguously
+          identify the original mandate.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlCdtrSchmeId:
+        description: Original creditor scheme identification that has been modified.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      OrgnlDbtr:
+        description: Original debtor that has been modified.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      OrgnlDbtrAcct:
+        description: Original debtor account that has been modified.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      OrgnlDbtrAgt:
+        description: Original debtor agent that has been modified.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      OrgnlDbtrAgtAcct:
+        description: Original debtor agent account that has been modified.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      OrgnlCdtrAgt:
+        description: Original creditor agent that has been modified.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      OrgnlCdtrAgtAcct:
+        description: Original creditor agent acount that has been modified.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      OrgnlFnlColltnDt:
+        type: string
+        format: date
+        description: Original final collection date that has been modified.
+      OrgnlFrqcy:
+        description: >-
+          Original frequency that has been modified. One of the 3 parameter
+          values (Tp/Prd/PtInTm) should be passed in request.
+        allOf:
+          - $ref: '#/definitions/Frequency36Choice'
+      OrgnlRsn:
+        description: >-
+          Original reason for the mandate to allow the user to distinguish
+          between different mandates for the same creditor. One of the 2
+          parameter values (Cd/Prtry) should be passed in request.
+        allOf:
+          - $ref: '#/definitions/MandateSetupReason1Choice'
+      OrgnlTrckgDays:
+        type: string
+        description: Original number of tracking days that has been modified.
+        pattern: '[0-9]{2}'
+  Frequency36Choice:
+    type: object
+    description: >-
+      Regularity with which direct debit instructions are to be created and
+      processed. One of the 3 parameter values (Tp/Prd/PtInTm) should be passed
+      in request.
+    properties:
+      Tp:
+        $ref: '#/definitions/Frequency6Code'
+      Prd:
+        $ref: '#/definitions/FrequencyPeriod1'
+      PtInTm:
+        $ref: '#/definitions/FrequencyAndMoment1'
+  Frequency6Code:
+    description: >-
+      Specifies the regularity of an event.br><br><b>YEAR</b> : Event takes
+      place every year or once a year. <br><br><b>MNTH</b> : Event takes place
+      every month or once a month. <br><br><b>QURT</b> : Event takes place every
+      three months or four times a year. <br><br><b>MIAN</b> : Event takes place
+      every six months or two times a year.<br><br><b>WEEK</b> : Event takes
+      place once a week. <br><br><b>DAIL</b> : Event takes place every day.
+      <br><br><b>ADHO</b> : Event takes place on request or as necessary.
+      <br><br><b>INDA</b> : Event takes place several times a
+      day.<br><br><b>FRTN</b> : Event takes place every two weeks.
+    enum:
+      - YEAR
+      - MNTH
+      - QURT
+      - MIAN
+      - WEEK
+      - DAIL
+      - ADHO
+      - INDA
+      - FRTN
+    type: string
+  FrequencyPeriod1:
+    type: object
+    description: >-
+      Defines a frequency in terms on counts per period for a specific period
+      type.
+    properties:
+      Tp:
+        $ref: '#/definitions/Frequency6Code'
+      CntPerPrd:
+        type: string
+        description: >-
+          Number of instructions to be created and processed during the
+          specified period. The number of fractional digits in the amount should
+          not be more than 17.
+        maxLength: 18
+    required:
+      - Tp
+      - CntPerPrd
+  FrequencyAndMoment1:
+    type: object
+    description: >-
+      Defines a frequency in terms a specific moment within a specified period
+      type.
+    properties:
+      Tp:
+        $ref: '#/definitions/Frequency6Code'
+      PtInTm:
+        type: string
+        description: >-
+          Further information on the exact point in time the event should take
+          place.
+        pattern: '[0-9]{2}'
+    required:
+      - Tp
+      - PtInTm
+  MandateSetupReason1Choice:
+    type: object
+    description: >-
+      Reason for the direct debit mandate to allow the user to distinguish
+      between different mandates for the same creditor. Either Code or
+      Proprietary parameter value should be passed in request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the external mandate setup reason code in the format of
+          character string with a maximum length of 4 characters. External code
+          sets can be downloaded from www.iso20022.org.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      Prtry:
+        description: Specifies the external mandate setup reason, as a proprietary code.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+  CreditTransferMandateData1:
+    type: object
+    properties:
+      MndtId:
+        description: >-
+          Unique identification, as assigned by the creditor, to unambiguously
+          identify the mandate.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Tp:
+        $ref: '#/definitions/MandateTypeInformation2'
+      DtOfSgntr:
+        type: string
+        format: date
+        description: Date on which the direct debit mandate has been signed by the debtor.
+      DtOfVrfctn:
+        type: string
+        format: date-time
+        description: >-
+          Date and time on which the direct debit mandate has been verified by
+          the debtor.
+      ElctrncSgntr:
+        maxLength: 10240
+        minLength: 1
+        type: string
+        description: >-
+          Additional security provisions, such as a digital signature, as
+          provided by the debtor.
+      FrstPmtDt:
+        type: string
+        format: date
+        description: First payment date.
+      FnlPmtDt:
+        type: string
+        format: date
+        description: Final payment date.
+      Frqcy:
+        $ref: '#/definitions/Frequency36Choice'
+      Rsn:
+        $ref: '#/definitions/MandateSetupReason1Choice'
+  MandateTypeInformation2:
+    type: object
+    description: Mandate type information.
+    properties:
+      SvcLvl:
+        description: >-
+          Agreement under which or rules under which the transaction should be
+          processed.
+        allOf:
+          - $ref: '#/definitions/ServiceLevel8Choice'
+      LclInstrm:
+        $ref: '#/definitions/LocalInstrument2Choice'
+      CtgyPurp:
+        $ref: '#/definitions/CategoryPurpose1Choice'
+      Clssfctn:
+        $ref: '#/definitions/MandateClassification1Choice'
+  MandateClassification1Choice:
+    type: object
+    description: >-
+      Specifies mandate classification. One of the 2 parameter values (Cd/Prtry)
+      should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          <br><br><b>FIXE</b> : Address is the complete postal address.
+          <br><br><b>USGB</b> : Address is a postal office (PO) box.
+          <br><br><b>VARI</b> : Address is the home address.
+        type: string
+        enum:
+          - FIXE
+          - USGB
+          - VARI
+      Prtry:
+        $ref: '#/definitions/Max35Text'
+  RemittanceInformation16:
+    type: object
+    properties:
+      Strd:
+        description: >-
+          Information supplied to enable the matching/reconciliation of an entry
+          with the items that the payment is intended to settle, such as
+          commercial invoices in an accounts' receivable system, in a structured
+          form.
+        items:
+          $ref: '#/definitions/StructuredRemittanceInformation16'
+        type: array
+      Ustrd:
+        description: >-
+          Information supplied to enable the matching/reconciliation of an entry
+          with the items that the payment is intended to settle, such as
+          commercial invoices in an accounts' receivable system, in an
+          unstructured form.
+        items:
+          $ref: '#/definitions/Max140Text'
+        type: array
+  StructuredRemittanceInformation16:
+    type: object
+    properties:
+      AddtlRmtInf:
+        description: >-
+          Additional information, in free text form, to complement the
+          structured remittance information.
+        items:
+          $ref: '#/definitions/Max140Text'
+        maxItems: 3
+        type: array
+      CdtrRefInf:
+        $ref: '#/definitions/CreditorReferenceInformation2'
+      Invcee:
+        description: >-
+          Identification of the party to whom an invoice is issued, when it is
+          different from the debtor or ultimate debtor.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      Invcr:
+        description: >-
+          Identification of the organization issuing the invoice, when it is
+          different from the creditor or ultimate creditor.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      RfrdDocAmt:
+        $ref: '#/definitions/RemittanceAmount2'
+      RfrdDocInf:
+        description: Provides the identification and the content of the referred document.
+        items:
+          $ref: '#/definitions/ReferredDocumentInformation7'
+        type: array
+      TaxRmt:
+        $ref: '#/definitions/TaxInformation7'
+      GrnshmtRmt:
+        $ref: '#/definitions/Garnishment3'
+  CreditorReferenceInformation2:
+    type: object
+    description: >-
+      Reference information provided by the creditor to allow the identification
+      of the underlying documents.
+    properties:
+      Ref:
+        description: >-
+          Unique reference, as assigned by the creditor, to unambiguously refer
+          to the payment transaction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Tp:
+        $ref: '#/definitions/CreditorReferenceType2'
+  CreditorReferenceType2:
+    type: object
+    description: Specifies the type of creditor reference.
+    properties:
+      CdOrPrtry:
+        $ref: '#/definitions/CreditorReferenceType1Choice'
+      Issr:
+        description: Entity that assigns the credit reference type.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    required:
+      - CdOrPrtry
+  CreditorReferenceType1Choice:
+    type: object
+    description: >-
+      Coded or proprietary format creditor reference type. Either Code or
+      Proprietary parameter value should be passed on request.
+    properties:
+      Cd:
+        $ref: '#/definitions/DocumentType3Code'
+      Prtry:
+        description: Creditor reference type, in a proprietary form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  DocumentType3Code:
+    enum:
+      - RADM
+      - RPIN
+      - FXDR
+      - DISP
+      - PUOR
+      - SCOR
+    type: string
+    description: >-
+      Type of creditor reference, in a coded form.<br><br><b>RADM</b> : Document
+      is a remittance advice sent separately from the current transaction.
+      <br><br><b>RPIN</b> : Document is a linked payment instruction to which
+      the current payment instruction is related, for example, in a cover
+      scenario. <br><br><b>FXDR</b> : Document is a pre-agreed or pre-arranged
+      foreign exchange transaction to which the payment transaction refers.
+      <br><br><b>DISP</b> : Document is a dispatch advice. <br><br><b>PUOR</b> :
+      Document is a purchase order <br><br><b>SCOR</b> : Document is a
+      structured communication reference provided by the creditor to identify
+      the referred transaction.
+  RemittanceAmount2:
+    type: object
+    description: Provides details on the amounts of the referred document.
+    properties:
+      DuePyblAmt:
+        description: Amount specified is the exact amount due and payable to the creditor.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      DscntApldAmt:
+        type: array
+        description: >-
+          Amount specified for the referred document is the amount of discount
+          to be applied to the amount due and payable to the creditor.
+        items:
+          $ref: '#/definitions/DiscountAmountAndType1'
+      CdtNoteAmt:
+        description: >-
+          Amount specified for the referred document is the amount of a credit
+          note.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      TaxAmt:
+        type: array
+        description: Quantity of cash resulting from the calculation of the tax.
+        items:
+          $ref: '#/definitions/TaxAmountAndType1'
+      AdjstmntAmtAndRsn:
+        description: >-
+          Specifies detailed information on the amount and reason of the
+          document adjustment.
+        items:
+          $ref: '#/definitions/DocumentAdjustment1'
+        type: array
+      RmtdAmt:
+        description: Amount of money remitted for the referred document.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+  DiscountAmountAndType1:
+    type: object
+    properties:
+      Tp:
+        $ref: '#/definitions/DiscountAmountType1Choice'
+      Amt:
+        description: Amount of money, which has been typed.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+    required:
+      - Amt
+  DiscountAmountType1Choice:
+    type: object
+    description: >-
+      Specifies the type of the amount. One of the 2 parameter values (Cd/Prtry)
+      should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the nature, or use, of the amount in the format of character
+          string with a maximum length of 4 characters. The list of valid codes
+          is an external code list published separately. External code sets can
+          be downloaded from www.iso20022.org.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      Prtry:
+        description: Specifies type of amount, as a proprietary code.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  TaxAmountAndType1:
+    type: object
+    properties:
+      Tp:
+        $ref: '#/definitions/TaxAmountType1Choice'
+      Amt:
+        description: Amount of money, which has been typed.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+    required:
+      - Amt
+  TaxAmountType1Choice:
+    type: object
+    description: >-
+      Specifies the type of the amount. One of the 2 parameter values (Cd/Prtry)
+      should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the nature, or use, of the amount in the format of character
+          string with a maximum length of 4 characters. The list of valid codes
+          is an external code list published separately. External code sets can
+          be downloaded from www.iso20022.org.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      Prtry:
+        description: Specifies type of amount, as a proprietary code.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  DocumentAdjustment1:
+    type: object
+    properties:
+      AddtlInf:
+        description: Provides further details on the document adjustment.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      Amt:
+        description: Amount of money of the document adjustment.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      CdtDbtInd:
+        $ref: '#/definitions/CreditDebitCode'
+      Rsn:
+        description: Specifies the reason for the adjustment.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+    required:
+      - Amt
+  CreditDebitCode:
+    enum:
+      - CRDT
+      - DBIT
+    type: string
+    description: >-
+      Specifies whether the adjustment must be subtracted or added to the total
+      amount.<br><br><b>CRDT</b> : Operation is an increase. <br><br><b>DBIT</b>
+      : Operation is a decrease.
+  ReferredDocumentInformation7:
+    type: object
+    properties:
+      Nb:
+        description: Unique and unambiguous identification of the referred document.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      RltdDt:
+        description: Date associated with the referred document.
+        type: string
+        format: date
+      Tp:
+        $ref: '#/definitions/ReferredDocumentType4'
+      LineDtls:
+        type: array
+        description: >-
+          Set of elements used to provide the content of the referred document
+          line.
+        items:
+          $ref: '#/definitions/DocumentLineInformation1'
+  ReferredDocumentType4:
+    type: object
+    description: Specifies the type of referred document.
+    properties:
+      CdOrPrtry:
+        $ref: '#/definitions/ReferredDocumentType1Choice'
+      Issr:
+        description: Identification of the issuer of the reference document type.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    required:
+      - CdOrPrtry
+  ReferredDocumentType1Choice:
+    type: object
+    description: >-
+      Provides the type details of the referred document. Either Code or
+      Proprietary parameter value should be passed on request.
+    properties:
+      Cd:
+        $ref: '#/definitions/DocumentType6Code'
+      Prtry:
+        description: Proprietary identification of the type of the remittance document.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  DocumentType6Code:
+    description: >-
+      Specifies a type of financial or commercial document.<br><br><b>MSIN</b> :
+      Document is an invoice claiming payment for the supply of metered
+      services, for example gas or electricity supplied to a fixed meter.
+      <br><br><b>CNFA</b> : Document is a credit note for the final amount
+      settled for a commercial transaction. <br><br><b>DNFA</b> : Document is a
+      debit note for the final amount settled for a commercial transaction.
+      <br><br><b>CINV</b> :   Document is an invoice. <br><br><b>CREN</b> :
+      Document is a credit note. <br><br><b>DEBN</b> : Document is a debit note.
+      <br><br><b>HIRI</b> : Document is an invoice for the hiring of human
+      resources or renting goods or equipment. <br><br><b>SBIN</b> : Document is
+      an invoice issued by the debtor. <br><br><b>SVGS</b> : Account used for
+      savings. <br><br><b>CMCN</b> : Document is an agreement between the
+      parties, stipulating the terms and conditions of the delivery of goods or
+      services. <br><br><b>SOAC</b> : Document is a statement of the
+      transactions posted to the debtor's account at the supplier.
+      <br><br><b>DISP</b> : Document is a dispatch advice. <br><br><b>BOLD</b> :
+      Document is a shipping notice. <br><br><b>VCHR</b> : Document is an
+      electronic payment document. <br><br><b>AROI</b> : Document is a payment
+      that applies to a specific source document. <br><br><b>TSUT</b> : Document
+      is a transaction identifier as assigned by the Trade Services Utility.
+      <br><br><b>PUOR</b> : Document is a purchase order.
+    enum:
+      - MSIN
+      - CNFA
+      - DNFA
+      - CINV
+      - CREN
+      - DEBN
+      - HIRI
+      - SBIN
+      - CMCN
+      - SOAC
+      - DISP
+      - BOLD
+      - VCHR
+      - AROI
+      - TSUT
+      - PUOR
+    type: string
+  DocumentLineInformation1:
+    type: object
+    properties:
+      Id:
+        type: array
+        description: >-
+          Set of elements used to provide the content of the referred document
+          line.
+        items:
+          $ref: '#/definitions/DocumentLineIdentification1'
+        minItems: 1
+      Desc:
+        description: Description associated with the document line.
+        allOf:
+          - $ref: '#/definitions/Max2048Text'
+      Amt:
+        $ref: '#/definitions/RemittanceAmount3'
+    required:
+      - Id
+  DocumentLineIdentification1:
+    type: object
+    properties:
+      Nb:
+        description: Identification of the type specified for the referred document line.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      RltdDt:
+        description: Date associated with the referred document line.
+        type: string
+        format: date
+      Tp:
+        $ref: '#/definitions/DocumentLineType1'
+  DocumentLineType1:
+    type: object
+    description: Specifies the type of referred document line identification.
+    properties:
+      CdOrPrtry:
+        $ref: '#/definitions/DocumentLineType1Choice'
+      Issr:
+        description: >-
+          Identification of the issuer of the reference document line
+          identificationtype.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    required:
+      - CdOrPrtry
+  DocumentLineType1Choice:
+    type: object
+    description: >-
+      Provides the type details of the referred document line identification.
+      One of the 2 parameter values (Cd/Prtry) should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the document line type as published in an external document
+          type code list.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      Prtry:
+        description: Proprietary identification of the type of the document line.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  RemittanceAmount3:
+    type: object
+    description: Provides details on the amounts of the document line.
+    properties:
+      DuePyblAmt:
+        description: Amount specified is the exact amount due and payable to the creditor.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      DscntApldAmt:
+        type: array
+        description: >-
+          Amount of discount to be applied to the amount due and payable to the
+          creditor.
+        items:
+          $ref: '#/definitions/DiscountAmountAndType1'
+      CdtNoteAmt:
+        description: Amount of a credit note.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      TaxAmt:
+        type: array
+        description: Amount of the tax.
+        items:
+          $ref: '#/definitions/TaxAmountAndType1'
+      AdjstmntAmtAndRsn:
+        description: >-
+          Set of elements used to provide information on the amount and reason
+          of the document adjustment.
+        items:
+          $ref: '#/definitions/DocumentAdjustment1'
+        type: array
+      RmtdAmt:
+        description: Amount of money remitted.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+  TaxInformation7:
+    type: object
+    description: >-
+      Provides remittance information about a payment made for tax-related
+      purposes.
+    properties:
+      Cdtr:
+        $ref: '#/definitions/TaxParty1'
+      Dbtr:
+        $ref: '#/definitions/TaxParty2'
+      UltmtDbtr:
+        description: >-
+          Ultimate party that owes an amount of money to the (ultimate)
+          creditor, in this case, to the taxing authority.
+        allOf:
+          - $ref: '#/definitions/TaxParty2'
+      AdmstnZone:
+        description: Territorial part of a country to which the tax payment is related.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      RefNb:
+        description: Tax reference information that is specific to a taxing agency.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      Mtd:
+        description: >-
+          Method used to indicate the underlying business or how the tax is
+          paid.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      TtlTaxblBaseAmt:
+        description: Total amount of money on which the tax is based.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      TtlTaxAmt:
+        description: Total amount of money as result of the calculation of the tax.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      Dt:
+        description: Date by which tax is due.
+        type: string
+        format: date
+      SeqNb:
+        description: Sequential number of the tax report.
+        allOf:
+          - $ref: '#/definitions/Number'
+      Rcrd:
+        description: Record of tax details.
+        items:
+          $ref: '#/definitions/TaxRecord2'
+        type: array
+  TaxParty1:
+    type: object
+    description: Party on the credit side of the transaction to which the tax applies.
+    properties:
+      RegnId:
+        description: >-
+          Unique identification, as assigned by an organization, to
+          unambiguously identify a party.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      TaxId:
+        description: Tax identification number of the creditor.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      TaxTp:
+        description: Type of tax payer.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  TaxParty2:
+    type: object
+    description: Party on the debit side of the transaction to which the tax applies.
+    properties:
+      Authstn:
+        $ref: '#/definitions/TaxAuthorisation1'
+      RegnId:
+        description: >-
+          Unique identification, as assigned by an organization, to
+          unambiguously identify a party.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      TaxId:
+        description: Tax identification number of the debtor.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      TaxTp:
+        description: Type of tax payer.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  TaxAuthorisation1:
+    type: object
+    description: Details of the authorised tax paying party.
+    properties:
+      Nm:
+        description: Name of the debtor or the debtor's authorised representative.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      Titl:
+        description: Title or position of debtor or the debtor's authorised representative.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  TaxRecord2:
+    type: object
+    properties:
+      Tp:
+        description: High level code to identify the type of tax details.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Ctgy:
+        description: Specifies the tax code as published by the tax authority.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      CtgyDtls:
+        description: Provides further details of the category tax code.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      DbtrSts:
+        description: >-
+          Code provided by local authority to identify the status of the party
+          that has drawn up the settlement document.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      CertId:
+        description: >-
+          Identification number of the tax report as assigned by the taxing
+          authority.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      FrmsCd:
+        description: >-
+          Identifies, in a coded form, on which template the tax report is to be
+          provided.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Prd:
+        $ref: '#/definitions/TaxPeriod2'
+      TaxAmt:
+        $ref: '#/definitions/TaxAmount2'
+      AddtlInf:
+        description: Further details of the tax record.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+  TaxPeriod2:
+    type: object
+    description: >-
+      Set of elements used to provide details on the period of time related to
+      the tax payment.
+    properties:
+      FrToDt:
+        $ref: '#/definitions/DatePeriodDetails'
+      Tp:
+        $ref: '#/definitions/TaxRecordPeriod1Code'
+      Yr:
+        description: Year related to the tax payment.
+        type: string
+        format: date
+  DatePeriodDetails:
+    type: object
+    description: >-
+      Range of time between a start date and an end date for which the tax
+      report is provided.
+    properties:
+      FrDt:
+        description: Start date of the range.
+        type: string
+        format: date
+      ToDt:
+        description: End date of the range.
+        type: string
+        format: date
+    required:
+      - FrDt
+      - ToDt
+  TaxRecordPeriod1Code:
+    description: >-
+      Identification of the period related to the tax payment.
+      <br><br><b>MM01</b> : Tax is related to the first month of the period.
+      <br><br><b>MM02</b> : Tax is related to the second month of the
+      period.<br><br><b>MM03</b> : Tax is related to the third month of the
+      period.<br><br><b>MM04</b> : Tax is related to the fourth month of the
+      period.<br><br><b>MM05</b> : Tax is related to the fifth month of the
+      period.<br><br><b>MM06</b> : Tax is related to the sixth month of the
+      period.<br><br><b>MM07</b> : Tax is related to the seventh month of the
+      period.<br><br><b>MM08</b> : Tax is related to the eighth month of the
+      period.<br><br><b>MM09</b> : Tax is related to the ninth month of the
+      period.<br><br><b>MM10</b> : Tax is related to the tenth month of the
+      period.<br><br><b>MM11</b> : Tax is related to the eleventh month of the
+      period.<br><br><b>MM12</b> : Tax is related to the twelfth month of the
+      period.<br><br><b>QTR1</b> : Tax is related to the first quarter of the
+      period.<br><br><b>QTR2</b> : Tax is related to the second quarter of the
+      period.<br><br><b>QTR3</b> : Tax is related to the third quarter of the
+      period.<br><br><b>QTR4</b> : Tax is related to the fourth quarter of the
+      period.<br><br><b>HLF1</b> : Tax is related to the first half of the
+      period.<br><br><b>HLF2</b> : Tax is related to the second half of the
+      period.
+    enum:
+      - MM01
+      - MM02
+      - MM03
+      - MM04
+      - MM05
+      - MM06
+      - MM07
+      - MM08
+      - MM09
+      - MM10
+      - MM11
+      - MM12
+      - QTR1
+      - QTR2
+      - QTR3
+      - QTR4
+      - HLF1
+      - HLF2
+    type: string
+  TaxAmount2:
+    type: object
+    description: >-
+      Set of elements used to provide information on the amount of the tax
+      record.
+    properties:
+      Dtls:
+        description: Set of elements used to provide details on the tax period and amount.
+        items:
+          $ref: '#/definitions/TaxRecordDetails2'
+        type: array
+      Rate:
+        type: string
+        maxLength: 11
+        description: >-
+          Rate used to calculate the tax. The number of fractional digits in the
+          rate should not be more than 10.
+      TaxblBaseAmt:
+        description: Amount of money on which the tax is based.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      TtlAmt:
+        description: >-
+          Total amount that is the result of the calculation of the tax for the
+          record.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+  TaxRecordDetails2:
+    type: object
+    properties:
+      Amt:
+        description: Underlying tax amount related to the specified period.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      Prd:
+        $ref: '#/definitions/TaxPeriod2'
+    required:
+      - Amt
+  Garnishment3:
+    type: object
+    description: >-
+      Provides remittance information about a payment for garnishment-related
+      purposes.
+    properties:
+      Tp:
+        $ref: '#/definitions/GarnishmentType1'
+      Grnshee:
+        description: >-
+          Ultimate party that owes an amount of money to the (ultimate)
+          creditor, in this case, to the garnisher.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      GrnshmtAdmstr:
+        description: >-
+          Party on the credit side of the transaction who administers the
+          garnishment on behalf of the ultimate beneficiary.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      RefNb:
+        description: >-
+          Reference information that is specific to the agency receiving the
+          garnishment.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      Dt:
+        description: Date of payment which garnishment was taken from.
+        type: string
+        format: date
+      RmtdAmt:
+        description: Amount of money remitted for the referred document.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      FmlyMdclInsrncInd:
+        type: boolean
+        description: >-
+          Indicates if the person to whom the garnishment applies (that is, the
+          ultimate debtor) has family medical insurance coverage available.
+      MplyeeTermntnInd:
+        type: boolean
+        description: >-
+          Indicates if the employment of the person to whom the garnishment
+          applies (that is, the ultimate debtor) has been terminated.
+    required:
+      - Tp
+  GarnishmentType1:
+    type: object
+    description: Specifies the type of garnishment.
+    properties:
+      CdOrPrtry:
+        $ref: '#/definitions/GarnishmentType1Choice'
+      Issr:
+        description: Identification of the issuer of the garnishment type.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    required:
+      - CdOrPrtry
+  GarnishmentType1Choice:
+    type: object
+    description: >-
+      Provides the type details of the garnishment. One of the 2 parameter
+      values (Cd/Prtry) should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the garnishment type as published in an external document
+          type code list.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      Prtry:
+        description: Proprietary identification of the type of the garnishment.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  Purpose2Choice:
+    type: object
+    description: >-
+      Specifies the underlying reason for the payment transaction. Either Code
+      or Proprietary parameter value should be passed on request.
+    properties:
+      Cd:
+        description: >-
+          Underlying reason for the payment transaction, as published in an
+          external purpose code list.
+        type: string
+        maxLength: 4
+        minLength: 1
+      Prtry:
+        description: Purpose, in a proprietary form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  SupplementaryData1:
+    type: object
+    properties:
+      PlcAndNm:
+        type: string
+        description: >-
+          Unambiguous reference to the location where the supplementary data
+          must be inserted in the message instance. In the case of XML, this is
+          expressed by a valid XPath.
+        maxLength: 350
+        minLength: 1
+      Envlp:
+        type: string
+        description: Technical element wrapping the supplementary data.
+    required:
+      - Envlp
+  ActiveOrHistoricCurrencyAndAmount:
+    type: object
+    properties:
+      Ccy:
+        description: Currency code. Passed as the parameter attribute.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyCode'
+      Value:
+        $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount_SimpleType'
+  ActiveOrHistoricCurrencyAndAmount_SimpleType:
+    type: string
+    maxLength: 18
+    description: >-
+      A number of monetary units specified in an active or a historic currency
+      where the unit of currency is explicit and compliant with ISO 4217. The
+      number of fractional digits should not be more than 5.
+  ActiveOrHistoricCurrencyCode:
+    pattern: '[A-Z]{3,3}'
+    type: string
+  Max105Text:
+    maxLength: 105
+    minLength: 1
+    type: string
+  Max140Text:
+    maxLength: 140
+    minLength: 1
+    type: string
+  Max16Text:
+    maxLength: 16
+    minLength: 1
+    type: string
+  Max2048Text:
+    maxLength: 2048
+    minLength: 1
+    type: string
+  Max34Text:
+    maxLength: 34
+    minLength: 1
+    type: string
+  Max35Text:
+    maxLength: 35
+    minLength: 1
+    type: string
+  Max4Text:
+    maxLength: 4
+    minLength: 1
+    type: string
+  Max70Text:
+    maxLength: 70
+    minLength: 1
+    type: string
+  Max15NumericText:
+    pattern: '[0-9]{1,15}'
+    type: string
+  Number:
+    maxLength: 18
+    type: number
+  GroupHeader91:
+    type: object
+    description: >-
+      Set of characteristics shared by all individual transactions included in
+      the message.
+    properties:
+      MsgId:
+        description: >-
+          Point to point reference, as assigned by the instructing party, and
+          sent to the next party in the chain to unambiguously identify the
+          message.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      CreDtTm:
+        type: string
+        format: date-time
+        description: Date and time at which the message was created.
+      InstgAgt:
+        description: >-
+          Agent that instructs the next party in the chain to carry out the (set
+          of) instruction(s).
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      InstdAgt:
+        description: >-
+          Agent that is instructed by the previous party in the chain to carry
+          out the (set of) instruction(s).
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+    required:
+      - MsgId
+      - CreDtTm
+  OriginalGroupHeader17:
+    type: object
+    properties:
+      OrgnlMsgId:
+        description: >-
+          Point to point reference, as assigned by the original instructing
+          party, to unambiguously identify the original message.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlMsgNmId:
+        description: >-
+          Specifies the original message name identifier to which the message
+          refers.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlCreDtTm:
+        type: string
+        format: date-time
+        description: Date and time at which the original message was created.
+      OrgnlNbOfTxs:
+        description: Number of individual transactions contained in the original message.
+        allOf:
+          - $ref: '#/definitions/Max15NumericText'
+      OrgnlCtrlSum:
+        description: >-
+          Total of all individual amounts included in the original message,
+          irrespective of currencies. The number of fractional digits in the
+          amount should not be more than 17.
+        type: string
+        maxLength: 18
+      GrpSts:
+        description: >-
+          Specifies the status of a group of transactions, as published in an
+          external payment group status code set. External code sets can be
+          downloaded from www.iso20022.org.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      StsRsnInf:
+        type: array
+        description: Provides detailed information on the status reason.
+        items:
+          $ref: '#/definitions/StatusReasonInformation12'
+      NbOfTxsPerSts:
+        type: array
+        description: >-
+          Detailed information on the number of transactions for each identical
+          transaction status.
+        items:
+          $ref: '#/definitions/NumberOfTransactionsPerStatus5'
+    required:
+      - OrgnlMsgId
+      - OrgnlMsgNmId
+  StatusReasonInformation12:
+    type: object
+    properties:
+      Orgtr:
+        description: Party that issues the status.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      Rsn:
+        $ref: '#/definitions/StatusReason6Choice'
+      AddtlInf:
+        description: Further details on the status reason.
+        items:
+          $ref: '#/definitions/Max105Text'
+        type: array
+  StatusReason6Choice:
+    type: object
+    description: >-
+      Specifies the reason for the status report. One of the 2 parameter values
+      (Cd/Prtry) should be passed in the request.
+    properties:
+      Cd:
+        description: >-
+          Specifies the status reason, as published in an external status reason
+          code list. External code sets can be downloaded from www.iso20022.org.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      Prtry:
+        description: Reason for the status, in a proprietary form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  NumberOfTransactionsPerStatus5:
+    type: object
+    properties:
+      DtldNbOfTxs:
+        description: >-
+          Number of individual transactions contained in the message, detailed
+          per status.
+        allOf:
+          - $ref: '#/definitions/Max15NumericText'
+      DtldCtrlSum:
+        description: >-
+          Total of all individual amounts included in the message, irrespective
+          of currencies, detailed per status. The number of fractional digits in
+          the amount should not be more than 17
+        type: string
+        maxLength: 18
+      DtldSts:
+        description: Common transaction status for all individual transactions reported.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+    required:
+      - DtldNbOfTxs
+      - DtldSts
+  PaymentTransaction110:
+    type: object
+    properties:
+      StsId:
+        description: >-
+          Unique identification, as assigned by an instructing party for an
+          instructed party, to unambiguously identify the reported status.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlGrpInf:
+        $ref: '#/definitions/OriginalGroupInformation29'
+      OrgnlInstrId:
+        description: >-
+          Unique identification, as assigned by the original instructing party
+          for the original instructed party, to unambiguously identify the
+          original instruction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlEndToEndId:
+        description: >-
+          Unique identification, as assigned by the original initiating party,
+          to unambiguously identify the original transaction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlTxId:
+        description: >-
+          Unique identification, as assigned by the original first instructing
+          agent, to unambiguously identify the transaction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlUETR:
+        description: >-
+          Universally unique identifier to provide the original end-to-end
+          reference of a payment transaction.
+        pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}'
+        type: string
+      TxSts:
+        description: Specifies the status of a transaction, in a coded form.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      StsRsnInf:
+        type: array
+        description: Provides detailed information on the status reason.
+        items:
+          $ref: '#/definitions/StatusReasonInformation12'
+      ChrgsInf:
+        type: array
+        description: >-
+          Provides information on the charges related to the processing of the
+          rejection of the instruction.
+        items:
+          $ref: '#/definitions/Charges7'
+      AccptncDtTm:
+        type: string
+        format: date-time
+        description: >-
+          Point in time when the payment order from the initiating party meets
+          the processing conditions of the account servicing agent. This means
+          that the account servicing agent has received the payment order and
+          has applied checks such as authorisation, availability of funds.
+      FctvIntrBkSttlmDt:
+        $ref: '#/definitions/DateAndDateTime2Choice'
+      AcctSvcrRef:
+        description: >-
+          Unique reference, as assigned by the account servicing institution, to
+          unambiguously identify the instruction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      ClrSysRef:
+        description: >-
+          Unique reference, as assigned by a clearing system, to unambiguously
+          identify the instruction.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      InstgAgt:
+        description: >-
+          Agent that instructs the next party in the chain to carry out the (set
+          of) instruction(s).
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      InstdAgt:
+        description: >-
+          Agent that is instructed by the previous party in the chain to carry
+          out the (set of) instruction(s).
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      OrgnlTxRef:
+        $ref: '#/definitions/OriginalTransactionReference28'
+      SplmtryData:
+        type: array
+        description: >-
+          Additional information that can not be captured in the structured
+          parameters and/or any other specific block.
+        items:
+          $ref: '#/definitions/SupplementaryData1'
+  Charges7:
+    type: object
+    properties:
+      Amt:
+        description: Transaction charges to be paid by the charge bearer.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      Agt:
+        description: >-
+          Agent that takes the transaction charges or to which the transaction
+          charges are due.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+  OriginalTransactionReference28:
+    type: object
+    properties:
+      IntrBkSttlmAmt:
+        description: >-
+          Amount of money moved between the instructing agent and the instructed
+          agent.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      Amt:
+        $ref: '#/definitions/AmountType4Choice'
+      IntrBkSttlmDt:
+        type: string
+        format: date
+        description: >-
+          Date on which the amount of money ceases to be available to the agent
+          that owes it and when the amount of money becomes available to the
+          agent to which it is due.
+      ReqdColltnDt:
+        type: string
+        format: date
+        description: >-
+          Date and time at which the creditor requests that the amount of money
+          is to be collected from the debtor.
+      ReqdExctnDt:
+        description: >-
+          Date at which the initiating party requests the clearing agent to
+          process the payment. Either Dt or DtTm parameter value should be
+          passed in request.
+        allOf:
+          - $ref: '#/definitions/DateAndDateTime2Choice'
+      CdtrSchmeId:
+        description: Credit party that signs the mandate.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      SttlmInf:
+        $ref: '#/definitions/SettlementInstruction7'
+      PmtTpInf:
+        $ref: '#/definitions/PaymentTypeInformation27'
+      PmtMtd:
+        $ref: '#/definitions/PaymentMethod4Code'
+      MndtRltdInf:
+        $ref: '#/definitions/MandateRelatedInformation14'
+      RmtInf:
+        description: >-
+          Information supplied to enable the matching of an entry with the items
+          that the transfer is intended to settle, such as commercial invoices
+          in an accounts' receivable system.
+        allOf:
+          - $ref: '#/definitions/RemittanceInformation16'
+      UltmtDbtr:
+        description: >-
+          Ultimate party that owes an amount of money to the (ultimate)
+          creditor. One of the 2 parameter values (Pty/Agt) should be passed in
+          request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      Dbtr:
+        description: >-
+          Party that owes an amount of money to the creditor. One of the 2
+          parameter values (Pty/Agt) should be passed in request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      DbtrAcct:
+        description: >-
+          Unambiguous identification of the account of the debtor to which a
+          debit entry will be made as a result of the transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      DbtrAgt:
+        description: Financial institution servicing an account for the debtor.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      DbtrAgtAcct:
+        description: >-
+          Unambiguous identification of the account of the debtor agent at its
+          servicing agent in the payment chain.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      CdtrAgt:
+        description: Financial institution servicing an account for the creditor.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      CdtrAgtAcct:
+        description: >-
+          Unambiguous identification of the account of the creditor agent at its
+          servicing agent to which a credit entry will be made as a result of
+          the payment transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      Cdtr:
+        description: >-
+          Party to which an amount of money is due. One of the 2 parameter
+          values (Pty/Agt) should be passed in request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      CdtrAcct:
+        description: >-
+          Unambiguous identification of the account of the creditor to which a
+          credit entry will be posted as a result of the payment transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      UltmtCdtr:
+        description: >-
+          Ultimate party to which an amount of money is due. One of the 2
+          parameter values (Pty/Agt) should be passed in request.
+        allOf:
+          - $ref: '#/definitions/Party40Choice'
+      Purp:
+        $ref: '#/definitions/Purpose2Choice'
+securityDefinitions:
+  clientCredentials:
+    description: >+
+      All CitiConnect APIs use the oAuth2 authentication scheme, which requires
+      a bearer token to authenticate your API call. The Token URL includes the
+      version of authentication used by this API. See <a
+      href="../../authentication/authentication-api-reference/"
+      target="_blank">the Citi Authentication API reference</a> for information
+      on requesting a token.
+
+    type: oauth2
+    tokenUrl: >-
+      https://tts.sit.apib2b.citi.com/citiconnect/sit5/authenticationservices/v3/oauth/token
+    flow: application
+    scopes: null

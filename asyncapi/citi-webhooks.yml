@@ -1,0 +1,81 @@
+generated: '2026-09-05'
+method: derived
+source: openapi/ — the OpenAPI 3.1 webhooks blocks and the notification/subscription contracts among the 118 first-party
+  Citi specifications harvested from https://developer.citi.com/apidocs on 2026-09-05
+asyncapi_published: false
+asyncapi_note: 'Citi publishes NO AsyncAPI document. The event surface is described inside OpenAPI instead: two
+  contracts use the OpenAPI 3.1 webhooks: keyword, and eight more model notifications as callback-style POST endpoints
+  the client implements plus subscription-management operations. Probed for /asyncapi.yaml and searched the Citi
+  GitHub org — nothing. This is recorded as an absence, not fabricated.'
+transport: HTTPS POST from Citi to a client-hosted endpoint
+webhooks:
+- event: prenotification
+  spec: openapi/citi-express-payments-webhooks-openapi.yaml
+  method: POST
+  style: openapi-3.1-webhooks
+  description: Pre-notifications are alerts sent by Citibank to inform you of incoming funds before the money is
+    officially credited to your bank account.
+- event: pushnotification
+  spec: openapi/citi-express-payments-webhooks-openapi.yaml
+  method: POST
+  style: openapi-3.1-webhooks
+  description: Webhook notifications sent for events not triggered directly by the client — for example an incoming
+    credit.
+- event: beneficiaryvalidationnotification
+  spec: openapi/citi-express-payments-webhooks-openapi.yaml
+  method: POST
+  style: openapi-3.1-webhooks
+  description: Notification of the outcome of a beneficiary validation.
+- event: prenotification
+  spec: openapi/citi-digitalpaymentscollections-webhooks-openapi.yaml
+  method: POST
+  style: openapi-3.1-webhooks
+  description: Incoming-funds pre-notification on the payment acceptance / collections surface.
+- event: pushnotification
+  spec: openapi/citi-digitalpaymentscollections-webhooks-openapi.yaml
+  method: POST
+  style: openapi-3.1-webhooks
+  description: Event notification on the payment acceptance / collections surface.
+- event: dispute status notification
+  spec: openapi/citi-dispute-webhook-openapi.yaml
+  method: POST
+  path: /v1/webhook
+  style: callback-endpoint
+  description: Commercial card dispute case status notifications (DisputeCaseStatusNotification v1.0).
+- event: VCA authorisation push notification
+  spec: openapi/citi-virtual-cards-pi-webhooks-openapi.yaml
+  style: callback-endpoint
+  description: Virtual Card Account client webhooks for payment intermediaries (Vca-PI-Client-webhooks 2.0.0).
+- event: VCA push notification
+  spec: openapi/citi-vcanotificationswebhooks-openapi.yaml
+  style: callback-endpoint
+  description: Virtual Card Account push notification webhook.
+- event: VCA dual-authorisation notification
+  spec: openapi/citi-vca-dual-auth-notification-openapi.yaml
+  style: callback-endpoint
+  description: Real-time dual-authorisation notification over mutual TLS (orchestrationNotf_mTLS).
+- event: account notification
+  spec: openapi/citi-account-notifications-api-openapi.yaml
+  style: subscription+callback
+  description: Account-level credit/debit notifications on the account reporting surface.
+subscription_management:
+- spec: openapi/citi-vcaeventssubscriptions-openapi.yaml
+  operations:
+  - createSubscription
+  - getSubscription
+  - updateSubscription
+  - deleteSubscription
+  path: /vca/v2/events/subscriptions
+- spec: openapi/citi-virtual-cards-notifications-openapi.yaml
+  operations:
+  - deleteSubscription
+  path: /vca/v1/authorizations/subscriptions/{subscriptionId}
+- spec: openapi/citi-vcagetnotifications-openapi.yaml
+  note: Pull-based retrieval of notifications, for clients that cannot host a webhook receiver.
+delivery_semantics:
+  retries: not published
+  signing: not published as a shared HMAC convention; the dual-authorisation notification uses mutual TLS instead
+  note: Citi does not publish webhook retry policy, replay window or a signature-verification scheme. Not asserted
+    here.
+note: 'The event surface is real and product-specific: it exists on payments, collections, virtual cards and account
+  reporting, and is absent everywhere else. Ten of 118 contracts carry it.'

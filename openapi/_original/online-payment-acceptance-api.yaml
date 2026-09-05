@@ -1,0 +1,2161 @@
+openapi: 3.0.2
+info:
+  title: Online Payment Acceptance API
+  description: >-
+    The Online Payment Acceptance API currently allows merchants to accept PIX
+    payments. PIX is a payment method owned by the Central Bank of Brazil (Banco
+    Central), offering instant direct bank transfers in Brazil.
+  version: 1.0.0
+servers:
+  - url: https://tts.apib2b.citi.com/citiconnect/prod
+    description: production gateway url
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+    description: 'sbox url '
+  - url: https://tts.sit.apib2b.citi.com/citiconnect/uat
+    description: uat url
+paths:
+  /digitalpayments/v1/payment-acceptance/methods:
+    get:
+      summary: Payment Method Details
+      description: >
+        Payment Method Details returns the merchant payment method(s) enabled
+        during onboarding.
+      operationId: getpaymentmethod
+      parameters:
+        - $ref: '#/components/parameters/ClientId'
+        - $ref: '#/components/parameters/MerchantID'
+        - $ref: '#/components/parameters/authorization'
+      responses:
+        '200':
+          description: Payment method
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodResponse'
+              examples:
+                PaymentMethod:
+                  $ref: '#/components/examples/PaymentMethod'
+        '400':
+          $ref: '#/components/responses/BadGetRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - Client Credentials: []
+  /digitalpayments/v1/payment-acceptance:
+    post:
+      summary: Submit a Payment With Selected Payment Method
+      description: Create a payment for a given payment method.
+      operationId: Payments
+      parameters:
+        - $ref: '#/components/parameters/ClientId'
+        - $ref: '#/components/parameters/authorization'
+        - $ref: '#/components/parameters/contentType'
+        - $ref: '#/components/parameters/IdempotencyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+            examples:
+              QRPIXPayments:
+                $ref: '#/components/examples/QRPIXPaymentRequestExample'
+              Payments:
+                $ref: '#/components/examples/PaymentRequestExample'
+      security:
+        - Client Credentials: []
+      callbacks:
+        payment-qr-created:
+          $ref: '#/components/callbacks/PaymentCreatedStatus'
+        payment-qr-failed:
+          $ref: '#/components/callbacks/PaymentFailedStatusNotification'
+        payment-settled:
+          $ref: '#/components/callbacks/PaymentSuccessStatusNotification'
+      responses:
+        '202':
+          $ref: '#/components/responses/202Accepted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+  /digitalpayments/v1/payment-acceptance/refunds:
+    post:
+      summary: Refund a Payment
+      description: Create a partial or full refund for a payment transaction.
+      operationId: refundPayments
+      parameters:
+        - $ref: '#/components/parameters/ClientId'
+        - $ref: '#/components/parameters/authorization'
+        - $ref: '#/components/parameters/contentType'
+        - $ref: '#/components/parameters/IdempotencyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refunds'
+            examples:
+              BR Refund Transfer:
+                $ref: '#/components/examples/BRRefundInitiationRequestExample'
+      security:
+        - Client Credentials: []
+      callbacks:
+        payment-refund-created:
+          $ref: '#/components/callbacks/PaymentRefundCreatedStatus'
+        payment-refund-failed:
+          $ref: '#/components/callbacks/PaymentRefundFailedStatus'
+      responses:
+        '202':
+          $ref: '#/components/responses/202Accepted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+  /digitalpayments/v1/payment-acceptance/{reference}:
+    patch:
+      summary: Update a Previously Submitted Payment
+      description: Update a payment.
+      operationId: collectionUpdate
+      parameters:
+        - $ref: '#/components/parameters/authorization'
+        - $ref: '#/components/parameters/contentType'
+        - $ref: '#/components/parameters/IdempotencyId'
+        - $ref: '#/components/parameters/ClientId'
+        - $ref: '#/components/parameters/ReferenceNo'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentUpdateRequest'
+            examples:
+              QRPIXPayments:
+                $ref: '#/components/examples/QRPIXPaymentUpdateRequestExample'
+      security:
+        - Client Credentials: []
+      callbacks:
+        payment-qr-modified:
+          $ref: '#/components/callbacks/PaymentCreatedStatus'
+        payment-qr-cancelled:
+          $ref: '#/components/callbacks/PaymentCancelledStatus'
+      responses:
+        '202':
+          $ref: '#/components/responses/202Accepted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      summary: Receive Transaction Details
+      description: >
+        Receive transaction status with transaction reference number for up to
+        90 days of transaction data.
+      operationId: getpaymentstatus
+      parameters:
+        - $ref: '#/components/parameters/ClientId'
+        - $ref: '#/components/parameters/ReferenceNo'
+        - $ref: '#/components/parameters/authorization'
+      responses:
+        '200':
+          description: Payment status
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payments'
+              examples:
+                QRCreatedStatus:
+                  $ref: '#/components/examples/QRCreatedStatus'
+                QRPendingStatus:
+                  $ref: '#/components/examples/QRPendingStatus'
+                QRCancelledStatus:
+                  $ref: '#/components/examples/QRCancelledStatus'
+                QRFailedStatus:
+                  $ref: '#/components/examples/QRFailedStatus'
+        '400':
+          $ref: '#/components/responses/BadGetRequest2'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - Client Credentials: null
+  /digitalpayments/v1/payment-acceptance/{refund_id}:
+    get:
+      summary: Receive Refund Transaction Details
+      description: >
+        Receive transaction status with transaction reference number. 90 days of
+        transaction data is available
+      operationId: getrefundpaymentstatus
+      parameters:
+        - $ref: '#/components/parameters/ClientId'
+        - $ref: '#/components/parameters/Refund_id'
+        - $ref: '#/components/parameters/authorization'
+      responses:
+        '200':
+          description: Payment status
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request,
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRefundNotification'
+              examples:
+                RefundcompletedStatus:
+                  $ref: '#/components/examples/PaymentRefundSucessNotification'
+                RefundrejectedStatus:
+                  $ref: '#/components/examples/PaymentRefundFailedNotification'
+        '400':
+          $ref: '#/components/responses/BadGetRequest2'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - Client Credentials: []
+components:
+  parameters:
+    ClientId:
+      in: query
+      name: client_id
+      required: true
+      schema:
+        type: string
+        description: >-
+          This is your unique identifier shared during your CitiConnect API
+          onboarding. This is the same `client_id` used for OAuth token
+          generation
+        example: abc123
+    contentType:
+      in: header
+      name: Content-Type
+      description: Supports application/json.
+      required: true
+      schema:
+        type: string
+    authorization:
+      in: header
+      name: Authorization
+      description: The OAuth token prefixed with "Bearer" and space in between.
+      required: true
+      schema:
+        type: string
+    IdempotencyId:
+      name: Idempotency-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        description: >-
+          Unique idempotency identification provided by the merchant during
+          transaction creation, maxlength of `IdempotencyId` is 128.
+      example: abcd-123-y4df-yhrtk
+    ReferenceNo:
+      name: reference
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+        minLength: 1
+        description: Your unique End To End identification
+      example: abc-pay-123
+    Refund_id:
+      name: refund_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+        description: >-
+          Unique refund reference ID, generated during refund initiation and
+          provided to you in the synchronous response to your refund POST
+          request 
+      example: 0c4fb98b-d77a-4468-96bb-0c88b3b8f75a
+    MerchantID:
+      name: merchant_id
+      in: query
+      required: true
+      schema:
+        type: string
+        maxLength: 40
+        minLength: 1
+        description: Your unique merchant identification number.
+      example: M123456987
+    ApimGuid:
+      name: apim-guid
+      in: header
+      required: true
+      schema:
+        type: string
+    EventType:
+      name: event-type
+      in: header
+      required: true
+      schema:
+        type: string
+    EventName:
+      name: event-name
+      in: header
+      required: true
+      schema:
+        type: string
+  schemas:
+    Customer:
+      properties:
+        id:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Merchant internal customer ID.
+          example: 1234abcjki
+        type:
+          type: string
+          enum:
+            - INDIVIDUAL
+            - BUSINESS
+          description: |-
+            Merchant customer type 
+             - For Brazil QR creation `customer.type` parameter is mandatory
+          example: BUSINESS
+        payer_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: |-
+            Customer's payer identification (e.g., email address) 
+             - For Brazil QR creation, the `customer.payer_id` parameter is mandatory and only a numeric value is allowed, individual person tax identification (CPF) allowed length = 11  or business entity tax identification (CNPJ) allowed length = 14
+          example: 234.453.678-21
+        payer_type:
+          type: string
+          enum:
+            - BIID
+            - EMAL
+            - EWAL
+            - MBNO
+            - NIDN
+          description: >-
+            Customer's payer type (BIID for bill identification, EMAL for email
+            address, EWAL for electronic wallet identification, MBNO for mobile
+            number and NIDN for national identification or tax identification 
+             - For Brazil QR creation `customer.payer_type` parameter is mandatory, applicable value NIDN
+          example: NIDN
+        name:
+          maxLength: 200
+          minLength: 1
+          type: string
+          description: |2-
+             Payer name 
+             - For Brazil QR creation customer.name parameter is mandatory and allowed datatype alphanumeric, individual person or business entity name.
+          example: Margarida
+        address:
+          $ref: '#/components/schemas/Address'
+    RestrictedFINXMax128Text:
+      maxLength: 35
+      minLength: 1
+      pattern: ^(?!\s*$).+
+      type: string
+      description: >-
+        Specifies a character string with a maximum length of 35 characters
+        limited to character set X, that is, a-z A-Z / - ? : ( ) . , ‘ + . 
+         - For Brazil `end_to_end_id` parameter is mandatory and allowed max length is 35
+    Address:
+      description: |-
+
+        - For Brazil QR transaction `shipping.address` details is not applicable
+      required:
+        - country_code
+      properties:
+        line1:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Customer line1 address
+          example: '#45, Block 12'
+        line2:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Customer line2 address.
+          example: Federal Street
+        city:
+          maxLength: 30
+          minLength: 1
+          type: string
+          description: Customer city
+          example: Abis Brasil
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Customer postal code.
+          example: 69935-000
+        state:
+          maxLength: 30
+          minLength: 1
+          type: string
+          description: Customer state.
+          example: san francisco
+        country_code:
+          type: string
+          enum:
+            - BR
+          description: Customer country.
+          example: BR
+    Original_Payment:
+      type: object
+      description: >-
+        Either populate UETR OR (`end_to_end_id` AND `value_date`) for the
+        refund to be processed.
+      properties:
+        end_to_end_id:
+          $ref: '#/components/schemas/RestrictedFINXMax128Text'
+        uetr:
+          type: string
+          pattern: >-
+            ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference.
+        value_date:
+          type: string
+          format: date
+          description: >-
+            Format YYYY-MM-DD Date in local time zone (e.g., EST for a United
+            States RTP network transaction) when Citi's transaction processing
+            application starts processing a transaction.
+    Original_Payment_Status:
+      type: object
+      description: >-
+        Either populate UETR OR (`end_to_end_id` AND `value_date`) for the
+        refund to be processed.
+      properties:
+        end_to_end_id:
+          $ref: '#/components/schemas/RestrictedFINXMax128Text'
+        uetr:
+          type: string
+          pattern: >-
+            ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference.
+        value_date:
+          type: string
+          format: date
+          description: >-
+            Format YYYY-MM-DD Date in local time zone (e.g., EST for a United
+            States RTP network transaction) when Citi's transaction processing
+            application starts processing a transaction.
+        instructed_amount:
+          type: number
+          minimum: 0.01
+          maximum: 100000000000000
+          description: |-
+            Instructed amount 
+             - Thailand PromptPay - Maximum amount is 2000000.00 
+             - United States - Maximum amount is 1000000.00
+        instructed_currency:
+          description: ISO 4217 code for the transaction instructed amount currency.
+          type: string
+          enum:
+            - BRL
+    Merchant:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Merchant ID assigned by Citi.
+          example: M12348907
+        payee_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: |-
+            Merchant's payee identification (e.g., email address) 
+             - For Brazil QR creation, `merchant.payee_id` parameter is mandatory, allowed maxlength is 77.
+          example: 1.020.340/8910-22
+        payee_type:
+          type: string
+          enum:
+            - BIID
+            - EMAL
+            - EWAL
+            - MBNO
+            - NIDN
+          description: >-
+            Merchant's payee type (BIID for bill identification, EMAL for email
+            address, EWAL for electronic wallet identification, MBNO for mobile
+            number and NIDN for national identification or tax identification 
+             - For Brazil QR creation `merchant.payee_type` parameter is mandatory
+          example: NIDN
+      additionalProperties: false
+    Method:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          description: |-
+            Method specified by the customer for the transaction 
+            - Provide PIX for Brazil QR creation
+          type: string
+          enum:
+            - PIX
+          example: PIX
+    Transaction:
+      type: object
+      required:
+        - reference
+        - amount
+        - currency_code
+      properties:
+        reference:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: >-
+            Unique transaction identification provided by the merchant during
+            transaction creation 
+
+            - transaction.reference parameter is mandatory for all transaction
+            type creation   
+
+            - For Brazil QR creation `transaction.reference` parameter should be
+            of length between 26 to 35 and allowed datatype is alphanumeric and
+            should not be filled with spaces or zeroes
+          example: pay02052023456r
+        order_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: >-
+            Unique order identification provided by the merchant during
+            transaction creation.
+          example: order1234
+        expiry_time:
+          type: integer
+          format: int32
+          minimum: 10
+          description: >-
+            Expiration time for QR collection, specified in seconds 
+
+            - QR Creation request will be rejected, if the expiration time value
+            is less than 10.
+          example: 3600
+        amount:
+          type: number
+          minimum: 0.01
+          maximum: 100000000000000
+          description: |-
+            Transaction amount 
+             - For Brazil QR creation decimal values are mandatory for transaction.amount and it must have 2 digits 
+             - For Brazil QR creation maximum amount limit is 9999999999.99
+          example: 200
+        currency_code:
+          type: string
+          enum:
+            - BRL
+          description: >-
+            ISO 4217 Currency Code for instance  USD/GBP/EUR 
+
+            - transaction.currency_code parameter is mandatory for all
+            transaction type creation
+          example: BRL
+        update_flag:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+          description: >-
+            For QR Creation (e.g., Brazil), during transaction processing if the
+            merchant wants to allow their clients to change QR amount then the
+            value should be Y otherwise, the default value is 'N'.
+          example: 'Y'
+        qr_image:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+          description: >-
+            Merchant to confirm QR Image is required or not, If required, the
+            value should be 'Y'.
+          example: 'Y'
+        additional_info:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdditionalInfo'
+    Shipping:
+      type: object
+      properties:
+        name:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: |-
+            Recipient name 
+            - For Brazil QR, the `shipping.name` is not applicable.
+          example: pay02052023456r
+        phone:
+          maxLength: 10
+          minLength: 1
+          type: number
+          description: |-
+            Recepient phone 
+            - For Brazil QR, the `shipping.phone` is not applicable.
+          example: 9982456123
+        carrier:
+          maxLength: 200
+          minLength: 1
+          type: string
+          description: |-
+            Service that shipped a physical product 
+            - For Brazil QR, the `shipping.carrier` is not applicable.
+          example: M455679
+        tracking_number:
+          maxLength: 40
+          minLength: 8
+          type: string
+          description: |-
+            Tracking number. 
+            - For Brazil QR, the `shipping.tracking_number` is not applicable.
+          example: T123456789
+        address:
+          $ref: '#/components/schemas/Address'
+    AdditionalInfo:
+      properties:
+        name:
+          maxLength: 50
+          minLength: 1
+          type: string
+          description: >-
+            Specifies a character string with a maximum length of 50
+            characters. 
+
+            - For Brazil QR transaction.additionalinfo.name is optional, if the
+            `transaction.additionalinfo.name` parameter is provided by the
+            merchant, then the `transaction.additionalinfo.value` parameter is
+            mandatory.
+          example: request_to_payer
+        value:
+          maxLength: 200
+          minLength: 1
+          type: string
+          description: >-
+            Specifies a character string with a maximum length of 200
+            characters. 
+
+            - For Brazil QR transaction.the `additionalinfo.value` parameter is
+            optional, if the `transaction.additionalinfo.value` parameter is
+            provided by merchant, then the `transaction.additionalinfo.name`
+            parameter is mandatory.
+          example: this is for purchase order 4567
+    Refunds:
+      type: object
+      required:
+        - instructed_amount
+        - instructed_currency
+        - original_payment
+      properties:
+        end_to_end_id:
+          $ref: '#/components/schemas/RestrictedFINXMax128Text'
+        instructed_amount:
+          type: number
+          minimum: 0.01
+          maximum: 100000000000000
+          description: >-
+            Instructed amount can either be the full original transaction amount
+            or a partial amount.
+        instructed_currency:
+          description: The ISO 4217 code for the transaction instructed amount currency.
+          type: string
+          enum:
+            - BRL
+        additional_info:
+          type: string
+          maxLength: 140
+          description: |-
+            Additional or remittance information 
+            - For Brazil, the `refunds.additional_info` parameter is optional.
+        original_payment:
+          $ref: '#/components/schemas/Original_Payment'
+    PaymentMethod:
+      type: array
+      items:
+        type: object
+        properties:
+          type:
+            description: |-
+              Method specified by the customer for the transaction 
+              - Provide PIX for Brazil QR creation.
+            type: string
+            maxLength: 20
+            minLength: 1
+            example: PIX
+        additionalProperties: false
+    CustomerUpdate:
+      type: object
+      properties:
+        id:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Merchant internal customer ID
+          example: 1234abcjki
+        type:
+          type: string
+          enum:
+            - INDIVIDUAL
+            - BUSINESS
+          description: |-
+            Merchant customer type 
+             - For Brazil QR update, the `customer.type` parameter is mandatory, if any one of the following parameters are selected: `customer.payer_id`, `customer.payer_type`, and `customer.name` is selected.
+          example: BUSINESS
+        payer_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: |-
+            Customer's payer identification (e.g., email address) 
+             - For Brazil QR update, `customer.payer_id`  parameter is mandatory if any one of the following parameters are selected: `customer.payer_type`, `customer.name`, and `customer.type`, then only a numeric value is allowed, individual person tax identification (CPF) allowed length = 11 or business entity tax identification (CNPJ) allowed length = 14
+          example: 234.453.678-21
+        payer_type:
+          type: string
+          enum:
+            - BIID
+            - EMAL
+            - EWAL
+            - MBNO
+            - NIDN
+          description: >-
+            Customer's payer type (BIID for bill identification, EMAL for email
+            address, EWAL for electronic wallet identification, MBNO for mobile
+            number and NIDN for national identification or tax identification 
+             - For Brazil QR update, the `customer.payer_type` parameter is mandatory, if any one of the parameters `customer.payer_id`, `customer.type`, and `customer.name` is selected, the applicable value NIDN.
+          example: NIDN
+        name:
+          maxLength: 200
+          minLength: 1
+          type: string
+          description: |-
+            Payer name 
+             - For Brazil QR update, the `customer.name` parameter is mandatory, if any one of the parameters `customer.payer_id` ,`customer.payer_type`, and `customer.type` are selected and allowed datatype alphanumeric, individual person or business entity name.
+          example: Margarida
+        address:
+          $ref: '#/components/schemas/Address'
+    MerchantUpdate:
+      type: object
+      properties:
+        id:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Merchant ID assigned by Citi.
+          example: M12348907
+        payee_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: |-
+            Merchant's payee identification (e.g., email address) 
+             - For Brazil QR update, the `merchant.payee_id` parameter is mandatory, if the `merchant.payer_type` is selected, the allowed maxlength is 77.
+          example: 1.020.340/8910-22
+        payee_type:
+          type: string
+          enum:
+            - BIID
+            - EMAL
+            - EWAL
+            - MBNO
+            - NIDN
+          description: >-
+            Merchant's payee type (BIID for bill identification, EMAL for email
+            address, EWAL for electronic wallet identification, MBNO for mobile
+            number and NIDN for national identification or tax identification 
+             - For Brazil QR creation, the `merchant.payee_type` parameter is mandatory, if the `merchant.payer_id` is selected.
+          example: NIDN
+      additionalProperties: false
+    TransactionUpdate:
+      type: object
+      properties:
+        expiry_time:
+          type: integer
+          format: int32
+          minimum: 10
+          description: >-
+            Expiration time for QR collection, specified in seconds 
+
+            - QR Creation request will be rejected, if the expiration time value
+            is less than 10
+          example: 3600
+        amount:
+          type: number
+          minimum: 0.01
+          maximum: 100000000000000
+          description: |-
+            Transaction amount 
+             - For Brazil QR Update decimal values are mandatory for the `transaction.amount`  must have 2 digits 
+             - For Brazil QR update, the maximum amount limit is 9999999999.99.
+          example: 200
+        currency_code:
+          type: string
+          enum:
+            - BRL
+          description: ISO 4217 currency code, for instance, USD/GBP/EUR.
+          example: BRL
+        update_flag:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+          description: >-
+            For QR creation (e.g., Brazil), during transaction processing if the
+            merchant wants to allow their client to change the QR amount, then
+            the value should be 'Y' otherwise, the default value is 'N'.
+          example: 'Y'
+        qr_image:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+          description: >-
+            Merchant to confirm QR Image is required or not, If required, the
+            value should be 'Y'.
+          example: 'Y'
+        operation:
+          type: string
+          enum:
+            - CANCEL
+          description: >-
+            Transaction cancellation request. This parameter is applicable only
+            for cancelling the collection request, if the merchant wants to
+            cancel the already created QR collection request 
+
+            - CANCEL - Request to cancel the transaction.
+        additional_info:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdditionalInfo'
+    PaymentMethodResponse:
+      type: object
+      properties:
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+      additionalProperties: false
+      description: Payment method response
+    Payments:
+      type: object
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        merchant:
+          $ref: '#/components/schemas/Merchant'
+        method:
+          $ref: '#/components/schemas/Method'
+        transaction:
+          $ref: '#/components/schemas/TransactionStatus'
+      additionalProperties: false
+      description: Payment status notification / inquiry response
+    TransactionStatus:
+      properties:
+        reference:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: >-
+            Unique Transaction identification provided by the merchant during
+            transaction creation 
+
+            - `transaction.reference` parameter is mandatory for all transaction
+            type creation   
+
+            - For Brazil QR creation, the `transaction.reference` parameter
+            should be alphanumeric and length ≥ 23 and ≤ 35 
+          example: pay02052023456r
+        expiry_time:
+          type: integer
+          format: int32
+          minimum: 10
+          description: >-
+            Expiration time for QR collection, specified in seconds 
+
+            - QR Creation request will be rejected, if the expiration time value
+            is less than 10.
+          example: 3600
+        amount:
+          type: number
+          minimum: 0.01
+          maximum: 100000000000000
+          description: |-
+            Transaction amount 
+             - For Brazil QR creation decimal values are mandatory for `transaction.amount` and it must have 2 digits 
+             - For Brazil QR creation maximum amount limit is 9999999999.99.
+          example: 200
+        currency_code:
+          type: string
+          enum:
+            - BRL
+          description: >-
+            ISO 4217 currency code, for instance, USD/GBP/EUR 
+
+            - `transaction.currency_code` parameter is mandatory for all
+            transaction type creation
+          example: BRL
+        update_flag:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+          description: >-
+            For QR creation (ex. Brazil), during transaction processing if the
+            merchant wants to allow their clients  to change QR amount, then the
+            value should be 'Y', otherwise, the default value is 'N'.
+          example: 'Y'
+        qr_image:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+          description: >-
+            Merchant to confirm QR Image is required or not, If required, the
+            value should be 'Y'.
+          example: 'Y'
+        additional_info:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdditionalInfo'
+        update_count:
+          type: integer
+          format: int32
+          description: >-
+            Stands for collection review. This parameter always starts at zero.
+            This parameter always varies in increments of 1, if any updation
+            done on QR creation).
+          example: 1
+        qr_string:
+          type: string
+          maxLength: 512
+          description: Dynamic QR code based on the merchant payload request.
+          example: >-
+            00020101021226700014br.gov.bcb.pix.citi.com.br/qr/2/8b3da2f39a4140d1a91abd93113bd44
+            15204000053039865802BR5913Fulano de
+            Tal6008BRASILIA62070503***630464E4
+        qr_byte_code:
+          type: string
+          format: byte
+          description: QR Image
+          example: >-
+            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
+        status:
+          type: string
+          maxLength: 20
+          description: >-
+            Transaction status, following status you will receive in response 
+
+            - CREATED - The transaction has successfully been created 
+
+            - PENDING - Transaction pending action from customer 
+
+            - CANCELLED - Transaction cancelled 
+
+            - SYSTEM_ERROR- Internal system error occurred processing the
+            transaction 
+
+            - SETTLED - Transaction settled
+        description:
+          type: string
+          maxLength: 200
+          description: >-
+            Transaction Status 
+
+            - CREATED - The transaction has successfully been created 
+
+            - PENDING - Transaction pending action from customer 
+
+            - CANCELLED - Transaction cancelled 
+
+            - SYSTEM_ERROR- Internal system error occurred processing the
+            transaction 
+
+            - SETTLED - Transaction settled
+          example: Transaction declined by the payment processor
+        creation_date_time:
+          type: string
+          format: date-time
+          description: >-
+            GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) 
+
+            - Instant Payment (Debit) - Date time, generated by CitiConnect API,
+            when CitiConnect API accepted a payment initiation after validation 
+
+            - Instant Payment (Credit) - Date time, either provided by the
+            debtor bank or generated by Citi's transaction processing
+            application, when a transaction was created
+          example: '2022-09-13T08:23:49.114Z'
+    PaymentRequest:
+      type: object
+      required:
+        - customer
+        - merchant
+        - method
+        - transaction
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        merchant:
+          $ref: '#/components/schemas/Merchant'
+        method:
+          $ref: '#/components/schemas/Method'
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+        shipping:
+          $ref: '#/components/schemas/Shipping'
+      additionalProperties: false
+      description: Payment Request
+    PaymentUpdateRequest:
+      type: object
+      properties:
+        customer:
+          $ref: '#/components/schemas/CustomerUpdate'
+        merchant:
+          $ref: '#/components/schemas/MerchantUpdate'
+        transaction:
+          $ref: '#/components/schemas/TransactionUpdate'
+      additionalProperties: false
+      description: Payment Update Request
+    PaymentResponse:
+      type: object
+      properties:
+        reference:
+          type: string
+          maxLength: 128
+          description: Unique reference number
+          example: pay02052023456r
+        status:
+          type: string
+          maxLength: 10
+          description: The transaction has been successfully created.
+          enum:
+            - CREATED
+          example: CREATED
+        description:
+          type: string
+          maxLength: 200
+          description: More information about the status
+          example: The transaction has been successfully created.
+    PaymentQrFailed:
+      type: object
+      properties:
+        reference:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: >-
+            Unique transaction identification provided by the merchant during
+            transaction creation 
+
+            - transaction.reference parameter is mandatory for all transaction
+            type creation   
+
+            - For Brazil QR creation - Maximum length is 35.
+          example: pay02052023456r
+        status:
+          type: string
+          enum:
+            - SYSTEM_ERROR
+          description: >-
+            Transaction status 
+
+            - SYSTEM_ERROR - Internal system error occurred processing the
+            transaction.
+        description:
+          type: string
+          maxLength: 200
+          description: |-
+            Transaction status description 
+            - SETTLED - Transaction settled
+          example: Transaction settled
+    PaymentStatus:
+      type: object
+      properties:
+        reference:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: >-
+            Unique transaction identification provided by the merchant during
+            transaction creation 
+
+            - the `transaction.reference` parameter is mandatory for all
+            transaction type creation   
+
+            - For Brazil QR creation, the maximum length is 35.
+          example: pay02052023456r
+        transaction_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Unique identification assigned by the initiating party to identify
+            the transaction. This identification is passed on, unchanged,
+            throughout the entire end-to-end chain.
+          example: pay02052023456r
+        amount:
+          type: number
+          minimum: 0.01
+          maximum: 100000000000000
+          description: |-
+            Transaction amount 
+             - For Brazil QR creation, the decimal values are mandatory for the `transaction.amount` parameter and it must have 2 digits 
+             - For Brazil QR creation, the maximum amount limit is 9999999999.99.
+          example: 200
+        payee_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: |-
+            Merchant's payee identification (e.g., email address) 
+             - For Brazil QR creation, the `merchant.payee_id`` parameter is mandatory. The allowed maxlength is 77.
+          example: 1.020.340/8910-22
+        payee_type:
+          type: string
+          enum:
+            - BIID
+            - EMAL
+            - EWAL
+            - MBNO
+            - NIDN
+          description: >-
+            Merchant's payee type (BIID for bill identification, EMAL for email
+            address, EWAL for electronic wallet identification, MBNO for mobile
+            number and NIDN for national identification or tax identification 
+             - For Brazil QR creation, the `merchant.payee_type` parameter is mandatory.
+          example: NIDN
+        creation_date_time:
+          type: string
+          format: date-time
+          description: >-
+            GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) 
+
+            - Instant Payment (Debit) - Date time, generated by the  CitiConnect
+            API, when the CitiConnect API accepted a payment initiation after
+            validation 
+
+            - Instant payment (Credit) - Date time, either provided by the
+            debtor bank or generated by Citi's transaction processing
+            application, when a transaction was created.
+          example: '2022-09-13T08:23:49.114Z'
+        additional_info:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Additional information provided by payor.
+          example: Payment for Goods
+        status:
+          type: string
+          enum:
+            - SETTLED
+          description: |-
+            Transaction Status 
+            - SETTLED - Transaction settled
+        description:
+          type: string
+          maxLength: 200
+          description: |-
+            Transaction status description 
+            - SETTLED - Transaction settled
+          example: Transaction settled
+    PaymentCancelledNotification:
+      type: object
+      properties:
+        transaction:
+          type: object
+          properties:
+            reference:
+              maxLength: 128
+              minLength: 1
+              type: string
+              description: >-
+                Unique transaction identification provided by the merchant
+                during transaction creation 
+
+                - `transaction.reference` parameter is mandatory for all
+                transaction type creation   
+
+                - For Brazil QR creation, the  `transaction.reference` parameter
+                should be  between 26 to 35 characters in length and the allowed
+                datatype is alphanumeric and should not be filled with spaces or
+                zeroes.
+              example: pay02052023456r
+            status:
+              type: string
+              enum:
+                - CANCELLED
+              description: |-
+                Transaction status 
+                - CANCELLED - Transaction cancelled
+            description:
+              type: string
+              maxLength: 200
+              description: |-
+                Transaction status description  
+                - CANCELLED - Transaction cancelled 
+              example: Transaction cancelled
+    RefundStatus:
+      type: object
+      required:
+        - date_time
+        - code
+        - description
+      properties:
+        date_time:
+          type: string
+          format: date-time
+          description: |-
+            GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) 
+            - Date time of transaction status
+        code:
+          type: string
+          description: ISO 20022 transaction status code.
+          enum:
+            - ACCC
+            - ACTC
+            - RJCT
+        description:
+          type: string
+          description: |-
+            Status code description 
+            - ACTC - Accepted 
+            - ACCC - Completed 
+            - RJCT - Rejected
+        type:
+          type: string
+          description: Refund Status \n P - Partial Refund \n F  - Full Refund
+          enum:
+            - P
+            - F
+    Reasons:
+      type: array
+      items:
+        $ref: '#/components/schemas/Reason'
+    Reason:
+      type: object
+      properties:
+        code:
+          type: string
+          description: >-
+            Reason codes (e.g., AM03, AM02, AC02, CH03, CH04, CH20, CH21, BE23,
+            NARR, etc.)
+        description:
+          type: string
+          description: >-
+            Reason code description (e.g., 
+
+            - AM03 -Method instructed currency is invalid (not in ISO 4217
+            format or value) 
+
+            - AM02 -Instructed amount is not ≥ 0.01 & ≤ 2,000,000.00.
+
+            - AC02 -Debtor account is invalid 
+
+            - CH03 -Value date is in the future 
+
+            - CH04 -Value date is in the past 
+
+            - CH20 -Value-added tax (VAT) amount format is invalid 
+
+            - CH21 -Bill identification 1 is mandatory for a bill payment,Bill
+            identification 2 and 3 are conditional for a bill payment 
+
+            - BE23 -Creditor mobile number (proxy identification) format is
+            invalid 
+
+            - NARR -Creditor name maximum length is 50 )
+    PaymentRefundNotification:
+      type: object
+      properties:
+        end_to_end_id:
+          $ref: '#/components/schemas/RestrictedFINXMax128Text'
+        refund_id:
+          type: string
+          pattern: >-
+            ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+        creation_date_time:
+          type: string
+          format: date-time
+          description: >-
+            GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ)- Instant Payment (Debit) -
+            Date time, generated by the CitiConnect API, when the CitiConnect
+            API accepted a payment initiation after validation 
+
+            - Instant payment (credit) - date and time, either provided by the
+            debtor bank or generated by Citi's transaction processing
+            application, when a transaction was created.
+        value_date:
+          type: string
+          format: date
+          description: >-
+            Date in local time zone (e.g., EST for a United States RTP network
+            transaction) when Citi's transaction processing application starts
+            processing a transaction. 
+
+            - Format YYYY-MM-DD
+        instructed_amount:
+          type: number
+          minimum: 0.01
+          maximum: 100000000000000
+          description: >-
+            Instructed amount can be either full original transaction amount or
+            a partial amount 
+             - Thailand PromptPay - Maximum amount is 2000000.00 
+             - United States - Maximum amount is 1000000.00
+        instructed_currency:
+          description: ISO 4217 code for the transaction instructed amount currency.
+          type: string
+          enum:
+            - BRL
+        additional_info:
+          type: string
+          maxLength: 140
+          description: |-
+            Additional or remittance information  
+            - For Brazil, the `refunds.additional_info` parameter is optional.
+        status:
+          $ref: '#/components/schemas/RefundStatus'
+        reasons:
+          $ref: '#/components/schemas/Reasons'
+        original_payment:
+          $ref: '#/components/schemas/Original_Payment_Status'
+    PaymentCreatedNotification:
+      type: object
+      properties:
+        transaction:
+          type: object
+          properties:
+            reference:
+              maxLength: 128
+              minLength: 1
+              type: string
+              description: >-
+                Unique transaction identification provided by the merchant
+                during transaction creation. 
+
+                - The `transaction.reference` parameter is mandatory for all
+                transaction types created   
+
+                - For Brazil QR creation, the  'transaction.reference` parameter
+                should be: 
+                 - between 26 to 35 characters in length 
+                 - the allowed datatype is alphanumeric 
+                 - should not be filled with spaces or zeroes
+              example: pay02052023456r
+            expiry_time:
+              type: integer
+              format: int32
+              minimum: 10
+              description: >-
+                Expiration time for QR collection, specified in seconds 
+
+                - QR Creation request will be rejected, if the expiration time
+                value is less than 10.
+              example: 3600
+            status:
+              type: string
+              enum:
+                - PENDING
+                - CANCELLED
+                - DECLINED
+                - SETTLED
+              description: |-
+                Transaction status 
+                - PENDING - Transaction pending action from customer 
+                - CANCELLED - Transaction cancelled 
+                - DECLINED- Transaction declined by the payment processor 
+                - SETTLED - Transaction settled
+            description:
+              type: string
+              maxLength: 200
+              description: |-
+                Transaction status  
+                - PENDING - Transaction pending action from customer 
+                - CANCELLED - Transaction cancelled 
+                - DECLINED- Transaction declined by the payment processor 
+                - SETTLED - Transaction settled
+              example: The transaction has been successfully created.
+            update_count:
+              type: integer
+              format: int32
+              description: >-
+                Indicates collection review. Collection review always starts at
+                zero. Collection review always varies in increments of 1, if any
+                updation done on QR creation)
+              example: 1
+            qr_string:
+              type: string
+              maxLength: 512
+              description: Dynamic QR code based on the merchant payload request.
+              example: >-
+                00020101021226700014br.gov.bcb.pix.citi.com.br/qr/2/8b3da2f39a4140d1a91abd93113bd44
+                15204000053039865802BR5913Fulano de
+                Tal6008BRASILIA62070503***630464E4
+            creation_date_time:
+              type: string
+              format: date-time
+              description: >-
+                GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) 
+
+                - Instant payment (Debit) - Date time, generated by CitiConnect
+                API, when the CitiConnect API accepted a payment initiation
+                after validation 
+
+                - Instant payment (credit) - Date time, either provided by the
+                debtor bank or generated by Citi's transaction processing
+                application, when a transaction was created.
+              example: '2022-09-13T08:23:49.114Z'
+            update_flag:
+              type: string
+              enum:
+                - 'Y'
+                - 'N'
+              description: >-
+                For QR creation (e.g., Brazil), during transaction processing,
+                if the merchant wants to allow their  clients to change the QR
+                amount, then the value should be "Y", otherwise, the default
+                value is "N".
+              example: 'Y'
+            qr_byte_code:
+              type: string
+              format: byte
+              description: QR Image
+              example: >-
+                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
+    ErrorResponse:
+      type: object
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the transaction.
+        errors:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: More details about the issue.
+        action:
+          type: string
+          maxLength: 150
+          description: Corrective action to be taken to resolve above issue.
+        code:
+          type: string
+          maxLength: 10
+          description: Unique code representing the issue.
+  securitySchemes:
+    Client Credentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes: null
+  headers:
+    RequestId:
+      schema:
+        type: string
+      description: Citi's unique identification for your request.
+  responses:
+    BadRequest:
+      description: Bad Request
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            BadRequestExample:
+              $ref: '#/components/examples/BadRequestExample'
+    BadGetRequest:
+      description: Bad Get Request
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            BadRequestExample:
+              $ref: '#/components/examples/BadRequestGETExample'
+    BadGetRequest2:
+      description: Bad Get Request
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            BadRequestExample:
+              $ref: '#/components/examples/BadRequestGET2Example'
+    Unauthorized:
+      description: Unauthorized
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            UnauthorizedExample:
+              $ref: '#/components/examples/UnauthorizedExample'
+    NotFound:
+      description: Not Found
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            NotFoundExample:
+              $ref: '#/components/examples/NotFoundExample'
+    MethodNotAllowed:
+      description: Method Not Allowed
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            MethodNotAllowedExample:
+              $ref: '#/components/examples/MethodNotAllowedExample'
+    Conflict:
+      description: Conflict
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            IdempotencyIdConflictExample:
+              $ref: '#/components/examples/IdempotencyIdConflictExample'
+    UnsupportedMediaType:
+      description: Unsupported Media Type
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            UnsupportedMediaTypeExample:
+              $ref: '#/components/examples/UnsupportedMediaTypeExample'
+    InternalServerError:
+      description: Internal Server Error
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    202Accepted:
+      description: Accepted
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PaymentResponse'
+  callbacks:
+    PaymentCreatedStatus:
+      /payment-qr-created:
+        post:
+          parameters:
+            - $ref: '#/components/parameters/ApimGuid'
+            - $ref: '#/components/parameters/EventType'
+            - $ref: '#/components/parameters/EventName'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PaymentCreatedNotification'
+                examples:
+                  PaymentCreatedNotification:
+                    $ref: '#/components/examples/PaymentCreatedNotification'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    PaymentRefundCreatedStatus:
+      /payment-refund-created:
+        post:
+          parameters:
+            - $ref: '#/components/parameters/ApimGuid'
+            - $ref: '#/components/parameters/EventType'
+            - $ref: '#/components/parameters/EventName'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PaymentRefundNotification'
+                examples:
+                  PaymentCreatedSucessNotification:
+                    $ref: '#/components/examples/PaymentRefundSucessNotification'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    PaymentRefundFailedStatus:
+      /payment-refund-failed:
+        post:
+          parameters:
+            - $ref: '#/components/parameters/ApimGuid'
+            - $ref: '#/components/parameters/EventType'
+            - $ref: '#/components/parameters/EventName'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PaymentRefundNotification'
+                examples:
+                  PaymentCreatedFailedNotification:
+                    $ref: '#/components/examples/PaymentRefundFailedNotification'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    PaymentCancelledStatus:
+      /payment-cancelled:
+        post:
+          parameters:
+            - $ref: '#/components/parameters/ApimGuid'
+            - $ref: '#/components/parameters/EventType'
+            - $ref: '#/components/parameters/EventName'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PaymentCancelledNotification'
+                examples:
+                  PaymentCancelledNotification:
+                    $ref: '#/components/examples/PaymentCancelledNotification'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    PaymentFailedStatusNotification:
+      /payment-qr-failed:
+        post:
+          parameters:
+            - $ref: '#/components/parameters/ApimGuid'
+            - $ref: '#/components/parameters/EventType'
+            - $ref: '#/components/parameters/EventName'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PaymentQrFailed'
+                examples:
+                  PaymentFailedStatusNotification:
+                    $ref: '#/components/examples/PaymentFailedStatusNotification'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    PaymentSuccessStatusNotification:
+      /payment-settled:
+        post:
+          parameters:
+            - $ref: '#/components/parameters/ApimGuid'
+            - $ref: '#/components/parameters/EventType'
+            - $ref: '#/components/parameters/EventName'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PaymentStatus'
+                examples:
+                  PaymentSuccessStatusNotification:
+                    $ref: '#/components/examples/PaymentSuccessStatusNotification'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+  examples:
+    PaymentMethod:
+      value:
+        method:
+          - type: PIX
+    QRCreatedStatus:
+      value:
+        customer:
+          id: 8415678edrf
+          type: BUSINESS
+          payer_id: 841.453.678-21
+          payer_type: NIDN
+          name: JOHN
+        merchant:
+          id: M88758765
+          payee_id: 8.020.340/8910-44
+          payee_type: NIDN
+        method:
+          type: PIX
+        transaction:
+          reference: abcedgh8742323
+          expiry_time: 2500
+          creation_date_time: '2022-09-13T08:23:49.112Z'
+          amount: 305
+          update_flag: 'Y'
+          update_count: 0
+          qr_image: 'Y'
+          status: CREATED
+          description: The transaction has successfully been created.
+          additional_info:
+            - name: LAPTOP
+              value: PURCHASED APPLE LAPTOP
+            - name: SOFTWARE
+              value: PURCHASED ADDITIONAL SOFTWARE
+    QRPendingStatus:
+      value:
+        customer:
+          id: 8415678edrf
+          type: BUSINESS
+          payer_id: 841.453.678-21
+          payer_type: NIDN
+          name: JOHN
+        merchant:
+          id: M88758765
+          payee_id: 8.020.340/8910-44
+          payee_type: NIDN
+        method:
+          type: PIX
+        transaction:
+          reference: abcedgh8742323
+          expiry_time: 2500
+          creation_date_time: '2022-09-13T08:23:49.112Z'
+          amount: 305
+          update_flag: 'Y'
+          update_count: 0
+          qr_image: 'Y'
+          status: PENDING
+          description: Transaction is pending action from the customer.
+          qr_byte_code: >-
+            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
+          qr_string: >-
+            00020101021226700014br.gov.bcb.pix.citi.com.br/qr/2/8b3da2f39a4140d1a91abd93113bd44
+            15204000053039865802BR5913Fulano de
+            Tal6008BRASILIA62070503***630464E4
+          additional_info:
+            - name: LAPTOP
+              value: PURCHASED APPLE LAPTOP
+            - name: SOFTWARE
+              value: PURCHASED ADDITIONAL SOFTWARE
+    QRCancelledStatus:
+      value:
+        customer:
+          id: 8415678edrf
+          type: BUSINESS
+          payer_id: 841.453.678-21
+          payer_type: NIDN
+          name: JOHN
+        merchant:
+          id: M88758765
+          payee_id: 8.020.340/8910-44
+          payee_type: NIDN
+        method:
+          type: PIX
+        transaction:
+          reference: abcedgh8742323
+          expiry_time: 2500
+          creation_date_time: '2022-09-13T08:23:49.112Z'
+          amount: 305
+          update_flag: 'Y'
+          update_count: 0
+          qr_image: 'Y'
+          status: CANCELLED
+          description: Transaction cancelled.
+          qr_byte_code: >-
+            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
+          qr_string: >-
+            00020101021226700014br.gov.bcb.pix.citi.com.br/qr/2/8b3da2f39a4140d1a91abd93113bd44
+            15204000053039865802BR5913Fulano de
+            Tal6008BRASILIA62070503***630464E4
+          additional_info:
+            - name: LAPTOP
+              value: PURCHASED APPLE LAPTOP
+            - name: SOFTWARE
+              value: PURCHASED ADDITIONAL SOFTWARE
+    QRFailedStatus:
+      value:
+        customer:
+          id: 8415678edrf
+          type: BUSINESS
+          payer_id: 841.453.678-21
+          payer_type: NIDN
+          name: JOHN
+        merchant:
+          id: M88758765
+          payee_id: 8.020.340/8910-44
+          payee_type: NIDN
+        method:
+          type: PIX
+        transaction:
+          reference: abcedgh8742323
+          expiry_time: 2500
+          creation_date_time: '2022-09-13T08:23:49.112Z'
+          amount: 305
+          update_flag: 'Y'
+          update_count: 0
+          qr_image: 'Y'
+          status: SYSTEM_ERROR
+          description: Internal system error occurred processing of the transaction.
+          additional_info:
+            - name: LAPTOP
+              value: PURCHASED APPLE LAPTOP
+            - name: SOFTWARE
+              value: PURCHASED ADDITIONAL SOFTWARE
+    PaymentRequestExample:
+      value:
+        customer:
+          id: 1234abcjki
+          type: BUSINESS
+          payer_id: '84145367821'
+          payer_type: NIDN
+          name: Margarida
+          address:
+            line1: '#45, Block 12'
+            line2: Federal Street
+            city: Abis Brasil
+            postal_code: 69935-000
+            state: san francisco
+            country_code: BR
+        merchant:
+          id: M789546213
+          payee_id: 8.020.340/8910-44
+          payee_type: NIDN
+        method:
+          type: PIX
+        transaction:
+          reference: r434SKtUcdGQ
+          expiry_time: 1500
+          amount: 100
+          currency_code: BRL
+          update_flag: 'Y'
+          qr_image: 'Y'
+          additional_info:
+            - name: LAPTOP
+              value: PURCHASED APPLE LAPTOP
+            - name: SOFTWARE
+              value: PURCHASED ADDITIONAL SOFTWARE
+    QRPIXPaymentRequestExample:
+      value:
+        customer:
+          payer_id: '84145367821'
+          payer_type: NIDN
+          name: Margarida
+        merchant:
+          id: M789546213
+          payee_id: '8020340891044'
+          payee_type: NIDN
+        method:
+          type: PIX
+        transaction:
+          reference: r434SKtUcdGQ
+          expiry_time: 1500
+          amount: 100
+          currency_code: BRL
+          update_flag: 'Y'
+          qr_image: 'Y'
+          additional_info:
+            - name: LAPTOP
+              value: PURCHASED APPLE LAPTOP
+            - name: SOFTWARE
+              value: PURCHASED ADDITIONAL SOFTWARE
+    QRPIXPaymentUpdateRequestExample:
+      value:
+        customer:
+          type: BUSINESS
+          payer_id: '14145367821'
+          payer_type: NIDN
+          name: JOHN PAUL
+        transaction:
+          expiry_time: 500
+          amount: 202
+    PaymentFailedStatusNotification:
+      value:
+        transaction:
+          reference: r434SKtUcdGQ
+          status: SYSTEM_ERROR
+          description: >-
+            An internal system error occurred during the processing of the
+            transaction.
+    PaymentSuccessStatusNotification:
+      value:
+        reference: r434SKtUcdGQ
+        transaction_id: pay02052023456r
+        amount: 500
+        payee_id: '8020340891044'
+        payee_type: NIDN
+        creation_date_time: '2022-09-13T08:23:49.114Z'
+        additional_info: Payment for goods
+        status: SETTLED
+        description: Transaction settled
+    PaymentRefundSucessNotification:
+      value:
+        end_to_end_id: r/434SKtUcdGQ
+        refund_id: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+        creation_date_time: '2022-09-13T08:23:49.112Z'
+        value_date: '2022-09-13'
+        instructed_amount: 29876.98
+        instructed_currency: BRL
+        status:
+          date_time: '2022-09-13T08:23:49.112Z'
+          code: ACCC
+          description: Completed
+          type: F
+        original_payment:
+          end_to_end_id: w/434SKtUcFGH
+          uetr: 4f00214d-296c-494b-8e9c-897bf1d2fc01
+          value_date: '2022-09-13'
+          instructed_amount: 29876.98
+          instructed_currency: BRL
+    PaymentRefundFailedNotification:
+      value:
+        end_to_end_id: y/434SKtUcfFT
+        refund_id: 4f00224d-289c-494b-8e9c-810bf1d9fc96
+        creation_date_time: '2022-09-13T08:23:49.112Z'
+        value_date: '2022-09-13'
+        instructed_amount: 300
+        instructed_currency: BRL
+        status:
+          date_time: '2022-09-13T08:23:49.112Z'
+          code: RJCT
+          description: Rejected
+          type: P
+        reasons:
+          - code: AM02
+            description: Transaction instructed refund amount is > total payment amount.
+        original_payment:
+          end_to_end_id: r/434SKtUcdGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2022-09-13'
+          instructed_amount: 300
+          instructed_currency: BRL
+    PaymentCreatedNotification:
+      value:
+        transaction:
+          reference: r434SKtUcdGQ
+          expiry_time: 1500
+          update_flag: 'Y'
+          update_count: 0
+          status: PENDING
+          description: The transaction is pending action from the customer.
+          creation_date_time: '2022-09-13T08:23:49.114Z'
+          qr_byte_code: >-
+            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
+          qr_string: >-
+            00020101021226700014br.gov.bcb.pix.citi.com.br/qr/2/8b3da2f39a4140d1a91abd93113bd44
+            15204000053039865802BR5913Fulano de
+            Tal6008BRASILIA62070503***630464E4
+    PaymentCancelledNotification:
+      value:
+        transaction:
+          reference: r434SKtUcdGQ
+          status: CANCELLED
+          description: transaction was cancelled by the user.
+    BRRefundInitiationRequestExample:
+      value:
+        end_to_end_id: r/434SKtUcd77
+        instructed_amount: 100.01
+        instructed_currency: BRL
+        additional_info: Refund Request
+        original_payment:
+          end_to_end_id: r/434SKtUaaGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc01
+          value_date: '2023-10-01'
+    BadRequestExample:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+          - issue: instructed_amount is missing
+            action: Provide valid `instructed_amount`
+            code: VC00010
+    BadRequestGETExample:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5aa
+        error_details:
+          - issue: >-
+              The provided value is not within the range for the query-param
+              `merchant_id`.
+            action: >-
+              Please provide a valid value for the query-param `merchant_id`,
+              size must be between 1 and 40 characters.
+            code: VC00012
+    BadRequestGET2Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2b921a5ab
+        error_details:
+          - issue: >-
+              The provided value is not within the range for query-param
+              `reference`.
+            action: >-
+              Please provide a valid value for the query-param `reference`. The
+              size must be between 1 and 128 characters.
+            code: VC00012
+    UnauthorizedExample:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: Request is not authorized.
+            action: Try again with valid credentials.
+            code: CC00007
+    NotFoundExample:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+          - issue: Resource is not available.
+            action: Provide valid resource details.
+            code: CC00006
+    MethodNotAllowedExample:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: HTTP method is not supported.
+            action: Provide valid HTTP method.
+            code: CC00001
+    IdempotencyIdConflictExample:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: >-
+              `Idempotency-Id` provided is currently being used in another
+              request
+            action: please do not repeat the same request again
+            code: VC00016
+    UnsupportedMediaTypeExample:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: Media type is invalid.
+            action: Provide valid media type
+            code: CC00002
+    InternalServerErrorExample:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: Unable to serve your request at this moment.
+            action: >-
+              Please refer to documentation provided or contact the support
+              team.
+            code: CC00004

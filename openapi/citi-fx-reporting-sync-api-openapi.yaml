@@ -1,0 +1,1786 @@
+openapi: 3.1.0
+info:
+  version: ''
+  title: InstantFX Reporting (SYNCHRONOUS CALL)
+  description: >
+    The FX Reporting API allows you to submit reporting requests to retrieve an
+    execution report, order status enquiry, or refund availability report.
+servers:
+  - url: https://api.citivelocity.com/markets
+    description: production URL
+  - url: https://sandbox.api.citivelocity.com/markets
+    description: sanbox URL
+security:
+  - OAuth2:
+      - fxapi
+paths:
+  /fxgateway/sync/orderreport/api/v1:
+    post:
+      summary: Order enquiry and refund report enquiry
+      description: >
+        This endpoint facilitates requests for order enquiries and refund
+        reports. 
+
+        For FX Order Enquiry: while the fields `tradeDate`, `rateSetId`,
+        `clOrdId` and `orderId` are optional individually, you must send them in
+        at least one of the combinations below:
+          * `tradeDate` & `rateSetId`
+          * `clOrdId`
+          * `orderId`
+
+        For FX Gross and Portfolio Refund Enquiry: while the fields `tradeDate`,
+        `rateSetId`, `fromTradeDate` and `toTradeDate` are optional
+        individually, you must send them in at least one of the combinations
+        below:
+          * `tradeDate` & `symbol`
+          * `rateSetId` & `symbol`
+          * `fromTradeDate` & `toTradeDate` & `symbol`
+
+        For Two Way Refund Enquiry, You must send in at least the `origClOrdId`
+        or `rateSetId`
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/FXOrderEnquiry'
+                - $ref: '#/components/schemas/FXGrossRefundEnquiryRequest'
+                - $ref: '#/components/schemas/FXPortfolioRefundEnquiryRequest'
+                - $ref: '#/components/schemas/FXTwoWayRefundEnquiryRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ExecutionReport'
+                  - $ref: '#/components/schemas/FXGrossRefundEnquiryResponse'
+                  - $ref: '#/components/schemas/FXPortfolioRefundEnquiryResponse'
+                  - $ref: '#/components/schemas/FXTwoWayRefundEnquiryResponse'
+        '401':
+          description: Unauthorized user error
+        '403':
+          description: Access Forbidden error
+        '500':
+          description: Internal Server Error
+      x-codeSamples:
+        - lang: cURL
+          label: cURL
+          source: >-
+            curl --request POST \
+
+            --url
+            'https://api.citivelocity.com/markets/fxgateway/sync/orderreport/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2'
+            \
+
+            --header 'accept: application/json' \
+
+            --header 'authorization: Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng'
+            \
+
+            --header 'content-type: application/json' \
+
+            --data '{ "action": "report-request", "senderCompId": "IFXCLIENT0",
+            "onBehalfOfCompId": "IFXCLIENT0", "jsonReqId": "sa-27-09-2018-20",
+            "sendingTime": "20180927-14:37:21.155", "deals": [ { "account":
+            "XXXXXXXXXX", "clOrdId": "Test1134 test 20" } ]}'
+        - lang: python
+          label: Python
+          source: >-
+            import http.client 
+
+
+            #If a proxy is used, set the tunnel as per below:
+
+            #conn=http.client.HTTPSConnection("your_proxy_host",your_proxy_port)
+
+            #conn.set_tunnel("api.citivelocity.com",443)
+
+            conn = http.client.HTTPSConnection("api.citivelocity.com") 
+
+            payload = "{ \"action\": \"report-request\", \"senderCompId\":
+            \"IFXCLIENT0\", \"onBehalfOfCompId\": \"IFXCLIENT0\", \"jsonReqId\":
+            \"sa-27-09-2018-20\", \"sendingTime\": \"20180927-14:37:21.155\",
+            \"deals\": [ { \"account\": \"XXXXXXXXXX\", \"clOrdId\": \"Test1134
+            test 20\" } ] }" 
+
+            headers = { 
+
+            'content-type': "application/json", 
+
+            'accept': "application/json", 
+
+            'authorization': "Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng" 
+
+            } 
+
+            conn.request("POST",
+            "/markets/fxgateway/sync/orderreport/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2",
+            payload, headers) 
+
+            res = conn.getresponse() 
+
+            data = res.read() 
+
+            print(data.decode("utf-8"))
+        - lang: PHP
+          label: PHP
+          source: >-
+            <?php 
+
+            $curl = curl_init(); 
+
+            curl_setopt_array($curl, array( 
+
+            CURLOPT_URL =>
+            "https://api.citivelocity.com/markets/fxgateway/sync/orderreport/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2
+            ", 
+
+            CURLOPT_RETURNTRANSFER => true, 
+
+            CURLOPT_ENCODING => " ", CURLOPT_MAXREDIRS => 10, 
+
+            CURLOPT_TIMEOUT => 30, 
+
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1, 
+
+            CURLOPT_CUSTOMREQUEST => "POST", 
+
+            CURLOPT_POSTFIELDS => "{ \"action\": \"report-request\",
+            \"senderCompId\": \"IFXCLIENT0\", \"onBehalfOfCompId\":
+            \"IFXCLIENT0\", \"jsonReqId\": \"sa-27-09-2018-20\",
+            \"sendingTime\": \"20180927-14:37:21.155\", \"deals\": [ {
+            \"account\": \"XXXXXXXXXX\", \"clOrdId\": \"Test1134 test 20\" } ]
+            }", 
+
+            CURLOPT_HTTPHEADER => array( 
+
+            "accept: application/json", 
+
+            "authorization: Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng", 
+
+            "content-type: application/json", 
+
+            ), 
+
+            )); 
+
+            $response = curl_exec($curl); 
+
+            $err = curl_error($curl); 
+
+            curl_close($curl); 
+
+            if ($err) { 
+
+            echo "cURL Error #:" . $err; 
+
+            } else 
+
+            { 
+
+            echo $response; 
+
+            }
+        - lang: JAVA
+          label: Java
+          source: |-
+            /**Include following Maven dependency 
+             <dependency> 
+             <groupId>com.squareup.okhttp3</groupId> 
+             <artifactId>okhttp3</artifactId> 
+             <version>3.9.0</version> 
+             </dependency> 
+             */ 
+            import java.io.IOException; 
+            import java.net.InetSocketAddress; 
+            import java.net.Proxy; 
+            import okhttp3.MediaType; 
+            import okhttp3.OkHttpClient; 
+            import okhttp3.Request; 
+            import okhttp3.RequestBody; 
+            import okhttp3.Response;
+            public class Main { 
+             public static void main(String[] args) { 
+            OkHttpClient client = new OkHttpClient(); 
+             MediaType mediaType = MediaType.parse("application/json"); 
+             RequestBody body = RequestBody.create(mediaType, "{ \"action\": \"report-request\", \"senderCompId\": \"IFXCLIENT0\", \"onBehalfOfCompId\": \"IFXCLIENT0\", \"jsonReqId\": \"sa-27-09-2018-20\", \"sendingTime\": \"20180927-14:37:21.155\", \"deals\": [ { \"account\": \"XXXXXXXXXX\", \"clOrdId\": \"Test1134 test 20\" } ] }"); 
+             Request request = new Request.Builder() .url("https://api.citivelocity.com/markets/fxgateway/sync/orderreport/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2") 
+             .post(body) 
+             .addHeader("content-type", "application/json") 
+             .addHeader("accept", "application/json") 
+             .addHeader("authorization", "Bearer AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng") 
+             .build(); 
+             try { 
+             Response response = client.newCall(request).execute(); 
+             } catch (IOException e) { 
+             e.printStackTrace(); 
+             } 
+             } 
+            } 
+        - lang: Javacript
+          label: Node
+          source: |2-
+             // Install request by running "npm install --save request" 
+             var request = require("request"); 
+             var options = { 
+             method: 'POST', 
+             url: 'https://api.citivelocity.com/markets/fxgateway/sync/orderreport/api/v1', 
+             qs: { client_id: 'REPLACE_THIS_VALUE' }, 
+             headers: 
+             { 
+             authorization: 'Bearer AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng', 
+             accept: 'application/json', 
+             'content-type': 'application/json' 
+             }, 
+             body: 
+             { "action": "report-request", "senderCompId": "IFXCLIENT0", "onBehalfOfCompId": "IFXCLIENT0", "jsonReqId": "sa-27-09-2018-20", "sendingTime": "20180927-14:37:21.155", "deals": [ { "account": "XXXXXXXXXX", "clOrdId": "Test1134 test 20" } ]}, 
+             json: true }; 
+             request(options, function (error, response, body) { 
+             if (error) 
+             return console.error('Failed: %s', error.message); 
+             console.log('Success: ', body); 
+             });
+        - lang: Go
+          label: Go
+          source: >-
+            package main 
+
+            import ( 
+
+            "fmt" 
+
+            "strings" 
+
+            "net/http" 
+
+            "io/ioutil" 
+
+            ) 
+
+            func main() { 
+
+            url :=
+            "https://api.citivelocity.com/markets/fxgateway/sync/orderreport/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2" 
+
+            payload := strings.NewReader("{ \"action\": \"report-request\",
+            \"senderCompId\": \"IFXCLIENT0\", \"onBehalfOfCompId\":
+            \"IFXCLIENT0\", \"jsonReqId\": \"sa-27-09-2018-20\",
+            \"sendingTime\": \"20180927-14:37:21.155\", \"deals\": [ {
+            \"account\": \"XXXXXXXXXX\", \"clOrdId\": \"Test1134 test 20\" } ]
+            }") 
+
+            req, _ := http.NewRequest("POST", url, payload) 
+
+            req.Header.Add("content-type", "application/json") 
+
+            req.Header.Add("accept", "application/json") 
+
+            req.Header.Add("authorization", "Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng") 
+
+            res, _ := http.DefaultClient.Do(req) 
+
+            defer res.Body.Close() 
+
+            body, _ := ioutil.ReadAll(res.Body) 
+
+            fmt.Println(res) 
+
+            fmt.Println(string(body)) }
+        - lang: Swift
+          label: Swift
+          source: >-
+            import Foundation 
+
+            let headers = [ 
+
+            "content-type": "application/json", 
+
+            "authorization": "Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng", 
+
+            "accept": "application/json" 
+
+            var request = URLRequest(url: URL(string:
+            "https://api.citivelocity.com/markets/fxgateway/sync/orderreport/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2")!, 
+
+            cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, 
+
+            timeoutInterval: 10.0) 
+
+            let data: [String: Any] = [ "action": "report-request",
+            "senderCompId": "IFXCLIENT0", "onBehalfOfCompId": "IFXCLIENT0",
+            "jsonReqId": "sa-27-09-2018-20", "sendingTime":
+            "20180927-14:37:21.155", "deals": [ [ "account": "XXXXXXXXXX",
+            "clOrdId": "Test1134 test 20" ] ]] 
+
+            let jsonData: Data 
+
+            do { 
+             jsonData = try JSONSerialization.data(withJSONObject: data, options: []) 
+             request.httpBody = jsonData 
+            } catch { 
+             print("Error: cannot create JSON from todo") 
+            } 
+
+            request.httpMethod = "POST" 
+
+            request.allHTTPHeaderFields = headers 
+
+            let session = URLSession.shared 
+
+            let task = session.dataTask(with: request, completionHandler: {
+            (data, response, error) in 
+             guard let data = data, error == nil else { // check for fundamental networking error 
+             print("error=\(String(describing: error))") 
+             return 
+             } 
+             if let httpStatus = response as? HTTPURLResponse, httpStatus.statusCode != 200 { // check for http errors 
+             print("statusCode should be 200, but is \(httpStatus.statusCode)") 
+             print("response = \(String(describing: response))") 
+             } 
+            let responseString = String(data: data, encoding: .utf8) 
+             print("responseString = \(String(describing: responseString))") 
+            }) 
+
+            task.resume()
+        - lang: R
+          label: R
+          source: >-
+            ## install the packages httr,jsonlite 
+
+            library(httr) 
+
+            library(jsonlite) 
+
+            url<-
+            'https://api.citivelocity.com/markets/fxgateway/sync/orderreport/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2' 
+
+            req<- '{ "action": "report-request", "senderCompId": "IFXCLIENT0",
+            "onBehalfOfCompId": "IFXCLIENT0", "jsonReqId": "sa-27-09-2018-20",
+            "sendingTime": "20180927-14:37:21.155", "deals": [ { "account":
+            "XXXXXXXXXX", "clOrdId": "Test1134 test 20" } ]}' 
+
+            resp<- POST(url , body=req, add_headers("accept" =
+            "applicaton/json","authorization" ="Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng",
+            "content-type" = "application/json")) 
+
+            data<- (toJSON(content(resp, as = "parsed"))) 
+
+            prettify(data)
+        - lang: Ruby
+          label: Ruby
+          source: >-
+            require 'uri' 
+
+            require 'openssl' 
+
+            require 'net/http' 
+
+            url =
+            URI("https://api.citivelocity.com/markets/fxgateway/sync/orderreport/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2") 
+
+            http = Net::HTTP.new(url.host, url.port) 
+
+            http.use_ssl = true 
+
+            http.verify_mode = OpenSSL::SSL::VERIFY_PEER 
+
+            request = Net::HTTP::Post.new(url) 
+
+            request["content-type"] = 'application/json' 
+
+            request["accept"] = 'application/json' 
+
+            request["authorization"] = 'Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng' 
+
+            request.body = "{ \"action\": \"report-request\", \"senderCompId\":
+            \"IFXCLIENT0\", \"onBehalfOfCompId\": \"IFXCLIENT0\", \"jsonReqId\":
+            \"sa-27-09-2018-20\", \"sendingTime\": \"20180927-14:37:21.155\",
+            \"deals\": [ { \"account\": \"XXXXXXXXXX\", \"clOrdId\": \"Test1134
+            test 20\" } ] }" 
+
+            response = http.request(request) 
+
+            puts response.read_body.force_encoding("utf-8")
+        - lang: C#
+          label: C#
+          source: |-
+            using System; 
+            using System.Collections.Generic; 
+            using System.Linq; 
+            using System.Text; 
+            using System; 
+            using System.Web; 
+            using System.Net; 
+            using System.IO; 
+             
+            namespace ConsoleProgram 
+            { 
+             public class Class1 
+             { 
+             private const string URL = "https://api.citivelocity.com/markets/fxgateway/sync/orderreport/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2"; 
+
+             private const string DATA = @"{ \"action\": \"report-request\", \"senderCompId\": \"IFXCLIENT0\", \"onBehalfOfCompId\": \"IFXCLIENT0\", \"jsonReqId\": \"sa-27-09-2018-20\", \"sendingTime\": \"20180927-14:37:21.155\", \"deals\": [ { \"account\": \"XXXXXXXXXX\", \"clOrdId\": \"Test1134 test 20\" } ] }"; 
+             
+             static void Main(string[] args) 
+             { 
+             Class1.CreateObject(); 
+             } 
+             
+             private static void CreateObject() 
+             { 
+             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL); 
+             request.Method = "POST"; 
+             request.ContentType = "application/json"; 
+             request.ContentLength = DATA.Length; 
+             request.Headers["authorization"] = "Bearer AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEytPrqs6bxHGhi2GEkApsDVZm_l9XgA07JUXESXAKfxna1RJXA34uvC50Sy0t9xC_JpRzgDD9sQYpO5D1bPU16x-UPiTyv1m8vkOhsYQD-GJtDN1oiGtYh_S6sQDFN7OsQY_oRhqeGieAwANihnNhsng"; 
+             using (Stream webStream = request.GetRequestStream()) 
+             using (StreamWriter requestWriter = new StreamWriter(webStream, System.Text.Encoding.ASCII)) 
+             { 
+             requestWriter.Write(DATA); 
+             } 
+             try 
+             { 
+             WebResponse webResponse = request.GetResponse(); 
+             using (Stream webStream = webResponse.GetResponseStream() ?? Stream.Null) 
+             using (StreamReader responseReader = new StreamReader(webStream)) 
+             { 
+             string response = responseReader.ReadToEnd(); 
+             Console.Out.WriteLine(response); 
+             } 
+             }catch (Exception e) 
+             { 
+             Console.Out.WriteLine("-----------------"); 
+             Console.Out.WriteLine(e.Message); 
+             } 
+             
+             } 
+             } 
+            }
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Citi Velocity APIs use the oAuth2 authentication scheme, which requires
+        a bearer token to authenticate your API call. See <a
+        href="../../fx/authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+      flows:
+        clientCredentials:
+          scopes:
+            fxapi: ''
+          tokenUrl: https://api.citivelocity.com/markets/cv/api/fx/oauth2/token
+  schemas:
+    FXOrderEnquiry:
+      description: >
+        Note: While the fields ‘tradeDate’, ‘rateSetId’, ‘clOrdId’ and ‘orderId’
+        are optional individually, the client must send them in at least one of
+        the combinations below to fetch the results.
+          a) ‘tradeDate’ & ‘rateSetId’
+          b) ‘clOrdId’
+          c) ‘orderId’
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+        - deals
+      properties:
+        action:
+          type: string
+          description: 'The service you are requesting. Allowed values: report-request.'
+          example: report-request
+        jsonReqId:
+          type: string
+          description: >-
+            The unique identifier that you assign in the JSON request. Must be
+            alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the message sender. This
+            was assigned to you during onboarding. May contain special
+            characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. This was
+            assigned to you during onboarding. May contain special characters (
+            ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: ClientName
+        sendingTime:
+          type: string
+          description: >-
+            The time of the message transmission expressed in UTC (Universal
+            Time Coordinated, also known as "GMT"). Format:
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:29.125
+        deals:
+          type: array
+          items:
+            required:
+              - account
+            properties:
+              account:
+                type: string
+                description: >-
+                  Your Citi-assigned client identifier. May contain special
+                  characters (‘_’, ‘.’, ‘-‘).
+                maxLength: 50
+                example: TEST12345
+              tradeDate:
+                type: string
+                format: date
+                description: 'The trade date for the report. Format: yyyy-MM-dd.'
+                maxLength: 10
+                example: '2011-03-03'
+              rateSetId:
+                type: integer
+                format: int32
+                description: The Rate Set Id for the report.
+                example: 12345
+              clOrdId:
+                type: string
+                description: The unique identifier that you assign.
+                maxLength: 64
+                example: CR12345
+              orderId:
+                type: string
+                format: int64
+                description: The Citi-assigned order reference.
+                example: '1824923'
+      example:
+        action: report-request
+        senderCompId: IFXCLIENT0
+        onBehalfOfCompId: IFXCLIENT0
+        jsonReqId: b2ff6f61
+        sendingTime: 20180820-04:48:29.125
+        deals:
+          - account: XXXXXXXX
+            rateSetId: 12725823
+            tradeDate: '2024-03-06'
+    ExecutionReport:
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+      properties:
+        action:
+          type: string
+          description: Defines action of the message. Value will be report-response.
+          maxLength: 20
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message.
+          maxLength: 20
+          example: clientname
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: clientname
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT.' Format is
+            YYYYMMDD-HH:MM:SS.mmm
+          example: 20180820-04:48:31.155
+        errorCode:
+          type: integer
+          description: >-
+            The error code associated with the response. See the Error Codes tab
+            for a complete list.
+          example: 99
+        errorMessage:
+          type: string
+          description: >-
+            The error message associated with the response. See the Error Codes
+            tab for a complete list.
+          example: unable to process your request
+        dealResponses:
+          type: array
+          items:
+            required:
+              - clOrdId
+              - account
+              - orderId
+              - ordStatus
+              - ccyPair
+              - tenor
+              - dealtCcy
+              - side
+              - orderQty
+              - rateSetId
+              - counterCcy
+              - contAmtValue
+              - lastSpotRate
+              - lastForwardPoints
+              - outrightRate
+              - rejectCode
+              - citiMergedOrder
+              - customTenorUnit
+              - ordType
+              - isBookedWithMktRate
+              - isBookedWithMRF
+              - mrfPercentage
+              - mrfComparisionRate
+              - mrfVariance
+            properties:
+              clOrdId:
+                type: string
+                description: The order reference you assigned.
+                maxLength: 64
+                example: '22136'
+              account:
+                type: string
+                description: >-
+                  Your account ID. May contain special characters ( ‘_’, ‘.’,
+                  ‘-‘).
+                maxLength: 50
+                example: ABC123
+              orderId:
+                type: string
+                format: int64
+                description: The Citi-assigned Order reference.
+                example: '123456'
+              ordStatus:
+                type: string
+                maxLength: 15
+                enum:
+                  - BOOKED
+                  - MERGED
+                  - PENDING
+                  - ACCEPTED
+                  - REJECTED
+                description: >
+                  Status description: 
+
+                  - PENDING: For InstantFX credit check failed orders/late
+                  orders/refund tolerance failed orders
+
+                  - MERGED: This is applicable only to ‘Net & Merge’ InstantFX
+                  clients; where two or more client orders are for the same ccy
+                  pair and value date, will be merged to create a single, netted
+                  Order and the original, contributing orders will be flagged as
+                  ‘Merged’ orders with a cross reference to the Citi created
+                  order. 
+
+                  - BOOKED: order is booked
+
+                  - ACCEPTED: applicable only for pre-orders (intent to pay)
+
+                  - REJECTED: order rejected
+                example: BOOKED
+              ccyPair:
+                type: string
+                maxLength: 6
+                description: >-
+                  The currency pair that you are trading on. Please discuss your
+                  preference of sending the value of currency pair in either
+                  BaseTerm format or alphabetic sort order with your Citi
+                  Representative.
+                example: GBPUSD
+              tenor:
+                type: string
+                description: The Tenor the order is being placed for.
+                maxLength: 10
+                example: BROKEN
+              valueDate:
+                type: string
+                format: date
+                description: The value date of the Order. Format is yyyy-MM-dd.
+                example: '2012-11-15'
+              dealtCcy:
+                type: string
+                maxLength: 3
+                description: The currency for which you supplied the dealt amount.
+                example: USD
+              side:
+                type: string
+                maxLength: 1
+                description: >-
+                  Indicates whether you are buying (B) or selling (S) the dealt
+                  ccy.
+                enum:
+                  - B
+                  - S
+                example: S
+              orderQty:
+                type: string
+                format: double
+                description: The dealt ccy amount
+                example: '100'
+              rateSetId:
+                type: integer
+                format: int32
+                description: >-
+                  If the rating method was IFX, this is the Rate Set Id used in
+                  the rating of the order. In case of a Refund order, it is the
+                  rate set Id previously used to book original order.
+              counterCcy:
+                type: string
+                maxLength: 3
+                description: The counter ccy of the ccy pair, not the dealt ccy.
+                example: GBP
+              contAmtValue:
+                type: string
+                format: double
+                description: The calculated counter ccy amount.
+                example: '6543.65'
+              lastSpotRate:
+                type: string
+                format: double
+                description: The spot rate applied to the order.
+                example: '1.5282'
+              lastForwardPoints:
+                type: string
+                format: double
+                description: >-
+                  The forward points applied to the order. Will be zero for spot
+                  transactions.
+                example: '0'
+              outrightRate:
+                type: string
+                description: The outright (spot and fwd points) rate applied to the order.
+                example: '1.5282'
+              rejectCode:
+                type: integer
+                description: The reject code if order status = ‘REJECTED’ (rejected).
+              rejectReason:
+                type: string
+                description: >-
+                  The reason for rejection if order status = ‘REJECTED’’
+                  (rejected).
+                maxLength: 250
+              citiMergedOrder:
+                type: boolean
+                description: >-
+                  Indicates whether this is a merged order created by Citi. Only
+                  applicable to ‘Net & Merge’ clients.
+                example: false
+              clOrdLinkId:
+                type: string
+                format: int64
+                description: >-
+                  The Citi-assigned Merged Order reference.  This is applicable
+                  only to ‘Net & Merge’ InstantFX clients; where two or more
+                  orders are for the same ccy pair and value date, will be
+                  merged to create a single, netted Order and the original,
+                  contributing orders will be flagged as ‘Merged’ orders with a
+                  cross reference to the Citi created order.
+                example: '123456'
+              fixingDate:
+                type: string
+                format: date
+                description: >-
+                  Optional field relating to NDF trades only. The fixing date of
+                  the NDF Order.
+                example: '2012-11-12'
+              customTenorUnit:
+                type: integer
+                description: >-
+                  The tenor unit to be used when booking a trade with a Tenor
+                  type of T. Current supported values are 1, 3, 5.
+                example: 1
+              clientData:
+                type: string
+                description: Contains the value that was sent in the original request.
+                maxLength: 30
+                example: Amount:1234|onBehalfOf:ClientB
+              clientData2:
+                type: string
+                description: Contains the value that was sent in the original request.
+                maxLength: 30
+                example: Amount:1234|onBehalfOf:ClientB
+              clientData3:
+                type: string
+                description: Contains the value that was sent in the original request.
+                maxLength: 30
+                example: Amount:1234|onBehalfOf:ClientB
+              clientData4:
+                type: string
+                description: Contains the value that was sent in the original request.
+                maxLength: 30
+                example: Amount:1234|onBehalfOf:ClientB
+              clientData5:
+                type: string
+                description: Contains the value that was sent in the original request.
+                maxLength: 30
+                example: Amount:1234|onBehalfOf:ClientB
+              origClOrdId:
+                type: string
+                format: int64
+                description: >-
+                  Conditional field. Mandatory for ordType =”REFUND”. The value
+                  received in the “orderId” field of the standard order response
+                  published by Citi.
+                example: '123456'
+              ordType:
+                description: The order type.
+                type: string
+                maxLength: 15
+                enum:
+                  - STANDARD
+                  - REFUND
+                  - PRE
+                  - DRAWDOWN
+                  - FORECAST
+                  - STAGING
+                  - STAGING_MERGED
+                  - BALANCE
+                example: STANDARD
+              isBookedWithMktRate:
+                type: boolean
+                description: To indicate if the order is booked on market rate
+              isBookedWithMRF:
+                type: boolean
+                description: >-
+                  This flag will be set if the order is booked with an adjusted
+                  rate. Note: Deals will be booked with an adjusted rate
+                  whenever MRF happens if you opted for it.
+                example: false
+              mrfId:
+                type: string
+                description: >-
+                  Conditional field. The reference number for the adjusted rate
+                  if isBookedWithMRF ='TRUE'.
+                example: '123'
+              mrfPercentage:
+                type: string
+                format: double
+                description: Percentage that is used to adjust the rate.
+                example: '3.54'
+              mrfComparisionRate:
+                type: string
+                format: double
+                description: Rate at which Citi compares in market while order booking.
+                example: '1.5982'
+              mrfVariance:
+                type: string
+                format: double
+                description: Variance between rate set rate and current market rate.
+                example: '4.58'
+              udc1:
+                type: string
+                description: The purpose code received in the order request.
+                example: '3'
+              udc2:
+                type: string
+                description: The purpose code received in the order request.
+                example: '2'
+              udc3:
+                type: string
+                description: The purpose code received in the order request.
+                example: '1'
+              backOffRef:
+                type: string
+                description: >-
+                  Back office settlement reference number for booked orders.
+                  Value will be null in the order response. The value can be
+                  obtained through a report request for the booked order. Please
+                  contact your Citi Representative to request the report.
+                maxLength: 60
+                example: 1054T31966
+              uniqueTradeIdentifier:
+                type: string
+                description: >-
+                  UTI value for booked orders. This value will be null in the
+                  order response. The value can be obtained through Report
+                  request for the booked order. Please contact your Citi
+                  Representative to request the report.
+                maxLength: 200
+                example: 1030187177149384LDN324700496727
+      example:
+        action: report-response
+        jsonReqId: sa-27-09-2018-50
+        senderCompId: IFXCLIENT0
+        onBehalfOfCompId: IFXCLIENT0
+        sendingTime: 20180927-09:41:40.763
+        dealResponses:
+          - clOrdId: Test1134_1
+            account: XXXXXXXXXX
+            orderId: '2755366'
+            ordStatus: BOOKED
+            ccyPair: EURINR
+            tenor: BROKEN
+            valueDate: '2018-10-29'
+            dealtCcy: EUR
+            side: B
+            orderQty: '50'
+            rateSetId: 142248
+            counterCcy: INR
+            contAmtValue: '4278.73'
+            lastSpotRate: '85.5746'
+            lastForwardPoints: '0'
+            outrightRate: '85.5746'
+            rejectCode: 0
+            citiMergedOrder: false
+            fixingDate: '2018-10-25'
+            customTenorUnit: 0
+            ordType: STANDARD
+            isBookedWithMktRate: false
+            isBookedWithMRF: false
+            mrfPercentage: '0'
+            mrfComparisionRate: '0'
+            mrfVariance: '0'
+            backOffRef: 104F836181
+            uniqueTradeIdentifier: '10301871771260946966'
+          - clOrdId: Test1134_2
+            account: XXXXXXXXXX
+            orderId: '2755367'
+            ordStatus: BOOKED
+            ccyPair: INRUSD
+            tenor: BROKEN
+            valueDate: '2018-10-29'
+            dealtCcy: USD
+            side: B
+            orderQty: '77'
+            rateSetId: 142248
+            counterCcy: INR
+            contAmtValue: '5614.96'
+            lastSpotRate: '72.9215'
+            lastForwardPoints: '0'
+            outrightRate: '72.9215'
+            rejectCode: 0
+            citiMergedOrder: false
+            customTenorUnit: 0
+            ordType: STANDARD
+            isBookedWithMktRate: false
+            isBookedWithMRF: false
+            mrfPercentage: '0'
+            mrfComparisionRate: '0'
+            mrfVariance: '0'
+            backOffRef: 104F836182
+            uniqueTradeIdentifier: '10301871771260946967'
+    FXGrossRefundEnquiryRequest:
+      description: >
+        This report enquiry shows the current usage and availability of
+        refunds.  While the fields `tradeDate`, `rateSetId`, `fromTradeDate`,
+        `toTradeDate`, `symbol` are optional, you must send them in at least one
+        of the combinations below to fetch the results:
+
+        a) `tradeDate` & `symbol`
+
+        b) `rateSetId` & `symbol`
+
+        c) `fromTradeDate` & `toTradeDate` & `symbol`
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - account
+        - symbol
+        - sendingTime
+      properties:
+        action:
+          type: string
+          description: >-
+            The service you are requesting. Allowed value:
+            refund-report-request.
+          example: refund-report-request
+        jsonReqId:
+          type: string
+          description: >-
+            The unique identifier that you assign in the JSON request. Must be
+            alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the message sender. This
+            was assigned to you during onboarding. May contain special
+            characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. This was
+            assigned to you during onboarding. May contain special characters (
+            ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: ClientName
+        sendingTime:
+          type: string
+          description: >-
+            The time of the message transmission expressed in UTC (Universal
+            Time Coordinated, also known as "GMT"). Format:
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:29.125
+        account:
+          type: string
+          description: >-
+            The Account ID supplied by Citi. May contain special characters
+            (‘_’, ‘.’, ‘-‘)
+          maxLength: 50
+          example: TEST12345
+        rateSetId:
+          type: integer
+          format: int32
+          description: The Rate Set Id for the report.
+          example: 12345
+        symbol:
+          type: string
+          maxLength: 6
+          description: >-
+            The currency pair value. The value must be ‘ALL’ to enquire refund
+            availability for all the currency pairs on which orders are placed
+            in the specified rateSetId. Otherwise, the value must be the
+            specific currency to which you want to enquire refund availability
+            for the mentioned symbol in the mentioned rateSetId.
+          example: ALL
+        tradeDate:
+          type: string
+          format: date
+          description: 'The rate set’s trade date for the report. Format: yyyy-MM-dd.'
+          example: '2023-09-21'
+        fromTradeDate:
+          type: string
+          format: date
+          description: >-
+            Denotes the starting date in rate set’s trade date range for the
+            report. Format: yyyy-MM-dd.
+          example: '2026-02-01'
+        toTradeDate:
+          type: string
+          format: date
+          description: >-
+            Denotes the ending date in rate set’s trade date range for the
+            report. Format: yyyy-MM-dd.
+          example: '2026-03-01'
+      example:
+        action: refund-report-request
+        senderCompId: CTEST12001
+        onBehalfOfCompId: BTEST62013
+        jsonReqId: brs-25-09-2018-01
+        sendingTime: 20210406-04:48:29.125
+        account: client1
+        symbol: ALL
+        rateSetId: 12345
+    FXGrossRefundEnquiryResponse:
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+      properties:
+        action:
+          type: string
+          description: >-
+            Defines the action of the message. Value will be
+            refund-report-response.
+          example: refund-report-response
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message.
+          maxLength: 20
+          example: clientname
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: clientname
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT.' Format is
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:31.155
+        errorCode:
+          type: integer
+          description: >-
+            The error code associated with the response. See the Error Codes tab
+            for a complete list.
+          example: 99
+        errorMessage:
+          type: string
+          description: >-
+            The error message associated with the response. See the Error Codes
+            tab for a complete list.
+          example: unable to process your request
+        refundAvailable:
+          type: object
+          properties:
+            grAvailable:
+              type: array
+              items:
+                required:
+                  - account
+                  - rateSetId
+                  - currencyPair
+                  - baseCcy
+                  - refundBaseBuyUsed
+                  - refundBaseSellUsed
+                  - refundBaseBuyAvailable
+                  - refundBaseSellAvailable
+                  - tradeDate
+                properties:
+                  account:
+                    type: string
+                    description: >-
+                      The API Client ID supplied by Citi. May contain special
+                      characters (‘_’, ‘.’, ‘-‘).
+                    maxLength: 50
+                    example: TEST12345
+                  rateSetId:
+                    type: integer
+                    format: int32
+                    description: The Rate Set Id for the report.
+                    example: 12345
+                  currencyPair:
+                    type: string
+                    description: >-
+                      A 6-character sorted alpha string containing two ISO ccy
+                      codes that this rate applies.
+                    example: EURUSD
+                  tierSequence:
+                    type: integer
+                    description: >-
+                      Only applicable if you are configured for time-based
+                      guaranteed rates. Shows the ordinal number of the rate
+                      used in the set of time-based rates, ordered according to
+                      “valid until time”, for the specified currency pair.
+                    example: 1
+                  baseCcy:
+                    type: string
+                    description: The base currency of the currency pair.
+                    maxLength: 3
+                    example: EUR
+                  refundBaseBuyUsed:
+                    type: number
+                    format: double
+                    description: The buy refund amount used in terms of base currency.
+                    example: 111.24
+                  refundBaseSellUsed:
+                    type: number
+                    format: double
+                    description: The sell refund amount used in terms of base currency.
+                    example: 111.24
+                  refundBaseBuyAvailable:
+                    type: number
+                    format: double
+                    description: The buy refund amount available in terms of base currency.
+                    example: 55.34
+                  refundBaseSellAvailable:
+                    type: number
+                    format: double
+                    description: >-
+                      The sell refund amount available in terms of base
+                      currency.
+                    example: 66.99
+                  tradeDate:
+                    description: The ratesets tradeDate
+                    type: string
+                    format: date
+                    example: '2026-02-03'
+      example:
+        refundAvailable:
+          grAvailable:
+            - account: client1
+              rateSetId: 12345
+              currencyPair: GBPZMW
+              tierSequence: 1
+              baseCcy: GBP
+              refundBaseBuyUsed: 15.71
+              refundBaseSellUsed: 0
+              refundBaseBuyAvailable: 0
+              refundBaseSellAvailable: 15.67
+              tradeDate: '2026-02-02'
+            - account: client1
+              rateSetId: 12345
+              currencyPair: GBPZMW
+              tierSequence: 2
+              baseCcy: GBP
+              refundBaseBuyUsed: 20.59
+              refundBaseSellUsed: 18.54
+              refundBaseBuyAvailable: 76.98
+              refundBaseSellAvailable: 76.54
+              tradeDate: '2026-02-02'
+        action: refund-report-response
+        jsonReqId: brs-25-09-2018-01
+        senderCompId: IFXCLIENT0
+        onBehalfOfCompId: IFXCLIENT0
+        sendingTime: 20260312-11:18:40.741
+    FXPortfolioRefundEnquiryRequest:
+      description: >
+        This report enquiry shows the current usage and availability of
+        portfolio refunds. While the fields `tradeDate`, `rateSetId`, `symbol`
+        are optional, you must send them in at least one of the combinations
+        below to fetch the results:
+
+        a) `tradeDate` & `symbol` 
+
+        b) `rateSetId` & `symbol`
+
+        c) `fromTradeDate` & `toTradeDate` & `symbol`
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+        - account
+        - symbol
+      properties:
+        action:
+          type: string
+          description: >-
+            The service you are requesting. Allowed value:
+            refund-report-response.
+          example: refund-report-response
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message.
+          maxLength: 20
+          example: clientname
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: clientname
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT.' Format is
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:31.155
+        account:
+          type: string
+          description: >-
+            The Account ID supplied by Citi. May contain special characters
+            (‘_’, ‘.’, ‘-‘).
+          example: TEST12345
+        rateSetId:
+          type: integer
+          format: int32
+          description: The Rate Set Id for the report.
+          example: 12345
+        symbol:
+          type: string
+          maxLength: 6
+          description: >-
+            The currency pair value. The value must be ‘ALL’ to enquire refund
+            availability for all the currency pairs on which orders are placed
+            in the specified rateSetId. Otherwise, the value must be the
+            specific currency to which you want to enquire refund availability
+            for the mentioned symbol in the mentioned rateSetId.
+          example: EURUSD
+        tradeDate:
+          type: string
+          format: date
+          description: 'The rate set’s trade date for the report. Format: yyyy-MM-dd.'
+          example: '2023-09-21'
+        fromTradeDate:
+          type: string
+          format: date
+          description: >-
+            Denotes the starting date in rate set’s trade date range for the
+            report. Format: yyyy-MM-dd.
+          example: '2026-02-01'
+        toTradeDate:
+          type: string
+          format: date
+          description: >-
+            Denotes the ending date in rate set’s trade date range for the
+            report. Format: yyyy-MM-dd.
+          example: '2026-03-01'
+      example:
+        action: refund-report-request
+        senderCompId: IFXQA2
+        onBehalfOfCompId: IFXQA2
+        jsonReqId: 2735c485-a659-49f4-ab87-a1b40f62eb49
+        sendingTime: 20180820-04:48:31.155
+        account: client0
+        symbol: ALL
+        tradeDate: '2023-09-14'
+    FXPortfolioRefundEnquiryResponse:
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+      properties:
+        action:
+          type: string
+          description: >-
+            Defines the action of the message. Value will be
+            refund-report-response.
+          example: refund-report-response
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message.
+          maxLength: 20
+          example: clientname
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: clientname
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT.' Format is
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:31.155
+        errorCode:
+          type: integer
+          description: >-
+            The error code associated with the response. See the Error Codes tab
+            for a complete list.
+          example: 99
+        errorMessage:
+          type: string
+          description: >-
+            The error message associated with the response. See the Error Codes
+            tab for a complete list.
+          example: unable to process your request
+        refundAvailable:
+          type: object
+          properties:
+            prAvailable:
+              type: array
+              items:
+                required:
+                  - account
+                  - rateSetId
+                  - currencyPair
+                  - refundReportCcy
+                  - totalTradeVolume
+                  - portfolioVolumeUsed
+                  - portfolioVolumeAvailable
+                  - portfolioUtilizedPercent
+                  - ccyPairVolumeUsed
+                  - ccyPairVolumeAvailable
+                  - ccyPairUtilizedPercent
+                  - tradeDate
+                properties:
+                  account:
+                    type: string
+                    description: >-
+                      The API Client ID supplied by Citi. May contain special
+                      characters (‘_’, ‘.’, ‘-‘)
+                    maxLength: 50
+                    example: TEST12345
+                  rateSetId:
+                    type: integer
+                    format: int32
+                    description: The Rate Set Id for the report
+                    example: 12345
+                  currencyPair:
+                    type: string
+                    maxLength: 6
+                    example: EURUSD
+                  refundReportCcy:
+                    type: string
+                    maxLength: 3
+                    description: >-
+                      Note: The amount in this report is in terms of
+                      refundReportCcy
+                    example: EUR
+                  totalTradeVolume:
+                    description: Total trade volume on rateSetId
+                    type: number
+                    format: double
+                    example: 112.45
+                  tierSequence:
+                    type: integer
+                    description: >-
+                      Only applicable if you are configured for time-based
+                      guaranteed rates. Shows the ordinal number of the rate
+                      used in the set of time-based rates, ordered according to
+                      “valid until time”, for the specified currencypair.
+                    example: 1
+                  portfolioVolumeUsed:
+                    description: Refund volume utilized at portfolio level
+                    type: number
+                    format: double
+                    example: 112.45
+                  portfolioVolumeAvailable:
+                    description: Portfolio refund available limit
+                    type: number
+                    format: double
+                    example: 24.5
+                  portfolioUtilizedPercent:
+                    description: Portfolio refund limit utilized percent
+                    type: number
+                    format: double
+                    example: 2.5
+                  ccyPairVolumeUsed:
+                    description: Portfolio refund limit utilized at currency pair level
+                    type: number
+                    format: double
+                    example: 111.24
+                  ccyPairVolumeAvailable:
+                    description: Portfolio refund limit available at currency pair level
+                    type: number
+                    format: double
+                    example: 24.48
+                  ccyPairUtilizedPercent:
+                    description: >-
+                      Portfolio refund limit utilized percent at currency pair
+                      level
+                    type: number
+                    format: double
+                    example: 24.48
+                  tradeDate:
+                    description: The ratesets tradeDate
+                    type: string
+                    format: date
+                    example: '2026-02-03'
+      example:
+        refundAvailable:
+          prAvailable:
+            - account: client1
+              rateSetId: 12621330
+              currencyPair: EURNZD
+              refundReportCcy: EUR
+              totalTradeVolume: 17150376.42
+              portfolioVolumeUsed: 44745.07
+              portfolioVolumeAvailable: 5100367.85
+              portfolioUtilizedPercent: 0.87
+              ccyPairVolumeUsed: 0
+              ccyPairVolumeAvailable: 5100367.85
+              ccyPairUtilizedPercent: 0
+              tradeDate: '2026-02-02'
+            - account: client1
+              rateSetId: 12621330
+              currencyPair: EUROMR
+              refundReportCcy: EUR
+              totalTradeVolume: 17150376.4
+              portfolioVolumeUsed: 44745.07
+              portfolioVolumeAvailable: 5100367.85
+              portfolioUtilizedPercent: 0.87
+              ccyPairVolumeUsed: 0
+              ccyPairVolumeAvailable: 5100367.85
+              ccyPairUtilizedPercent: 0
+              tradeDate: '2026-02-02'
+        action: refund-report-response
+        jsonReqId: a9c4b8d5-6973-49ed-b8ec-491e707dc80b
+        senderCompId: IFXQA2
+        onBehalfOfCompId: IFXQA2
+        sendingTime: 20260312-11:18:40.741
+    FXTwoWayRefundEnquiryRequest:
+      description: >-
+        This report enquiry shows the current usage and availability of two-way
+        refunds. You must send them in at least the ‘origClOrdId’ or ‘rateSetId’
+        for ALL orders against the ratesets.
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+        - symbol
+        - origClOrdID
+        - account
+      properties:
+        action:
+          type: string
+          description: >-
+            The service you are requesting. Allowed value:
+            refund-report-response.
+          example: refund-report-response
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message.
+          maxLength: 20
+          example: clientname
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: clientname
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT.' Format is
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:31.155
+        account:
+          type: string
+          description: >-
+            The Account ID supplied by Citi. May contain special characters
+            (‘_’, ‘.’, ‘-‘)
+          example: TEST12345
+        origClOrdId:
+          type: string
+          format: int64
+          description: >
+            The original order reference. To enquire refund availability for
+            specific order, this field needs to be populated with the orderId
+            published by Citi. This Id should be a standard order id and not
+            refund order id. Use 'ALL' to pull report for all orders placed in
+            the specified rateSetId.
+          example: '12345'
+        symbol:
+          type: string
+          description: >
+            The currency pair value. The value must be ‘ALL’ to enquire refund
+            availability for all the currency pairs on which orders are placed
+            in the specified rateSetId. Otherwise, the value must be the
+            specific currency to which you want to enquire refund  availability
+            for the mentioned symbol in the mentioned rateSetId
+          example: EURUSD
+        rateSetId:
+          type: integer
+          format: int32
+          description: |
+            Optional field to pull report for all orders placed in the rateset.
+          example: 12345
+      example:
+        action: refund-report-request
+        senderCompId: CTEST12001
+        onBehalfOfCompId: BTEST62013
+        jsonReqId: brs-25-09-2018-01
+        sendingTime: 20210406-04:48:29.125
+        account: client0
+        rateSetId: 12345
+        origClOrdID: ALL
+        symbol: ALL
+    FXTwoWayRefundEnquiryResponse:
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+      properties:
+        action:
+          type: string
+          description: >-
+            Defines the action of the message. Value will be
+            refund-report-response.
+          example: refund-report-response
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message.
+          maxLength: 20
+          example: clientname
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: clientname
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT.' Format is
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:31.155
+        errorCode:
+          type: integer
+          description: >-
+            The error code associated with the response. See the Error Codes tab
+            for a complete list.
+          example: 99
+        errorMessage:
+          type: string
+          description: >-
+            The error message associated with the response. See the Error Codes
+            tab for a complete list.
+          example: unable to process your request
+        refundAvailable:
+          type: object
+          description: Contains refund availability report list.
+          properties:
+            trAvailable:
+              type: array
+              items:
+                required:
+                  - account
+                  - rateSetId
+                  - currencyPair
+                  - baseCcy
+                  - refundBaseBuyUsed
+                  - refundBaseSellUsed
+                  - refundBaseBuyAvailable
+                  - refundBaseSellAvailable
+                properties:
+                  account:
+                    type: string
+                    description: >-
+                      Your client ID supplied by Citi. May contain special
+                      characters (‘_’, ‘.’, ‘-‘)
+                    maxLength: 50
+                    example: TEST12345
+                  origClOrdID:
+                    type: integer
+                    format: int64
+                    description: The original order reference
+                    example: 6432780
+                  rateSetId:
+                    type: integer
+                    format: int32
+                    description: The Rate Set Id for the report.
+                    example: 12345
+                  currencyPair:
+                    type: string
+                    description: >-
+                      A 6-character sorted alpha string containing two ISO ccy
+                      codes that this rate applies.
+                    example: EURUSD
+                  tierSequence:
+                    type: integer
+                    description: >-
+                      Only applicable if you are configured for time-based
+                      guaranteed rates. Shows the ordinal number of the rate
+                      used in the set of time-based rates, ordered according to
+                      “valid until time”, for the specified currency pair.
+                    example: 1
+                  baseCcy:
+                    type: string
+                    description: The base currency of the currency pair.
+                    maxLength: 3
+                    example: EUR
+                  refundBaseBuyUsed:
+                    type: number
+                    format: double
+                    description: The buy refund amount used in terms of base currency.
+                    example: 111.24
+                  refundBaseSellUsed:
+                    type: number
+                    format: double
+                    description: The sell refund amount used in terms of base currency.
+                    example: 111.24
+                  refundBaseBuyAvailable:
+                    type: number
+                    format: double
+                    description: The buy refund amount available in terms of base currency.
+                    example: 55.34
+                  refundBaseSellAvailable:
+                    type: number
+                    format: double
+                    description: >-
+                      The sell refund amount available in terms of base
+                      currency.
+                    example: 66.99
+      example:
+        refundAvailable:
+          trAvailable:
+            - account: client0
+              rateSetId: 12345
+              origClOrdID: 12357
+              currencyPair: EURUSD
+              tierSequence: 1
+              baseCcy: EUR
+              refundBaseBuyUsed: 15.71
+              refundBaseSellUsed: 0
+              refundBaseBuyAvailable: 0
+              refundBaseSellAvailable: 15.67
+            - account: client0
+              rateSetId: 12345
+              origClOrdID: 12357
+              currencyPair: EURUSD
+              tierSequence: 2
+              baseCcy: EUR
+              refundBaseBuyUsed: 16.33
+              refundBaseSellUsed: 34.36
+              refundBaseBuyAvailable: 45.66
+              refundBaseSellAvailable: 19.99
+            - account: client0
+              rateSetId: 12345
+              origClOrdID: 789655
+              currencyPair: GBPUSD
+              tierSequence: 1
+              baseCcy: GBP
+              refundBaseBuyUsed: 34.71
+              refundBaseSellUsed: 13
+              refundBaseBuyAvailable: 98
+              refundBaseSellAvailable: 154.07
+        action: refund-report-response
+        jsonReqId: brs-25-09-2018-01
+        senderCompId: IFXCLIENT0
+        onBehalfOfCompId: IFXCLIENT0
+        sendingTime: 20180925-15:06:48.099
+tags: []

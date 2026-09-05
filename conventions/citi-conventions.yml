@@ -1,0 +1,195 @@
+generated: '2026-09-05'
+method: derived
+source: https://developer.citi.com/apidocs/ — 118 first-party OpenAPI/Swagger specifications published
+  by Citi, harvested 2026-09-05; plus the Citi Authentication Guide at https://developer.citi.com/apidocs/authentication/authentication-only-guide
+note: Cross-cutting runtime semantics for the Citi institutional API estate, derived from the published
+  contracts and the published guides. Where a mechanism is scoped rather than fleet-wide this file says
+  so, because the two are different facts for an integrator.
+auth:
+  style: OAuth 2.0 bearer token over mutual TLS, with message-level signing and encryption on most APIs
+  flows:
+  - client_credentials (dominant — 74 OAS3 clientCredentials + 24 OAS2 application declarations)
+  - authorization_code (12 declarations, used by the consent-bearing open banking surfaces)
+  token_header: 'Authorization: Bearer <access_token>'
+  refresh_tokens: false
+  refresh_note: 'Citi Authentication Guide: "Citi does not provide a Refresh token. When your Access Token
+    has expired, you have two options: ... Renew your Access Token only when you receive a 401 Unauthorized
+    error from Citi."'
+  endpoint_versions: Four concurrent authentication endpoint versions (V1, V2, V3, V4) are published.
+    Each product API specification names the version it requires; V4 removes the payload signing and encryption
+    requirement that V1-V3 impose.
+  transport: 'All API requests must be made over HTTPS. Citi Authentication Guide: "Calls made over HTTP
+    and API requests without authentication will fail."'
+  docs: https://developer.citi.com/apidocs/authentication/authentication-only-guide
+  artifact: authentication/citi-authentication.yml
+idempotency:
+  coverage: partial
+  header: Idempotency-Id
+  conflict_response: 409, modelled in the contracts as an Idempotency-Id-Conflict response with a worked
+    example
+  scope:
+  - POST /v1/mandates (createMandate) in openapi/citi-payto-openapi.yaml
+  - POST /addonservices/v1/validations (expressBeneficiaryValidation) in openapi/citi-add-on-service-openapi.yaml
+  - POST /addonservices/v1/responsetorequestforinformations (responseToRequestForInformation) in openapi/citi-add-on-service-openapi.yaml
+  - POST /bulkpayments (bulkpaymentinitiation) in openapi/citi-bulk-payments-openapi.yaml
+  - POST /paymentservices/v1/beneficiaryvalidations (expressBeneficiaryValidation) in openapi/citi-express-payments-api-openapi.yaml
+  - POST /paymentservices/v1/refunds (expressRefundInitiation) in openapi/citi-express-payments-api-openapi.yaml
+  - POST /paymentservices/v1/payments (expressPaymentInitiation) in openapi/citi-express-payments-api-openapi.yaml
+  - POST /paymentservices/v1/payments/{uetr}/messages (createMessage) in openapi/citi-express-payments-api-openapi.yaml
+  - POST /token-lifecycle-events (lifecycle) in openapi/citi-mobile-wallets-openapi.yaml
+  - POST /token-provisioning-events (provision) in openapi/citi-mobile-wallets-openapi.yaml
+  retention: null
+  retention_note: The contracts declare the header and the 409 conflict but do not state a replay-window
+    retention period. Not asserted here.
+  note: Ten operations across six of the 118 specifications declare Idempotency-Id. The remaining mutating
+    operations — including most of the ISO 20022 payment initiation surface — carry no declared replay
+    protection in the contract. An agent must not assume a retry is safe outside the listed operations.
+reversibility:
+  grade: documented
+  grade_rationale: Reversal paths are published as first-class operations with operationIds, but none
+    of the contracts or the published guides state the window inside which a reversal is accepted. A window
+    is therefore NOT asserted here.
+  read_only: false
+  reversals:
+  - write_surface: Instant / express payment initiation
+    forward: expressPaymentInitiation (POST /paymentservices/v1/payments)
+    reversal: expressRefundInitiation (POST /paymentservices/v1/refunds)
+    window: null
+    window_note: Not stated in the contract or the Express Instant Payments guide.
+    spec: openapi/citi-express-payments-api-openapi.yaml
+    status_check: findRefunds (GET /paymentservices/v1/refunds), findRefundById (GET /paymentservices/v1/refunds/{refund_id})
+  - write_surface: ISO 20022 payment initiation (pain.001 / pacs.008 / pacs.009)
+    forward: paymentinitiation
+    reversal: FICancellationAPI (POST /payments/stops) — carries an ISO 20022 camt.056.001.09 FI to FI
+      Payment Cancellation Request
+    window: null
+    window_note: Not stated. Cancellation success is bounded by clearing-system cut-off in practice, but
+      no cut-off is published in the contract.
+    spec: openapi/citi-paymentcancellation-json-openapi.yaml, openapi/citi-paymentcancellation-xml-openapi.yaml
+  - write_surface: Payment refund
+    forward: payment initiation
+    reversal: POST /txrefund
+    window: null
+    spec: openapi/citi-payment-refund-openapi.yaml
+  - write_surface: Payment acceptance / collections
+    forward: createPayment
+    reversal: refundPayments (POST /digitalpayments/v1/payment-acceptance/refunds), refundUpdate (PATCH
+      .../refunds/{id})
+    window: null
+    spec: openapi/citi-digitalpaymentscollectionsv12-openapi.yaml, openapi/citi-online-payment-acceptance-api-openapi.yaml
+  - write_surface: Direct debit / e-mandate
+    forward: createMandate (POST /v1/mandates)
+    reversal: recallMandate (PATCH /v1/mandates/recall), cancelMandate (PATCH /digitalpayments/v1/payment-acceptance/mandates)
+    window: null
+    spec: openapi/citi-payto-openapi.yaml, openapi/citi-digitalpaymentscollectionsv12-openapi.yaml
+  - write_surface: Virtual Card Account issuance
+    forward: create / issue VCA
+    reversal: cancel (POST /cancel, POST /vca/v1/cancel) — turns a VCA inactive to suspend further payment
+      requests; DELETE /virtualcard on the mobile lifecycle API
+    window: null
+    spec: openapi/citi-virtual-cards-lifecycle-v4-openapi.yaml, openapi/citi-virtual-cards-pi-v2-openapi.yaml,
+      openapi/citi-mobilevirtuallifecycle-openapi.yaml
+  - write_surface: Virtual account (receivables)
+    forward: createVirtualAccount
+    reversal: deleteVirtualAccount (DELETE /receivablesservices/v1/virtualaccounts)
+    window: null
+    spec: openapi/citi-vca-api-openapi.yaml
+  - write_surface: FX order
+    forward: order placement
+    reversal: Order Cancellation (POST /fxgateway/sync/ordercancel/api/v1 and the async twin), WorldLink
+      cancelFx (POST /v1/fx/cancelfx)
+    window: null
+    spec: openapi/citi-fx-cancel-sync-api-openapi.yaml, openapi/citi-fx-cancel-async-api-openapi.yaml,
+      openapi/citi-worldlink-v1-api-openapi.yaml
+  - write_surface: Trade instrument
+    forward: trade issuance
+    reversal: Trade Amendment/Cancellation (POST /trade/modifyorcancel)
+    window: null
+    spec: openapi/citi-trade-api-openapi.yaml
+  - write_surface: Card transaction (post-settlement)
+    forward: n/a — the transaction is made on the card rail
+    reversal: createDispute (POST /v1/cases), status via getDisputeStatus (GET /v1/status)
+    window: null
+    window_note: Card scheme dispute windows are set by the network, not by Citi, and are not stated in
+      this contract.
+    spec: openapi/citi-card-disputes-openapi.yaml
+  - write_surface: Event subscription
+    forward: createSubscription
+    reversal: deleteSubscription (DELETE /vca/v2/events/subscriptions/{subscriptionId}, DELETE /vca/v1/authorizations/subscriptions/{subscriptionId})
+    window: null
+    spec: openapi/citi-vcaeventssubscriptions-openapi.yaml, openapi/citi-virtual-cards-notifications-openapi.yaml
+  - write_surface: Account block or filter
+    forward: createBlockAndFilter
+    reversal: deleteBlockAndFilter (DELETE /blocksandfilters/{type}/{id})
+    window: null
+    spec: openapi/citi-blocksandfilters-openapi.yaml
+  note: 32 reversal-shaped operations were identified across the estate. Every one is a real published
+    operation. NOT ONE of them carries a stated reversal window in the contract or in the published guides,
+    which is why this grades documented and not verified.
+dry_run_mode:
+  supported: partial
+  note: There is no dry-run or simulation flag on the write operations. What Citi does publish is a full
+    parallel sandbox estate on distinct hosts (tts.sandbox.apib2b.citi.com, sandbox.b2b.api.icg.citi.com,
+    sandbox.api.citivelocity.com) declared as a second servers[] entry in the contracts themselves, plus
+    validation-only operations (expressBeneficiaryValidation, beneficiary search, entity whitelisting)
+    that let a caller check a payment instruction before committing it.
+  artifact: sandbox/citi-sandbox.yml
+pagination:
+  style: not standardised across the estate
+  note: Pagination appears in 29 of 118 specs and is per-product rather than fleet-wide. The Brazil PIX
+    collections surface uses the BACEN paginacao.paginaAtual / paginacao.itensPorPagina pair; reporting
+    surfaces mostly use date-range and identifier filters rather than cursors. No shared cursor or page-token
+    convention is published.
+metadata:
+  supported: false
+  note: No general-purpose metadata or custom-field envelope is published.
+request_id_tracing:
+  headers:
+  - Req-Sys-Id (40 declarations — the caller-supplied requesting-system identifier)
+  - X-Request-ID (4 declarations)
+  - uetr (ISO 20022 unique end-to-end transaction reference, used as a path parameter on the express payments
+    message surface)
+  note: Req-Sys-Id is the closest thing to a fleet-wide correlation header. The estate also carries Region
+    and Country routing headers (26 and 26 declarations) that select the servicing Citi entity.
+routing_headers:
+  headers:
+  - Region
+  - Country
+  - Accept-Language
+  note: Citi is a multi-entity global bank and the same operation is served by different legal entities
+    per market. Region and Country are declared request headers on 52 operations and are load-bearing,
+    not optional decoration.
+versioning:
+  style: path segment
+  note: Version lives in the base path (…/v1, …/v3, …/paymentservices/v3, …/accountsservices/v4 and /v5).
+    Several products publish two major versions side by side as separate contracts (Account Services V1.4.2
+    and V5, WorldLink V1/V2/V3/V5, statements v1 and v2, VCA lifecycle v1 and v2), so an integrator picks
+    a version by choosing a contract.
+  artifact: lifecycle/citi-lifecycle.yml
+error_envelope:
+  shapes:
+  - bespoke JSON error objects (dominant)
+  - ISO 20022 XML status reports — pain.002, pacs.002 — on the payment surfaces
+  - application/problem+json (RFC 9457) on the three Brazil PIX contracts only
+  content_types:
+    application/json: 442
+    application/xml: 194
+    application/problem+json: 12
+    application/pdf: 1
+  artifact: errors/citi-problem-types.yml
+rate_limit_signalling:
+  headers:
+  - RateLimit-Limit
+  - RateLimit-Remaining
+  - RateLimit-Reset
+  coverage: partial
+  note: Declared with documented semantics on three contracts only. 82 operations declare a 429 response
+    without declaring the headers, so on most of the estate an agent learns it is throttled from the status
+    code alone.
+  artifact: rate-limits/citi-rate-limits.yml
+content_negotiation:
+  note: 'The payment estate is deliberately dual-encoded: the same ISO 20022 message is published as a
+    JSON contract and an XML contract (paymentcancellation-json / paymentcancellation-xml, paymentenhancedinquiry-json
+    / paymentenhancedinquiry-xml). Citi states this as a platform feature: "Ability to access JSON-based
+    APIs and convert to XML".'
+  source: https://partner.citi.com/assets/json/pre-login/developers-page.json

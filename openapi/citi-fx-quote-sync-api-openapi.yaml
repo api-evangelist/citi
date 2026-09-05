@@ -1,0 +1,1258 @@
+openapi: 3.1.0
+info:
+  version: ''
+  title: InstantFX Quote Request (SYNCHRONOUS CALL)
+  description: >
+    FX quote request API facilitates rate requests for either a specific
+    currency pair or all configured currency pairs. 
+
+
+    FX quote report request API facilitates historic rate pull for a rate set ID
+    or for a tradedate.
+
+
+    ### Trading Rules
+     Please contact your Citi representative to obtain a list of currency pairs currently supported by Instant FX.
+    #### Platform Operational Hours
+      The Instant FX platform is available during standard FX market trading hours. The platform is not available during weekend hours.
+      * Start of business is Monday 07:00 NZDT New Zealand/Auckland
+      * End of business is Friday 17:00 EST New York
+servers:
+  - url: https://api.citivelocity.com/markets
+    description: production URL
+  - url: https://sandbox.api.citivelocity.com/markets
+    description: sanbox URL
+security:
+  - OAuth2:
+      - fxapi
+paths:
+  /fxgateway/sync/instantfxquote/api/v1:
+    post:
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            Your unique identifier shared during your API onboarding. It is the
+            same client_id used for oauth token generation.
+          required: true
+          schema:
+            type: string
+      summary: Quote Request and Quote Report Request API
+      description: >
+        This endpoint facilitates requests for active rate enquiries - for a
+        specific currency pair or all currency pairs and historic rate enquiries
+        - for all currency pairs.
+
+
+        For Quote Report Request, while the fields ‘tradeDate’, ‘rateSetId’, 
+        are optional, you must send them in at least one of the combinations
+        below to fetch the results:
+
+
+        a) ‘tradeDate’ 
+
+
+        b) ‘rateSetId’ 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/FXQuoteRequest'
+                - $ref: '#/components/schemas/FXQuoteReportRequest'
+        required: true
+      responses:
+        '200':
+          description: >-
+            OK Acknowledged.
+
+
+            In rate response, if you are configured to have time-based
+            guaranteed rates, then all live rates are included. 
+
+            In rate report response, if you are configured to have time based
+            guaranteed rates, then all the tier-based rates are included.
+            Expired rates are omitted in the sent response. 
+
+
+            The different spot rates for a given currency pair will have
+            different spreads and can be viewed based on the `validUntilTime`
+            field. 
+
+
+            Missing rates are omitted in the rates and rates report response
+            unless configured to receive missing rates.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/FXQuoteResponse'
+                  - $ref: '#/components/schemas/FXQuoteReportResponse'
+        '401':
+          description: Unauthorized user error
+        '403':
+          description: Access Forbidden error
+        '500':
+          description: Internal Server Error
+      x-codeSamples:
+        - lang: cURL
+          label: cURL
+          source: >-
+            curl --request POST \
+
+            --url
+            'https://api.citivelocity.com/markets/fxgateway/sync/instantfxquote/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2'
+            \
+
+            --header 'accept: application/json' \
+
+            --header 'authorization: Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ'
+            \
+
+            --header 'content-type: application/json' \
+
+            --data '{ "action": "rate-request", "senderCompId": "IFXCLIENT0",
+            "onBehalfOfCompId": "IFXCLIENT0", "jsonReqId": "brs-25-09-2018-01",
+            "sendingTime": "20180925-14:41:56.807", "symbol": "ALL", "account":
+            "Xxxxxxxxxxx" }'
+        - lang: python
+          label: Python
+          source: >-
+            import http.client 
+
+
+            #If a proxy is used, set the tunnel as per below:
+
+            #conn=http.client.HTTPSConnection("your_proxy_host",your_proxy_port)
+
+            #conn.set_tunnel("api.citivelocity.com",443)
+
+            conn = http.client.HTTPSConnection("api.citivelocity.com") 
+
+            payload = "{ \"action\": \"rate-request\", \"senderCompId\":
+            \"IFXCLIENT0\", \"onBehalfOfCompId\": \"IFXCLIENT0\", \"jsonReqId\":
+            \"brs-25-09-2018-01\", \"sendingTime\": \"20180925-14:41:56.807\",
+            \"symbol\": \"ALL\", \"account\": \"Xxxxxxxxxxx\" }" 
+
+            headers = { 
+
+            'content-type': "application/json", 
+
+            'accept': "application/json", 
+
+            'authorization': "Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ" 
+
+            } 
+
+            conn.request("POST",
+            "/markets/fxgateway/sync/instantfxquote/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2",
+            payload, headers) 
+
+            res = conn.getresponse() 
+
+            data = res.read() 
+
+            print(data.decode("utf-8"))
+        - lang: PHP
+          label: PHP
+          source: >-
+            <?php 
+
+            $curl = curl_init(); 
+
+            curl_setopt_array($curl, array( 
+
+            CURLOPT_URL =>
+            "https://api.citivelocity.com/markets/fxgateway/sync/instantfxquote/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2
+            ", 
+
+            CURLOPT_RETURNTRANSFER => true, 
+
+            CURLOPT_ENCODING => " ", CURLOPT_MAXREDIRS => 10, 
+
+            CURLOPT_TIMEOUT => 30, 
+
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1, 
+
+            CURLOPT_CUSTOMREQUEST => "POST", 
+
+            CURLOPT_POSTFIELDS => "{ \"action\": \"rate-request\",
+            \"senderCompId\": \"IFXCLIENT0\", \"onBehalfOfCompId\":
+            \"IFXCLIENT0\", \"jsonReqId\": \"brs-25-09-2018-01\",
+            \"sendingTime\": \"20180925-14:41:56.807\", \"symbol\": \"ALL\",
+            \"account\": \"Xxxxxxxxxxx\" }", 
+
+            CURLOPT_HTTPHEADER => array( 
+
+            "accept: application/json", 
+
+            "authorization: Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ", 
+
+            "content-type: application/json", 
+
+            ), 
+
+            )); 
+
+            $response = curl_exec($curl); 
+
+            $err = curl_error($curl); 
+
+            curl_close($curl); 
+
+            if ($err) { 
+
+            echo "cURL Error #:" . $err; 
+
+            } else 
+
+            { 
+
+            echo $response; 
+
+            }
+        - lang: JAVA
+          label: Java
+          source: |-
+            /**Include following Maven dependency 
+             <dependency> 
+             <groupId>com.squareup.okhttp3</groupId> 
+             <artifactId>okhttp3</artifactId> 
+             <version>3.9.0</version> 
+             </dependency> 
+             */ 
+            import java.io.IOException; 
+            import java.net.InetSocketAddress; 
+            import java.net.Proxy; 
+            import okhttp3.MediaType; 
+            import okhttp3.OkHttpClient; 
+            import okhttp3.Request; 
+            import okhttp3.RequestBody; 
+            import okhttp3.Response;
+            public class Main { 
+             public static void main(String[] args) { 
+            OkHttpClient client = new OkHttpClient(); 
+             MediaType mediaType = MediaType.parse("application/json"); 
+             RequestBody body = RequestBody.create(mediaType, "{ \"action\": \"rate-request\", \"senderCompId\": \"IFXCLIENT0\", \"onBehalfOfCompId\": \"IFXCLIENT0\", \"jsonReqId\": \"brs-25-09-2018-01\", \"sendingTime\": \"20180925-14:41:56.807\", \"symbol\": \"ALL\", \"account\": \"Xxxxxxxxxxx\" }"); 
+             Request request = new Request.Builder() .url("https://api.citivelocity.com/markets/fxgateway/sync/instantfxquote/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2") 
+             .post(body) 
+             .addHeader("content-type", "application/json") 
+             .addHeader("accept", "application/json") 
+             .addHeader("authorization", "Bearer AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ") 
+             .build(); 
+             try { 
+             Response response = client.newCall(request).execute(); 
+             } catch (IOException e) { 
+             e.printStackTrace(); 
+             } 
+             } 
+            } 
+        - lang: Javacript
+          label: Node
+          source: |2-
+             // Install request by running "npm install --save request" 
+             var request = require("request"); 
+             var options = { 
+             method: 'POST', 
+             url: 'https://api.citivelocity.com/markets/fxgateway/sync/instantfxquote/api/v1', 
+             qs: { client_id: 'REPLACE_THIS_VALUE' }, 
+             headers: 
+             { 
+             authorization: 'Bearer AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ', 
+             accept: 'application/json', 
+             'content-type': 'application/json' 
+             }, 
+             body: 
+             { "action": "rate-request", "senderCompId": "IFXCLIENT0", "onBehalfOfCompId": "IFXCLIENT0", "jsonReqId": "brs-25-09-2018-01", "sendingTime": "20180925-14:41:56.807", "symbol": "ALL", "account": "Xxxxxxxxxxx" }, 
+             json: true }; 
+             request(options, function (error, response, body) { 
+             if (error) 
+             return console.error('Failed: %s', error.message); 
+             console.log('Success: ', body); 
+             });
+        - lang: Go
+          label: Go
+          source: >-
+            package main 
+
+            import ( 
+
+            "fmt" 
+
+            "strings" 
+
+            "net/http" 
+
+            "io/ioutil" 
+
+            ) 
+
+            func main() { 
+
+            url :=
+            "https://api.citivelocity.com/markets/fxgateway/sync/instantfxquote/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2" 
+
+            payload := strings.NewReader("{ \"action\": \"rate-request\",
+            \"senderCompId\": \"IFXCLIENT0\", \"onBehalfOfCompId\":
+            \"IFXCLIENT0\", \"jsonReqId\": \"brs-25-09-2018-01\",
+            \"sendingTime\": \"20180925-14:41:56.807\", \"symbol\": \"ALL\",
+            \"account\": \"Xxxxxxxxxxx\" }") 
+
+            req, _ := http.NewRequest("POST", url, payload) 
+
+            req.Header.Add("content-type", "application/json") 
+
+            req.Header.Add("accept", "application/json") 
+
+            req.Header.Add("authorization", "Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ") 
+
+            res, _ := http.DefaultClient.Do(req) 
+
+            defer res.Body.Close() 
+
+            body, _ := ioutil.ReadAll(res.Body) 
+
+            fmt.Println(res) 
+
+            fmt.Println(string(body)) }
+        - lang: Swift
+          label: Swift
+          source: >-
+            import Foundation 
+
+            let headers = [ 
+
+            "content-type": "application/json", 
+
+            "authorization": "Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ", 
+
+            "accept": "application/json" 
+
+            var request = URLRequest(url: URL(string:
+            "https://api.citivelocity.com/markets/fxgateway/sync/instantfxquote/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2")!, 
+
+            cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, 
+
+            timeoutInterval: 10.0) 
+
+            let data: [String: Any] = ["action": "rate-request", "senderCompId":
+            "IFXCLIENT0", "onBehalfOfCompId": "IFXCLIENT0", "jsonReqId":
+            "brs-25-09-2018-01", "sendingTime": "20180925-14:41:56.807",
+            "symbol": "ALL", "account": "Xxxxxxxxxxx"] 
+
+            let jsonData: Data 
+
+            do { 
+             jsonData = try JSONSerialization.data(withJSONObject: data, options: []) 
+             request.httpBody = jsonData 
+            } catch { 
+             print("Error: cannot create JSON from todo") 
+            } 
+
+            request.httpMethod = "POST" 
+
+            request.allHTTPHeaderFields = headers 
+
+            let session = URLSession.shared 
+
+            let task = session.dataTask(with: request, completionHandler: {
+            (data, response, error) in 
+             guard let data = data, error == nil else { // check for fundamental networking error 
+             print("error=\(String(describing: error))") 
+             return 
+             } 
+             if let httpStatus = response as? HTTPURLResponse, httpStatus.statusCode != 200 { // check for http errors 
+             print("statusCode should be 200, but is \(httpStatus.statusCode)") 
+             print("response = \(String(describing: response))") 
+             } 
+            let responseString = String(data: data, encoding: .utf8) 
+             print("responseString = \(String(describing: responseString))") 
+            }) 
+
+            task.resume()
+        - lang: R
+          label: R
+          source: >-
+            ## install the packages httr,jsonlite 
+
+            library(httr) 
+
+            library(jsonlite) 
+
+            url<-
+            'https://api.citivelocity.com/markets/fxgateway/sync/instantfxquote/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2' 
+
+            req<- '{ "action": "rate-request", "senderCompId": "IFXCLIENT0",
+            "onBehalfOfCompId": "IFXCLIENT0", "jsonReqId": "brs-25-09-2018-01",
+            "sendingTime": "20180925-14:41:56.807", "symbol": "ALL", "account":
+            "Xxxxxxxxxxx" }' 
+
+            resp<- POST(url , body=req, add_headers("accept" =
+            "applicaton/json","authorization" ="Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ",
+            "content-type" = "application/json")) 
+
+            data<- (toJSON(content(resp, as = "parsed"))) 
+
+            prettify(data)
+        - lang: Ruby
+          label: Ruby
+          source: >-
+            require 'uri' 
+
+            require 'openssl' 
+
+            require 'net/http' 
+
+            url =
+            URI("https://api.citivelocity.com/markets/fxgateway/sync/instantfxquote/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2") 
+
+            http = Net::HTTP.new(url.host, url.port) 
+
+            http.use_ssl = true 
+
+            http.verify_mode = OpenSSL::SSL::VERIFY_PEER 
+
+            request = Net::HTTP::Post.new(url) 
+
+            request["content-type"] = 'application/json' 
+
+            request["accept"] = 'application/json' 
+
+            request["authorization"] = 'Bearer
+            AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ' 
+
+            request.body = "{ \"action\": \"rate-request\", \"senderCompId\":
+            \"IFXCLIENT0\", \"onBehalfOfCompId\": \"IFXCLIENT0\", \"jsonReqId\":
+            \"brs-25-09-2018-01\", \"sendingTime\": \"20180925-14:41:56.807\",
+            \"symbol\": \"ALL\", \"account\": \"Xxxxxxxxxxx\" }" 
+
+            response = http.request(request) 
+
+            puts response.read_body.force_encoding("utf-8")
+        - lang: C#
+          label: C#
+          source: |-
+            using System; 
+            using System.Collections.Generic; 
+            using System.Linq; 
+            using System.Text; 
+            using System; 
+            using System.Web; 
+            using System.Net; 
+            using System.IO; 
+             
+            namespace ConsoleProgram 
+            { 
+             public class Class1 
+             { 
+             private const string URL = "https://api.citivelocity.com/markets/fxgateway/sync/instantfxquote/api/v1?client_id=da41c8aa-c96b-437c-ad95-dade40c85fa2"; 
+             private const string DATA = @"{ \"action\": \"rate-request\", \"senderCompId\": \"IFXCLIENT0\", \"onBehalfOfCompId\": \"IFXCLIENT0\", \"jsonReqId\": \"brs-25-09-2018-01\", \"sendingTime\": \"20180925-14:41:56.807\", \"symbol\": \"ALL\", \"account\": \"Xxxxxxxxxxx\" }"; 
+             
+             static void Main(string[] args) 
+             { 
+             Class1.CreateObject(); 
+             } 
+             
+             private static void CreateObject() 
+             { 
+             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL); 
+             request.Method = "POST"; 
+             request.ContentType = "application/json"; 
+             request.ContentLength = DATA.Length; 
+             request.Headers["authorization"] = "Bearer AAIkZGE0MWM4YWEtYzk2Yi00MzdjLWFkOTUtZGFkZTQwYzg1ZmEy9q61Vj0ly6PHyTj84qbE5UaKGxf3fdz2ARY15Kszu-zf_SWLloRClpkg6aBQxG9I608HzrBB7FSV3DVJcyrpjsGtJx0rOfNEO_Sn708nqxQsBuPzn03YZ2OHi5Q0jLpLpvE-s5XoaAf74nLYKLHtnQ"; 
+             using (Stream webStream = request.GetRequestStream()) 
+             using (StreamWriter requestWriter = new StreamWriter(webStream, System.Text.Encoding.ASCII)) 
+             { 
+             requestWriter.Write(DATA); 
+             } 
+             try 
+             { 
+             WebResponse webResponse = request.GetResponse(); 
+             using (Stream webStream = webResponse.GetResponseStream() ?? Stream.Null) 
+             using (StreamReader responseReader = new StreamReader(webStream)) 
+             { 
+             string response = responseReader.ReadToEnd(); 
+             Console.Out.WriteLine(response); 
+             } 
+             }catch (Exception e) 
+             { 
+             Console.Out.WriteLine("-----------------"); 
+             Console.Out.WriteLine(e.Message); 
+             } 
+             
+             } 
+             } 
+            }
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Citi Velocity APIs use the oAuth2 authentication scheme, which requires
+        a bearer token to authenticate your API call. See <a
+        href="../../fx/authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+      flows:
+        clientCredentials:
+          scopes:
+            fxapi: ''
+          tokenUrl: https://api.citivelocity.com/markets/cv/api/fx/oauth2/token
+  schemas:
+    FXQuoteRequest:
+      description: >
+        Use this endpoint to request a rate for either a specific currency pair
+        or all configured currency pairs.
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+        - account
+        - symbol
+      properties:
+        action:
+          type: string
+          description: 'The service you are requesting. Allowed values: rate-request.'
+          maxLength: 20
+          example: rate-request
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Must be alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the message sender. This
+            was assigned to you during onboarding. May contain special
+            characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. This was
+            assigned to you during onboarding. May contain special characters (
+            ‘_’, ‘.’, ‘-‘)
+          maxLength: 20
+          example: ClientName
+        sendingTime:
+          type: string
+          description: >-
+            The time of the message transmission expressed in UTC (Universal
+            Time Coordinated, also known as "GMT"). Format:
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:29.125
+        account:
+          type: string
+          description: >-
+            Your Citi-assigned client identifier. May contain special characters
+            ( ‘_’, ‘.’, ‘-‘)
+          maxLength: 50
+          example: ABC123
+        symbol:
+          type: string
+          maxLength: 6
+          description: >
+            The Currency Pair of the rate you are requesting. <b>Note that the
+            symbol value for the first request must be “ALL”.</b>
+
+            This will send the rate response for all of your configured currency
+            pairs. You can then request rates for individual currency pairs in
+            subsequent calls.
+
+            Discuss sending the value of the currency pair in either BaseTerm
+            format or alphabetic sort order with your Citi representative. 
+          example: GBPUSD
+      example:
+        action: rate-request
+        jsonReqId: 8ee02197-d54d-41ac-84a4-b607462ba3b1
+        senderCompId: IFXCLIENT1
+        onBehalfOfCompId: IFXCLIENT1
+        sendingTime: 20180820-04:48:29.125
+        account: XXXXXXX
+        symbol: ALL
+    FXQuoteResponse:
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+      properties:
+        action:
+          type: string
+          description: Defines the action of the message. Value will be rate-response.
+          example: rate-response
+          maxLength: 20
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message. May  contain special characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘)
+          maxLength: 20
+          example: ClientName
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT'), format:
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:31.155
+        errorCode:
+          type: integer
+          description: >-
+            The error code associated with the response. See the Error Codes tab
+            for a complete list.
+          example: 89
+        errorMessage:
+          type: string
+          description: >-
+            The error message associated with the response. See the Error Codes
+            tab for a complete list.
+          example: No records found for the given inputs.
+        ifxRates:
+          type: array
+          items:
+            type: object
+            required:
+              - rateSetId
+              - ccyPair
+              - tenor
+              - bidSpotRate
+              - offerSpotRate
+              - bidForwardPoints
+              - offerForwardPoints
+              - midPrice
+              - validUntilTime
+              - isValid
+              - baseCurrency
+              - ratePrecision
+              - valueDate
+              - bidOutrightRate
+              - offerOutrightRate
+              - fixingRate
+            properties:
+              rateSetId:
+                type: integer
+                description: The Citi-defined rate set ID that the rate belongs to.
+                example: 123456
+              ccyPair:
+                type: string
+                description: >-
+                  A six character sorted alpha string comprising two ISO ccy
+                  codes that the rate applies to.
+                example: EURUSD
+                maxLength: 6
+              tenor:
+                type: string
+                description: The Tenor for the rate.
+                maxLength: 3
+                example: SP
+              bidSpotRate:
+                type: string
+                format: double
+                description: The Bid Spot Rate for the currency pair.
+                example: '1.04'
+              offerSpotRate:
+                type: string
+                format: double
+                description: The Offer Spot Rate for the currency pair.
+                example: '1.06'
+              bidForwardPoints:
+                type: string
+                format: double
+                description: The Bid Forward Points for this tenor (Forward Pricing Only).
+                example: '0.01'
+              offerForwardPoints:
+                type: string
+                format: double
+                description: >-
+                  The Offer Forward Points for this tenor (Forward Pricing
+                  Only).
+                example: '0.02'
+              midPrice:
+                type: string
+                format: double
+                description: The Mid Price for the rate.
+                example: '1.05'
+              validUntilTime:
+                type: string
+                description: >-
+                  The time and date that this rate will expire. Note-This is
+                  held in GMT / UTC format: yyyyMM-dd HH:mm:ss.SSS
+                example: 2018-10-15 16:30:00.000 GMT
+              isValid:
+                type: boolean
+                description: >-
+                  A flag that shows that Citi was able to provide the requested
+                  rate. If this field is false, then midPrice, points, and rates
+                  are zero.
+                example: true
+              baseCurrency:
+                type: string
+                maxLength: 3
+                description: The base currency of the currency pair.
+                example: EUR
+              ratePrecision:
+                type: integer
+                description: >-
+                  The number of decimal places to which the rate(s) for this
+                  tenor should be quoted in regular base/term format.
+                example: 2
+              isTradable:
+                type: boolean
+                description: >-
+                  A flag to indicate whether the rate is tradable by the client
+                  (TRUE) or is to be used for reference purposes only.
+                example: true
+              fixingRate:
+                type: string
+                format: double
+                description: >-
+                  This field and `fixingsource` field will only be populated
+                  once a month on the agreed NDF fixing date. Will contain the
+                  fixing rate to be used for this currency pair.
+                example: '0'
+              fixingSource:
+                type: string
+                description: >-
+                  Will contain the fixing source associated with the fixingRate
+                  field.
+                example: Citi New York 15:00 Fixing
+                maxLength: 100
+              valueDate:
+                type: string
+                format: date
+                description: 'The value date of the rate returned in format: yyyy-MM-dd.'
+                example: '2011-05-06'
+              drawDownValidUntilTime:
+                description: >
+                  Optional field. The extended time and date that this rate will
+                  expire for sending draw down orders. This field will be sent
+                  only if you are enabled for sending pre-order requests. Note:
+                  this is held in GMT / UTC in format: yyyy-MM-dd HH:mm:ss.SSS.
+                example: '2011-05-05 09:30:00.000'
+              bidOutrightRate:
+                type: string
+                format: double
+                description: The Bid Outright Rate for this currency pair.
+                example: '111.24'
+              offerOutrightRate:
+                type: string
+                format: double
+                description: The Offer Outright Rate for this currency pair.
+                example: '112.24'
+              isMrf:
+                description: >-
+                  Optional field. Applicable when MRF hourly updated rate option
+                  enabled. Flag indicates whether this is updated rate due to
+                  MRF True indicates updated rate.
+                type: boolean
+                example: true
+              rateId:
+                type: integer
+                description: >-
+                  Optional field. Applicable when MRF hourly updated rate option
+                  enabled. Unique identifier of a rate. Value is incremental.
+                  Used for reference purpose to identify latest rate in case of
+                  incremental version of rate due to MRF.
+                example: 456123
+      example:
+        action: rate-response
+        jsonReqId: 8ee02197-d54d-41ac-84a4-b607462ba3b1
+        senderCompId: IFXCLIENT1
+        onBehalfOfCompId: IFXCLIENT1
+        sendingTime: 20250126-22:54:56.684
+        ifxRates:
+          - rateSetId: 13052961
+            ccyPair: EURGBP
+            tenor: SP
+            bidSpotRate: '0.84391'
+            offerSpotRate: '0.84391'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '0.84391'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: true
+            baseCurrency: EUR
+            ratePrecision: 5
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-01-30'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '0.84391'
+            offerOutrightRate: '0.84391'
+          - rateSetId: 13052961
+            ccyPair: EURGBP
+            tenor: W1
+            bidSpotRate: '0.0'
+            offerSpotRate: '0.0'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '0.0'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: false
+            baseCurrency: EUR
+            ratePrecision: 6
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-02-06'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '0.0'
+            offerOutrightRate: '0.0'
+          - rateSetId: 13052961
+            ccyPair: EURUSD
+            tenor: SP
+            bidSpotRate: '1.0433'
+            offerSpotRate: '1.0474'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '1.04535'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: true
+            baseCurrency: EUR
+            ratePrecision: 4
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-01-28'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '1.0433'
+            offerOutrightRate: '1.0474'
+          - rateSetId: 13052961
+            ccyPair: EURUSD
+            tenor: W1
+            bidSpotRate: '0.0'
+            offerSpotRate: '0.0'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '0.0'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: false
+            baseCurrency: EUR
+            ratePrecision: 6
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-02-05'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '0.0'
+            offerOutrightRate: '0.0'
+          - rateSetId: 13052961
+            ccyPair: EURUSD
+            tenor: M1
+            bidSpotRate: '0.0'
+            offerSpotRate: '0.0'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '0.0'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: false
+            baseCurrency: EUR
+            ratePrecision: 6
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-02-28'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '0.0'
+            offerOutrightRate: '0.0'
+    FXQuoteReportRequest:
+      description: >
+        Use this endpoint to request historic rates for all currency pairs for
+        either a tradedate or ratesetid. While the fields ‘tradeDate’,
+        ‘rateSetId’,  are optional, you must send them in at least one of the
+        combinations below to fetch the results:
+
+
+        a) ‘tradeDate’ 
+
+
+        b) ‘rateSetId’ 
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+        - account
+      properties:
+        action:
+          type: string
+          description: 'The service you are requesting. Allowed values: rate-report-request.'
+          maxLength: 20
+          example: rate-report-request
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Must be alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the message sender. This
+            was assigned to you during onboarding. May contain special
+            characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. This was
+            assigned to you during onboarding. May contain special characters (
+            ‘_’, ‘.’, ‘-‘)
+          maxLength: 20
+          example: ClientName
+        sendingTime:
+          type: string
+          description: >-
+            The time of the message transmission expressed in UTC (Universal
+            Time Coordinated, also known as "GMT"). Format:
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:29.125
+        account:
+          type: string
+          description: >-
+            Your Citi-assigned client identifier. May contain special characters
+            ( ‘_’, ‘.’, ‘-‘)
+          maxLength: 50
+          example: ABC123
+        rateSetId:
+          type: string
+          description: |
+            The Rate Set ID for which the rate report is requested.
+          example: '12345'
+        tradeDate:
+          type: string
+          format: date
+          description: |
+            The trade date for which the rate report is requested.
+          example: '2026-06-30'
+      example:
+        action: rate-report-request
+        jsonReqId: 8ee02197-d54d-41ac-84a4-b607462ba3b1
+        senderCompId: IFXCLIENT1
+        onBehalfOfCompId: IFXCLIENT1
+        sendingTime: 20180820-04:48:29.125
+        account: XXXXXXX
+        rateSetId: '12345'
+    FXQuoteReportResponse:
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+      properties:
+        action:
+          type: string
+          description: >-
+            Defines the action of the message. Value will be
+            rate-report-response.
+          example: rate-report-response
+          maxLength: 20
+        jsonReqId:
+          type: string
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 100
+          example: Req20181011776
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message. May  contain special characters ( ‘_’, ‘.’, ‘-‘).
+          maxLength: 20
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘)
+          maxLength: 20
+          example: ClientName
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT'), format:
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:31.155
+        errorCode:
+          type: integer
+          description: >-
+            The error code associated with the response. See the Error Codes tab
+            for a complete list.
+          example: 89
+        errorMessage:
+          type: string
+          description: >-
+            The error message associated with the response. See the Error Codes
+            tab for a complete list.
+          example: No records found for the given inputs.
+        ifxRates:
+          type: array
+          items:
+            type: object
+            required:
+              - rateSetId
+              - ccyPair
+              - tenor
+              - bidSpotRate
+              - offerSpotRate
+              - bidForwardPoints
+              - offerForwardPoints
+              - midPrice
+              - validUntilTime
+              - isValid
+              - baseCurrency
+              - ratePrecision
+              - valueDate
+              - bidOutrightRate
+              - offerOutrightRate
+              - fixingRate
+            properties:
+              rateSetId:
+                type: integer
+                description: The Citi-defined rate set ID that the rate belongs to.
+                example: 123456
+              ccyPair:
+                type: string
+                description: >-
+                  A six character sorted alpha string comprising two ISO ccy
+                  codes that the rate applies to.
+                example: EURUSD
+                maxLength: 6
+              tenor:
+                type: string
+                description: The Tenor for the rate.
+                maxLength: 3
+                example: SP
+              bidSpotRate:
+                type: string
+                format: double
+                description: The Bid Spot Rate for the currency pair.
+                example: '1.04'
+              offerSpotRate:
+                type: string
+                format: double
+                description: The Offer Spot Rate for the currency pair.
+                example: '1.06'
+              bidForwardPoints:
+                type: string
+                format: double
+                description: The Bid Forward Points for this tenor (Forward Pricing Only).
+                example: '0.01'
+              offerForwardPoints:
+                type: string
+                format: double
+                description: >-
+                  The Offer Forward Points for this tenor (Forward Pricing
+                  Only).
+                example: '0.02'
+              midPrice:
+                type: string
+                format: double
+                description: The Mid Price for the rate.
+                example: '0.0'
+              validUntilTime:
+                type: string
+                description: >-
+                  The time and date that this rate will expire. Note-This is
+                  held in GMT / UTC format: yyyyMM-dd HH:mm:ss.SSS
+                example: 2018-10-15 16:30:00.000 GMT
+              isValid:
+                type: boolean
+                description: >-
+                  A flag that shows that Citi was able to provide the requested
+                  rate. If this field is false, then midPrice, points, and rates
+                  are zero.
+                example: true
+              baseCurrency:
+                type: string
+                maxLength: 3
+                description: The base currency of the currency pair.
+                example: EUR
+              ratePrecision:
+                type: integer
+                description: >-
+                  The number of decimal places to which the rate(s) for this
+                  tenor should be quoted in regular base/term format.
+                example: 2
+              isTradable:
+                type: boolean
+                description: >-
+                  A flag to indicate whether the rate is tradable by the client
+                  (TRUE) or is to be used for reference purposes only.
+                example: true
+              fixingRate:
+                type: string
+                format: double
+                description: >-
+                  This field and `fixingsource` field will only be populated
+                  once a month on the agreed NDF fixing date. Will contain the
+                  fixing rate to be used for this currency pair.
+                example: '0'
+              fixingSource:
+                type: string
+                description: >-
+                  Will contain the fixing source associated with the fixingRate
+                  field.
+                example: Citi New York 15:00 Fixing
+                maxLength: 100
+              valueDate:
+                type: string
+                format: date
+                description: 'The value date of the rate returned in format: yyyy-MM-dd.'
+                example: '2011-05-06'
+              drawDownValidUntilTime:
+                description: >
+                  Optional field. The extended time and date that this rate will
+                  expire for sending draw down orders. This field will be sent
+                  only if you are enabled for sending pre-order requests. Note:
+                  this is held in GMT / UTC in format: yyyy-MM-dd HH:mm:ss.SSS.
+                example: '2011-05-05 09:30:00.000'
+              bidOutrightRate:
+                type: string
+                format: double
+                description: The Bid Outright Rate for this currency pair.
+                example: '0.0'
+              offerOutrightRate:
+                type: string
+                format: double
+                description: The Offer Outright Rate for this currency pair.
+                example: '0.0'
+              isMrf:
+                description: >-
+                  Optional field. Applicable when MRF hourly updated rate option
+                  enabled. Flag indicates whether this is updated rate due to
+                  MRF True indicates updated rate.
+                type: boolean
+                example: true
+              rateId:
+                type: integer
+                description: >-
+                  Optional field. Applicable when MRF hourly updated rate option
+                  enabled. Unique identifier of a rate. Value is incremental.
+                  Used for reference purpose to identify latest rate in case of
+                  incremental version of rate due to MRF.
+                example: 456123
+      example:
+        action: rate-report-response
+        jsonReqId: 8ee02197-d54d-41ac-84a4-b607462ba3b1
+        senderCompId: IFXCLIENT1
+        onBehalfOfCompId: IFXCLIENT1
+        sendingTime: 20250126-22:54:56.684
+        ifxRates:
+          - rateSetId: 13052961
+            ccyPair: EURGBP
+            tenor: SP
+            bidSpotRate: '0.84391'
+            offerSpotRate: '0.84391'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '0.0'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: true
+            baseCurrency: EUR
+            ratePrecision: 5
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-01-30'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '0.0'
+            offerOutrightRate: '0.0'
+          - rateSetId: 13052961
+            ccyPair: EURGBP
+            tenor: W1
+            bidSpotRate: '0.0'
+            offerSpotRate: '0.0'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '0.0'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: false
+            baseCurrency: EUR
+            ratePrecision: 6
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-02-06'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '0.0'
+            offerOutrightRate: '0.0'
+          - rateSetId: 13052961
+            ccyPair: EURUSD
+            tenor: SP
+            bidSpotRate: '1.0433'
+            offerSpotRate: '1.0474'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '0.0'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: true
+            baseCurrency: EUR
+            ratePrecision: 4
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-01-28'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '0.0'
+            offerOutrightRate: '0.0'
+          - rateSetId: 13052961
+            ccyPair: EURUSD
+            tenor: W1
+            bidSpotRate: '0.0'
+            offerSpotRate: '0.0'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '0.0'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: false
+            baseCurrency: EUR
+            ratePrecision: 6
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-02-05'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '0.0'
+            offerOutrightRate: '0.0'
+          - rateSetId: 13052961
+            ccyPair: EURUSD
+            tenor: M1
+            bidSpotRate: '0.0'
+            offerSpotRate: '0.0'
+            bidForwardPoints: '0.0'
+            offerForwardPoints: '0.0'
+            midPrice: '0.0'
+            validUntilTime: '2025-01-26 23:00:00.000'
+            isValid: false
+            baseCurrency: EUR
+            ratePrecision: 6
+            isTradable: true
+            fixingRate: '0.0'
+            valueDate: '2025-02-28'
+            drawDownValidUntilTime: '2025-01-27 23:00:00.000'
+            bidOutrightRate: '0.0'
+            offerOutrightRate: '0.0'
+tags: []

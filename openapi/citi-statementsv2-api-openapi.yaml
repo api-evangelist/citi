@@ -1,0 +1,618 @@
+openapi: 3.0.2
+info:
+  description: >-
+    Using the Statements API, you can generate account statements in a range of
+    globally-supported file formats. <br><br> <b>Account statements contain
+    -</b> <br> * your incoming payments <br> * any transfers or deposits made
+    <br> * cash withdrawals <br> * interest accruals and any charges as
+    applicable <br> * start and end balances <br><br>  This new version
+    streamlines the statement processing by eliminating the need to invoke
+    another API call after statement generation. Once the statement is generated
+    it will be pushed thereby removing inefficiencies in current process. <br>
+    In order to transition from the earlier version, you need to consume single
+    new endpoint which offers below set of benefits - <br> * Get Statements by
+    invoking a single API. <br> * Statement once generated will be pushed as an
+    asynchronous response. <br> * Remove the overhead to introduce delay and
+    retry in case the statement generation takes time. <br><br> <b> Generating
+    account statements - </b> <br> To generate an account statement for one or
+    more of your accounts <br> * Post a request to the
+    ``/accountreporting/v2/statement`` endpoint. This request returns a
+    Statement Identifier. <br>  A push notification corresponding to the
+    Statement Identifier will return your statement(s). <br> <br><b> Download
+    our SDKs -</b> <br>  * [Python
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=python&apiTitle=all&isClientSecReq=true)
+    <br>  * [Java
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=java&apiTitle=all&isClientSecReq=true)
+    <br>  * [.Net
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=dotnet&apiTitle=all&isClientSecReq=true)
+    <br>  * [Ruby
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ruby&apiTitle=all&isClientSecReq=true)
+    <br>  * [NodeJS
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=nodejs&apiTitle=all&isClientSecReq=true)
+    <br>  * [CLI Tool
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ccapi-cli&apiTitle=all&isClientSecReq=true)
+    <br> <br><b>Note - </b> You must be logged in to download the SDKs.
+  version: 2.0.0
+  title: accountreporting_2-0-0
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+servers:
+  - url: https://tts.apib2b.citi.com/citiconnect/prod
+    description: Production Gateway URL
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+    description: Sandbox URL
+tags:
+  - name: Statement
+    description: Statement
+paths:
+  /accountreporting/v2/statement:
+    post:
+      tags:
+        - Statement
+      description: >-
+        The Statement endpoint follows XML and JSON format. The response from
+        this endpoint returns a ``statementId``. This identifier must then be
+        used to map the statement received as part of push notification.
+        <br><br> **Note:** Statement generation requires some time to be
+        processed to allow successful push of statements. It will depend on the
+        statement size. It may take from 15 seconds to a few minutes before the
+        statement is generated. Once generated the statement will be shared in
+        push notification and can be mapped with ``statementId`` <br><br><font
+        size='2'><b>Content-Type</b> : Supports “application/XML” and
+        “application/JSON”. <br><b>Authorization</b> : The OAuth Token prefixed
+        with “Bearer“ and space in between.
+      summary: >-
+        The Statements API allows you to create your payment account statements.
+        The statement once generated will be sent via push notification.
+      operationId: initiateStatement
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports "application/XML" and "application/JSON"
+          required: true
+          schema:
+            type: string
+        - name: Timezone
+          in: header
+          description: >-
+            Time zone used to generate the statement. If not provided, the
+            default timezone is applied.  Examples include 'EST', 'EDT', 'IST'.
+          required: false
+          schema:
+            type: string
+            maxLength: 4
+          example: EST
+        - name: Attachment-Encoding
+          in: header
+          description: >-
+            Specifies the preferred content encoding for the response. To enable
+            gZip compression for the statement file, set this header value to
+            gzip. Using compression is highly recommended for large statement
+            files, as it can significantly reduce the download size and help
+            prevent API failures related to gateway file size limits. If this
+            header is sent, the API will return the statement file in a
+            compressed format. The client application is responsible for
+            decompressing the file.
+          required: false
+          schema:
+            type: string
+          example: gzip
+      requestBody:
+        required: true
+        description: >-
+          This endpoint validates your request and responds with HTTP status 202
+          (accepted) after successful validation. If validation fails, the
+          endpoint synchronously responds with error (HTTP status 4XX / 5XX),
+          indicating Citi couldn't accept your statement initiation request.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatementRequest'
+            examples:
+              Statement-Request-Example:
+                $ref: '#/components/examples/Statement-Request-Example'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/StatementRequest'
+            example: >-
+              <?xml version="1.0" encoding="UTF-8"?><statementRequest
+              xmlns="http://com.citi.citiconnect/services/types/inquiries/statement/v2"><accountNumber>12345</accountNumber><accountNumber>34567</accountNumber><formatName>CAMT_053_001_02</formatName><fromDate>2017-04-02T02:02:02.222Z</fromDate><toDate>2017-04-03T03:03:03.333Z</toDate></statementRequest>
+      callbacks:
+        Statement-Notification:
+          $ref: '#/components/callbacks/Statement-Notification'
+      security:
+        - oAuth2:
+            - authenticationservices/v2
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementResponse'
+              examples:
+                Statement-Response-Example:
+                  $ref: '#/components/examples/Statement-Response-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatementResponse'
+              example: >-
+                <?xml version="1.0" encoding="UTF-8"?><statementResponse
+                xmlns="http://com.citi.citiconnect/services/types/inquiries/statement/v2"><statementId>86756565</statementId></statementResponse>
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Bad-Request-Example:
+                  $ref: '#/components/examples/Bad-Request-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <?xml
+                version="1.0"encoding="UTF-8"?><errormessage><httpMessage>Bad
+                Request</httpMessage><httpCode>400</httpCode></errormessage>
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Unauthorized-Example:
+                  $ref: '#/components/examples/Unauthorized-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpCode>401</httpCode><httpMessage>Invalid OAuth
+                Token</httpMessage><moreInformation>Please use valid OAuth
+                Token</moreInformation></errormessage>
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Not-Found-Example:
+                  $ref: '#/components/examples/Not-Found-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpMessage>Not
+                Found</httpMessage><httpCode>404</httpCode><moreInformation>No
+                resources match requested URI</moreInformation></errormessage>
+        '405':
+          description: Method Not Allowed
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpMessage>Method Not
+                Allowed</httpMessage><httpCode>405</httpCode><moreInformation>The
+                method is not allowed for the requested
+                URL</moreInformation></errormessage>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Method-Not-Allowed-Example:
+                  $ref: '#/components/examples/Method-Not-Allowed-Example'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Un-Supported-Media-Type-Example:
+                  $ref: '#/components/examples/Un-Supported-Media-Type-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpMessage>Unsupported Media
+                Type</httpMessage><httpCode>415</httpCode><moreInformation>Unsupported
+                Content-Type</moreInformation></errormessage>
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Internal-Server-Error-Example:
+                  $ref: '#/components/examples/Internal-Server-Error-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <root><httpMessage>Internal Server
+                Error</httpMessage><httpCode>500</httpCode><moreInformation>Internal
+                Server Error</moreInformation></root>
+components:
+  parameters:
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Event Type
+      schema:
+        type: string
+      example: Statements
+    Event-Name:
+      name: Event-Name
+      in: header
+      required: true
+      description: Event Name
+      schema:
+        type: string
+      example: Intraday/End of day Statement
+    Attachment-Encoding:
+      name: Attachment-Encoding
+      in: header
+      description: >-
+        Indicates that the attachment (the statement file) has been compressed.
+        A value of gzip means the client must decompress the file using the gZip
+        algorithm to access the original statement content. This header is only
+        present when gZip compression is requested in the Initiation and
+        compression is successfully applied on the attachment.
+      schema:
+        type: string
+      example: gzip
+  schemas:
+    StatementNotificationResponse:
+      type: object
+      title: StatementNotificationResponse
+      properties:
+        status:
+          type: object
+          title: status
+          properties:
+            code:
+              description: Status Code for the message.
+              title: code
+              format: int32
+              type: integer
+              example: 200
+            message:
+              description: Status message associated with the code.
+              title: message
+              type: string
+              example: OK
+            moreInformation:
+              description: Additional information along with the Status code and message.
+              title: moreInformation
+              type: string
+              example: OK
+          required:
+            - code
+            - message
+          xml:
+            name: status
+        statementId:
+          description: >-
+            Unique ID associated with the statement generation request. This is
+            mapped with the statement file.
+          type: string
+          title: statementId
+          xml:
+            name: statementId
+          example: '45227678'
+        fileCheckSum:
+          description: >-
+            Contains sha512 hash value of the statement file. It can be used to
+            verify whether the file is not corrupted.
+          type: string
+          title: fileCheckSum
+          xml:
+            name: fileCheckSum
+          example: >-
+            770d285d1505da11034f729484d4d7250b30dde1101730bed129283476715e14fc5835de5d49d3b17c55ba5908bcfb50ab212edc4bb9c7e1ee08a4e03fcc6f4a
+        xmlns:
+          type: string
+          xml:
+            attribute: true
+            name: xmlns
+          example: http://com.citi.citiconnect/services/types/attachments/v2
+      required:
+        - statementId
+      xml:
+        name: statementNotificationResponse
+    StatementRequest:
+      title: StatementRequest
+      properties:
+        accountNumber:
+          description: >-
+            The account number(s) for which the account statement is to be
+            retrieved. You can specify multiple accounts by using multiple
+            account objects.  <br><br> If no value is sent the Statements API
+            will send a reject response with an error message.
+          title: accountNumber
+          type: array
+          example:
+            - '12345'
+            - '34567'
+          items:
+            type: string
+            title: items
+          minItems: 1
+        formatName:
+          description: >-
+            Specifies the format of the statement(s) to be generated. The types
+            of statements available to request are - <br> <br> *
+            SWIFT_MT940      - End of day account statement in Standard SWIFT
+            proprietary format. <br> * CAMT_053_001_02  - Intraday account
+            statement in ISO20022 Standard XML format. <br> * SWIFT_MT942      -
+            Intraday account statement in Standard SWIFT proprietary format.
+            <br> * CAMT_052_001_02  - End of day account statement in ISO20022
+            Standard XML format. <br><br> **Note:** ``formatName`` will be
+            ignored if ``templateName`` is supplied, but ``formatName`` is still
+            required for completeness.
+          title: formatName
+          type: string
+          example: CAMT_053_001_02
+          enum:
+            - SWIFT_MT940
+            - CAMT_053_001_02
+            - SWIFT_MT942
+            - CAMT_052_001_02
+        fromDate:
+          description: >-
+            Specifies the beginning date and time for the statement generation
+            request. ``fromDate`` uses _YYYY-MM-DDTHH:MM:SS.sssZ_ format.
+          title: fromDate
+          type: string
+          format: date-time
+          example: '2017-04-02T02:02:02.222Z'
+        toDate:
+          description: ' Specifies the ending date for the statement generation request. ``toDate`` uses _YYYY-MM-DDTHH:MM:SS.sssZ_ format.'
+          title: toDate
+          type: string
+          format: date-time
+          example: '2017-04-03T03:03:03.333Z'
+        strLibrayName:
+          description: >-
+            Specifies the STR Library name created as part of STR profile by the
+            Citi representative, if itemization data is required.
+          title: strLibrayName
+          type: string
+          example: STR API 920
+        templateName:
+          description: >-
+            The template name, as defined in CitiDirect BE File Services (STR
+            Library Number). Before you make your first statement API request,
+            make sure that the correct template (also known as an 'export
+            profile') has been set up using CitiDirect BE. For help setting up a
+            template contact your Citi representative. <br><br> The template
+            contains the following: <br> <br> * the format standard <br> * the
+            list of transaction codes and descriptions <br> * the display of
+            itemized entries for bulk debits <br> * the list of the date and
+            time stamps <br><br>  You can choose between: <br><br>    * Detailed
+            itemized entries - list all transactions on the statement. If you
+            would like an itemized Statement Retrieval (STR), please contact
+            your Citi representative to perform the setup on your behalf. You
+            must then use the STR library Name in your statement initiation
+            request. <br><br>    * A single consolidated debit entry - one debit
+            entry that can contain several smaller transactions. These are also
+            known as bulk debit transactions. <br><br>    When creating the
+            template, the time zone where the template is initially set up will
+            be used when generating the account statement as well as the
+            frequency and interval specified.
+          title: templateName
+          type: string
+          example: API_TEMPLATE
+        xmlns:
+          type: string
+          title: xmlns
+          xml:
+            attribute: true
+          example: http://com.citi.citiconnect/services/types/inquiries/statement/v2
+      xml:
+        name: statementRequest
+      required:
+        - accountNumber
+        - formatName
+        - fromDate
+        - toDate
+    StatementResponse:
+      title: StatementResponse
+      properties:
+        statementId:
+          description: >-
+            Unique ID for newly generated statement. This will be used to map
+            with the statement file.
+          title: statementId
+          type: string
+          example: '86756565'
+        xmlns:
+          type: string
+          title: xmlns
+          xml:
+            attribute: true
+          example: http://com.citi.citiconnect/services/types/inquiries/statement/v2
+      required:
+        - statementId
+      xml:
+        name: statementResponse
+    ErrorMessage:
+      title: ErrorMessage
+      properties:
+        httpCode:
+          description: Http Code for the message.
+          title: httpCode
+          format: int32
+          type: integer
+        httpMessage:
+          description: Http message associated with the code.
+          title: httpMessage
+          type: string
+        moreInformation:
+          description: Additional information along with the Http code and message.
+          title: moreInformation
+          type: string
+      required:
+        - httpCode
+      xml:
+        name: errormessage
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v2/oauth/token
+          tokenUrl: authenticationservices/v2/oauth/token
+          scopes:
+            authenticationservices/v2: API Access for
+  examples:
+    Statement-Request-Example:
+      value:
+        accountNumber:
+          - '12345'
+          - '34567'
+        formatName: CAMT_053_001_02
+        fromDate: '2017-04-02T02:02:02.222Z'
+        toDate: '2017-04-02T02:02:02.222Z'
+    Statement-Response-Example:
+      value:
+        statementId: '45227678'
+    Ok-Response-Example:
+      value:
+        xmlns: http://com.citi.citiconnect/services/types/attachments/v2
+        status:
+          code: 200
+          message: Ok
+          moreInformation: Ok
+        statementId: '45227678'
+        fileCheckSum: >-
+          770d285d1505da11034f729484d4d7250b30dde1101730bed129283476715e14fc5835de5d49d3b17c55ba5908bcfb50ab212edc4bb9c7e1ee08a4e03fcc6f4a
+    Ok-Response-Example-Json:
+      value:
+        status:
+          code: 200
+          message: Ok
+          moreInformation: Ok
+        statementId: '45227678'
+        fileCheckSum: >-
+          770d285d1505da11034f729484d4d7250b30dde1101730bed129283476715e14fc5835de5d49d3b17c55ba5908bcfb50ab212edc4bb9c7e1ee08a4e03fcc6f4a
+    Empty-Response-Example:
+      value:
+        status:
+          code: 500
+          message: STATEMENT_EMPTY
+          moreInformation: No results found, Increase the range.
+        statementId: '45227689'
+    Error-Response-Example:
+      value:
+        status:
+          code: 500
+          message: INTERNAL SERVER ERROR
+          moreInformation: >-
+            Unable to serve your request after retrying. Please try again later.
+            If the issue persists, contact support.
+        statementId: '45227690'
+    Bad-Request-Example:
+      value:
+        httpMessage: Bad_Request
+        httpCode: 400
+        moreInformation: Schema Validation Failed.
+    Unauthorized-Example:
+      value:
+        httpMessage: Invalid OAuth Token
+        httpCode: 401
+        moreInformation: >-
+          You are not authorized to access this API. Please send valid
+          credentials for authorization.
+    Not-Found-Example:
+      value:
+        httpMessage: Not Found
+        httpCode: 404
+        moreInformation: Please check the URL and try again later.
+    Method-Not-Allowed-Example:
+      value:
+        httpMessage: Method Not Allowed
+        httpCode: 405
+        moreInformation: Please use valid HTTP supported verb only.
+    Un-Supported-Media-Type-Example:
+      value:
+        httpMessage: Unsupported Media Type
+        httpCode: 415
+        moreInformation: >-
+          Provided content-type is not allowed. Only content-type as
+          application/xml and application/json is accepted, please correct the
+          content-type on the header and try again.
+    Internal-Server-Error-Example:
+      value:
+        httpMessage: Internal Server Error
+        httpCode: 500
+        moreInformation: Unable to serve your request at this moment. Please try again later.
+  callbacks:
+    Statement-Notification:
+      /statement-notification:
+        post:
+          description: >-
+            Once the statement is generated, you will receive the statements
+            information as a push notification as part of this callback.
+            Notification will be in form of MIME which has 2 parts. One part is
+            of XML/JSON and second part will be Statements file as attachment.
+          parameters:
+            - $ref: '#/components/parameters/Event-Type'
+            - $ref: '#/components/parameters/Event-Name'
+            - $ref: '#/components/parameters/Attachment-Encoding'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/StatementNotificationResponse'
+                examples:
+                  Ok-Response-Example:
+                    $ref: '#/components/examples/Ok-Response-Example-Json'
+                  Empty-Response-Example:
+                    $ref: '#/components/examples/Empty-Response-Example'
+                  Error-Response-Example:
+                    $ref: '#/components/examples/Error-Response-Example'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/StatementNotificationResponse'
+                examples:
+                  Ok-Response-Example:
+                    $ref: '#/components/examples/Ok-Response-Example'
+                  Empty-Response-Example:
+                    $ref: '#/components/examples/Empty-Response-Example'
+                  Error-Response-Example:
+                    $ref: '#/components/examples/Error-Response-Example'
+          responses:
+            '202':
+              description: Accepted
+x-apigee-configuration:
+  lob: tts
+  basepath: /accountreporting/v2
+  proxyBasepathPrefix: /citiconnect/sit5
+  org: external
+  eSSL: mtls
+  tlsprofile: smb-ext-egress-tls
+  ingressSecurity: oauth
+  egressSecurityJWT: 'false'
+  jwtHeader: ''
+  jwtSubject: ''
+  spikeEnabled: 'true'
+  quotaEnabled: 'true'
+  citiconnect: 'true'
+  oauthProduct: oauth2-authentication-services_1-0-0_authenticationservices-default
+  tokenURL: /citiconnect/sit5/authenticationservices/v1/oauth/token
+  scope: /authenticationservices/v1
+  targethost: https://ccapi-gateway-uat.nam.nsroot.net
+  targetpath: ''
+  setPortalHeaders: ''
+  csiId: '168554'
+  email: ve16761@citi.com
+  apiproxyname: accountreporting_2-0-0

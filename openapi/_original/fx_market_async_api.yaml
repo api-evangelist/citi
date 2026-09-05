@@ -1,0 +1,717 @@
+openapi: 3.0.3
+info:
+  version: ''
+  title: FX Market Order
+  description: >
+
+    The FX Market Order API allows you to initiate a spot or forward market
+    order request. Both individual and multi-order requests are accepted.
+    Acknowledged, Rejected, or Completion responses are returned.
+
+    ### Web Sockets
+
+    <b>The response to this endpoint will be sent via web socket connection.</b>
+    Refer to the [User Guide](user-guide) for more information on enabling a web
+    socket connection. This allows you to integrate the responses you receive
+    from Citi into your workflow for automated processing.
+
+    Ensure that you have an open web socket session before sending any requests,
+    otherwise Citi will be unable to send a response. 
+     
+    ### Platform Operational Hours
+
+      The CitiFX Gateway is available during standard FX market trading hours. The platform is not available during weekend hours.
+      * Start of business is Monday 07:00 AM Auckland
+      * End of business is Friday 17:00 EST New York
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets
+    description: sandbox URL
+  - url: https://api.citivelocity.com/markets
+    description: production gateway URL
+security:
+  - OAuth2:
+      - fxapi
+  - client_id: []
+paths:
+  /fxgateway/async/marketorder/api/v1:
+    post:
+      summary: Market Order Asynchronous Request
+      description: |
+        Use this endpoint to initiate a spot or forward market order request.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FXMarketOrder'
+        required: true
+      responses:
+        '200':
+          description: >
+            OK Acknowledged.
+
+
+            <b>Note: The response message will be sent via web socket.</b>
+            Please see the User Guide for more information on using the web
+            socket connection.      
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Order_Accepted_Or_Rejected'
+                  - $ref: '#/components/schemas/Order_Rated'
+        '401':
+          description: >-
+            Unauthorized user/ Invalid_client (Not authorized to Oauth API)/ Not
+            registered to the plan
+        '429':
+          description: Too Many Requests
+        '500':
+          description: Internal Server Error
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Citi Velocity APIs use the oAuth2 authentication scheme, which requires
+        a bearer token to authenticate your API call. See <a
+        href="../../fx/authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+      flows:
+        clientCredentials:
+          scopes:
+            fxapi: ''
+          tokenUrl: https://sandbox.api.citivelocity.com/markets/cv/api/fx/oauth2/token
+    client_id:
+      type: apiKey
+      in: query
+      name: client_id
+  schemas:
+    FXMarketOrder:
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+        - deals
+      properties:
+        action:
+          type: string
+          description: 'The service you are requesting. Allowed value: NEW.'
+        jsonReqId:
+          type: string
+          example: Req20181011776
+          description: >-
+            The unique identifier that you assign in the JSON request. Must be
+            alphanumeric.
+          maxLength: 60
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the message sender. This
+            was assigned to you during onboarding.
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. This was
+            assigned to you during onboarding.
+          example: Sub Entity
+        sendingTime:
+          type: string
+          description: >-
+            The time of the message transmission expressed in UTC (Universal
+            Time Coordinated, also known as "GMT"). Format:
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:29.125
+        deals:
+          type: array
+          items:
+            required:
+              - account
+              - clOrdId
+              - tenor
+              - ccyPair
+              - dealtCcy
+              - orderQty
+              - side
+              - fixingCode
+            properties:
+              account:
+                type: string
+                description: Your Citi-assigned client identifier.
+                example: '109430258'
+              clOrdId:
+                type: string
+                description: >-
+                  The unique identifier that you assign to the order. Max 15
+                  characters. Alphanumeric and special character hyphen (-)
+                  allowed.
+                example: TEST12345
+              secondaryClOrdId:
+                type: string
+                description: Secondary order reference.
+                example: OR12345
+              tenor:
+                type: string
+                description: >-
+                  The following FX standard tenors are supported:
+                          
+                  |Tenor          | Value |
+
+                  |---------------|-------|
+
+                  Overnight       | ON |
+
+                  Tom/Next        | TN |
+
+                  Spot            | SP |
+
+                  Spot/Next       | SN |
+
+                  One Week        | 1W |
+
+                  Two Week        | 2W |
+
+                  Three Week      | 3W |
+
+                  One Month       | 1M |
+
+                  Two Month       | 2M |
+
+                  Three Month     | 3M |
+
+                  Four Month      | 4M |
+
+                  Five Month      | 5M |
+
+                  Six Month       | 6M |
+
+                  Seven Month     | 7M |
+
+                  Eight Month     | 8M |
+
+                  Nine Month      | 9M |
+
+                  Ten Month       | 10M |
+
+                  Eleven Month    | 11M |
+
+                  One Year        | 1Y |
+
+                  Fifteen Months  | 15M |
+
+                  Eighteen Months | 18M |
+
+                  Twenty One Months| 21M |
+
+                  Two Years        | 2Y |
+
+                  Specify a Broken Date| BROKEN |
+                         
+                  Broken Dates (the dates that fall between the tenors) are
+                  supported. To supply a Broken Date, the Tenor mut be specified
+                  as “BROKEN” and a Value Date specified.
+
+
+                  If SP is supplied, this implies a SPOT instrument is
+                  requested. Otherwise the trade will be a forward. For SWAP
+                  orders, this field should have a "-" (hyphen) separated value
+                  e.g.: 1W-1M.
+                example: SP
+              valueDate:
+                type: string
+                description: >-
+                  The value date the order is being placed for. Required if
+                  tenor = ‘BROKEN’. Format: yyyyMMdd. By default, the valueDate
+                  rolls over to the next business day if it falls on a currency
+                  holiday. If auto rollover to the next business day is not
+                  required, notify your Citi Representative. The default setup
+                  will be disabled within the CitiFX Gateway. The configuration
+                  applies to all trades sent over API and cannot be customized
+                  at an individual trade level.
+                example: 20250525
+              ccyPair:
+                type: string
+                description: >
+                  Please contact your Citi Salesperson to obtain a list of
+                  currency pairs currently supported by CitiFX Gateway.
+
+                  CitiFX Gateway can accept currency pairs in any of the below
+                  formats:
+                    - Alpha Sorted
+                    - BaseTerm
+                    - Base/Term
+                    - TermBase
+                    - Term/Base
+
+                  Note: Specifying term first in the currency pair field does
+                  not signify an inverted quote. Inverted quote is not supported
+                  for FX Market Orders.
+                maxLength: 6
+                example: GBPUSD
+              dealtCcy:
+                type: string
+                description: The currency that you wish to deal on.
+                maxLength: 3
+                example: GBP
+              orderQty:
+                type: number
+                description: The order quanitity of the dealt currency.
+                example: 1000
+              side:
+                type: string
+                enum:
+                  - B
+                  - S
+                description: >-
+                  The Buy Or Sell Indicator from your perspective. B=Client buys
+                  dealt ccy S=Client sells dealt ccy.
+                example: B
+              transactTime:
+                type: string
+                description: The time of the transaction represented by this single order.
+                example: Mon Apr 29 12:50:33 IST 2024
+              purposeCode:
+                type: string
+                description: >-
+                  The purpose code for your branch if mandatory as per
+                  regulation in your branch.
+              customRemark1:
+                type: string
+                description: User-defined custom field.
+              customRemark2:
+                type: string
+                description: User-defined custom field.
+              customRemark3:
+                type: string
+                description: User-defined custom field.
+              customRemark4:
+                type: string
+                description: User-defined custom field.
+              customRemark5:
+                type: string
+                description: User-defined custom field.
+              ndf:
+                type: string
+                description: NDF field. Should be Y if NDF deal. Default is N if blank.
+              ndfCurrency:
+                type: string
+                description: >-
+                  NDF Currency. Applicable for NDF = Y but not mandatory.
+                  Applicable to synthetic cross. Else value will be discarded.
+              ndfFixingSource:
+                type: string
+                description: >-
+                  NDF Fixing Source. For NDFs, this field is mandatory for G10.
+                  System will discard the value in case exist for non G10 cross.
+                example: WMR LDN1600
+              startTime:
+                type: string
+                description: For time-based market orders. Format:HH:mm <Timezone>.
+                example: 13:45 GMT
+              purposeOfTransfer:
+                type: number
+                description: >-
+                  Indicates the purpose of the FX Trade. Field is numeric value
+                  and contains list of pre-defined codes configured at Citi
+                  Legal Vehicle and will be provide to you during onboarding.
+              debitTemplate:
+                type: string
+                description: >-
+                  Indicates the debit side of the deal. It is a list of
+                  pre-defined templates configured at individual entity level.
+                  Applicable only for Spot and Forward deals. Values will be
+                  provide by Citi during onboarding.
+              creditTemplate:
+                type: string
+                description: >-
+                  Indicates the credit side of the deal. It is a list of
+                  pre-defined templates configured at individual entity level.
+                  Applicable only for Spot and Forward deals. Values will be
+                  provide by Citi during  onboarding.
+              suppressSettlement:
+                type: string
+                description: Flag to suppress the settlement on FX side.
+                example: Y (or) N
+      example:
+        action: NEW
+        senderCompId: TESTCLIENT0
+        onBehalfOfCompId: TC0
+        jsonReqId: 56ae4527
+        sendingTime: 20240315-15:48:49.635
+        deals:
+          - account: HKG|0xxxxx4
+            clOrdId: TESTDEAL01
+            tenor: SP
+            ccyPair: EURUSD
+            dealtCcy: USD
+            orderQty: '100'
+            side: B
+            transactTime: Fri Mar 15 15:48:49 GMT 2024
+    Order_Accepted_Or_Rejected:
+      description: >-
+        The response will be published via web socket for Accepted or Rejected
+        orders. In case of multiple orders, multiple dealResponse JSON objects
+        will be present in the dealResponses JSON array. Response array can be
+        of both Ack, Nack.
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+        - dealResponses
+        - deals
+      properties:
+        action:
+          type: string
+          example: order-response
+          description: 'Allowed Value: order-response.'
+        jsonReqId:
+          type: string
+          example: Req20181011776
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 60
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message.
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘).
+          example: Sub Entity
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT.' Format is
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:29.125
+        deals:
+          type: array
+          items:
+            required:
+              - account
+              - clOrdId
+              - ccyPair
+              - dealtCcy
+              - orderQty
+              - side
+              - fixingCode
+              - transactTime
+              - execId
+              - avgPx
+              - orderStatus
+            properties:
+              account:
+                type: string
+                description: Your Citi-assigned client identifier.
+                example: 109430258
+              clOrdId:
+                type: string
+                description: The order reference you assigned.
+                example: TEST12345
+              side:
+                type: string
+                enum:
+                  - B
+                  - S
+                description: >-
+                  Indicates whether you are buying (B) or selling (S) the dealt
+                  ccy.
+                example: B
+              valueDate:
+                type: string
+                description: Populated for Acknowledged deal.
+                example: 20240502
+              purposeCode:
+                type: string
+                description: Returns the purpose code of the order.
+              ccyPair:
+                type: string
+                description: The currency pair that you are trading on.
+                maxLength: 6
+                example: GBPUSD
+              dealtCcy:
+                type: string
+                description: The currency for which you supplied the dealt amount.
+                maxLength: 3
+                example: GBP
+              transactTime:
+                type: string
+                description: The time of the transaction this order occurred.
+                example: Mon Apr 29 12:50:33 IST 2024
+              execId:
+                type: string
+                description: The unique identifier of execution message.
+                example: ABC123
+              avgPx:
+                type: number
+                description: Calculated average price of all fills on this order.
+                example: 0
+              orderId:
+                type: number
+                description: >-
+                  Citi-assigned order ID. This is not populated for REJECTED
+                  deals.
+                example: 3714864
+              orderStatus:
+                type: string
+                description: The current status of the deal.
+                example: ACKNOWLEDGED or REJECTED
+              lastQty:
+                type: number
+                description: Populates with value 0 only for ACKNOWLEDGED deals.
+                example: 0
+              cumQty:
+                type: number
+                description: Populates with value 0 only for REJECTED deals.
+              leavesQty:
+                type: number
+                description: Populates with value 0 only for REJECTED deals.
+              execType:
+                type: number
+                description: >-
+                  Populates with value : 8 for REJECTED deals. Do not get
+                  populated for ACKNOWLEDGED deals.
+                example: 8
+              ordRejReason:
+                type: number
+                description: Only for REJECTED deals. Contains rejection code.
+                example: 99
+              text:
+                type: string
+                description: Only for REJECTED deals. Contains actual rejection reason.
+                example: 0
+              secondaryClOrdId:
+                type: string
+                description: Secondary order reference.
+                example: OR12345
+      example:
+        senderCompId: TESTCLIENT0
+        onBehalfOfCompId: TCL0
+        action: order-response
+        jsonReqId: 56ae4527
+        sendingTime: 20240315-15:48:49.635
+        senderSubId: System
+        dealResponses:
+          - account: HKG|0xxxxx4
+            clOrdId: TESTDEAL01
+            side: B
+            transactTime: Fri Mar 15 15:48:49 GMT 2024
+            valueDate: '20240319'
+            dealtCcy: USD
+            ccyPair: EURUSD
+            execId: 3086183-1710517729635
+            avgPx: '0'
+            orderId: TCL0-TESTDEAL01
+            orderStatus: ACKNOWLEDGED
+            lastQty: '0'
+            text: Quote TCL0-TESTDEAL01 processed in eDealer.
+            purposeCode: 'null'
+    Order_Rated:
+      description: >-
+        The response will be published via web socket for Rated orders. In case
+        of multiple orders, multiple dealResponse JSON objects will be present
+        in the dealResponses JSON array. Response array can be of both Ack,
+        Nack.
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+        - dealResponses
+        - deals
+      properties:
+        action:
+          type: string
+          example: order-response
+          description: 'Allowed Value: order-response.'
+        jsonReqId:
+          type: string
+          example: Req20181011776
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 60
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message.
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘).
+          example: Sub Entity
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT.' Format is
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:29.125
+        deals:
+          type: array
+          items:
+            required:
+              - account
+              - clOrdId
+              - valueDate
+              - tradeDate
+              - ccyPair
+              - dealtCcy
+              - orderQty
+              - side
+              - fixingCode
+              - transactTime
+              - execId
+              - avgPx
+              - orderId
+              - orderStatus
+              - lastQty
+              - contAmtValue
+              - lastPx
+              - lastSpotRate
+              - lastForwardPoints
+            properties:
+              account:
+                type: string
+                description: Your Citi-assigned client identifier.
+                example: 109430258
+              clOrdId:
+                type: string
+                description: The order reference you assigned.
+                example: TEST12345
+              side:
+                type: string
+                enum:
+                  - B
+                  - S
+                description: >-
+                  Indicates whether you are buying (B) or selling (S) the dealt
+                  ccy.
+              valueDate:
+                type: string
+                description: Populated for Rated deal.
+                example: 20240502
+              purposeCode:
+                type: string
+                description: Returns the purpose code of the order.
+              ccyPair:
+                type: string
+                description: The currency pair that you are trading on.
+                maxLength: 6
+                example: GBPUSD
+              dealtCcy:
+                type: string
+                description: The currency for which you supplied the dealt amount.
+                maxLength: 3
+                example: GBP
+              transactTime:
+                type: string
+                description: The time of the transaction.
+                example: Mon Apr 29 12:50:33 IST 2024
+              execId:
+                type: string
+                description: >-
+                  The unique identifier of execution message. Alphanumeric &
+                  special character hyphen (-).
+              avgPx:
+                type: number
+                description: The calculated average price of all fills on this order
+                example: 1.0935
+              orderId:
+                type: number
+                description: >-
+                  Citi-assigned order ID. This will be the same value as sent in
+                  orderId field of Acknowledged deal.
+                example: 3714864
+              orderStatus:
+                type: string
+                example: COMPLETED
+                description: The current status of the deal. Allowed value = COMPLETED.
+              contAmtValue:
+                type: number
+                description: The counter amount, i.e., non-dealt amount.
+                example: 54321.21
+              lastPx:
+                type: number
+                description: Outright Rate
+                example: 1.51446
+              lastQty:
+                type: number
+                description: Amount
+                example: 12345.56
+              lastSpotRate:
+                type: number
+                description: Spot Rate
+                example: 1.5144
+              lastForwardPoints:
+                type: number
+                description: Forward Points
+                example: 0
+              customRemark1:
+                type: string
+                description: >-
+                  User-defined custom field. Value given in incoming request is
+                  returned.
+              customRemark2:
+                type: string
+                description: >-
+                  User-defined custom field. Value given in incoming request is
+                  returned.
+              customRemark3:
+                type: string
+                description: >-
+                  User-defined custom field. Value given in incoming request is
+                  returned.
+              customRemark4:
+                type: string
+                description: >-
+                  User-defined custom field. Value given in incoming request is
+                  returned.
+              customRemark5:
+                type: string
+                description: >-
+                  User-defined custom field. Value given in incoming request is
+                  returned.
+              secondaryClOrdId:
+                type: string
+                description: Secondary order reference.
+                example: OR12345
+      example:
+        senderCompId: TESTCLIENT0
+        onBehalfOfCompId: TCL0
+        action: order-response
+        jsonReqId: 56ae4527
+        sendingTime: 20240315-15:49:01.980
+        senderSubId: System
+        dealResponses:
+          - account: HKG|0xxxxx4
+            clOrdId: TESTDEAL01
+            side: B
+            transactTime: Fri Mar 15 15:49:01 GMT 2024
+            valueDate: '20240319'
+            tradeDate: '20240315'
+            dealtCcy: USD
+            ccyPair: EURUSD
+            execId: 3086183-1710517741980
+            avgPx: '1.086'
+            orderId: TCL0-TESTDEAL01
+            orderStatus: COMPLETED
+            lastQty: '100.0'
+            text: Rated Through OLT.
+            contAmtValue: '92.08'
+            lastPx: '1.086'
+            lastSpotRate: '1.086'
+            lastForwardPoints: '0.0'
+            purposeCode: 'null'

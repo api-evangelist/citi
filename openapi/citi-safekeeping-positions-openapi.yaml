@@ -1,0 +1,2730 @@
+openapi: 3.0.1
+info:
+  title: Safekeeping Positions API
+  description: >
+    The Safekeeping Positions API provides real-time and historical visibility
+    into securities holdings across individual accounts. It delivers
+    comprehensive data for End-of-Day and Intraday periods, enabling to monitor
+    asset movements with high precision. Designed for seamless integration, this
+    API supports critical functions such as portfolio reconciliation, liquidity
+    management, and automated reporting within a secure, professional
+    framework.  <br><br>**Authentication**<br><br>Client applications must
+    supply an authentication token with every request, and therefore must first
+    authenticate before it can proceed. A client can use the OAuth 2 client
+    credential grant flow to obtain a time limited access token. To get an
+    access token send a HTTP Post request to the token endpoint using basic
+    authentication with the client key and secret (provided under separate
+    cover).<br><br>**Request**<br><br>```POST {baseURL}/api/oauth2/token
+    HTTPS/1.1 
+
+    Authorization: Basic base64(key:secret) 
+
+    Content-Type:application/x-www-form-urlencoded```<br><br>
+
+    **Response**<br><br>```
+      {
+          "token_type": "bearer", 
+          "access_token": <access token>, 
+          "expires_in": <seconds until expiry>, 
+          "consented_on":<timestamp>, 
+          "scope": "/dod"`
+      }```    <br><br>The bearer token is valid for 1800 seconds (30 minutes) after which it will expire. At this point, you would need to re-authenticate.
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets/dod
+    description: Sandbox server (uses test data)
+  - url: https://api.citivelocity.com/markets/dod
+    description: Production server
+security:
+  - client-Credential-Oauth-Security-Schema: []
+components:
+  headers:
+    dod-request-id:
+      schema:
+        type: string
+      description: The UUID representing the unique identifier of the dod request
+    paging-page-number:
+      schema:
+        type: string
+      description: The current page number
+    paging-total-page-count:
+      schema:
+        type: string
+      description: The total count of pages available
+    paging-total-record-count:
+      schema:
+        type: string
+      description: The total count of records
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  examples:
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: path-param servicePortableId is mandatory and it cannot be empty
+            action: please provide valid parameter values
+            code: VC00010
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Resource that you are searching is not found
+            action: Please use valid resource details
+            code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Method not supported
+            action: please use valid http verb
+            code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+  schemas:
+    1040640e-125f-41e2-a262-88dea5f338bd-data-schema:
+      type: object
+      properties:
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account. For the
+            Cash Account the branch code is a numeric value and for the
+            Safekeeping Account it is the ISO Country code.
+          example: '484'
+        ALTV_CUR_CD:
+          type: string
+          description: Account Base Currency Code is the ISO Currency Code for the account.
+          example: JPY
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: 8-DEMOCSH53JPY
+        ALTN_CUR_EXCH_RATE:
+          type: number
+          format: double
+          description: >-
+            The exchange rate used to convert Local Market Valuation to the
+            Alternative Currency Valuation. Not applicable to the US domestic
+            positions.
+          example: '8.9076'
+        ALTV_CUR_VAL:
+          type: number
+          format: double
+          description: >-
+            Base Currency Valuation is the Market Valuation in the Account Base
+            Currency of the position for the "As Of" date.
+          example: '138923711.7'
+        ISS_CAT_NME:
+          type: string
+          description: >-
+            Issue Category is the description for the Issue Category Code. 
+            Values include:  Common Stock (CSTK), Derivatives (DERIV), Mortgage
+            Backed Securities (MBS), etc.
+          example: EQUITIES
+        SEC_GROUP:
+          type: string
+          description: >-
+            Asset Type is a code representing the Asset Type of the security. 
+            Values include: EQTY (Equity), FI (Fixed Income), etc.
+          example: FI
+        BR_NME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: NEW YORK SECURITIES CB
+        CNTR_CD:
+          type: string
+          description: >-
+            Place Of Settlement Code is a 3 digit code corresponding to the
+            settlement location of the holding.
+          example: RSA
+        CNTR_CD_DESC:
+          type: string
+          description: >-
+            The center code description applicable to securities transactions
+            only.
+          example: NORTHFIELD LLC
+        CURR_FCTR:
+          type: number
+          format: double
+          description: >-
+            Current Factor is the factor which applies to the current accrual
+            period to determine payments and balances for principal paying
+            securities.
+          example: '0.01580556'
+        GFC_ID:
+          type: string
+          description: >-
+            Client ID is an identifier that is available on a Cash Account
+            and/or a Safekeeping Account. This Client ID is referred to,
+            internally at Citi, as a GFCID.
+          example: '1000012345'
+        DTED_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Dated Date/Time is the date that the interest begins to accrue on a
+            fixed-income security.
+          example: '2019-08-26 00:00:00'
+        DLAY_DAYS:
+          type: string
+          description: >-
+            Delay Days is the number of days from the issuance of an MBS pool
+            (or from the beginning of the interest accrual period) until the
+            first payment is remitted/paid to the holders.
+          example: '13'
+        DNOMD_CUR_CD:
+          type: string
+          description: >-
+            Denomination Currency Code is the ISO currency code in which the
+            security is denominated, in the local market.
+          example: HKD
+        CNTRY_CD:
+          type: string
+          description: >-
+            The Country Code (location) of the security custodian. Not
+            applicable to the US domestic positions.
+          example: JE
+        SETL_HOLD_ST:
+          type: string
+          description: >-
+            How Position is Held Code is a 2 digit code corresponding to the How
+            Position Is Held parameter which carries the status of the holding,
+            or where it is held.
+          example: LE
+        SEC_DESC:
+          type: string
+          description: >-
+            Issue Description contains the name and other details of the
+            instrument.
+          example: TEMPORARY SECURITY 003263100
+        ISS_PRC:
+          type: number
+          format: double
+          description: Issue Price is the market price of the security at the "As Of" date.
+          example: '35.811'
+        SEC_SUB_TYP_CD:
+          type: string
+          description: >-
+            Issue Type Code is a code linked to the Issue Type parameter which
+            describes the type of security instrument. Values include: 1 (ADR
+            Convertible), 12 (Bond), 19 (Bond Convertible), etc.
+          example: '12'
+        SEC_SUB_TYP_NME:
+          type: string
+          description: >-
+            Issue Type is a description of the type of the security instrument. 
+            Values include: ADR Convertible (1), Bond (12) , Bond Convertible
+            (19), etc.
+          example: BOND
+        ISSR_LOC_CD:
+          type: string
+          description: >-
+            Issuer Location Code is the ISO country code where the issuer of the
+            security is based.  Values include: AR (Argentina), CA (Canada), IE
+            (Ireland), etc.
+          example: CA
+        ISSR_LOC_NME:
+          type: string
+          description: >-
+            Issuer Location is the name of the country where the issuer of the
+            security is based.  Values include: Argentina (AR), Canada (CA),
+            Ireland (IE), etc.
+          example: CANADA
+        MKT_VAL_AMT:
+          type: number
+          format: double
+          description: >-
+            The market price of the holding multiplied by the number of units or
+            shares held. Usually, the monetary value of the holding. This is the
+            indicative valuation of the position at EOD using the Issue Price
+            supplied.
+          example: '927444.82'
+        STK_EXCHG_NME:
+          type: string
+          description: >-
+            Nominee Description is the nominee name and/or other nominee
+            information.
+          example: VIDACOS NOMINEES LIMITED
+        PMT_FREQY_DESC:
+          type: string
+          description: >-
+            Payment Frequency Description indicates how often interest is paid
+            on the security.  Values include: Annual (00001),  Sem-Annual
+            (00002), One Payment Per Year (00035), etc.
+          example: Annual
+        PNDNG_DELIV:
+          type: number
+          format: double
+          description: >-
+            Pending Deliverable is the sum of the quantity of outstanding
+            deliver trades at the "As Of" date.
+          example: '-34891'
+        PNDNG_RECV:
+          type: number
+          format: double
+          description: >-
+            Pending Receivable is the sum of the quantity of outstanding receive
+            trades at the "As Of" date.
+          example: '353400'
+        POOL_ID_CD:
+          type: string
+          description: >-
+            Pool ID is an alphanumeric code that identifies a particular
+            mortgage backed security.
+          example: AB1234
+        HLDNG_UPD_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Position Update Timestamp is the date/time when the holding was last
+            updated.
+          example: '2019-08-27 00:00:00'
+        PREV_FCTR:
+          type: number
+          format: double
+          description: >-
+            The factor which applies for the previous accrual period to
+            determine payments and balances for principal paying securities.
+            Currently applicable to the US intraday cash transactions.
+          example: '0.84824716'
+        PRC_CCY_NME:
+          type: string
+          description: >-
+            Market Value Currency is the name of the currency used to value the
+            holding.
+          example: POUND STERLING
+        SID_SEDOL:
+          type: string
+          description: >-
+            SEDOL (Stock Exchange Daily Official List) is a unique
+            identification code, consisting of seven alphanumeric characters,
+            that is assigned to all securities trading on the London Stock
+            Exchange.
+          example: BJ18KB6
+        SID_CUSIP:
+          type: string
+          description: >-
+            CUSIP (Committee on Uniform Securities Identification Procedures) It
+            is a nine-character alphanumeric code that identifies a North
+            American financial security for the purposes of facilitating
+            clearing and settlement of trades.
+          example: T5379P105
+        ST_NME:
+          type: string
+          description: >-
+            State is the state where this statutory deposit is placed. Applies
+            only to US Domestic holdings.
+          example: CALIFORNIA
+        ST_CD:
+          type: string
+          description: >-
+            State Code is a 2 digit code corresponding to the State where this
+            statutory deposit is placed. Applies only to US Domestic holdings.
+          example: CA
+        STRK_PRC_AMT:
+          type: number
+          format: double
+          description: >-
+            Strike Price is the specified price on an options contract at which
+            the contract may be exercised.
+          example: '109.9'
+        SID_TICKER_SYMB:
+          type: string
+          description: Ticker is the symbol used on the exchange to identify the security.
+          example: DARK
+        TRDED_QTY:
+          type: number
+          format: double
+          description: >-
+            Traded Quantity is the quantity of the security held including any
+            open trades.
+          example: '755435'
+        MKT_PRC_CUR_CD:
+          type: string
+          description: >-
+            Market Value Currency Code is the ISO currency code of the Market
+            Value.
+          example: GBP
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - Japan 2
+        MATY_DT:
+          type: string
+          format: date-time
+          description: >-
+            Maturity Date is the date of maturity or redemption for fixed income
+            securities.
+          example: '2041-10-10 00:00:00'
+        PFD_ID_CTXT_CD:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID parameter. Values include: CUSIP, ISIN,
+            SEDOL, LOCAL, etc.
+          example: ISIN
+        PFD_ISS_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: BFXCMX
+        SID_ISIN:
+          type: string
+          description: >-
+            ISIN (International Securities Identification Number) is a
+            12-character alpha-numerical code that does not contain information
+            characterizing financial instruments but serves for uniform
+            identification of a security at trading and settlement.
+          example: JP3049040003
+        SEC_SHRT_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: FR QN4224
+        INCM_PROJN_RATE:
+          type: number
+          format: double
+          description: Interest Rate is the coupon rate of the security.
+          example: '3.0946'
+        SETLD_QTY:
+          type: number
+          format: double
+          description: >-
+            Settled Quantity is the quantity that has settled or the quantity of
+            the security that is fully settled at the "As Of" date.  For partial
+            settlements the settled quantity is the portion that has settled.
+          example: '165502'
+        HOLD_LOCN_NME:
+          type: string
+          description: >-
+            How Position is Held is a description of the status of the holding,
+            or where it is held.
+          example: HELD AT DEPOSITORY
+        ORGL_FCE_VAL:
+          type: number
+          format: double
+          description: >-
+            Face Value is the original face value for Mortgage Backed Securities
+            in the US domestic market. For other MBS positions this will be the
+            current face value after amortization.
+          example: '6053'
+        ASOF_TMS:
+          type: string
+          format: date-time
+          description: The As Of Date is the date of the information being reported.
+          example: '2019-12-30 00:00:00'
+        EOD_INTRA_IND:
+          type: string
+          description: >-
+            EOD/intraday Indicator advises if the balance is an End of Day
+            reported balance or if the balance is an Intraday reported balance.
+            Values are:<br> 1 (Intraday)<br> 2 (End of Day)
+          example: '2'
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            Account Type Code indicates the type of the account. Values are:<br>
+            C (Cash Account)<br> S (Safekeeping Account).
+          example: C
+        SEC_SECURITY_CD:
+          type: string
+          description: >-
+            CITI Internal Security Code is the identifier of the CITI Internal
+            Security Identifier.
+          example: 000BMG6KT4
+        ISS_TMS:
+          type: string
+          format: date-time
+          description: Issue Date is the date of first issue of the security.
+          example: '2019-11-26 00:00:00'
+        ISS_CATG_CD:
+          type: string
+          description: >-
+            Issue Category Code is a specific category for the security.  Values
+            include: CSTK (Common Stock), DERIV (Derivatives), MBS (Mortgage
+            Backed Securities), etc.
+          example: EQTY
+        US_SIC_CD:
+          type: string
+          description: >-
+            SIC is the Standard Industrial Classification four-digit numeric
+            code.
+          example: '3544'
+        PMT_FREQY:
+          type: string
+          description: >-
+            Payment Frequency indicates how often interest is paid on the
+            security.  Values include: 00001 (Annual), 00002 (Sem-Annual), 00035
+            (One Payment Per Year), etc.
+          example: '00001'
+        FCTR_DTE:
+          type: string
+          format: date-time
+          description: >-
+            Factor Date is the date the current factor is applicable from for
+            principal paying securities.
+          example: '2023-12-10 00:00:00'
+        SID_LOCAL:
+          type: string
+          description: >-
+            Local ID is the Local security identifier of the associated
+            security.
+          example: '0059663300'
+        COB_DATE:
+          type: string
+          format: date
+          description: Close of Business Date
+          example: '2024-07-10'
+        TRDED_QTY_MKT_EOD:
+          type: number
+          format: double
+          description: >-
+            Traded Quantity is the quantity of the security held including any
+            open trades as of market close date
+          example: '123456'
+        SETLD_QTY_MKT_EOD:
+          type: number
+          format: double
+          description: >-
+            Settled Quantity is the quantity of the security that is fully
+            settled as of market close date
+          example: '12345'
+        MKT_EOD_CL_DT:
+          type: string
+          format: date
+          description: This is the last close date for the position in the local market.
+          example: '2024-11-12'
+        PLACE_OF_SETLMT:
+          type: string
+          description: >-
+            Place Of Settlement is the name of the settlement location for the
+            security, applicable to securities positions , transactions only.
+          example: MOSCOW
+        ROLLED_FWD:
+          type: string
+          description: >-
+            Rolled Forward indicator parameter is used to flag if position
+            valuation has been rolled forward from last close of business.
+          example: 'N'
+        IOD_TIMESTAMP:
+          type: string
+          format: date-time
+          description: Provides the Timestamp when data is loaded in the Data Lake
+          example: '2024-11-12 19:30:08'
+    1040640e-125f-41e2-a262-88dea5f338bd-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/1040640e-125f-41e2-a262-88dea5f338bd-data-schema
+    1040640e-125f-41e2-a262-88dea5f338bd-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/1040640e-125f-41e2-a262-88dea5f338bd-data-schema
+      xml:
+        name: data
+    bbe2a729-c02f-4e5c-8c56-8001d04e5933-data-schema:
+      type: object
+      properties:
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: 8-DEMOCSH53JPY
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            Account Type Code indicates the type of the account. Values are:<br>
+            C (Cash Account)<br> S (Safekeeping Account).
+          example: C
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - Japan 2
+        ALTN_CUR_EXCH_RATE:
+          type: number
+          format: double
+          description: >-
+            The exchange rate used to convert Local Market Valuation to the
+            Alternative Currency Valuation. Not applicable to the US domestic
+            positions.
+          example: '8.9076'
+        ALTV_CUR_CD:
+          type: string
+          description: Account Base Currency Code is the ISO Currency Code for the account.
+          example: JPY
+        ALTV_CUR_VAL:
+          type: number
+          format: double
+          description: >-
+            Base Currency Valuation is the Market Valuation in the Account Base
+            Currency of the position for the "As Of" date.
+          example: '138923711.7'
+        ASOF_TMS:
+          type: string
+          format: date-time
+          description: The As Of Date is the date of the information being reported.
+          example: '2019-12-30 00:00:00'
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account.For the
+            Cash Account the branch code is a numeric value and for the
+            Safekeeping Account it is the ISO Country code.
+          example: '484'
+        BR_NME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: NEW YORK SECURITIES CB
+        CNTR_CD:
+          type: string
+          description: >-
+            Place Of Settlement Code is a 3 digit code corresponding to the
+            settlement location of the holding.
+          example: RSA
+        CNTR_CD_DESC:
+          type: string
+          description: >-
+            The center code description applicable to securities transactions
+            only.
+          example: NORTHFIELD LLC
+        CNTRY_CD:
+          type: string
+          description: >-
+            The Country Code (location) of the security custodian. Not
+            applicable to the US domestic positions.
+          example: JE
+        COB_DATE:
+          type: string
+          format: date
+          description: Close of Business Date
+          example: '2024-07-10'
+        CURR_FCTR:
+          type: number
+          format: double
+          description: >-
+            Current Factor is the factor which applies to the current accrual
+            period to determine payments and balances for principal paying
+            securities.
+          example: '0.01580556'
+        DLAY_DAYS:
+          type: string
+          description: >-
+            Delay Days is the number of days from the issuance of an MBS pool
+            (or from the beginning of the interest accrual period) until the
+            first payment is remitted/paid to the holders.
+          example: '13'
+        DNOMD_CUR_CD:
+          type: string
+          description: >-
+            Denomination Currency Code is the ISO currency code in which the
+            security is denominated, in the local market.
+          example: HKD
+        DTED_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Dated Date/Time is the date that the interest begins to accrue on a
+            fixed-income security.
+          example: '2019-08-26 00:00:00'
+        EOD_INTRA_IND:
+          type: string
+          description: >-
+            EOD/intraday Indicator advises if the balance is an End of Day
+            reported balance or if the balance is an Intraday reported balance.
+            Values are: <br>1 (Intraday)<br> 2 (End of Day)
+          example: '2'
+        FCTR_DTE:
+          type: string
+          format: date-time
+          description: >-
+            Factor Date is the date the current factor is applicable from for
+            principal paying securities.
+          example: '2023-12-10 00:00:00'
+        GFC_ID:
+          type: string
+          description: >-
+            Client ID is an identifier that is available on a Cash Account
+            and/or a Safekeeping Account. This Client ID is referred to,
+            internally at Citi, as a GFCID.
+          example: '1000012345'
+        HLDNG_UPD_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Position Update Timestamp is the date/time when the holding was last
+            updated.
+          example: '2019-08-27 00:00:00'
+        HOLD_LOCN_NME:
+          type: string
+          description: >-
+            How Position is Held is a description of the status of the holding,
+            or where it is held.
+          example: HELD AT DEPOSITORY
+        INCM_PROJN_RATE:
+          type: number
+          format: double
+          description: Interest Rate is the coupon rate of the security.
+          example: '3.0946'
+        IOD_UPDATE_TMS:
+          type: string
+          format: date-time
+          description: IOD Timestamp
+          example: '2020-06-12 16:01:15'
+        ISS_CAT_NME:
+          type: string
+          description: >-
+            Issue Category is the description for the Issue Category Code. 
+            Values include:  Common Stock (CSTK), Derivatives (DERIV), Mortgage
+            Backed Securities (MBS), etc.
+          example: EQUITIES
+        ISS_CATG_CD:
+          type: string
+          description: >-
+            Issue Category Code is a specific category for the security.  Values
+            include: CSTK (Common Stock), DERIV (Derivatives), MBS (Mortgage
+            Backed Securities), etc.
+          example: EQTY
+        ISS_PRC:
+          type: number
+          format: double
+          description: Issue Price is the market price of the security at the "As Of" date.
+          example: '35.811'
+        ISS_TMS:
+          type: string
+          format: date-time
+          description: Issue Date is the date of first issue of the security.
+          example: '2019-11-26 00:00:00'
+        ISSR_LOC_CD:
+          type: string
+          description: >-
+            Issuer Location Code is the ISO country code where the issuer of the
+            security is based. Values include: AR (Argentina), CA (Canada), IE
+            (Ireland), etc.
+          example: CA
+        ISSR_LOC_NME:
+          type: string
+          description: >-
+            Issuer Location is the name of the country where the issuer of the
+            security is based. Values include: Argentina (AR), Canada (CA),
+            Ireland (IE), etc.
+          example: CANADA
+        MATY_DT:
+          type: string
+          format: date-time
+          description: >-
+            Maturity Date is the date of maturity or redemption for fixed income
+            securities.
+          example: '2041-10-10 00:00:00'
+        MKT_PRC_CUR_CD:
+          type: string
+          description: >-
+            Market Value Currency Code is the ISO currency code of the Market
+            Value.
+          example: GBP
+        ORGL_FCE_VAL:
+          type: number
+          format: double
+          description: >-
+            Face Value is the original face value for Mortgage Backed Securities
+            in the US domestic market. For other MBS positions this will be the
+            current face value after amortization.
+          example: '6053'
+        PFD_ID_CTXT_CD:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID parameter. Values include: CUSIP, ISIN,
+            SEDOL, LOCAL, etc.
+          example: ISIN
+        PFD_ISS_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: BFXCMX
+        PLACE_OF_SETLMT:
+          type: string
+          description: >-
+            Place Of Settlement is the name of the settlement location for the
+            security, applicable to securities positions , transactions only.
+          example: MOSCOW
+        PMT_FREQY:
+          type: string
+          description: >-
+            Payment Frequency indicates how often interest is paid on the
+            security.  Values include: 00001 (Annual), 00002 (Sem-Annual), 00035
+            (One Payment Per Year), etc.
+          example: '00001'
+        PMT_FREQY_DESC:
+          type: string
+          description: >-
+            Payment Frequency Description indicates how often interest is paid
+            on the security.  Values include: Annual (00001),  Sem-Annual
+            (00002), One Payment Per Year (00035), etc.
+          example: Annual
+        PNDNG_DELIV:
+          type: number
+          format: double
+          description: >-
+            Pending Deliverable is the sum of the quantity of outstanding
+            deliver trades at the "As Of" date.
+          example: '-34891'
+        PNDNG_RECV:
+          type: number
+          format: double
+          description: >-
+            Pending Receivable is the sum of the quantity of outstanding receive
+            trades at the "As Of" date.
+          example: '353400'
+        POOL_ID_CD:
+          type: string
+          description: >-
+            Pool ID is an alphanumeric code that identifies a particular
+            mortgage backed security.
+          example: AB1234
+        PRC_CCY_NME:
+          type: string
+          description: >-
+            Market Value Currency is the name of the currency used to value the
+            holding.
+          example: POUND STERLING
+        PREV_FCTR:
+          type: number
+          format: double
+          description: >-
+            The factor which applies for the previous accrual period to
+            determine payments and balances for principal paying securities.
+            Currently applicable to the US intraday cash transactions.
+          example: '0.84824716'
+        SEC_DESC:
+          type: string
+          description: >-
+            Issue Description contains the name and other details of the
+            instrument.
+          example: TEMPORARY SECURITY 003263100
+        SEC_GROUP:
+          type: string
+          description: >-
+            Asset Type is a code representing the Asset Type of the security. 
+            Values include: EQTY (Equity), FI (Fixed Income), etc.
+          example: FI
+        SEC_SECURITY_CD:
+          type: string
+          description: >-
+            CITI Internal Security Code is the identifier of the CITI Internal
+            Security Identifier.
+          example: 000BMG6KT4
+        SEC_SHRT_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: FR QN4224
+        SEC_SUB_TYP_CD:
+          type: string
+          description: >-
+            Issue Type Code is a code linked to the Issue Type parameter which
+            describes the type of security instrument. Values include: 1 (ADR
+            Convertible), 12 (Bond), 19 (Bond Convertible), etc.
+          example: '12'
+        SEC_SUB_TYP_NME:
+          type: string
+          description: >-
+            Issue Type is a description of the type of the security instrument. 
+            Values include: ADR Convertible (1), Bond (12) , Bond Convertible
+            (19), etc.
+          example: BOND
+        SETL_HOLD_ST:
+          type: string
+          description: >-
+            How Position is Held Code is a 2 digit code corresponding to the How
+            Position Is Held parameter which carries the status of the holding,
+            or where it is held.
+          example: LE
+        SETLD_QTY:
+          type: number
+          format: double
+          description: >-
+            Settled Quantity is the quantity that has settled or the quantity of
+            the security that is fully settled at the "As Of" date.  For partial
+            settlements the settled quantity is the portion that has settled.
+          example: '165502'
+        SID_CUSIP:
+          type: string
+          description: >-
+            CUSIP (Committee on Uniform Securities Identification Procedures) It
+            is a nine-character alphanumeric code that identifies a North
+            American financial security for the purposes of facilitating
+            clearing and settlement of trades.
+          example: T5379P105
+        SID_ISIN:
+          type: string
+          description: >-
+            ISIN (International Securities Identification Number) is a
+            12-character alpha-numerical code that does not contain information
+            characterizing financial instruments but serves for uniform
+            identification of a security at trading and settlement.
+          example: JP3049040003
+        SID_LOCAL:
+          type: string
+          description: >-
+            Local ID is the Local security identifier of the associated
+            security.
+          example: '0059663300'
+        SID_SEDOL:
+          type: string
+          description: >-
+            SEDOL (Stock Exchange Daily Official List) is a unique
+            identification code, consisting of seven alphanumeric characters,
+            that is assigned to all securities trading on the London Stock
+            Exchange.
+          example: BJ18KB6
+        SID_TICKER_SYMB:
+          type: string
+          description: Ticker is the symbol used on the exchange to identify the security.
+          example: DARK
+        ST_CD:
+          type: string
+          description: >-
+            State Code is a 2 digit code corresponding to the State where this
+            statutory deposit is placed. Applies only to US Domestic holdings.
+          example: CA
+        ST_NME:
+          type: string
+          description: >-
+            State is the state where this statutory deposit is placed. Applies
+            only to US Domestic holdings.
+          example: CALIFORNIA
+        STK_EXCHG_NME:
+          type: string
+          description: >-
+            Nominee Description is the nominee name and/or other nominee
+            information.
+          example: VIDACOS NOMINEES LIMITED
+        STRK_PRC_AMT:
+          type: number
+          format: double
+          description: >-
+            Strike Price is the specified price on an options contract at which
+            the contract may be exercised.
+          example: '109.9'
+        TRDED_QTY:
+          type: number
+          format: double
+          description: >-
+            Traded Quantity is the quantity of the security held including any
+            open trades.
+          example: '755435'
+        US_SIC_CD:
+          type: string
+          description: >-
+            SIC is the Standard Industrial Classification four-digit numeric
+            code.
+          example: '3544'
+        TRDED_QTY_MKT_EOD:
+          type: number
+          format: double
+          description: >-
+            Traded Quantity is the quantity of the security held including any
+            open trades as of market close date
+          example: '123456'
+        SETLD_QTY_MKT_EOD:
+          type: number
+          format: double
+          description: >-
+            Settled Quantity is the quantity of the security that is fully
+            settled as of market close date
+          example: '12345'
+        MKT_EOD_CL_DT:
+          type: string
+          format: date
+          description: This is the last close date for the position in the local market.
+          example: '2024-11-12'
+    bbe2a729-c02f-4e5c-8c56-8001d04e5933-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/bbe2a729-c02f-4e5c-8c56-8001d04e5933-data-schema
+    bbe2a729-c02f-4e5c-8c56-8001d04e5933-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/bbe2a729-c02f-4e5c-8c56-8001d04e5933-data-schema
+      xml:
+        name: data
+    ErrorResponse:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errorDetails:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      title: Error Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+  parameters:
+    client_id:
+      description: >-
+        Your unique ID. This is the same as the ID you used for OAuth token
+        generation. Citi shared this ID with you during your Data On Demand API
+        onboarding
+      name: client_id
+      in: header
+      required: true
+      schema:
+        type: string
+    skip:
+      name: skip
+      in: query
+      description: The number of records to skip before returning the results
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    take:
+      name: take
+      in: query
+      description: The maximum number of records to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 5000
+    select:
+      name: $select
+      in: query
+      description: >-
+        The `$select` parameter in an API allows you to specify which data
+        parameters (properties or columns) they want to receive in the API
+        response. This helps improve efficiency by reducing the amount of data
+        transferred and simplifying client-side processing.
+      required: false
+      schema:
+        type: string
+    parameter-19114:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account.  For the
+        Cash Account the branch code is a numeric value and for the Safekeeping
+        Account it is the ISO Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19115:
+      name: ALTV_CUR_CD
+      description: Account Base Currency Code is the ISO Currency Code for the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19116:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal Citi client identifier that is
+        associated to a Safekeeping or Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19119:
+      name: ALTN_CUR_EXCH_RATE
+      description: >-
+        The exchange rate used to convert Local Market Valuation to the
+        Alternative Currency Valuation. Not applicable to the US domestic
+        positions.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19120:
+      name: ALTV_CUR_VAL
+      description: >-
+        Base Currency Valuation is the Market Valuation in the Account Base
+        Currency of the position for the "As Of" date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19121:
+      name: ISS_CAT_NME
+      description: >-
+        Issue Category is the description for the Issue Category Code.  Values
+        include:  Common Stock (CSTK), Derivatives (DERIV), Mortgage Backed
+        Securities (MBS), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19122:
+      name: SEC_GROUP
+      description: >-
+        Asset Type is a code representing the Asset Type of the security. 
+        Values include: EQTY (Equity), FI (Fixed Income), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19124:
+      name: BR_NME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19126:
+      name: CNTR_CD
+      description: >-
+        Place Of Settlement Code is a 3 digit code corresponding to the
+        settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19127:
+      name: CNTR_CD_DESC
+      description: The center code description applicable to securities transactions only.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19130:
+      name: CURR_FCTR
+      description: >-
+        Current Factor is the factor which applies to the current accrual period
+        to determine payments and balances for principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19133:
+      name: GFC_ID
+      description: >-
+        Client ID is an identifier that is available on a Cash Account and/or a
+        Safekeeping Account. This Client ID is referred to, internally at Citi,
+        as a GFCID.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19135:
+      name: DTED_TMS
+      description: >-
+        Dated Date/Time is the date that the interest begins to accrue on a
+        fixed-income security.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-19136:
+      name: DLAY_DAYS
+      description: >-
+        Delay Days is the number of days from the issuance of an MBS pool (or
+        from the beginning of the interest accrual period) until the first
+        payment is remitted/paid to the holders.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19137:
+      name: DNOMD_CUR_CD
+      description: >-
+        Denomination Currency Code is the ISO currency code in which the
+        security is denominated, in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19138:
+      name: CNTRY_CD
+      description: >-
+        The Country Code (location) of the security custodian. Not applicable to
+        the US domestic positions.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19145:
+      name: SETL_HOLD_ST
+      description: >-
+        How Position is Held Code is a 2 digit code corresponding to the How
+        Position Is Held parameter which carries the status of the holding, or
+        where it is held.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19151:
+      name: SEC_DESC
+      description: Issue Description contains the name and other details of the instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19152:
+      name: ISS_PRC
+      description: Issue Price is the market price of the security at the "As Of" date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19153:
+      name: SEC_SUB_TYP_CD
+      description: >-
+        Issue Type Code is a code linked to the Issue Type parameter which
+        describes the type of security instrument. Values include: 1 (ADR
+        Convertible), 12 (Bond), 19 (Bond Convertible), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19154:
+      name: SEC_SUB_TYP_NME
+      description: >-
+        Issue Type is a description of the type of the security instrument. 
+        Values include: ADR Convertible (1), Bond (12) , Bond Convertible (19),
+        etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19156:
+      name: ISSR_LOC_CD
+      description: >-
+        Issuer Location Code is the ISO country code where the issuer of the
+        security is based.  Values include: AR (Argentina), CA (Canada), IE
+        (Ireland), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19157:
+      name: ISSR_LOC_NME
+      description: >-
+        Issuer Location is the name of the country where the issuer of the
+        security is based.  Values include: Argentina (AR), Canada (CA), Ireland
+        (IE), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19160:
+      name: MKT_VAL_AMT
+      description: >-
+        The market price of the holding multiplied by the number of units or
+        shares held. Usually, the monetary value of the holding. This is the
+        indicative valuation of the position at EOD using the Issue Price
+        supplied.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19162:
+      name: STK_EXCHG_NME
+      description: >-
+        Nominee Description is the nominee name and/or other nominee
+        information.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19163:
+      name: PMT_FREQY_DESC
+      description: >-
+        Payment Frequency Description indicates how often interest is paid on
+        the security.  Values include: Annual (00001),  Sem-Annual (00002), One
+        Payment Per Year (00035), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19164:
+      name: PNDNG_DELIV
+      description: >-
+        Pending Deliverable is the sum of the quantity of outstanding deliver
+        trades at the "As Of" date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19165:
+      name: PNDNG_RECV
+      description: >-
+        Pending Receivable is the sum of the quantity of outstanding receive
+        trades at the "As Of" date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19167:
+      name: POOL_ID_CD
+      description: >-
+        Pool ID is an alphanumeric code that identifies a particular mortgage
+        backed security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19168:
+      name: HLDNG_UPD_TMS
+      description: >-
+        Position Update Timestamp is the date/time when the holding was last
+        updated.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-19169:
+      name: PREV_FCTR
+      description: >-
+        The factor which applies for the previous accrual period to determine
+        payments and balances for principal paying securities. Currently
+        applicable to the US intraday cash transactions.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19170:
+      name: PRC_CCY_NME
+      description: >-
+        Market Value Currency is the name of the currency used to value the
+        holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19174:
+      name: SID_SEDOL
+      description: >-
+        SEDOL (Stock Exchange Daily Official List) is a unique identification
+        code, consisting of seven alphanumeric characters, that is assigned to
+        all securities trading on the London Stock Exchange.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19175:
+      name: SID_CUSIP
+      description: >-
+        CUSIP (Committee on Uniform Securities Identification Procedures) It is
+        a nine-character alphanumeric code that identifies a North American
+        financial security for the purposes of facilitating clearing and
+        settlement of trades.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19181:
+      name: ST_NME
+      description: >-
+        State is the state where this statutory deposit is placed. Applies only
+        to US Domestic holdings.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19182:
+      name: ST_CD
+      description: >-
+        State Code is a 2 digit code corresponding to the State where this
+        statutory deposit is placed. Applies only to US Domestic holdings.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19183:
+      name: STRK_PRC_AMT
+      description: >-
+        Strike Price is the specified price on an options contract at which the
+        contract may be exercised.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19185:
+      name: SID_TICKER_SYMB
+      description: Ticker is the symbol used on the exchange to identify the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19186:
+      name: TRDED_QTY
+      description: >-
+        Traded Quantity is the quantity of the security held including any open
+        trades.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19190:
+      name: MKT_PRC_CUR_CD
+      description: Market Value Currency Code is the ISO currency code of the Market Value.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19191:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19192:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19193:
+      name: MATY_DT
+      description: >-
+        Maturity Date is the date of maturity or redemption for fixed income
+        securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-19194:
+      name: PFD_ID_CTXT_CD
+      description: >-
+        Security ID Type indicates the type of identifier of the corresponding
+        Security ID parameter. Values include: CUSIP, ISIN, SEDOL, LOCAL, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19195:
+      name: PFD_ISS_ID
+      description: >-
+        Security ID is the most commonly used identifier for the security in a
+        given market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19196:
+      name: SID_ISIN
+      description: >-
+        ISIN (International Securities Identification Number) is a 12-character
+        alpha-numerical code that does not contain information characterizing
+        financial instruments but serves for uniform identification of a
+        security at trading and settlement.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19197:
+      name: SEC_SHRT_NME
+      description: Issue Name is the Security Name of the security instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19198:
+      name: INCM_PROJN_RATE
+      description: Interest Rate is the coupon rate of the security.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19199:
+      name: SETLD_QTY
+      description: >-
+        Settled Quantity is the quantity that has settled or the quantity of the
+        security that is fully settled at the "As Of" date.  For partial
+        settlements the settled quantity is the portion that has settled.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19200:
+      name: HOLD_LOCN_NME
+      description: >-
+        How Position is Held is a description of the status of the holding, or
+        where it is held.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19201:
+      name: ORGL_FCE_VAL
+      description: >-
+        Face Value is the original face value for Mortgage Backed Securities in
+        the US domestic market. For other MBS positions this will be the current
+        face value after amortization.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-19202:
+      name: ASOF_TMS
+      description: The As Of Date is the date of the information being reported.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-19205:
+      name: EOD_INTRA_IND
+      description: >-
+        EOD/intraday Indicator advises if the balance is an End of Day reported
+        balance or if the balance is an Intraday reported balance. Values are:
+        <br>1 (Intraday)<br> 2 (End of Day)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19206:
+      name: ACCT_BUS_TYP_CD
+      description: >-
+        Account Type Code indicates the type of the account. Values are: <br>C
+        (Cash Account)<br> S (Safekeeping Account).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19226:
+      name: SEC_SECURITY_CD
+      description: >-
+        CITI Internal Security Code is the identifier of the CITI Internal
+        Security Identifier.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19228:
+      name: ISS_TMS
+      description: Issue Date is the date of first issue of the security.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-19229:
+      name: ISS_CATG_CD
+      description: >-
+        Issue Category Code is a specific category for the security.  Values
+        include: CSTK (Common Stock), DERIV (Derivatives), MBS (Mortgage Backed
+        Securities), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19230:
+      name: US_SIC_CD
+      description: SIC is the Standard Industrial Classification four-digit numeric code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19231:
+      name: PMT_FREQY
+      description: >-
+        Payment Frequency indicates how often interest is paid on the security. 
+        Values include: 00001 (Annual), 00002 (Sem-Annual), 00035 (One Payment
+        Per Year), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19235:
+      name: FCTR_DTE
+      description: >-
+        Factor Date is the date the current factor is applicable from for
+        principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-19237:
+      name: SID_LOCAL
+      description: Local ID is the Local security identifier of the associated security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19245:
+      name: COB_DATE
+      description: Close of Business Date
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-48549:
+      name: TRDED_QTY_MKT_EOD
+      description: >-
+        Traded Quantity is the quantity of the security held including any open
+        trades as of market close date
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-48550:
+      name: SETLD_QTY_MKT_EOD
+      description: >-
+        Settled Quantity is the quantity of the security that is fully settled
+        as of market close date
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-48551:
+      name: MKT_EOD_CL_DT
+      description: This is the last close date for the position in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-19247:
+      name: PLACE_OF_SETLMT
+      description: >-
+        Place Of Settlement is the name of the settlement location for the
+        security, applicable to securities positions , transactions only.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19248:
+      name: ROLLED_FWD
+      description: >-
+        Rolled Forward indicator parameter is used to flag if position valuation
+        has been rolled forward from last close of business.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-19250:
+      name: IOD_TIMESTAMP
+      description: Provides the Timestamp when data is loaded in the Data Lake
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-13407:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal Citi client identifier that is
+        associated to a Safekeeping or Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13497:
+      name: ACCT_BUS_TYP_CD
+      description: >-
+        Account Type Code indicates the type of the account. Values are:<br> C
+        (Cash Account)<br> S (Safekeeping Account).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29101:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13483:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29079:
+      name: ALTN_CUR_EXCH_RATE
+      description: >-
+        Base Currency Exchange Rate is the rate used to convert the Market
+        Valuation to the Account Base Currency Valuation.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-13406:
+      name: ALTV_CUR_CD
+      description: Account Base Currency Code is the ISO Currency Code for the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29080:
+      name: ALTV_CUR_VAL
+      description: >-
+        Base Currency Valuation is the Market Valuation in the Account Base
+        Currency of the position for the "As Of" date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29115:
+      name: ASOF_TMS
+      description: The As Of Date is the date of the information being reported.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-13405:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account.  For the
+        Cash Account the branch code is a numeric value and for the Safekeeping
+        Account it is the ISO Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13415:
+      name: BR_NME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29095:
+      name: CNTR_CD
+      description: >-
+        Place Of Settlement Code is a 3 digit code corresponding to the
+        settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29096:
+      name: CNTR_CD_DESC
+      description: The Center Code  description applicable to securities transactions only.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29098:
+      name: CNTRY_CD
+      description: >-
+        Depot Domicile is the Depot domicile (Country where the sub-account is
+        held).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29120:
+      name: COB_DATE
+      description: Close of Business Date
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-29077:
+      name: CURR_FCTR
+      description: >-
+        Current Factor is the factor which applies to the current accrual period
+        to determine payments and balances for principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-13427:
+      name: DLAY_DAYS
+      description: >-
+        Delay Days is the number of days from the issuance of an MBS pool (or
+        from the beginning of the interest accrual period) until the first
+        payment is remitted/paid to the holders.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13428:
+      name: DNOMD_CUR_CD
+      description: >-
+        Denomination Currency Code is the ISO currency code in which the
+        security is denominated, in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13426:
+      name: DTED_TMS
+      description: >-
+        Dated Date/Time is the date that the interest begins to accrue on a
+        fixed-income security.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-29104:
+      name: EOD_INTRA_IND
+      description: >-
+        EOD/intraday Indicator advises if the information is as of End of Day or
+        as of Intraday.  Values are:<br> 1 (Intraday)<br> 2 (End of Day)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29118:
+      name: FCTR_DTE
+      description: >-
+        Factor Date is the date the current factor is applicable from for
+        principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-13424:
+      name: GFC_ID
+      description: >-
+        Client ID is an identifier that is available on a Cash Account and/or a
+        Safekeeping Account. This Client ID is referred to, internally at Citi,
+        as a GFCID.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29117:
+      name: HLDNG_UPD_TMS
+      description: >-
+        Position Update Timestamp is the date/time when the holding was last
+        updated.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-29094:
+      name: HOLD_LOCN_NME
+      description: >-
+        How Position is Held is a description of the status of the holding, or
+        where it is held.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13489:
+      name: INCM_PROJN_RATE
+      description: Interest Rate is the coupon rate of the security.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29116:
+      name: IOD_UPDATE_TMS
+      description: IOD Timestamp
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-13412:
+      name: ISS_CAT_NME
+      description: >-
+        Issue Category is the description for the Issue Category Code.  Values
+        include:  Common Stock (CSTK), Derivatives (DERIV), Mortgage Backed
+        Securities (MBS), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13518:
+      name: ISS_CATG_CD
+      description: >-
+        Issue Category Code is a specific category for the security.  Values
+        include: CSTK (Common Stock), DERIV (Derivatives), MBS (Mortgage Backed
+        Securities), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29084:
+      name: ISS_PRC
+      description: Issue Price is the market price of the security at the "As Of" date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-13517:
+      name: ISS_TMS
+      description: Issue Date is the date of first issue of the security.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-13447:
+      name: ISSR_LOC_CD
+      description: >-
+        Issuer Location Code is the ISO country code where the issuer of the
+        security is based.  Values include: AR (Argentina), CA (Canada), IE
+        (Ireland), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13448:
+      name: ISSR_LOC_NME
+      description: >-
+        Issuer Location is the name of the country where the issuer of the
+        security is based.  Values include: Argentina (AR), Canada (CA), Ireland
+        (IE), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13484:
+      name: MATY_DT
+      description: >-
+        Maturity Date is the date of maturity or redemption for fixed income
+        securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-29105:
+      name: MKT_PRC_CUR_CD
+      description: Market Value Currency Code is the ISO currency code of the Market Value.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29086:
+      name: ORGL_FCE_VAL
+      description: >-
+        Face Value is the original face value for Mortgage Backed Securities in
+        the US domestic market. For other MBS positions this will be the current
+        face value after amortization.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-13485:
+      name: PFD_ID_CTXT_CD
+      description: >-
+        Security ID Type indicates the type of identifier of the corresponding
+        Security ID parameter. Values include: CUSIP, ISIN, SEDOL, LOCAL, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13486:
+      name: PFD_ISS_ID
+      description: >-
+        Security ID is the most commonly used identifier for the security in a
+        given market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29106:
+      name: PLACE_OF_SETLMT
+      description: >-
+        Place Of Settlement is the name of the settlement location for the
+        security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13520:
+      name: PMT_FREQY
+      description: >-
+        Payment Frequency indicates how often interest is paid on the security. 
+        Values include: 00001 (Annual), 00002 (Sem-Annual), 00035 (One Payment
+        Per Year), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13454:
+      name: PMT_FREQY_DESC
+      description: >-
+        Payment Frequency Description indicates how often interest is paid on
+        the security.  Values include: Annual (00001),  Sem-Annual (00002), One
+        Payment Per Year (00035), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29087:
+      name: PNDNG_DELIV
+      description: >-
+        Pending Deliverable is the sum of the quantity of outstanding deliver
+        trades at the "As Of" date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29088:
+      name: PNDNG_RECV
+      description: >-
+        Pending Receivable is the sum of the quantity of outstanding receive
+        trades at the "As Of" date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-13458:
+      name: POOL_ID_CD
+      description: >-
+        Pool ID is an alphanumeric code that identifies a particular mortgage
+        backed security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29089:
+      name: PRC_CCY_NME
+      description: >-
+        Market Value Currency is the name of the currency used to value the
+        holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29076:
+      name: PREV_FCTR
+      description: >-
+        The factor which applies for the previous accrual period to determine
+        payments and balances for principal paying securities. Currently
+        applicable to the US intraday cash transactions.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-13442:
+      name: SEC_DESC
+      description: Issue Description contains the name and other details of the instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13413:
+      name: SEC_GROUP
+      description: >-
+        Asset Type is a code representing the Asset Type of the security. 
+        Values include: EQTY (Equity), FI (Fixed Income), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13515:
+      name: SEC_SECURITY_CD
+      description: >-
+        CITI Internal Security Code is the identifier of the CITI Internal
+        Security Identifier.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13488:
+      name: SEC_SHRT_NME
+      description: Issue Name is the Security Name of the security instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13444:
+      name: SEC_SUB_TYP_CD
+      description: >-
+        Issue Type Code is a code linked to the Issue Type parameter which
+        describes the type of security instrument. Values include: 1 (ADR
+        Convertible), 12 (Bond), 19 (Bond Convertible), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13445:
+      name: SEC_SUB_TYP_NME
+      description: >-
+        Issue Type is a description of the type of the security instrument. 
+        Values include: ADR Convertible (1), Bond (12) , Bond Convertible (19),
+        etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29107:
+      name: SETL_HOLD_ST
+      description: >-
+        How Position is Held Code is a 2 digit code corresponding to the How
+        Position Is Held parameter which carries the status of the holding, or
+        where it is held.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29075:
+      name: SETLD_QTY
+      description: >-
+        Settled Quantity is the quantity of the security that is fully settled
+        at the "As Of" date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-13466:
+      name: SID_CUSIP
+      description: >-
+        CUSIP (Committee on Uniform Securities Identification Procedures) It is
+        a nine-character alphanumeric code that identifies a North American
+        financial security for the purposes of facilitating clearing and
+        settlement of trades.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13487:
+      name: SID_ISIN
+      description: >-
+        ISIN (International Securities Identification Number) is a 12-character
+        alpha-numerical code that does not contain information characterizing
+        financial instruments but serves for uniform identification of a
+        security at trading and settlement.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13526:
+      name: SID_LOCAL
+      description: Local ID is the Local security identifier of the associated security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13465:
+      name: SID_SEDOL
+      description: >-
+        SEDOL (Stock Exchange Daily Official List) is a unique identification
+        code, consisting of seven alphanumeric characters, that is assigned to
+        all securities trading on the London Stock Exchange.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13476:
+      name: SID_TICKER_SYMB
+      description: Ticker is the symbol used on the exchange to identify the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29111:
+      name: ST_CD
+      description: >-
+        State Code is a 2 digit code corresponding to the State where this
+        statutory deposit is placed. Applies only to US Domestic holdings.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29112:
+      name: ST_NME
+      description: >-
+        State is the state where this statutory deposit is placed. Applies only
+        to US Domestic holdings.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29113:
+      name: STK_EXCHG_NME
+      description: Nominee Description is the nominee name and/or other nominee information
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13474:
+      name: STRK_PRC_AMT
+      description: >-
+        Strike Price is the specified price on an options contract at which the
+        contract may be exercised.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29073:
+      name: TRDED_QTY
+      description: >-
+        Traded Quantity is the quantity of the security held including any open
+        trades.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-13519:
+      name: US_SIC_CD
+      description: SIC is the Standard Industrial Classification four-digit numeric code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-48543:
+      name: TRDED_QTY_MKT_EOD
+      description: >-
+        Traded Quantity is the quantity of the security held including any open
+        trades as of market close date
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-48544:
+      name: SETLD_QTY_MKT_EOD
+      description: >-
+        Settled Quantity is the quantity of the security that is fully settled
+        as of market close date
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-48545:
+      name: MKT_EOD_CL_DT
+      description: Market EOD Close Date
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+  securitySchemes:
+    client-Credential-Oauth-Security-Schema:
+      type: oauth2
+      description: This API uses OAuth 2 with the client credentials flow
+      flows:
+        clientCredentials:
+          tokenUrl: /markets/api/oauth2/token
+          scopes:
+            /dod: Access to Safekeeping Positions Information
+paths:
+  /api/services/1040640e-125f-41e2-a262-88dea5f338bd/filter:
+    get:
+      summary: Security Positions
+      description: >-
+        Provides Custody Security positions , market values for a particular
+        date and safekeeping account
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-19114'
+        - $ref: '#/components/parameters/parameter-19115'
+        - $ref: '#/components/parameters/parameter-19116'
+        - $ref: '#/components/parameters/parameter-19119'
+        - $ref: '#/components/parameters/parameter-19120'
+        - $ref: '#/components/parameters/parameter-19121'
+        - $ref: '#/components/parameters/parameter-19122'
+        - $ref: '#/components/parameters/parameter-19124'
+        - $ref: '#/components/parameters/parameter-19126'
+        - $ref: '#/components/parameters/parameter-19127'
+        - $ref: '#/components/parameters/parameter-19130'
+        - $ref: '#/components/parameters/parameter-19133'
+        - $ref: '#/components/parameters/parameter-19135'
+        - $ref: '#/components/parameters/parameter-19136'
+        - $ref: '#/components/parameters/parameter-19137'
+        - $ref: '#/components/parameters/parameter-19138'
+        - $ref: '#/components/parameters/parameter-19145'
+        - $ref: '#/components/parameters/parameter-19151'
+        - $ref: '#/components/parameters/parameter-19152'
+        - $ref: '#/components/parameters/parameter-19153'
+        - $ref: '#/components/parameters/parameter-19154'
+        - $ref: '#/components/parameters/parameter-19156'
+        - $ref: '#/components/parameters/parameter-19157'
+        - $ref: '#/components/parameters/parameter-19160'
+        - $ref: '#/components/parameters/parameter-19162'
+        - $ref: '#/components/parameters/parameter-19163'
+        - $ref: '#/components/parameters/parameter-19164'
+        - $ref: '#/components/parameters/parameter-19165'
+        - $ref: '#/components/parameters/parameter-19167'
+        - $ref: '#/components/parameters/parameter-19168'
+        - $ref: '#/components/parameters/parameter-19169'
+        - $ref: '#/components/parameters/parameter-19170'
+        - $ref: '#/components/parameters/parameter-19174'
+        - $ref: '#/components/parameters/parameter-19175'
+        - $ref: '#/components/parameters/parameter-19181'
+        - $ref: '#/components/parameters/parameter-19182'
+        - $ref: '#/components/parameters/parameter-19183'
+        - $ref: '#/components/parameters/parameter-19185'
+        - $ref: '#/components/parameters/parameter-19186'
+        - $ref: '#/components/parameters/parameter-19190'
+        - $ref: '#/components/parameters/parameter-19191'
+        - $ref: '#/components/parameters/parameter-19192'
+        - $ref: '#/components/parameters/parameter-19193'
+        - $ref: '#/components/parameters/parameter-19194'
+        - $ref: '#/components/parameters/parameter-19195'
+        - $ref: '#/components/parameters/parameter-19196'
+        - $ref: '#/components/parameters/parameter-19197'
+        - $ref: '#/components/parameters/parameter-19198'
+        - $ref: '#/components/parameters/parameter-19199'
+        - $ref: '#/components/parameters/parameter-19200'
+        - $ref: '#/components/parameters/parameter-19201'
+        - $ref: '#/components/parameters/parameter-19202'
+        - $ref: '#/components/parameters/parameter-19205'
+        - $ref: '#/components/parameters/parameter-19206'
+        - $ref: '#/components/parameters/parameter-19226'
+        - $ref: '#/components/parameters/parameter-19228'
+        - $ref: '#/components/parameters/parameter-19229'
+        - $ref: '#/components/parameters/parameter-19230'
+        - $ref: '#/components/parameters/parameter-19231'
+        - $ref: '#/components/parameters/parameter-19235'
+        - $ref: '#/components/parameters/parameter-19237'
+        - $ref: '#/components/parameters/parameter-19245'
+        - $ref: '#/components/parameters/parameter-48549'
+        - $ref: '#/components/parameters/parameter-48550'
+        - $ref: '#/components/parameters/parameter-48551'
+        - $ref: '#/components/parameters/parameter-19247'
+        - $ref: '#/components/parameters/parameter-19248'
+        - $ref: '#/components/parameters/parameter-19250'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/1040640e-125f-41e2-a262-88dea5f338bd-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/1040640e-125f-41e2-a262-88dea5f338bd-xml-response-schema
+              example: >-
+                <?xml version="1.0" encoding="UTF-8"?> <data> <row>
+                <BR_ID>484</BR_ID> <ALTV_CUR_CD>JPY</ALTV_CUR_CD>
+                <ACCT_BASE_NBR>8-DEMOCSH53JPY</ACCT_BASE_NBR>
+                <ALTN_CUR_EXCH_RATE>8.9076</ALTN_CUR_EXCH_RATE>
+                <ALTV_CUR_VAL>138923711.7</ALTV_CUR_VAL>
+                <ISS_CAT_NME>EQUITIES</ISS_CAT_NME> <SEC_GROUP>FI</SEC_GROUP>
+                <BR_NME>NEW YORK SECURITIES CB</BR_NME> <CNTR_CD>RSA</CNTR_CD>
+                <CNTR_CD_DESC>NORTHFIELD LLC</CNTR_CD_DESC>
+                <CURR_FCTR>0.01580556</CURR_FCTR> <GFC_ID>1000012345</GFC_ID>
+                <DTED_TMS>2019-08-26 00:00:00</DTED_TMS>
+                <DLAY_DAYS>13</DLAY_DAYS> <DNOMD_CUR_CD>HKD</DNOMD_CUR_CD>
+                <CNTRY_CD>JE</CNTRY_CD> <SETL_HOLD_ST>LE</SETL_HOLD_ST>
+                <SEC_DESC>TEMPORARY SECURITY 003263100</SEC_DESC>
+                <ISS_PRC>35.811</ISS_PRC> <SEC_SUB_TYP_CD>12</SEC_SUB_TYP_CD>
+                <SEC_SUB_TYP_NME>BOND</SEC_SUB_TYP_NME>
+                <ISSR_LOC_CD>CA</ISSR_LOC_CD>
+                <ISSR_LOC_NME>CANADA</ISSR_LOC_NME>
+                <MKT_VAL_AMT>927444.82</MKT_VAL_AMT> <STK_EXCHG_NME>VIDACOS
+                NOMINEES LIMITED</STK_EXCHG_NME>
+                <PMT_FREQY_DESC>Annual</PMT_FREQY_DESC>
+                <PNDNG_DELIV>-34891</PNDNG_DELIV>
+                <PNDNG_RECV>353400</PNDNG_RECV> <POOL_ID_CD>AB1234</POOL_ID_CD>
+                <HLDNG_UPD_TMS>2019-08-27 00:00:00</HLDNG_UPD_TMS>
+                <PREV_FCTR>0.84824716</PREV_FCTR> <PRC_CCY_NME>POUND
+                STERLING</PRC_CCY_NME> <SID_SEDOL>BJ18KB6</SID_SEDOL>
+                <SID_CUSIP>T5379P105</SID_CUSIP> <ST_NME>CALIFORNIA</ST_NME>
+                <ST_CD>CA</ST_CD> <STRK_PRC_AMT>109.9</STRK_PRC_AMT>
+                <SID_TICKER_SYMB>DARK</SID_TICKER_SYMB>
+                <TRDED_QTY>755435</TRDED_QTY>
+                <MKT_PRC_CUR_CD>GBP</MKT_PRC_CUR_CD>
+                <ACCT_ID>DEMOSK02US</ACCT_ID> <ACCT_NME>Demo - SK - Japan
+                2</ACCT_NME> <MATY_DT>2041-10-10 00:00:00</MATY_DT>
+                <PFD_ID_CTXT_CD>ISIN</PFD_ID_CTXT_CD>
+                <PFD_ISS_ID>BFXCMX</PFD_ISS_ID>
+                <SID_ISIN>JP3049040003</SID_ISIN> <SEC_SHRT_NME>FR
+                QN4224</SEC_SHRT_NME> <INCM_PROJN_RATE>3.0946</INCM_PROJN_RATE>
+                <SETLD_QTY>165502</SETLD_QTY> <HOLD_LOCN_NME>HELD AT
+                DEPOSITORY</HOLD_LOCN_NME> <ORGL_FCE_VAL>6053</ORGL_FCE_VAL>
+                <ASOF_TMS>2019-12-30 00:00:00</ASOF_TMS>
+                <EOD_INTRA_IND>2</EOD_INTRA_IND>
+                <ACCT_BUS_TYP_CD>C</ACCT_BUS_TYP_CD>
+                <SEC_SECURITY_CD>000BMG6KT4</SEC_SECURITY_CD>
+                <ISS_TMS>2019-11-26 00:00:00</ISS_TMS>
+                <ISS_CATG_CD>EQTY</ISS_CATG_CD> <US_SIC_CD>3544</US_SIC_CD>
+                <PMT_FREQY>00001</PMT_FREQY> <FCTR_DTE>2023-12-10
+                00:00:00</FCTR_DTE> <SID_LOCAL>0059663300</SID_LOCAL>
+                <COB_DATE>2024-07-10</COB_DATE>
+                <TRDED_QTY_MKT_EOD>123456</TRDED_QTY_MKT_EOD>
+                <SETLD_QTY_MKT_EOD>12345</SETLD_QTY_MKT_EOD>
+                <MKT_EOD_CL_DT>2024-11-12</MKT_EOD_CL_DT>
+                <PLACE_OF_SETLMT>MOSCOW</PLACE_OF_SETLMT>
+                <ROLLED_FWD>N</ROLLED_FWD> <IOD_TIMESTAMP>2024-11-12
+                19:30:08</IOD_TIMESTAMP> </row> </data>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/bbe2a729-c02f-4e5c-8c56-8001d04e5933/filter:
+    get:
+      summary: Current Asset Positions
+      description: >-
+        Current Asset Positions provides the current settled and traded
+        quantities held for each security in each safekeeping account.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-13407'
+        - $ref: '#/components/parameters/parameter-13497'
+        - $ref: '#/components/parameters/parameter-29101'
+        - $ref: '#/components/parameters/parameter-13483'
+        - $ref: '#/components/parameters/parameter-29079'
+        - $ref: '#/components/parameters/parameter-13406'
+        - $ref: '#/components/parameters/parameter-29080'
+        - $ref: '#/components/parameters/parameter-29115'
+        - $ref: '#/components/parameters/parameter-13405'
+        - $ref: '#/components/parameters/parameter-13415'
+        - $ref: '#/components/parameters/parameter-29095'
+        - $ref: '#/components/parameters/parameter-29096'
+        - $ref: '#/components/parameters/parameter-29098'
+        - $ref: '#/components/parameters/parameter-29120'
+        - $ref: '#/components/parameters/parameter-29077'
+        - $ref: '#/components/parameters/parameter-13427'
+        - $ref: '#/components/parameters/parameter-13428'
+        - $ref: '#/components/parameters/parameter-13426'
+        - $ref: '#/components/parameters/parameter-29104'
+        - $ref: '#/components/parameters/parameter-29118'
+        - $ref: '#/components/parameters/parameter-13424'
+        - $ref: '#/components/parameters/parameter-29117'
+        - $ref: '#/components/parameters/parameter-29094'
+        - $ref: '#/components/parameters/parameter-13489'
+        - $ref: '#/components/parameters/parameter-29116'
+        - $ref: '#/components/parameters/parameter-13412'
+        - $ref: '#/components/parameters/parameter-13518'
+        - $ref: '#/components/parameters/parameter-29084'
+        - $ref: '#/components/parameters/parameter-13517'
+        - $ref: '#/components/parameters/parameter-13447'
+        - $ref: '#/components/parameters/parameter-13448'
+        - $ref: '#/components/parameters/parameter-13484'
+        - $ref: '#/components/parameters/parameter-29105'
+        - $ref: '#/components/parameters/parameter-29086'
+        - $ref: '#/components/parameters/parameter-13485'
+        - $ref: '#/components/parameters/parameter-13486'
+        - $ref: '#/components/parameters/parameter-29106'
+        - $ref: '#/components/parameters/parameter-13520'
+        - $ref: '#/components/parameters/parameter-13454'
+        - $ref: '#/components/parameters/parameter-29087'
+        - $ref: '#/components/parameters/parameter-29088'
+        - $ref: '#/components/parameters/parameter-13458'
+        - $ref: '#/components/parameters/parameter-29089'
+        - $ref: '#/components/parameters/parameter-29076'
+        - $ref: '#/components/parameters/parameter-13442'
+        - $ref: '#/components/parameters/parameter-13413'
+        - $ref: '#/components/parameters/parameter-13515'
+        - $ref: '#/components/parameters/parameter-13488'
+        - $ref: '#/components/parameters/parameter-13444'
+        - $ref: '#/components/parameters/parameter-13445'
+        - $ref: '#/components/parameters/parameter-29107'
+        - $ref: '#/components/parameters/parameter-29075'
+        - $ref: '#/components/parameters/parameter-13466'
+        - $ref: '#/components/parameters/parameter-13487'
+        - $ref: '#/components/parameters/parameter-13526'
+        - $ref: '#/components/parameters/parameter-13465'
+        - $ref: '#/components/parameters/parameter-13476'
+        - $ref: '#/components/parameters/parameter-29111'
+        - $ref: '#/components/parameters/parameter-29112'
+        - $ref: '#/components/parameters/parameter-29113'
+        - $ref: '#/components/parameters/parameter-13474'
+        - $ref: '#/components/parameters/parameter-29073'
+        - $ref: '#/components/parameters/parameter-13519'
+        - $ref: '#/components/parameters/parameter-48543'
+        - $ref: '#/components/parameters/parameter-48544'
+        - $ref: '#/components/parameters/parameter-48545'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/bbe2a729-c02f-4e5c-8c56-8001d04e5933-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/bbe2a729-c02f-4e5c-8c56-8001d04e5933-xml-response-schema
+              example: >-
+                <?xml version="1.0" encoding="UTF-8"?> <data> <row>
+                <ACCT_BASE_NBR>8-DEMOCSH53JPY</ACCT_BASE_NBR>
+                <ACCT_BUS_TYP_CD>C</ACCT_BUS_TYP_CD>
+                <ACCT_ID>DEMOSK02US</ACCT_ID> <ACCT_NME>Demo - SK - Japan
+                2</ACCT_NME> <ALTN_CUR_EXCH_RATE>8.9076</ALTN_CUR_EXCH_RATE>
+                <ALTV_CUR_CD>JPY</ALTV_CUR_CD>
+                <ALTV_CUR_VAL>138923711.7</ALTV_CUR_VAL> <ASOF_TMS>2019-12-30
+                00:00:00</ASOF_TMS> <BR_ID>484</BR_ID> <BR_NME>NEW YORK
+                SECURITIES CB</BR_NME> <CNTR_CD>RSA</CNTR_CD>
+                <CNTR_CD_DESC>NORTHFIELD LLC</CNTR_CD_DESC>
+                <CNTRY_CD>JE</CNTRY_CD> <COB_DATE>2024-07-10</COB_DATE>
+                <CURR_FCTR>0.01580556</CURR_FCTR> <DLAY_DAYS>13</DLAY_DAYS>
+                <DNOMD_CUR_CD>HKD</DNOMD_CUR_CD> <DTED_TMS>2019-08-26
+                00:00:00</DTED_TMS> <EOD_INTRA_IND>2</EOD_INTRA_IND>
+                <FCTR_DTE>2023-12-10 00:00:00</FCTR_DTE>
+                <GFC_ID>1000012345</GFC_ID> <HLDNG_UPD_TMS>2019-08-27
+                00:00:00</HLDNG_UPD_TMS> <HOLD_LOCN_NME>HELD AT
+                DEPOSITORY</HOLD_LOCN_NME>
+                <INCM_PROJN_RATE>3.0946</INCM_PROJN_RATE>
+                <IOD_UPDATE_TMS>2020-06-12 16:01:15</IOD_UPDATE_TMS>
+                <ISS_CAT_NME>EQUITIES</ISS_CAT_NME>
+                <ISS_CATG_CD>EQTY</ISS_CATG_CD> <ISS_PRC>35.811</ISS_PRC>
+                <ISS_TMS>2019-11-26 00:00:00</ISS_TMS>
+                <ISSR_LOC_CD>CA</ISSR_LOC_CD>
+                <ISSR_LOC_NME>CANADA</ISSR_LOC_NME> <MATY_DT>2041-10-10
+                00:00:00</MATY_DT> <MKT_PRC_CUR_CD>GBP</MKT_PRC_CUR_CD>
+                <ORGL_FCE_VAL>6053</ORGL_FCE_VAL>
+                <PFD_ID_CTXT_CD>ISIN</PFD_ID_CTXT_CD>
+                <PFD_ISS_ID>BFXCMX</PFD_ISS_ID>
+                <PLACE_OF_SETLMT>MOSCOW</PLACE_OF_SETLMT>
+                <PMT_FREQY>00001</PMT_FREQY>
+                <PMT_FREQY_DESC>Annual</PMT_FREQY_DESC>
+                <PNDNG_DELIV>-34891</PNDNG_DELIV>
+                <PNDNG_RECV>353400</PNDNG_RECV> <POOL_ID_CD>AB1234</POOL_ID_CD>
+                <PRC_CCY_NME>POUND STERLING</PRC_CCY_NME>
+                <PREV_FCTR>0.84824716</PREV_FCTR> <SEC_DESC>TEMPORARY SECURITY
+                003263100</SEC_DESC> <SEC_GROUP>FI</SEC_GROUP>
+                <SEC_SECURITY_CD>000BMG6KT4</SEC_SECURITY_CD> <SEC_SHRT_NME>FR
+                QN4224</SEC_SHRT_NME> <SEC_SUB_TYP_CD>12</SEC_SUB_TYP_CD>
+                <SEC_SUB_TYP_NME>BOND</SEC_SUB_TYP_NME>
+                <SETL_HOLD_ST>LE</SETL_HOLD_ST> <SETLD_QTY>165502</SETLD_QTY>
+                <SID_CUSIP>T5379P105</SID_CUSIP>
+                <SID_ISIN>JP3049040003</SID_ISIN>
+                <SID_LOCAL>0059663300</SID_LOCAL> <SID_SEDOL>BJ18KB6</SID_SEDOL>
+                <SID_TICKER_SYMB>DARK</SID_TICKER_SYMB> <ST_CD>CA</ST_CD>
+                <ST_NME>CALIFORNIA</ST_NME> <STK_EXCHG_NME>VIDACOS NOMINEES
+                LIMITED</STK_EXCHG_NME> <STRK_PRC_AMT>109.9</STRK_PRC_AMT>
+                <TRDED_QTY>755435</TRDED_QTY> <US_SIC_CD>3544</US_SIC_CD>
+                <TRDED_QTY_MKT_EOD>123456</TRDED_QTY_MKT_EOD>
+                <SETLD_QTY_MKT_EOD>12345</SETLD_QTY_MKT_EOD>
+                <MKT_EOD_CL_DT>2024-11-12</MKT_EOD_CL_DT> </row> </data>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'

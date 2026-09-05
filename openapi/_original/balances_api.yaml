@@ -1,0 +1,2551 @@
+openapi: 3.0.3
+info:
+  title: Balances API
+  description: >-
+    The Balances API retrieves account balance details. The response can be
+    delivered in either JSON or XML format. Balance Inquiry allows you to access
+    account balances intraday (during the day specific period) or end of day for
+    greater visibility. 
+
+
+    The Balance Inquiry endpoint can also be set up to respond with your
+    balances of accounts you have with other banks. Please contact your Citi
+    sales representative for more information.
+
+
+    The API call will retrieve the account details based on a specific account
+    identification. It can be used for both intraday as well as historical
+    dates, limited to the last 180 days. The response is delivered in both JSON
+    & XML formats.
+
+
+    Download our SDKs:
+
+
+    * [Python
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=python&apiTitle=all&isClientSecReq=true)
+
+    * [Java
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=java&apiTitle=all&isClientSecReq=true)
+
+    * [.Net
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=dotnet&apiTitle=all&isClientSecReq=true)
+
+    * [Ruby
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ruby&apiTitle=all&isClientSecReq=true)
+
+    * [NodeJS
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=nodejs&apiTitle=all&isClientSecReq=true)
+
+    * [Go
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=go&apiTitle=all&isClientSecReq=true)
+
+    * [CLI Tool
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ccapi-cli&apiTitle=all&isClientSecReq=true)
+
+
+    Note: You must be logged in to download the SDKs. 
+  version: 3.0.0
+security:
+  - clientCredentials: []
+paths:
+  /v3/balance/inquiry:
+    post:
+      summary: Get Account Balance
+      description: >-
+        The balance inquiry endpoint allows users to access account balances
+        intraday or end of day for greater visibility.
+      operationId: getAccountBalance
+      consumes:
+        - application/xml
+        - application/json
+      produces:
+        - application/xml
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports \"application/xml\" and \"application/json\".
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          type: string
+        - $ref: '#/components/parameters/OffsetParam'
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalanceRequest'
+            example:
+              account_identifier: 12345678,23456789
+              branch_number: '600'
+              base_currency: USD
+              from_date: '2020-08-30'
+              to_date: '2020-10-25'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/BalanceRequest'
+            example: >-
+              <?xml version="1.0" encoding="UTF-8"?><balanceInquiryRequest
+              xmlns="http://com.citi.citiconnect/services/types/inquiries/balance/v1"><accountNumber>12345678</accountNumber><branchNumber>600</branchNumber><baseCurrency>USD</baseCurrency><fromDate>2020-08-30</fromDate><toDate>2020-10-25</toDate></balanceInquiryRequest>
+      responses:
+        '200':
+          description: OK. Returns the requested account details.
+          headers:
+            Pagination-Metadata:
+              $ref: '#/components/headers/Pagination-Metadata'
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - account_balance
+                properties:
+                  unavailable_accounts:
+                    type: array
+                    description: List of unavailable accounts
+                    maxItems: 50
+                    items:
+                      type: string
+                  account_balance:
+                    description: List of all requested accounts balances
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CashAccount'
+              examples:
+                list_of_accounts_full:
+                  $ref: '#/components/examples/List_of_accounts_full'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryResponse'
+              examples:
+                balance_inquiry:
+                  $ref: '#/components/examples/BalanceInquiry'
+        '400':
+          description: Bad Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              examples:
+                DatesOlderThan180Days:
+                  value:
+                    ref_id: ec689822-9864-4c4d-9d68-222467627901
+                    status: FAILURE
+                    http_code: 400
+                    errors:
+                      - issue: Balance date(s) out of range
+                        action: >-
+                          From Date or To date should not be greater than 180
+                          days from current date
+                BalanceFromDateGreaterThanToDate:
+                  value:
+                    ref_id: ec689822-9864-4c4d-9d68-222467627901
+                    status: FAILURE
+                    http_code: 400
+                    errors:
+                      - issue: Invalid Date
+                        action: From Date should not be greater than To date.
+                BalanceAccountNumberOrBranchNumberMandatory:
+                  value:
+                    ref_id: ec689822-9864-4c4d-9d68-222467627901
+                    status: FAILURE
+                    http_code: 400
+                    errors:
+                      - issue: Mandatory field missing on the request.
+                        action: >-
+                          Resend the request with valid values either in
+                          AccountNumber (or) BranchNumber field
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              examples:
+                DatesOlderThan180DaysXML:
+                  value:
+                    ref_id: ec689822-9864-4c4d-9d68-222467627901
+                    status: FAILURE
+                    http_code: 400
+                    errors:
+                      - issue: Balance date(s) out of range
+                        action: >-
+                          From Date or To date should not be greater than 180
+                          days from current date
+                BalanceFromDateGreaterThanToDateXML:
+                  value:
+                    ref_id: ec689822-9864-4c4d-9d68-222467627901
+                    status: FAILURE
+                    http_code: 400
+                    errors:
+                      - issue: Invalid Date
+                        action: From Date should not be greater than To date.
+                BalanceAccountNumberOrBranchNumberMandatoryXML:
+                  value:
+                    ref_id: ec689822-9864-4c4d-9d68-222467627901
+                    status: FAILURE
+                    http_code: 400
+                    errors:
+                      - issue: Mandatory field missing on the request.
+                        action: >-
+                          Resend the request with valid values either in
+                          AccountNumber (or) BranchNumber field
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 401
+                moreInformation: >-
+                  You are not authorized to access this API. Please send valid
+                  credentials for authorization.
+                errors:
+                  - issue: Authorization failed
+                    action: Please try again with valid credentials.
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 401
+                errors:
+                  - issue: Authorization failed
+                    action: Please try again with valid credentials.
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 403
+                moreInformation: Please check the URL and try again later.
+                errors:
+                  - issue: access denied
+                    action: access denied
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 403
+                errors:
+                  - issue: access denied
+                    action: access denied
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 404
+                moreInformation: Please use valid HTTP supported verb only.
+                errors:
+                  - issue: No resources match requested URI
+                    action: Check the URI.
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 404
+                moreInformation: Please use valid HTTP supported verb only.
+                errors:
+                  - issue: No resources match requested URI
+                    action: Check the URI.
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 405
+                moreInformation: Please use valid HTTP supported verb only.
+                errors:
+                  - issue: Method not allowed
+                    action: Please use valid Http Verb.
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 405
+                moreInformation: Please use valid HTTP supported verb only.
+                errors:
+                  - issue: Method not allowed
+                    action: Please use valid HTTP verb.
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 415
+                moreInformation: >-
+                  Provided content-type is not allowed. Only content-type as
+                  application/xml is accepted, please correct the content-type
+                  on the header and try again.
+                errors:
+                  - issue: Unsupported Media Type
+                    action: Resend the request with valid content-type.
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 415
+                moreInformation: >-
+                  Provided content-type is not allowed. Only content-type as
+                  application/xml is accepted, please correct the content-type
+                  on the header and try again.
+                errors:
+                  - issue: Unsupported Media Type
+                    action: Resend the request with valid content-type.
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 429
+                moreInformation: You've made too many requests in a specific timeframe.
+                errors:
+                  - issue: Rate Limit exceeded
+                    action: Retry after two minutes.
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 429
+                moreInformation: You've made too many requests in a specific timeframe.
+                errors:
+                  - issue: Rate Limit exceeded
+                    action: Retry after two minutes.
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 500
+                moreInformation: >-
+                  Unable to serve your request at this moment. Please try again
+                  later.
+                errors:
+                  - issue: Unable to serve your request at this moment
+                    action: Please try again later.
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BalanceInquiryErrorResponse'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627901
+                status: FAILURE
+                http_code: 500
+                errors:
+                  - issue: Unable to serve your request at this moment
+                    action: please try again later.
+servers:
+  - url: https://tts.sit.apib2b.citi.com/citiconnect/sit5/accountstatementservices
+    description: dev gateway url
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/accountstatementservices
+    description: production gateway url
+  - url: >-
+      https://tts.sandbox.apib2b.citi.com/citiconnect/sb/accountstatementservices
+    description: sbox url
+components:
+  headers:
+    Pagination-Metadata:
+      schema:
+        type: object
+        properties:
+          page_number:
+            type: integer
+            description: >-
+              This is identifies the current page number.  If there more records
+              available and Total Pages are more than 1, then client is expected
+              to make another API call by providing page number in header and
+              without changing any other parameter in the request. Default value
+              of page number is 1.
+            example: 1
+          size:
+            type: integer
+            description: Identification of number of accounts per page
+            example: 80
+          total_pages:
+            type: integer
+            description: Identification of total pages
+            example: 4
+          total_elements:
+            type: integer
+            description: Identification of total accounts that client may request
+            example: 280
+  schemas:
+    BalanceInquiryResponse:
+      description: >-
+        Balance Inquiry Response should be in ISO XML Standard
+        format(camt.052.001.02). refer this link for more details-
+        https://www.iso20022.org/catalogue-messages/iso-20022-messages-archive?business-domain%5B0%5D=1&search=camt.052.001.02
+      properties:
+        Document:
+          $ref: '#/components/schemas/Document'
+    Document:
+      properties:
+        BkToCstmrAcctRpt:
+          $ref: '#/components/schemas/BankToCustomerAccountReportV02'
+    BankToCustomerAccountReportV02:
+      required:
+        - Rpt
+      type: object
+      properties:
+        GrpHdr:
+          $ref: '#/components/schemas/GroupHeader42'
+        Rpt:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountReport11'
+    GroupHeader42:
+      type: object
+      properties:
+        MsgId:
+          $ref: '#/components/schemas/Max35Text'
+        CreDtTm:
+          $ref: '#/components/schemas/ISODateTime'
+        MsgRcpt:
+          $ref: '#/components/schemas/PartyIdentification32'
+        MsgPgntn:
+          $ref: '#/components/schemas/Pagination'
+        AddtlInf:
+          $ref: '#/components/schemas/Max500Text'
+    ISODateTime:
+      format: dateTime
+      type: string
+    PartyIdentification32:
+      type: object
+      properties:
+        Nm:
+          description: >-
+            Name by which a party is known and which is usually used to identify
+            that party.
+          allOf:
+            - $ref: '#/components/schemas/Max140Text'
+        PstlAdr:
+          allOf:
+            - $ref: '#/components/schemas/PostalAddress6'
+        Id:
+          type: object
+          description: >-
+            Unique and unambiguous identification of a party. Should pass either
+            OrgId or PrvtId for organisation and private respectively.
+          allOf:
+            - $ref: '#/components/schemas/Party6Choice'
+        CtryOfRes:
+          description: >-
+            Country in which a person resides (the place of a person's home). In
+            the case of a company, it is the country from which the affairs of
+            that company are directed.
+          allOf:
+            - $ref: '#/components/schemas/CountryCode'
+        CtctDtls:
+          allOf:
+            - $ref: '#/components/schemas/ContactDetails2'
+    Party6Choice:
+      type: object
+      properties:
+        OrgId:
+          allOf:
+            - $ref: '#/components/schemas/OrganisationIdentification4'
+        PrvtId:
+          allOf:
+            - $ref: '#/components/schemas/PersonIdentification5'
+    PostalAddress6:
+      type: object
+      description: >-
+        Information that locates and identifies a specific address, as defined
+        by postal services.
+      properties:
+        AdrLine:
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+          items:
+            type: string
+          maxItems: 7
+          minLength: 1
+          maxLength: 70
+          type: array
+        AdrTp:
+          description: >-
+            Identifies the nature of the postal address.<br><br><b>ADDR</b> :
+            Address is the complete postal address. <br><br><b>PBOX</b> :
+            Address is a postal office (PO) box. <br><br><b>HOME</b> : Address
+            is the home address. <br><br><b>BIZZ</b> : Address is the business
+            address.<br><br><b>MLTO</b> : Address is the address to which mail
+            is sent.<br><br><b>DLVY</b> : Address is the address to which
+            delivery is to take place.
+          allOf:
+            - $ref: '#/components/schemas/AddressType2Code'
+        BldgNb:
+          description: Number that identifies the position of a building on a street.
+          allOf:
+            - $ref: '#/components/schemas/Max16Text'
+        Ctry:
+          allOf:
+            - $ref: '#/components/schemas/CountryCode'
+        CtrySubDvsn:
+          description: Identifies a subdivision of a country such as state, region, county.
+          allOf:
+            - $ref: '#/components/schemas/Max35Text'
+        Dept:
+          description: Identification of a division of a large organisation or building.
+          allOf:
+            - $ref: '#/components/schemas/Max70Text'
+        PstCd:
+          description: >-
+            Identifier consisting of a group of letters and/or numbers that is
+            added to a postal address to assist the sorting of mail.
+          allOf:
+            - $ref: '#/components/schemas/Max16Text'
+        StrtNm:
+          description: Name of a street or thoroughfare.
+          allOf:
+            - $ref: '#/components/schemas/Max70Text'
+        SubDept:
+          description: >-
+            Identification of a sub-division of a large organisation or
+            building.
+          allOf:
+            - $ref: '#/components/schemas/Max70Text'
+        TwnNm:
+          description: >-
+            Name of a built-up area, with defined boundaries, and a local
+            government.
+          allOf:
+            - $ref: '#/components/schemas/Max35Text'
+    OrganisationIdentification4:
+      type: object
+      description: Unique and unambiguous way to identify an organisation.
+      properties:
+        BICOrBEI:
+          description: >-
+            Code allocated to a financial institution or non financial
+            institution by the ISO 9362 Registration Authority as described in
+            ISO 9362 "Banking - Banking telecommunication messages - Business
+            identifier code (BIC)".
+          pattern: '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
+          type: string
+        Othr:
+          description: >-
+            Unique identification of an organisation, as assigned by an
+            institution, using an identification scheme.
+          items:
+            $ref: '#/components/schemas/GenericOrganisationIdentification1'
+          type: array
+    GenericOrganisationIdentification1:
+      type: object
+      properties:
+        Id:
+          description: Identification assigned by an institution.
+          allOf:
+            - $ref: '#/components/schemas/Max35Text'
+        SchmeNm:
+          description: Name of the identification scheme.
+          allOf:
+            - $ref: '#/components/schemas/OrganisationIdentificationSchemeName1Choice'
+        Issr:
+          description: Entity that assigns the identification.
+          allOf:
+            - $ref: '#/components/schemas/Max35Text'
+    Pagination:
+      type: object
+      properties:
+        PgNb:
+          $ref: '#/components/schemas/Max5NumericText'
+        LastPgInd:
+          $ref: '#/components/schemas/YesNoIndicator'
+    Max5NumericText:
+      type: string
+      pattern: '[0-9]{1,5}'
+    YesNoIndicator:
+      type: boolean
+    OrganisationIdentificationSchemeName1Choice:
+      type: object
+      description: Either of Code or Proprietary is required
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalOrganisationIdentification1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    AccountIdentification4Choice:
+      type: object
+      properties:
+        IBAN:
+          $ref: '#/components/schemas/IBAN2007Identifier'
+        Othr:
+          $ref: '#/components/schemas/GenericAccountIdentification1'
+    AccountInterest2:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/InterestType1Choice'
+        Rate:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rate3'
+        FrToDt:
+          $ref: '#/components/schemas/DateTimePeriodDetails'
+        Rsn:
+          $ref: '#/components/schemas/Max35Text'
+    AccountReport11:
+      type: object
+      properties:
+        Id:
+          $ref: '#/components/schemas/Max35Text'
+        ElctrncSeqNb:
+          type: string
+        LglSeqNb:
+          type: string
+        CreDtTm:
+          $ref: '#/components/schemas/ISODateTime'
+        FrToDt:
+          $ref: '#/components/schemas/DateTimePeriodDetails'
+        CpyDplctInd:
+          $ref: '#/components/schemas/CopyDuplicate1Code'
+        RptgSrc:
+          $ref: '#/components/schemas/ReportingSource1Choice'
+        Acct:
+          $ref: '#/components/schemas/CashAccount20'
+        RltdAcct:
+          $ref: '#/components/schemas/CashAccount16'
+        Intrst:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountInterest2'
+        Bal:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashBalance3'
+        TxsSummry:
+          $ref: '#/components/schemas/TotalTransactions2'
+        Ntry:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportEntry2'
+        AddtlRptInf:
+          $ref: '#/components/schemas/Max500Text'
+    AccountSchemeName1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalAccountIdentification1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    ActiveOrHistoricCurrencyAndAmount_SimpleType:
+      type: number
+      maxLength: 18
+      description: >-
+        A number of monetary units specified in an active or a historic currency
+        where the unit of currency is explicit and compliant with ISO 4217. The
+        number of fractional digits should be 5.
+    ActiveOrHistoricCurrencyAndAmount:
+      type: object
+      properties:
+        Ccy:
+          description: Currency code. Passed as the tag attribute.
+          allOf:
+            - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+          xml:
+            attribute: true
+        amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount_SimpleType'
+    ActiveOrHistoricCurrencyCode:
+      pattern: '[A-Z]{3,3}'
+      type: string
+    AddressType2Code:
+      type: string
+      enum:
+        - ADDR
+        - PBOX
+        - HOME
+        - BIZZ
+        - MLTO
+        - DLVY
+    AlternateSecurityIdentification2:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/Max35Text'
+        Id:
+          $ref: '#/components/schemas/Max35Text'
+    AmountAndCurrencyExchange3:
+      type: object
+      properties:
+        InstdAmt:
+          $ref: '#/components/schemas/AmountAndCurrencyExchange3'
+        TxAmt:
+          $ref: '#/components/schemas/AmountAndCurrencyExchange3'
+        CntrValAmt:
+          $ref: '#/components/schemas/AmountAndCurrencyExchange3'
+        AnncdPstngAmt:
+          $ref: '#/components/schemas/AmountAndCurrencyExchange3'
+        PrtryAmt:
+          type: array
+          items:
+            $ref: '#/components/schemas/AmountAndCurrencyExchangeDetails4'
+    AmountAndCurrencyExchangeDetails4:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/Max35Text'
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CcyXchg:
+          $ref: '#/components/schemas/CurrencyExchange5'
+    AmountRangeBoundary1:
+      type: object
+      properties:
+        BdryAmt:
+          $ref: '#/components/schemas/ImpliedCurrencyAndAmount'
+        Incl:
+          $ref: '#/components/schemas/YesNoIndicator'
+    BICIdentifier:
+      type: string
+      pattern: '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
+    BalanceSubType1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalBalanceSubType1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    BalanceType12:
+      type: object
+      properties:
+        CdOrPrtry:
+          $ref: '#/components/schemas/BalanceType5Choice'
+        SubTp:
+          $ref: '#/components/schemas/BalanceSubType1Choice'
+    BalanceType12Code:
+      type: string
+      enum:
+        - XPCD
+        - OPAV
+        - ITAV
+        - CLAV
+        - FWAV
+        - CLBD
+        - ITBD
+        - OPBD
+        - PRCD
+        - INFO
+    BalanceType5Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/BalanceType12Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    BankTransactionCodeStructure4:
+      type: object
+      properties:
+        Domn:
+          $ref: '#/components/schemas/BankTransactionCodeStructure5'
+        Prtry:
+          $ref: '#/components/schemas/ProprietaryBankTransactionCodeStructure1'
+    BankTransactionCodeStructure5:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalBankTransactionDomain1Code'
+        Fmly:
+          $ref: '#/components/schemas/BankTransactionCodeStructure6'
+    BankTransactionCodeStructure6:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalBankTransactionFamily1Code'
+        SubFmlyCd:
+          $ref: '#/components/schemas/ExternalBankTransactionSubFamily1Code'
+    BaseOneRate:
+      type: string
+      maxLength: 11
+      description: Total Digits allowed is 11 and upto 10 decimal places allowed.
+    BatchInformation2:
+      type: object
+      properties:
+        MsgId:
+          $ref: '#/components/schemas/Max35Text'
+        PmtInfId:
+          $ref: '#/components/schemas/Max35Text'
+        NbOfTxs:
+          $ref: '#/components/schemas/Max15NumericText'
+        TtlAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+    BranchAndFinancialInstitutionIdentification4:
+      type: object
+      properties:
+        FinInstnId:
+          $ref: '#/components/schemas/FinancialInstitutionIdentification7'
+        BrnchId:
+          $ref: '#/components/schemas/BranchData2'
+    BranchData2:
+      type: object
+      properties:
+        Id:
+          $ref: '#/components/schemas/Max35Text'
+        Nm:
+          $ref: '#/components/schemas/Max140Text'
+        PstlAdr:
+          $ref: '#/components/schemas/PostalAddress6'
+    CashAccount16:
+      type: object
+      properties:
+        Id:
+          $ref: '#/components/schemas/AccountIdentification4Choice'
+        Tp:
+          $ref: '#/components/schemas/CashAccountType2'
+        Ccy:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        Nm:
+          $ref: '#/components/schemas/Max70Text'
+    CashAccount20:
+      type: object
+      properties:
+        Id:
+          $ref: '#/components/schemas/AccountIdentification4Choice'
+        Tp:
+          $ref: '#/components/schemas/CashAccountType2'
+        Ccy:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        Nm:
+          $ref: '#/components/schemas/Max70Text'
+        Ownr:
+          $ref: '#/components/schemas/PartyIdentification32'
+        Svcr:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+    CashAccountType2:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/CashAccountType4Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    CashAccountType4Code:
+      type: string
+      enum:
+        - CASH
+        - CHAR
+        - COMM
+        - TAXE
+        - CISH
+        - TRAS
+        - SACC
+        - CACC
+        - SVGS
+        - ONDP
+        - MGLD
+        - NREX
+        - MOMA
+        - LOAN
+        - SLRY
+        - ODFT
+    CashBalance3:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/BalanceType12'
+        CdtLine:
+          $ref: '#/components/schemas/CreditLine2'
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+        Dt:
+          $ref: '#/components/schemas/DateAndDateTimeChoice'
+        Avlbty:
+          $ref: '#/components/schemas/CashBalanceAvailability2'
+    CashBalanceAvailability2:
+      type: object
+      properties:
+        Dt:
+          $ref: '#/components/schemas/CashBalanceAvailabilityDate1'
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtDbtInd:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+    CashBalanceAvailabilityDate1:
+      type: object
+      properties:
+        NbOfDays:
+          $ref: '#/components/schemas/Max15PlusSignedNumericText'
+        ActlDt:
+          $ref: '#/components/schemas/ISODate'
+    ChargeBearerType1Code:
+      type: string
+      enum:
+        - DEBT
+        - CRED
+        - SHAR
+        - SLEV
+    ChargeType1Code:
+      type: string
+      enum:
+        - BRKF
+        - COMM
+    ChargeType2Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ChargeType1Code'
+        Prtry:
+          $ref: '#/components/schemas/GenericIdentification3'
+    ChargesInformation6:
+      type: object
+      properties:
+        TtlChrgsAndTaxAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+        Tp:
+          $ref: '#/components/schemas/ChargeType2Choice'
+        Rate:
+          $ref: '#/components/schemas/PercentageRate'
+        Br:
+          $ref: '#/components/schemas/ChargeBearerType1Code'
+        Pty:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        Tax:
+          $ref: '#/components/schemas/TaxCharges2'
+    ClearingSystemIdentification2Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalClearingSystemIdentification1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    ClearingSystemMemberIdentification2:
+      type: object
+      properties:
+        ClrSysId:
+          $ref: '#/components/schemas/ClearingSystemIdentification2Choice'
+        MmbId:
+          $ref: '#/components/schemas/Max35Text'
+    ContactDetails2:
+      type: object
+      properties:
+        NmPrfx:
+          $ref: '#/components/schemas/NamePrefix1Code'
+        Nm:
+          $ref: '#/components/schemas/Max140Text'
+        PhneNb:
+          $ref: '#/components/schemas/PhoneNumber'
+        MobNb:
+          $ref: '#/components/schemas/PhoneNumber'
+        FaxNb:
+          $ref: '#/components/schemas/PhoneNumber'
+        EmailAdr:
+          $ref: '#/components/schemas/Max2048Text'
+        Othr:
+          $ref: '#/components/schemas/Max35Text'
+    CopyDuplicate1Code:
+      type: string
+      enum:
+        - CODU
+        - COPY
+        - DUPL
+    CorporateAction1:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/Max35Text'
+        Nb:
+          $ref: '#/components/schemas/Max35Text'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    CountryCode:
+      type: string
+      pattern: '[A-Z]{2,2}'
+    CreditLine2:
+      type: object
+      properties:
+        Incl:
+          $ref: '#/components/schemas/TrueFalseIndicator'
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+    CreditorReferenceInformation2:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/CreditorReferenceType2'
+        Ref:
+          $ref: '#/components/schemas/Max35Text'
+    CreditorReferenceType1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/DocumentType3Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    CreditorReferenceType2:
+      type: object
+      properties:
+        CdOrPrtry:
+          $ref: '#/components/schemas/CreditorReferenceType1Choice'
+        Issr:
+          $ref: '#/components/schemas/Max35Text'
+    CurrencyAndAmountRange2:
+      type: object
+      properties:
+        Amt:
+          $ref: '#/components/schemas/ImpliedCurrencyAmountRangeChoice'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+        Ccy:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+    CurrencyExchange5:
+      type: object
+      properties:
+        SrcCcy:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        TrgtCcy:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        UnitCcy:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        XchgRate:
+          $ref: '#/components/schemas/BaseOneRate'
+        CtrctId:
+          $ref: '#/components/schemas/Max35Text'
+        QtnDt:
+          $ref: '#/components/schemas/ISODateTime'
+    DateAndDateTimeChoice:
+      type: object
+      properties:
+        Dt:
+          $ref: '#/components/schemas/ISODate'
+        DtTm:
+          $ref: '#/components/schemas/ISODateTime'
+    DateAndPlaceOfBirth:
+      type: object
+      properties:
+        BirthDt:
+          $ref: '#/components/schemas/ISODate'
+        PrvcOfBirth:
+          $ref: '#/components/schemas/Max35Text'
+        CityOfBirth:
+          $ref: '#/components/schemas/Max35Text'
+        CtryOfBirth:
+          $ref: '#/components/schemas/CountryCode'
+    DatePeriodDetails:
+      type: object
+      properties:
+        FrDt:
+          $ref: '#/components/schemas/ISODate'
+        ToDt:
+          $ref: '#/components/schemas/ISODate'
+    DateTimePeriodDetails:
+      type: object
+      properties:
+        FrDtTm:
+          $ref: '#/components/schemas/ISODateTime'
+        ToDtTm:
+          $ref: '#/components/schemas/ISODateTime'
+    DecimalNumber:
+      type: number
+      maxLength: 18
+      description: Total digits 18 is allowed. And upto 17 decimal places allowed
+    DocumentAdjustment1:
+      type: object
+      properties:
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+        Rsn:
+          $ref: '#/components/schemas/Max4Text'
+        AddtlInf:
+          $ref: '#/components/schemas/Max140Text'
+    DocumentType3Code:
+      type: string
+      enum:
+        - RADM
+        - RPIN
+        - FXDR
+        - DISP
+        - PUOR
+        - SCOR
+    DocumentType5Code:
+      type: string
+      enum:
+        - MSIN
+        - CNFA
+        - DNFA
+        - CINV
+        - CREN
+        - DEBN
+        - HIRI
+        - SBIN
+        - CMCN
+        - SOAC
+        - DISP
+        - BOLD
+        - VCHR
+        - AROI
+        - TSUT
+    EntryDetails1:
+      type: object
+      properties:
+        Btch:
+          $ref: '#/components/schemas/BatchInformation2'
+        TxDtls:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntryTransaction2'
+    EntryStatus2Code:
+      type: string
+      enum:
+        - BOOK
+        - PDNG
+        - INFO
+    EntryTransaction2:
+      type: object
+      properties:
+        Refs:
+          $ref: '#/components/schemas/TransactionReferences2'
+        AmtDtls:
+          $ref: '#/components/schemas/AmountAndCurrencyExchange3'
+        Avlbty:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashBalanceAvailability2'
+        BkTxCd:
+          $ref: '#/components/schemas/BankTransactionCodeStructure4'
+        Chrgs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChargesInformation6'
+        Intrst:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionInterest2'
+        RtldPties:
+          $ref: '#/components/schemas/TransactionParty2'
+        RltdAgts:
+          $ref: '#/components/schemas/TransactionAgents2'
+        Purp:
+          $ref: '#/components/schemas/Purpose2Choice'
+        RltdRmtInf:
+          $ref: '#/components/schemas/RemittanceLocation2'
+        RmtInf:
+          $ref: '#/components/schemas/RemittanceInformation5'
+        RltdDts:
+          $ref: '#/components/schemas/TransactionDates2'
+        RltdPric:
+          $ref: '#/components/schemas/TransactionPrice2Choice'
+        RltdQties:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionQuantities1Choice'
+        FinInstrmId:
+          $ref: '#/components/schemas/SecurityIdentification4Choice'
+        Tax:
+          $ref: '#/components/schemas/TaxInformation3'
+        RtrInf:
+          $ref: '#/components/schemas/ReturnReasonInformation10'
+        CorpActn:
+          $ref: '#/components/schemas/CorporateAction1'
+        SfkpgAcct:
+          $ref: '#/components/schemas/CashAccount16'
+        AddtlTxInf:
+          $ref: '#/components/schemas/Max500Text'
+    ExternalAccountIdentification1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalBalanceSubType1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalBankTransactionDomain1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalBankTransactionFamily1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalBankTransactionSubFamily1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalClearingSystemIdentification1Code:
+      type: string
+      minLength: 1
+      maxLength: 5
+    ExternalFinancialInstitutionIdentification1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalOrganisationIdentification1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalPersonIdentification1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalPurpose1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalReportingSource1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalReturnReason1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    ExternalTechnicalInputChannel1Code:
+      type: string
+      minLength: 1
+      maxLength: 4
+    FinancialIdentificationSchemeName1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalFinancialInstitutionIdentification1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    FinancialInstitutionIdentification7:
+      type: object
+      properties:
+        BIC:
+          $ref: '#/components/schemas/BICIdentifier'
+        ClrSysMmbId:
+          $ref: '#/components/schemas/ClearingSystemMemberIdentification2'
+        Nm:
+          $ref: '#/components/schemas/Max140Text'
+        PstlAdr:
+          $ref: '#/components/schemas/PostalAddress6'
+        Othr:
+          $ref: '#/components/schemas/GenericFinancialIdentification1'
+    FinancialInstrumentQuantityChoice:
+      type: object
+      properties:
+        Unit:
+          $ref: '#/components/schemas/DecimalNumber'
+        FaceAmt:
+          $ref: '#/components/schemas/ImpliedCurrencyAndAmount'
+        AmtsdVal:
+          $ref: '#/components/schemas/ImpliedCurrencyAndAmount'
+    FromToAmountRange:
+      type: object
+      properties:
+        FrAmt:
+          $ref: '#/components/schemas/AmountRangeBoundary1'
+        ToAmt:
+          $ref: '#/components/schemas/AmountRangeBoundary1'
+    GenericAccountIdentification1:
+      type: object
+      properties:
+        Id:
+          $ref: '#/components/schemas/Max34Text'
+        SchmeNm:
+          $ref: '#/components/schemas/AccountSchemeName1Choice'
+        Issr:
+          $ref: '#/components/schemas/Max35Text'
+    GenericFinancialIdentification1:
+      type: object
+      properties:
+        Id:
+          $ref: '#/components/schemas/Max35Text'
+        SchmeNm:
+          $ref: '#/components/schemas/FinancialIdentificationSchemeName1Choice'
+        Issr:
+          $ref: '#/components/schemas/Max35Text'
+    GenericIdentification3:
+      type: object
+      properties:
+        Id:
+          $ref: '#/components/schemas/Max35Text'
+        Issr:
+          $ref: '#/components/schemas/Max35Text'
+    GenericPersonIdentification1:
+      type: object
+      properties:
+        Id:
+          $ref: '#/components/schemas/Max35Text'
+        SchmeNm:
+          $ref: '#/components/schemas/PersonIdentificationSchemeName1Choice'
+        Issr:
+          $ref: '#/components/schemas/Max35Text'
+    IBAN2007Identifier:
+      type: string
+      pattern: '[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}'
+    ISINIdentifier:
+      type: string
+      pattern: '[A-Z0-9]{12,12}'
+    ImpliedCurrencyAmountRangeChoice:
+      type: object
+      properties:
+        FrAmt:
+          $ref: '#/components/schemas/AmountRangeBoundary1'
+        ToAmt:
+          $ref: '#/components/schemas/AmountRangeBoundary1'
+        FrToAmt:
+          $ref: '#/components/schemas/FromToAmountRange'
+        EQAmt:
+          $ref: '#/components/schemas/ImpliedCurrencyAndAmount'
+        NEQAmt:
+          $ref: '#/components/schemas/ImpliedCurrencyAndAmount'
+    ImpliedCurrencyAndAmount:
+      type: string
+      maxLength: 18
+      description: Total digts 18 are allowed. And Upto 5 fractional places
+    InterestType1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/InterestType1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    InterestType1Code:
+      type: string
+      enum:
+        - INDY
+        - OVRN
+    Max15NumericText:
+      type: string
+      pattern: '[0-9]{1,15}'
+    Max140Text:
+      type: string
+      minLength: 1
+      maxLength: 140
+    Max105Text:
+      type: string
+      minLength: 1
+      maxLength: 105
+    Max15PlusSignedNumericText:
+      type: string
+      pattern: '[+]{0,1}[0-9]{1,15}'
+    Max16Text:
+      type: string
+      minLength: 1
+      maxLength: 16
+    Max2048Text:
+      type: string
+      minLength: 1
+      maxLength: 2048
+    Max34Text:
+      type: string
+      minLength: 1
+      maxLength: 34
+    Max4Text:
+      minLength: 1
+      maxLength: 4
+      type: string
+    Max500Text:
+      type: string
+      minLength: 1
+      maxLength: 500
+    MessageIdentification2:
+      type: object
+      properties:
+        MsgNmId:
+          $ref: '#/components/schemas/Max35Text'
+        MsgId:
+          $ref: '#/components/schemas/Max35Text'
+    NameAndAddress10:
+      type: object
+      properties:
+        Nm:
+          $ref: '#/components/schemas/Max140Text'
+        Adr:
+          $ref: '#/components/schemas/PostalAddress6'
+    NamePrefix1Code:
+      type: string
+      enum:
+        - DOCT
+        - MIST
+        - MISS
+        - MADM
+    Number:
+      type: string
+      maxLength: 18
+      description: Upto 18 digits allowed.
+    NumberAndSumOfTransactions1:
+      type: object
+      properties:
+        NbOfNtries:
+          $ref: '#/components/schemas/Max15NumericText'
+        Sum:
+          $ref: '#/components/schemas/DecimalNumber'
+    NumberAndSumOfTransactions2:
+      type: object
+      properties:
+        NbOfNtries:
+          $ref: '#/components/schemas/Max15NumericText'
+        Sum:
+          $ref: '#/components/schemas/DecimalNumber'
+        TtlNetNtryAmt:
+          $ref: '#/components/schemas/DecimalNumber'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+    PercentageRate:
+      type: string
+      maxLength: 11
+      description: Total 11 digits allowed. Upto 10 decimal places allowed
+    PersonIdentification5:
+      type: object
+      properties:
+        DtAndPlcOfBirth:
+          $ref: '#/components/schemas/DateAndPlaceOfBirth'
+        Othr:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericPersonIdentification1'
+    PersonIdentificationSchemeName1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalPersonIdentification1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    PhoneNumber:
+      type: string
+      pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
+    ProprietaryAgent2:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/Max35Text'
+        Agt:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+    ProprietaryBankTransactionCodeStructure1:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/Max35Text'
+        Issr:
+          $ref: '#/components/schemas/Max35Text'
+    ProprietaryDate2:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/Max35Text'
+        Dt:
+          $ref: '#/components/schemas/DateAndDateTimeChoice'
+    ProprietaryParty2:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/Max35Text'
+        Pty:
+          $ref: '#/components/schemas/PartyIdentification32'
+    ProprietaryPrice2:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/Max35Text'
+        Pric:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+    ProprietaryQuantity1:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/Max35Text'
+        Qty:
+          $ref: '#/components/schemas/Max35Text'
+    ProprietaryReference1:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/Max35Text'
+        Ref:
+          $ref: '#/components/schemas/Max35Text'
+    Purpose2Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalPurpose1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    Rate3:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/RateType4Choice'
+        VldtyRg:
+          $ref: '#/components/schemas/CurrencyAndAmountRange2'
+    RateType4Choice:
+      type: object
+      properties:
+        Pctg:
+          $ref: '#/components/schemas/PercentageRate'
+        Othr:
+          $ref: '#/components/schemas/Max35Text'
+    ReferredDocumentInformation3:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/ReferredDocumentType2'
+        Nb:
+          $ref: '#/components/schemas/Max35Text'
+        RltdDt:
+          $ref: '#/components/schemas/ISODate'
+    ReferredDocumentType1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/DocumentType5Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    ReferredDocumentType2:
+      type: object
+      properties:
+        CdOrPrtry:
+          $ref: '#/components/schemas/ReferredDocumentType1Choice'
+        Issr:
+          $ref: '#/components/schemas/Max35Text'
+    RemittanceAmount1:
+      type: object
+      properties:
+        DuePyblAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        DscntApldAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtNoteAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        TaxAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        AdjstmntAmtAndRsn:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentAdjustment1'
+        RmtdAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+    RemittanceInformation5:
+      type: object
+      properties:
+        Ustrd:
+          type: array
+          items:
+            $ref: '#/components/schemas/Max140Text'
+        Strd:
+          type: array
+          items:
+            $ref: '#/components/schemas/StructuredRemittanceInformation7'
+    RemittanceLocation2:
+      type: object
+      properties:
+        RmtId:
+          $ref: '#/components/schemas/Max35Text'
+        RmtLctnMtd:
+          $ref: '#/components/schemas/RemittanceLocationMethod2Code'
+        RmtLctnElctrncAdr:
+          $ref: '#/components/schemas/Max2048Text'
+        RmtLctnPstlAdr:
+          $ref: '#/components/schemas/NameAndAddress10'
+    RemittanceLocationMethod2Code:
+      type: string
+      enum:
+        - FAXI
+        - EDIC
+        - URID
+        - EMAL
+        - POST
+        - SMSM
+    ReportEntry2:
+      type: object
+      properties:
+        NtryRef:
+          $ref: '#/components/schemas/Max35Text'
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+        RvslInd:
+          $ref: '#/components/schemas/TrueFalseIndicator'
+        Sts:
+          $ref: '#/components/schemas/EntryStatus2Code'
+        BookgDt:
+          $ref: '#/components/schemas/DateAndDateTimeChoice'
+        ValDt:
+          $ref: '#/components/schemas/DateAndDateTimeChoice'
+        AcctSvcrRef:
+          $ref: '#/components/schemas/Max35Text'
+        Avlbty:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashBalanceAvailability2'
+        BkTxCd:
+          $ref: '#/components/schemas/BankTransactionCodeStructure4'
+        ComssnWvrInd:
+          $ref: '#/components/schemas/YesNoIndicator'
+        AddtlInfInd:
+          $ref: '#/components/schemas/MessageIdentification2'
+        AmtDtls:
+          $ref: '#/components/schemas/AmountAndCurrencyExchange3'
+        Chrgs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChargesInformation6'
+        TechInptChanl:
+          $ref: '#/components/schemas/TechnicalInputChannel1Choice'
+        Intrst:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionInterest2'
+        NtryDtls:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntryDetails1'
+        AddtlNtryInf:
+          $ref: '#/components/schemas/Max500Text'
+    ReportingSource1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalReportingSource1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    ReturnReason5Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalReturnReason1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    ReturnReasonInformation10:
+      type: object
+      properties:
+        OrgnlBkTxCd:
+          $ref: '#/components/schemas/BankTransactionCodeStructure4'
+        Orgtr:
+          $ref: '#/components/schemas/PartyIdentification32'
+        Rsn:
+          $ref: '#/components/schemas/ReturnReason5Choice'
+        AddtlInf:
+          type: array
+          items:
+            $ref: '#/components/schemas/Max105Text'
+    SecurityIdentification4Choice:
+      type: object
+      properties:
+        ISIN:
+          $ref: '#/components/schemas/ISINIdentifier'
+        Prtry:
+          $ref: '#/components/schemas/AlternateSecurityIdentification2'
+    StructuredRemittanceInformation7:
+      type: object
+      properties:
+        RfrdDocInf:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferredDocumentInformation3'
+        RfrdDocAmt:
+          $ref: '#/components/schemas/RemittanceAmount1'
+        CdtrRefInf:
+          $ref: '#/components/schemas/CreditorReferenceInformation2'
+        Invcr:
+          $ref: '#/components/schemas/PartyIdentification32'
+        Invcee:
+          $ref: '#/components/schemas/PartyIdentification32'
+        AddtlRmtInf:
+          type: array
+          items:
+            $ref: '#/components/schemas/Max140Text'
+          maxItems: 3
+    TaxAmount1:
+      type: object
+      properties:
+        Rate:
+          $ref: '#/components/schemas/PercentageRate'
+        TaxblBaseAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        TtlAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        Dtls:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxRecordDetails1'
+    TaxAuthorisation1:
+      type: object
+      properties:
+        Titl:
+          $ref: '#/components/schemas/Max35Text'
+        Nm:
+          $ref: '#/components/schemas/Max140Text'
+    TaxCharges2:
+      type: object
+      properties:
+        Id:
+          $ref: '#/components/schemas/Max35Text'
+        Rate:
+          $ref: '#/components/schemas/PercentageRate'
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+    TaxInformation3:
+      type: object
+      properties:
+        Cdtr:
+          $ref: '#/components/schemas/TaxParty1'
+        Dbtr:
+          $ref: '#/components/schemas/TaxParty2'
+        AdmstnZn:
+          $ref: '#/components/schemas/Max35Text'
+        RefNb:
+          $ref: '#/components/schemas/Max140Text'
+        Mtd:
+          $ref: '#/components/schemas/Max35Text'
+        TtlTaxblBaseAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        TtlTaxAmt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        Dt:
+          $ref: '#/components/schemas/ISODate'
+        SeqNb:
+          $ref: '#/components/schemas/Number'
+        Rcrd:
+          $ref: '#/components/schemas/TaxRecord1'
+    TaxParty1:
+      type: object
+      properties:
+        TaxId:
+          $ref: '#/components/schemas/Max35Text'
+        RegnId:
+          $ref: '#/components/schemas/Max35Text'
+        TaxTp:
+          $ref: '#/components/schemas/Max35Text'
+    TaxParty2:
+      type: object
+      properties:
+        TaxId:
+          $ref: '#/components/schemas/Max35Text'
+        RegnId:
+          $ref: '#/components/schemas/Max35Text'
+        TaxTp:
+          $ref: '#/components/schemas/Max35Text'
+        Authstn:
+          $ref: '#/components/schemas/TaxAuthorisation1'
+    TaxPeriod1:
+      type: object
+      properties:
+        Yr:
+          $ref: '#/components/schemas/ISODate'
+        Tp:
+          $ref: '#/components/schemas/TaxRecordPeriod1Code'
+        FrToDt:
+          $ref: '#/components/schemas/DatePeriodDetails'
+    TaxRecord1:
+      type: object
+      properties:
+        Tp:
+          $ref: '#/components/schemas/Max35Text'
+        Ctgy:
+          $ref: '#/components/schemas/Max35Text'
+        CtgyDtls:
+          $ref: '#/components/schemas/Max35Text'
+        DbtrSts:
+          $ref: '#/components/schemas/Max35Text'
+        CertId:
+          $ref: '#/components/schemas/Max35Text'
+        FrmsCd:
+          $ref: '#/components/schemas/Max35Text'
+        Prd:
+          $ref: '#/components/schemas/TaxPeriod1'
+        TaxAmt:
+          $ref: '#/components/schemas/TaxAmount1'
+        AddtlInf:
+          $ref: '#/components/schemas/Max140Text'
+    TaxRecordDetails1:
+      type: object
+      properties:
+        Prd:
+          $ref: '#/components/schemas/TaxRecord1'
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+    TaxRecordPeriod1Code:
+      type: string
+      enum:
+        - MM01
+        - MM02
+        - MM03
+        - MM04
+        - MM05
+        - MM06
+        - MM07
+        - MM08
+        - MM09
+        - MM10
+        - MM11
+        - MM12
+        - QTR1
+        - QTR2
+        - QTR3
+        - QTR4
+        - HLF1
+        - HLF2
+    TechnicalInputChannel1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/ExternalTechnicalInputChannel1Code'
+        Prtry:
+          $ref: '#/components/schemas/Max35Text'
+    TotalTransactions2:
+      type: object
+      properties:
+        TtlNtries:
+          $ref: '#/components/schemas/NumberAndSumOfTransactions2'
+        TtlCdtNtries:
+          $ref: '#/components/schemas/NumberAndSumOfTransactions1'
+        TtlDbtNtries:
+          $ref: '#/components/schemas/NumberAndSumOfTransactions1'
+        TtlNtriesPerBkTxCd:
+          type: array
+          items:
+            $ref: '#/components/schemas/TotalsPerBankTransactionCode2'
+    TotalsPerBankTransactionCode2:
+      type: object
+      properties:
+        NbOfNtries:
+          $ref: '#/components/schemas/Max15NumericText'
+        Sum:
+          $ref: '#/components/schemas/DecimalNumber'
+        TtlNetNtryAmt:
+          $ref: '#/components/schemas/DecimalNumber'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+        FcstInd:
+          $ref: '#/components/schemas/TrueFalseIndicator'
+        BkTxCd:
+          $ref: '#/components/schemas/BankTransactionCodeStructure4'
+        Avlbty:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashBalanceAvailability2'
+    TransactionAgents2:
+      type: object
+      properties:
+        DbtrAgt:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        CdtrAgt:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        IntrmyAgt1:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        IntrmyAgt2:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        IntrmyAgt3:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        RcvgAgt:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        DlvrgAgt:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        IssgAgt:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        SttlmPlc:
+          $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        Prtry:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProprietaryAgent2'
+    TransactionDates2:
+      type: object
+      properties:
+        AccptncDtTm:
+          $ref: '#/components/schemas/ISODateTime'
+        TradActvtyCtrctlSttlmDt:
+          $ref: '#/components/schemas/ISODate'
+        TradDt:
+          $ref: '#/components/schemas/ISODate'
+        IntrBkSttlmDt:
+          $ref: '#/components/schemas/ISODate'
+        StartDt:
+          $ref: '#/components/schemas/ISODate'
+        EndDt:
+          $ref: '#/components/schemas/ISODate'
+        TxDtTm:
+          $ref: '#/components/schemas/ISODateTime'
+        Prtry:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProprietaryDate2'
+    TransactionInterest2:
+      type: object
+      properties:
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+        Tp:
+          $ref: '#/components/schemas/InterestType1Choice'
+        Rate:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rate3'
+        FrToDt:
+          $ref: '#/components/schemas/DateTimePeriodDetails'
+        Rsn:
+          $ref: '#/components/schemas/Max35Text'
+    TransactionParty2:
+      type: object
+      properties:
+        InitgPty:
+          $ref: '#/components/schemas/PartyIdentification32'
+        Dbtr:
+          $ref: '#/components/schemas/PartyIdentification32'
+        DbtrAcct:
+          $ref: '#/components/schemas/CashAccount16'
+        UltmtDbtr:
+          $ref: '#/components/schemas/PartyIdentification32'
+        Cdtr:
+          $ref: '#/components/schemas/PartyIdentification32'
+        CdtrAcct:
+          $ref: '#/components/schemas/CashAccount16'
+        UltmtCdtr:
+          $ref: '#/components/schemas/PartyIdentification32'
+        TradgPty:
+          $ref: '#/components/schemas/PartyIdentification32'
+        Prtry:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProprietaryParty2'
+    TransactionPrice2Choice:
+      type: object
+      properties:
+        DealPric:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        Prtry:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProprietaryPrice2'
+    TransactionQuantities1Choice:
+      type: object
+      properties:
+        Qty:
+          $ref: '#/components/schemas/FinancialInstrumentQuantityChoice'
+        Prtry:
+          $ref: '#/components/schemas/ProprietaryQuantity1'
+    TransactionReferences2:
+      type: object
+      properties:
+        MsgId:
+          $ref: '#/components/schemas/Max35Text'
+        AcctSvcrRef:
+          $ref: '#/components/schemas/Max35Text'
+        PmtInfId:
+          $ref: '#/components/schemas/Max35Text'
+        InstrId:
+          $ref: '#/components/schemas/Max35Text'
+        EndToEndId:
+          $ref: '#/components/schemas/Max35Text'
+        TxId:
+          $ref: '#/components/schemas/Max35Text'
+        MndtId:
+          $ref: '#/components/schemas/Max35Text'
+        ChqNb:
+          $ref: '#/components/schemas/Max35Text'
+        ClrSysRef:
+          $ref: '#/components/schemas/Max35Text'
+        Prtry:
+          $ref: '#/components/schemas/ProprietaryReference1'
+    TrueFalseIndicator:
+      type: boolean
+    ActiveCurrencyAndAmount:
+      type: object
+      description: >-
+        A number of monetary units specified in an active currency where the
+        unit of currency is explicit and compliant with ISO 4217.
+      properties:
+        currency:
+          $ref: '#/components/schemas/ActiveCurrencyCode'
+        amount:
+          type: string
+          maxLength: 19
+          pattern: >-
+            ^0*(([0-9]{0,13}\.[0-9]{1,5})|([0-9]{0,14}\.[0-9]{1,4})|([0-9]{0,15}\.[0-9]{1,3})|([0-9]{0,16}\.[0-9]{1,2})|([0-9]{0,17}\.[0-9]{1,1})|0*|([0-9]{0,18}))$
+    AmountAndDirection52:
+      type: object
+      description: >-
+        Posting of an item to a cash account, in the context of a cash
+        transaction, that results in an increase or decrease to the balance of
+        the account.
+      additionalProperties: false
+      properties:
+        amount:
+          $ref: '#/components/schemas/ActiveCurrencyAndAmount'
+        credit_debit_indicator:
+          $ref: '#/components/schemas/CreditDebitCode'
+      required:
+        - amount
+        - credit_debit_indicator
+    ActiveCurrencyCode:
+      type: string
+      pattern: ^[A-Z]{3,3}$
+      description: >
+        The code allocated to a currency by a Maintenance Agency under an
+        international identification scheme as described in the latest edition
+        of the international standard ISO 4217 Codes for the Representation of
+        Currencies and Funds
+    BalanceRequest:
+      description: >-
+        For XML content-type requests, elements in the request must appear in
+        the same order as mentioned in the schema. Otherwise, the API will
+        return a schema validation error.
+      properties:
+        account_identifier:
+          type: string
+          description: >-
+            Identifier of the account as defined by the account service
+            provider. You must include at least 1 account and can specify up to
+            50 accounts in the `account_identifier` field by comma-seperated
+            values. You must specify either `account_identifier` or
+            `branch_number` in order to receive a successful response. If none
+            of these fields are provided, then the API will return a reject
+            response along with an error message.
+          xml:
+            name: accountNumber
+        branch_number:
+          type: string
+          description: >-
+            Branch Number as defined by the account service provider. You can
+            send only one Branch Number in the request. If you send a
+            `branch_number` without an `account_number`, the API returns
+            balances for all accounts belonging to the branch specified in the
+            request. You must specify either `account_identifier` or
+            `branch_number` in order to receive a successful response. If none
+            of these fields are provided, then the API will return a reject
+            response along with an error message.
+          xml:
+            name: branchNumber
+        base_currency:
+          type: string
+          pattern: ^[A-Z]{3,3}$
+          description: >-
+            3-digit currency code for the currency in which the balance needs to
+            be retrieved. You may only one value in this field. If
+            `base_currency` is provided in the request, the API will return
+            balances in the requested currency after applying any applicable FX
+            currency conversations. If `base_currency` is not provided in the
+            request, then the response will return balances in the account's
+            currency.
+          xml:
+            name: baseCurrency
+        from_date:
+          type: string
+          description: >-
+            Calendar date expressed in YYYY-MM-DD format. Cannot be more than
+            180 days from the current date. This is defined in "XML Schema Part
+            2: Datatypes Second Edition - W3C Recommendation 28 October 2004"
+            which is aligned with ISO 8601.
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          xml:
+            name: fromDate
+        to_date:
+          type: string
+          description: >-
+            Calendar date expressed in YYYY-MM-DD format. Cannot be more than
+            180 days from the current date. This is defined in "XML Schema Part
+            2: Datatypes Second Edition - W3C Recommendation 28 October 2004"
+            which is aligned with ISO 8601.
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          xml:
+            name: toDate
+      xml:
+        name: balanceInquiryRequest
+        namespace: http://com.citi.citiconnect/services/types/inquiries/balance/v1
+    BICFIDec2014Identifier:
+      type: string
+      description: >
+        Code allocated to a financial institution by the ISO 9362 Registration
+        Authority as described in ISO 9362 - 2014 - Banking - Banking
+        telecommunication messages - Business identifier code (BIC)
+      pattern: ^[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}$
+    BalancesList3:
+      type: object
+      description: List of the balances that can be retrieved on a given account
+      additionalProperties: false
+      properties:
+        current_balance:
+          $ref: '#/components/schemas/CashCurrentBalance1'
+        available_balance:
+          $ref: '#/components/schemas/CashAvailableBalance1'
+        forward_available_balance:
+          type: array
+          description: >
+            Provides detailed information of the forward available balance of a
+            specific cash account. Subject to the service provided by the
+            Account Servicer, forward avaialble balance can be presented with
+            multiple times for multiple reference dates.
+          items:
+            $ref: '#/components/schemas/CashForwardAvailableBalance1'
+      required:
+        - current_balance
+    CashCurrentBalance1:
+      type: object
+      description: >
+        'Individual current balance details on a given cash account.\r\nIt can
+        either be in a balance type of closing booked or interim booked, subject
+        to the agreement between the account servicer and its
+        consumer.\r\n\r\nFor closing booked, it is the balance of the account at
+        the end of the pre-agreed account reporting period. It is the sum of the
+        opening booked balance at the beginning of the period and all entries
+        booked to the account during the pre-agreed account reporting period.
+        \r\n\r\nFor interim booked, it is the balance calculated in the course
+        of the account servicer's business day, at the time specified, and
+        subject to further changes during the business day. The interim balance
+        is calculated on the basis of booked credit and debit items during the
+        calculation time/period specified. '
+      additionalProperties: false
+      properties:
+        balance_amount:
+          $ref: '#/components/schemas/AmountAndDirection52'
+        balance_type:
+          $ref: '#/components/schemas/CashBalanceType3Code'
+        last_change_date_time:
+          $ref: '#/components/schemas/ISONormalisedDateTime'
+        date_time:
+          $ref: '#/components/schemas/ISONormalisedDateTime'
+        last_committed_transaction_identification:
+          $ref: '#/components/schemas/Max40Text'
+        credit_line:
+          type: array
+          description: Provides details on the credit line linked to the account.
+          items:
+            $ref: '#/components/schemas/CreditLine6'
+      required:
+        - balance_amount
+        - balance_type
+    CreditLine6:
+      type: object
+      description: Specifies the details of a credit line.
+      additionalProperties: false
+      properties:
+        included:
+          description: Indicates whether or not the credit line is included in the balance.
+          type: boolean
+        type:
+          $ref: '#/components/schemas/Max35Text'
+        amount:
+          $ref: '#/components/schemas/ActiveCurrencyAndAmount'
+      required:
+        - included
+    CashAvailableBalance1:
+      type: object
+      description: >
+        Individual available balance details on a given cash account.\r\nIt can
+        either be in a balance type of closing available or interim available,
+        subject to the agreement between the account servicer and its
+        consumer.\r\n\r\nFor closing available, it is the closing balance of
+        amount of money that is at the disposal of the account owner on the date
+        specified. \r\n\r\nFor interim avaialble, it is the available balance
+        calculated in the course of the account servicer's business day, at the
+        time specified, and subject to further changes during the business day.
+        The interim balance is calculated on the basis of booked credit and
+        debit items during the calculation time/period specified. '
+      additionalProperties: false
+      properties:
+        balance_amount:
+          $ref: '#/components/schemas/AmountAndDirection52'
+        balance_type:
+          $ref: '#/components/schemas/CashBalanceType4Code'
+        availability_date:
+          $ref: '#/components/schemas/ISONormalisedDateTime'
+      required:
+        - balance_amount
+        - balance_type
+        - availability_date
+    CashForwardAvailableBalance1:
+      type: object
+      description: >
+        Individual forward available balance details on a given cash account. It
+        is the forward available balance of money that is at the disposal of the
+        account owner on the date specified.
+      additionalProperties: false
+      properties:
+        balance_amount:
+          $ref: '#/components/schemas/AmountAndDirection52'
+        balance_type:
+          $ref: '#/components/schemas/CashBalanceType5Code'
+        availability_date:
+          $ref: '#/components/schemas/ISODate'
+      required:
+        - balance_amount
+        - balance_type
+    CashBalanceType3Code:
+      type: string
+      description: >
+        Specifies the nature of the balance.
+
+        *`CLBD_closing_booked`-Balance of the account at the end of the
+        pre-agreed account reporting period. It is the sum of the opening booked
+        balance at the beginning of the period and all entries booked to the
+        account during the pre-agreed account reporting period.
+
+        *`ITBD_interim_booked`-Balance calculated in the course of the account
+        servicer's business day, at the time specified, and subject to further
+        changes during the business day. The interim balance is calculated on
+        the basis of booked credit and debit items during the calculation
+        time/period specified.
+
+        *`OPBD_opening_booked`-Book balance of the account at the beginning of
+        the account reporting period. It always equals the closing book balance
+        from the previous report
+      enum:
+        - CLBD
+        - ITBD
+        - OPBD
+    CashBalanceType4Code:
+      type: string
+      description: >
+        Specifies the nature of the balance.
+
+        *`ITAV_interim_available`-Available balance calculated in the course of
+        the account servicer's business day, at the time specified, and subject
+        to further changes during the business day. The interim balance is
+        calculated on the basis of booked credit and debit items during the
+        calculation time/period specified.
+
+        *`CLAV_closing_available`-Closing balance of amount of money that is at
+        the disposal of the account owner on the date specified.
+
+        *`OPAV_opening_available`-Opening balance of amount of money that is at
+        the disposal of the account owner on the date specified.
+      enum:
+        - ITAV
+        - CLAV
+        - OPAV
+    CashBalanceType5Code:
+      type: string
+      description: >
+        Specifies the nature of the balance.
+
+        *`FWAV_forward_available`-Forward available balance of money that is at
+        the disposal of the account owner on the date specified.
+      enum:
+        - FWAV
+    CashAccount:
+      type: object
+      description: Specifies the details of the cash account.
+      additionalProperties: false
+      required:
+        - account_identification
+        - name
+        - currency
+        - balances
+      properties:
+        account_identification:
+          description: >
+            Identification of the account as defined by the account service
+            provider. It can be in IBAN or proprietary format.
+
+
+            RECOMMENDATION IN ORDER OF PREFERENCE:
+
+            IBAN - When available IBAN must be specified for instance endpoint
+            or hyper link to work.
+
+            Other - In the absence of IBAN, this must be an unique account
+            identification used for routing of the payment to the account via
+            clearing system. A format which is agreed between the account owner
+            and the account servicer. For example a SWIFT BIC/Branch Code and
+            Account number.
+          type: string
+          minLength: 1
+          maxLength: 34
+        account_servicer:
+          $ref: '#/components/schemas/BICFIDec2014Identifier'
+        name:
+          $ref: '#/components/schemas/Max70Text'
+        owner_name:
+          $ref: '#/components/schemas/Max70Text'
+        currency:
+          $ref: '#/components/schemas/ActiveCurrencyCode'
+        linked_account:
+          $ref: '#/components/schemas/Max70Text'
+        balances:
+          type: array
+          items:
+            $ref: '#/components/schemas/BalancesList3'
+        status:
+          $ref: '#/components/schemas/Max35Text'
+        credit_limit:
+          $ref: '#/components/schemas/ActiveCurrencyAndAmount'
+        links:
+          $ref: '#/components/schemas/Links'
+    CreditDebitCode:
+      type: string
+      description: |
+        Specifies if an operation is an increase or a decrease.
+        *`CRDT_credit`-Operation is an increase.
+        *`DBIT_debit`-Operation is a decrease.
+      enum:
+        - CRDT
+        - DBIT
+    BalanceInquiryErrorResponse:
+      xml:
+        name: ErrorResponse
+      type: object
+      properties:
+        ref_id:
+          type: string
+          xml:
+            name: RefId
+        status:
+          type: string
+          xml:
+            name: Status
+        http_code:
+          type: integer
+          format: int32
+          xml:
+            name: HttpCode
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/BalanceInquiryErrorDetail'
+          xml:
+            wrapped: true
+            name: Errors
+    BalanceInquiryErrorDetail:
+      type: object
+      properties:
+        issue:
+          xml:
+            name: Issue
+          type: string
+          description: more details about the  issue
+        action:
+          type: string
+          description: corrective action to be taken to resolve above issue
+          xml:
+            name: Action
+      xml:
+        name: Error
+    ISODate:
+      type: string
+      description: >-
+        A particular point in the progression of time in a calendar year
+        expressed in the YYYY-MM-DD format. This representation is defined in
+        "XML Schema Part 2: Datatypes Second Edition - W3C Recommendation 28
+        October 2004" which is aligned with ISO 8601.
+      pattern: >-
+        ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+    ISONormalisedDateTime:
+      type: string
+      description: an ISODateTime whereby all timezoned dateTime values are UTC.
+      pattern: >-
+        ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.[0-9]+)?(?:Z)$
+    Links:
+      type: array
+      items:
+        $ref: '#/components/schemas/Link'
+    Link:
+      type: object
+      readOnly: true
+      description: Contains a generic structure to support hyperlinking (REST level 3).
+      additionalProperties: false
+      required:
+        - href
+      properties:
+        href:
+          description: >-
+            Specifies the link as a url. The href member identifies the target
+            IRI location of the resource.
+          type: string
+          maxLength: 256
+        rel:
+          description: >-
+            Specifies the operation. The value of this property MUST be a
+            string. This property is required except self. The self reference
+            contains the URI of the same resource.
+          type: string
+          maxLength: 35
+        type:
+          description: >-
+            The value containing the HTTP verb used for the URL. If the type
+            element is not included then the link MUST be available using GET.
+          type: string
+          maxLength: 35
+    Max35Text:
+      type: string
+      description: Specifies a character string with a maximum length of 35 characters.
+      minLength: 1
+      maxLength: 35
+    Max40Text:
+      type: string
+      description: Specifies a character string with a maximum length of 40 characters.
+      minLength: 1
+      maxLength: 40
+    Max70Text:
+      type: string
+      description: Specifies a character string with a maximum length of 70characters.
+      minLength: 1
+      maxLength: 70
+  parameters:
+    OffsetParam:
+      in: query
+      name: page_number
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+      description: >-
+        `page_number` identifies the current page number. You will need  to
+        review the response header 'pagination-metadata' and `total_page`
+        property. If `page_number` is greater than 1, then you can make
+        subsequent calls without changing other parameters in the request. The
+        default value of `page_number` is 1.
+  examples:
+    List_of_accounts_full:
+      summary: A list of accounts with detail for each account
+      value:
+        unavailable_accounts:
+          - '12345'
+          - '547886'
+          - '586585'
+        account_balance:
+          - account_identification: '123456'
+            account_servicer: CITIUS33
+            name: AccountNameABC
+            owner_name: ClientNameABC
+            currency: USD
+            status: Open
+            balances:
+              - current_balance:
+                  balance_amount:
+                    amount:
+                      amount: '1000'
+                      currency: USD
+                    credit_debit_indicator: CRDT
+                  balance_type: CLBD
+                  date_time: '2020-10-10'
+                available_balance:
+                  balance_amount:
+                    amount:
+                      amount: '1000'
+                      currency: USD
+                    credit_debit_indicator: CRDT
+                  balance_type: AVLB
+                  availability_date: '2020-10-10'
+              - current_balance:
+                  balance_amount:
+                    amount:
+                      amount: '1000'
+                      currency: USD
+                    credit_debit_indicator: CRDT
+                  balance_type: CLBD
+                  date_time: '2020-10-12'
+                available_balance:
+                  balance_amount:
+                    amount:
+                      amount: '1000'
+                      currency: USD
+                    credit_debit_indicator: CRDT
+                  balance_type: CLAV
+                  availability_date: '2020-10-12'
+          - account_identification: '123456'
+            account_servicer: CITIUS33
+            name: AccountNameABC
+            owner_name: ClientNameABC
+            currency: USD
+            status: Open
+            balances:
+              - current_balance:
+                  balance_amount:
+                    amount:
+                      amount: '1000'
+                      currency: USD
+                    credit_debit_indicator: CRDT
+                  balance_type: CLBD
+                  date_time: '2020-10-10'
+                available_balance:
+                  balance_amount:
+                    amount:
+                      amount: '1000'
+                      currency: USD
+                    credit_debit_indicator: CRDT
+                  balance_type: CLAV
+                  availability_date: '2020-10-10'
+    BalanceInquiry:
+      value: >-
+        <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.052.001.02"
+        xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><BkToCstmrAcctRpt><GrpHdr><MsgId>CITIBANK/20220308-PSR/1438472181</MsgId><CreDtTm>2022-03-08T01:07:59</CreDtTm><MsgRcpt><Nm>1234567
+        890X XXXXXX
+        XXX</Nm><Id><OrgId><Othr><Id>1234567890</Id></Othr></OrgId></Id></MsgRcpt></GrpHdr><Rpt><Id>10012262</Id><CreDtTm>2022-03-08T01:07:59</CreDtTm><Acct><Id><Othr><Id>GB27CITI12345678912345</Id></Othr></Id><Ccy>USD</Ccy><Nm>8010012
+        262X XXXXXX XXX</Nm><Ownr><Nm>8010012 262X XXXXXX
+        XXX</Nm></Ownr><Svcr><FinInstnId/><BrnchId><Id>600</Id><Nm>CITIBANK NA
+        LONDON</Nm></BrnchId></Svcr></Acct><Bal><Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-7098.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-01-24T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-7098.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-01-24T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>OPAV</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-3099.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-01-24T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>CLAV</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-3099.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-01-24T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-7098.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-02-01T00:00:</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-7091.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-02-01T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>OPAV</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-3099.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-02-01T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>CLAV</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-3099.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-02-01T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-7098.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-02-02T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-7098.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-02-02T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>OPAV</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-3099.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-02-02T00:00:00</DtTm></Dt></Bal><Bal><Tp><CdOrPrtry><Cd>CLAV</Cd></CdOrPrtry></Tp><Amt
+        Ccy="USD">-3099.38</Amt><CdtDbtInd>DBIT</CdtDbtInd><Dt><DtTm>2022-02-02T00:00:00</DtTm></Dt></Bal><TxsSummry><TtlNtries><TtlNetNtryAmt>7.00</TtlNetNtryAmt></TtlNtries><TtlCdtNtries><NbOfNtries>26</NbOfNtries><Sum>26.00</Sum></TtlCdtNtries><TtlDbtNtries><NbOfNtries>19</NbOfNtries><Sum>19.00</Sum></TtlDbtNtries></TxsSummry></Rpt></BkToCstmrAcctRpt></Document>
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes: null

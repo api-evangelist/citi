@@ -1,0 +1,1795 @@
+openapi: 3.1.0
+info:
+  title: CCAPI Payments(JSON)
+  description: |
+    Update - May 8, 2025
+
+    Changelog : No schema level changes, updated samples only.
+                
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+servers:
+  - url: https://b2b.api.icg.citi.com/citiconnect/prod
+    description: production gateway url
+  - url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb
+    description: sbox URL
+tags:
+  - name: Webhooks
+    description: API services to support webhooks
+webhooks:
+  prenotification:
+    post:
+      summary: >-
+        Pre-notifications are alerts sent by Citibank to inform you of incoming
+        funds before the money is officially credited to your bank account. You
+        have the option to reject/accept these incoming payments via synchronous
+        response.
+      description: Webhook pre-notification to client.
+      parameters:
+        - $ref: '#/components/parameters/Event-Type'
+        - $ref: '#/components/parameters/Event-Name'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment-Credit-Notification'
+            examples:
+              TH-Payment-Confirmation-Request:
+                $ref: '#/components/examples/Th-Pending-Request'
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message-Request'
+              examples:
+                Accept Response to Incoming Payment Confirmation Request From CITI:
+                  $ref: >-
+                    #/components/examples/Th-Response-To-Payment-Confirmation-Sucess-Request-Example
+                Reject Response to Incoming Payment Confirmation Request From CITI:
+                  $ref: >-
+                    #/components/examples/Th-Response-To-Payment-Confirmation-Reject-Request-Example
+  pushnotification:
+    post:
+      summary: >-
+        Webhook notifications are sent for events that are not triggered
+        directly by you. For example a notification of an incoming credit into
+        your account.
+      description: Webhook notification to client.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment-Credit-Notification'
+            examples:
+              Payment-Success-Thailand-IP-Credit-Status-Notification:
+                $ref: >-
+                  #/components/examples/Payment-Success-Thailand-IP-Credit-Status-Notification
+              Payment-Failed-Thailand-IP-Credit-Status-Notification:
+                $ref: >-
+                  #/components/examples/Payment-Failed-Thailand-IP-Credit-Status-Notification
+              Payment-Success-Australia-IP-Credit-Status-Notification:
+                $ref: >-
+                  #/components/examples/Payment-Success-Australia-IP-Credit-Status-Notification
+              Payment-Failed-Australia-IP-Credit-Status-Notification:
+                $ref: >-
+                  #/components/examples/Payment-Failed-Australia-IP-Credit-Status-Notification
+              Payment-Success-Incoming-Brazil-PIX-Credit-Status-Notification:
+                $ref: >-
+                  #/components/examples/Payment-Success-Incoming-Brazil-PIX-Credit-Status-Notification
+              Payment-Failed-Incoming-Brazil-PIX-Credit-Status-Notification:
+                $ref: >-
+                  #/components/examples/Payment-Failed-Incoming-Brazil-PIX-Credit-Status-Notification
+components:
+  parameters:
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Event Type
+      schema:
+        type: string
+    Event-Name:
+      name: Event-Name
+      in: header
+      required: true
+      description: Event Name
+      schema:
+        type: string
+  schemas:
+    Payment-Credit-Notification:
+      type: object
+      title: Payment Credit Notification
+      required:
+        - transaction
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer-Notification'
+        sender:
+          $ref: '#/components/schemas/Sender-Notification'
+        merchant:
+          $ref: '#/components/schemas/Merchant-Notification'
+        receiver:
+          $ref: '#/components/schemas/Receiver-Notification'
+        method:
+          $ref: '#/components/schemas/Method-Notification'
+        transaction:
+          $ref: '#/components/schemas/Transaction-Notification'
+        order:
+          $ref: '#/components/schemas/Order-Notification'
+        mandate:
+          $ref: '#/components/schemas/Mandate-Notification'
+      additionalProperties: false
+      description: Payment Notification
+    Customer-Notification:
+      type: object
+      title: Customer Notification
+      properties:
+        account:
+          title: customer account
+          description: Account Details
+          properties:
+            number:
+              maxLength: 40
+              minLength: 1
+              type: string
+              description: >-
+                Customer's bank account 
+
+                - For US RFP this parameter is mandatory with max length 40 
+
+                - For UK PAYBYBANK and IN UPI transactions,
+                customer.account.number parameter is optional 
+
+                - For US ACH Direct Debit, this parameter is mandatory with max
+                length 17 
+
+                - For Brazil PIX, this parameter is mandatory with max length 40
+              example: '1122334455'
+              title: number
+            bank_id:
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: >-
+                Customer bank's network identification 
+
+                - For US RFP this parameter is mandatory with max length 16 
+
+                - For ACH, length is equal to 9 
+
+                - For UK PAYBYBANK and IN UPI transactions,
+                customer.account.bank_id parameter is optional
+              example: CITIIN77
+              title: bank_id
+            branch_id:
+              description: Customer bank's branch id
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: BR123
+              title: branch_id
+            name:
+              maxLength: 70
+              minLength: 1
+              type: string
+              description: >-
+                Customer's Account Name 
+
+                - For US RFP transaction, customer.account.name parameter is
+                optional
+              title: name
+            proxy_id:
+              maxLength: 255
+              minLength: 1
+              type: string
+              description: |-
+                Customer's proxy identification (e.g., email address) 
+                - For IN UPI, customer.account.proxy_id parameter is optional
+              example: raja@citi.com
+              title: proxy_id
+            proxy_type:
+              type: string
+              enum:
+                - BIID
+                - EMAL
+                - EWAL
+                - MBNO
+                - NIDN
+              description: >-
+                Customer's proxy type (BIID for bill identification, EMAL for
+                email address, EWAL for electronic wallet identification, MBNO
+                for mobile number and NIDN for national identification) 
+
+                - For IN UPI, customer.account.proxy_type parameter is optional
+              title: proxy_type
+            type:
+              description: |-
+                Customer Source type of the transaction 
+                - For IN UPI, customer.account.type parameter is optional
+              enum:
+                - SAVINGS
+                - CURRENT
+                - CARD
+                - OVERDRAFT
+                - VIRTUAL_ACCOUNT
+                - CORPORATE_CHECKING
+              example: SAVINGS
+              type: string
+              title: type
+            virtual_number:
+              description: Customer's Virtual account number
+              type: string
+              maxLength: 140
+              minLength: 1
+              example: '123456789'
+              title: virtual_number
+            issuer:
+              description: Entity that assigned account to the party
+              type: string
+              maxLength: 35
+              minLength: 1
+              example: ABC Ltd
+              title: issuer
+        tax_id:
+          description: Customer's tax identification
+          maxLength: 128
+          minLength: 1
+          type: string
+          example: 1.020.340/8910-22
+          title: tax_id
+        birth_date:
+          type: string
+          format: date
+          description: |-
+            ISO 8601 (YYYY-MM-DD), Customer's birth_date  
+            - For US RFP, customer.birth_date parameter is optional
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: |-
+            Customer's birth_city 
+            - For US RFP max length is 35
+          title: birth_city
+        birth_country:
+          type: string
+          description: |-
+            Customer's birth_country 
+            - For US RFP, customer.birth_country parameter is optional
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+        birth_province:
+          description: Customer's birth province
+          type: string
+          maxLength: 35
+          minLength: 1
+          title: birth_province
+        organization_id:
+          description: Customer Organization Id/ Legal Entity
+          example: ORG123456
+          maxLength: 35
+          minLength: 1
+          type: string
+          title: organization_id
+        type:
+          type: string
+          description: Customer type
+          enum:
+            - BUSINESS
+            - INDIVIDUAL
+          title: type
+        name:
+          $ref: '#/components/schemas/Name'
+        address:
+          $ref: '#/components/schemas/Notification-Address'
+    Name:
+      title: name
+      type: object
+      properties:
+        first_name:
+          description: >-
+            The payer's first name. 
+             - For Brazil QR and UK PAYBYBANK creation, name.first_name parameter is mandatory. 
+            - For US RFP this parameter is mandatory and full name has to be
+            passed in this parameter 
+
+            - For US ACH Direct Debit, cutomer.name.first_name parameter is
+            optional with max length 22
+          example: JOHN
+          maxLength: 140
+          minLength: 1
+          type: string
+          title: first_name
+        last_name:
+          description: |-
+            The payer's last name. 
+             - For Brazil QR and UK PAYBYBANK creation, name.last_name parameter is mandatory.
+          example: PETER
+          maxLength: 50
+          minLength: 1
+          type: string
+          title: last_name
+        company_name:
+          description: The name of the company associated with this address.
+          example: COMPANY NAME
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: company_name
+    Notification-Address:
+      type: object
+      description: Notification-Address
+      title: Notification-Address
+      properties:
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 7
+          items:
+            $ref: '#/components/schemas/Lines'
+          title: lines
+        floor:
+          description: Floor
+          maxLength: 70
+          minLength: 1
+          type: string
+          example: Second Floor
+          title: floor
+        room:
+          description: Room
+          maxLength: 70
+          minLength: 1
+          type: string
+          example: Magna
+          title: room
+        street_name:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: Customer Street Name.
+          example: Federal Street
+          title: street_name
+        building_number:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Building number
+          example: '20'
+          title: building_number
+        building_name:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Building name
+          example: Venice
+          title: building_name
+        department:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: Address Department
+          example: Castle
+          title: department
+        sub_department:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: Address Sub Department
+          example: Mortgage
+          title: sub_department
+        district:
+          description: District name
+          maxLength: 70
+          minLength: 1
+          type: string
+          example: New ark
+          title: district
+        city:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: Customer city
+          example: Abis Brasil
+          title: city
+        city_location:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: Customer location name
+          example: Churchil
+          title: city_location
+        post_box:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Post box
+          example: '123'
+          title: post_box
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Customer postal code.
+          example: 69935-000
+          title: postal_code
+        state:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Customer state.
+          example: san francisco
+          title: state
+        country_code:
+          type: string
+          pattern: ^[A-Z]{2,2}$
+          description: Customer country.
+          example: BR
+          title: country_code
+        province_code:
+          description: >-
+            The three character ISO 3166-2 country subdivision code for the
+            state or province of the address
+          example: IN
+          maxLength: 3
+          minLength: 1
+          type: string
+          title: province_code
+        organization_id:
+          description: >-
+            Customer Organization Id/ Legal Entity as provided at the time of
+            payment request.
+
+            - For US RFP max length is 20
+          example: ORG123456
+          maxLength: 35
+          minLength: 1
+          type: string
+          title: organization_id
+        birth_date:
+          type: string
+          format: date
+          description: |-
+            ISO 8601 (YYYY-MM-DD), Customer's birth_date  
+            - For US RFP, customer.birth_date parameter is optional
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: |-
+            Customer's birth_city 
+            - For US RFP max length is 35
+          title: birth_city
+        birth_country:
+          type: string
+          description: |-
+            Customer's birth_country 
+            - For US RFP, customer.birth_country parameter is optional
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+    Lines:
+      type: string
+      maxLength: 100
+      minLength: 1
+      description: >-
+        Address Lines 
+
+        - For US RFP only one(1) line of 70 characters is allowed 
+
+        - For US ACH Direct Debit payment, unstructured address_lines is
+        mandatory when structured address parameters are not provided and
+        allowed three instances with each line max length of 35 characters.
+        Address Line 1 should have Building info followed by asterik, Street
+        Address ends with a single backslash. Address Line2 should have City
+        followed by asterik, State ends with a single backslash. Address Line 3
+        should have Zip Code followed by asterik, Country Code ends with a
+        single backslash. For example Zip code*US\.
+      title: lines
+    Sender-Notification:
+      type: object
+      title: Sender Notification
+      properties:
+        name:
+          description: >-
+            Sender name. 
+
+            - For US RFP and UK PAYBYBANK transactions, sender.name parameter is
+            optional
+          example: JOHN
+          maxLength: 140
+          minLength: 1
+          type: string
+          title: name
+        organization_id:
+          description: >-
+            Sender's org_id. 
+
+            - For US RFP and UK PAYBYBANK transactions, sender.organizatio_id
+            parameter is optional
+          example: ORG123456
+          maxLength: 35
+          minLength: 1
+          type: string
+          title: organization_id
+        birth_date:
+          type: string
+          format: date
+          description: >-
+            ISO 8601 (YYYY-MM-DD), Sender's birth_date  
+
+            - For US RFP and UK PAYBYBANK transactions, sender.birth_date
+            parameter is optional
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Sender's birth_city 
+
+            - For US RFP and UK PAYBYBANK transactions, sender.birth_city
+            parameter is optional
+          title: birth_city
+        birth_country:
+          type: string
+          description: >-
+            Sender's birth_country 
+
+            - For US RFP and UK PAYBYBANK transactions, sender.birth_country
+            parameter is optional
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+        birth_province:
+          description: Sender's birth province
+          type: string
+          maxLength: 35
+          minLength: 1
+          title: birth_province
+        private_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: |-
+            Sender's private ID 
+             - For US RFP transaction, sender.private_id parameter is optional
+          title: private_id
+        account:
+          title: Sender account
+          description: Account details
+          properties:
+            bank_id:
+              description: Sender's bank network identification
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: CITIBRSP
+              title: bank_id
+            issuer:
+              description: Entity that assigned account to the party
+              type: string
+              maxLength: 35
+              minLength: 1
+              example: ABC Ltd
+              title: issuer
+        address:
+          $ref: '#/components/schemas/Notification-Address'
+    Receiver-Notification:
+      type: object
+      title: Receiver Notification
+      properties:
+        name:
+          description: >-
+            Receiver name. 
+
+            - For US RFP and UK PAYBYBANK transactions, receiver.name parameter
+            is optional
+          example: JOHN
+          maxLength: 140
+          minLength: 1
+          type: string
+          title: name
+        organization_id:
+          description: >-
+            Sender's org_id. 
+
+            - For US RFP and UK PAYBYBANK transactions, receiver.organization_id
+            parameter is optional 
+
+            - For US ACH Direct Debit, this parameter is mandatory with max
+            length 10
+          example: ORG123456
+          maxLength: 35
+          minLength: 1
+          type: string
+          title: organization_id
+        birth_date:
+          type: string
+          format: date
+          description: |-
+            ISO 8601 (YYYY-MM-DD), Receiver's birth_date  
+             -For US RFP, receiver.birth_date parameter is optional
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Receiver's birth_city 
+
+            -  For US RFP transaction, receiver.birth_city parameter is optional
+            and allowed max length is 35
+          title: birth_city
+        birth_province:
+          description: Receiver's birth province
+          type: string
+          maxLength: 35
+          minLength: 1
+          title: birth_province
+        birth_country:
+          type: string
+          description: |-
+            Receiver's birth_country 
+             - For US RFP, receiver.birth_country parameter is optional
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+        private_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: |-
+            Receiver's private ID 
+             - For US RFP, receiver.private_id parameter is optional
+          title: private_id
+        account:
+          title: Receiver account
+          description: Account details
+          properties:
+            issuer:
+              description: Entity that assigned account to the party
+              type: string
+              maxLength: 35
+              minLength: 1
+              example: ABC Ltd
+              title: issuer
+        address:
+          $ref: '#/components/schemas/Notification-Address'
+    Merchant-Notification:
+      title: Merchant Notification
+      properties:
+        name:
+          description: >-
+            Merchant internal customer name. 
+
+            - For US RFP, IN UPI, UK PAYBYBANK transactions, merchant.name
+            parameter is optional 
+
+            - For US ACH Direct Debit, this parameter is mandatory with max
+            length 16 
+
+            - For Brazil PIX, this parameter is mandatory with max length 105
+          example: JOHN
+          maxLength: 140
+          minLength: 1
+          type: string
+          title: name
+        tax_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: |-
+            Merchant's payee identification (e.g., email address) 
+             - For Brazil QR creation merchant.tax_id parameter is mandatory, allowed maxlength is 77
+          example: 1.020.340/8910-22
+          title: tax_id
+        account:
+          title: merchant account
+          description: Account Details
+          properties:
+            number:
+              maxLength: 40
+              minLength: 1
+              type: string
+              description: >-
+                Merchant's bank account 
+
+                - TFor US RFP, IN UPI, UK PAYBYBANK transactions,
+                merchant.number parameter is optional 
+
+                - For US ACH Direct Debit, this parameter is mandatory with max
+                length 17 
+
+                - For Brazil PIX, thi parameter is mandatory with max length 10
+              example: '1122334455'
+              title: number
+            bank_id:
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: >-
+                Merchant bank's network identification 
+
+                - For US RFP, IN UPI,UK PAYBYBANK transactions, merchant.bank_id
+                parameter is optional 
+
+                - For US ACH Direct Debit, this parameter is mandatory with max
+                length 9 
+
+                - For Brazil PIX, thi parameter is mandatory with max length 8
+              example: CITIIN77
+              title: bank_id
+            branch_id:
+              description: Merchant bank's branch id
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: BR123
+              title: branch_id
+            name:
+              maxLength: 70
+              minLength: 1
+              type: string
+              description: >-
+                Merchant's Account Name 
+
+                - For US RFP transaction, merchant.account.name parameter is
+                optional 
+              title: name
+            proxy_id:
+              description: |-
+                Merchant's proxy identification (e.g., email address) 
+                 - For IN UPI Instant payment debtor.proxy_id is mandatory, with an allowed value of VPA ID
+              example: vinu@citi.com
+              maxLength: 320
+              minLength: 1
+              type: string
+              title: proxy_id
+            proxy_type:
+              description: >-
+                Merchant's proxy type (BIID for bill identification, EMAL for
+                email address, EWAL for electronic wallet identification, MBNO
+                for mobile number and NIDN for national identification)
+              type: string
+              enum:
+                - BIID
+                - EMAL
+                - EWAL
+                - MBNO
+                - NIDN
+              title: proxy_type
+            virtual_number:
+              description: Merchant's Virtual account number
+              type: string
+              maxLength: 140
+              minLength: 1
+              example: '123456789'
+              title: virtual_number
+            issuer:
+              description: Entity that assigned account to the party
+              type: string
+              maxLength: 35
+              minLength: 1
+              example: ABC Ltd
+              title: issuer
+        private_id:
+          description: |-
+            Merchant's prvt_id 
+            -  For UK PAYBYBANK, merchant.private_id parameter is optional
+          example: '8899775544'
+          maxLength: 18
+          minLength: 1
+          type: string
+          title: private_id
+        organization_id:
+          description: >-
+            Merchant Organization Id/ Legal Entity as provided at the time of
+            payment request.
+
+            - For US RFP max length is 20
+          example: ORG123456
+          maxLength: 35
+          minLength: 1
+          type: string
+          title: organization_id
+        birth_date:
+          type: string
+          format: date
+          description: |-
+            ISO 8601 (YYYY-MM-DD), Merchant's birth_date  
+            -  For US RFP, merchant.birth_date parameter is optional
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Merchant's birth_city 
+
+            - For US RFP, merchant.birth_city parameter is optional and allowed
+            max length is 35
+          title: birth_city
+        birth_country:
+          type: string
+          description: |-
+            Merchant's birth_country 
+            - For US RFP, merchant.birth_country parameter is optional
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+        birth_province:
+          description: Merchant's birth province
+          type: string
+          maxLength: 35
+          minLength: 1
+          title: birth_province
+        address:
+          $ref: '#/components/schemas/Notification-Address'
+    Method-Notification:
+      type: object
+      title: Method Notification
+      required:
+        - type
+      properties:
+        type:
+          description: Method specified by the customer for the transaction
+          type: string
+          enum:
+            - PIX
+            - UPI
+            - RTP
+            - FPS
+            - ACH
+            - WIRES
+            - IMPS
+            - IP
+          example: PIX
+          title: type
+        upi:
+          $ref: '#/components/schemas/Upi'
+    Upi:
+      title: Upi
+      description: India UPI Transaction
+      properties:
+        initiation_type:
+          description: |-
+            Mode of payment 
+            - For India UPI trasnaction, this parameter is Mandatory
+          maxLength: 50
+          minLength: 1
+          type: string
+          example: UPI QR Code
+          title: initiation_type
+        sec_code:
+          description: >-
+            Identifies the Standard Entry Class (SEC) code to be sent to the
+            issuer.
+          minLength: 1
+          maxLength: 3
+          type: string
+          example: CCD
+          title: sec_code
+    Order-Notification:
+      title: Order Notification
+      properties:
+        id:
+          description: >-
+            A unique identifier for this order to distinguish it from any other
+            order you create. 
+
+            - For CARD Authorize,Capture,Pay and Verify operation order.id
+            parameter is mandatory 
+
+            - For ACH Pay and Verify transaction order.id parameter is mandatory
+          example: OR123456789
+          maxLength: 40
+          minLength: 1
+          type: string
+          title: id
+    Mandate-Notification:
+      type: object
+      title: Mandate Notification
+      properties:
+        id:
+          type: string
+          maxLength: 35
+          description: |-
+            Unique Id assigned to identify the mandate 
+            - This parameter is mandatory for Brazil PIX Credit notification.
+          example: RR3347902320251109BRF12345678
+          title: id
+    Transaction-Notification:
+      type: object
+      title: Transaction Notification
+      properties:
+        id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: >-
+            Unique Transaction identification provided by the merchant during
+            transaction creation 
+
+            - For Brazil QR PIX , UK PAYBYBANK and US RFP transaction
+            transaction.id is optional 
+
+            - For Brazil QR Creation - Maximum length is 35. 
+
+            - For US RFP max length is 35 
+
+            - For US ACH Direct Debit, this parameter is mandatory with max
+            length 16 
+
+            - For Brazil PIX, this parameter is mandatory with min length 26 &
+            max length 35
+          example: pay02052023456r
+          title: id
+        uetr:
+          type: string
+          pattern: >-
+            ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: >-
+            UUID v4 format unique end-to-end transaction reference 
+
+            - For India UPI,UK PAYBYBANK transaction, US RFP & Brazil PIX
+            transaction.uetr is optional
+          example: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          title: uetr
+        network_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: >-
+            Transaction identification generated by the network (clearing) 
+
+            - For India UPI, UK PAYBYBANK and US RFP transactions
+            transaction.network_id is optional
+          example: clr02052023478
+          title: network_id
+        batch_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Identification for your Citi account consolidated credit posting
+            including the transaction 
+
+            - For India UPI, UK PAYBYBANK and US RFP transactions
+            transaction.batch_id 
+
+            - For US RFP max length is 35
+          example: batch12345
+          title: batch_id
+        country_code:
+          description: |-
+            ISO 3166 Alpha-2 code for the transaction country 
+            - For Brazil PIX, this parameter is mandatory
+          type: string
+          enum:
+            - BR
+            - IN
+            - GB
+            - US
+            - TH
+            - AU
+          example: IN
+          title: country_code
+        reason_code:
+          description: >-
+            Transaction rejection Code 
+
+            - For US ACH Direct Debit transaction.reason_code parameter is
+            optional with max length 4 
+
+            - For Brazil PIX, this parameter is mandatory
+          example: SC0020
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: reason_code
+        value_date:
+          type: string
+          format: date
+          description: >-
+            YYYY-MM-DD Date in local time zone (e.g., EST for a United States
+            RTP network transaction IST for IN IMPS) when Citi's transaction
+            processing application starts processing a transaction 
+
+            - For India UPI, UK PAYBYBANK and US RFP transactions
+            transaction.value_date parameter is optional 
+
+            - For US RFP this parameter is mandatory 
+
+            - For US ACH Direct Debit, this parameter is mandatory 
+
+            - For Brazil PIX this parameter is mandatory
+          example: '2022-09-07'
+          title: value_date
+        currency_code:
+          type: string
+          description: >-
+            ISO 4217 code for the transaction instructed amount currency 
+
+            - For India UPI, UK PAYBYBANK and US RFP transactions
+            transaction.currency_code parameter is optional 
+
+            - For US ACH Direct Debit, this parameter is mandatory 
+
+            - For Brazil PIX this parameter is mandatory
+          enum:
+            - BRL
+            - INR
+            - USD
+            - GBP
+            - THB
+            - AUD
+          example: INR
+          title: currency_code
+        remittance_info:
+          type: array
+          description: |-
+            Unstructured remittance information 
+            - For US ACH Direct Debit, this parameter is optional
+          items:
+            $ref: '#/components/schemas/Unstructured'
+        end_to_end_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Unique identification assigned by the initiating party to
+            unambiguously identify the transaction. This identification is
+            passed on, unchanged, throughout the entire end-to-end chain. 
+
+            - For Brazil QR PIX, India UPI and PAYBYBANK transactions
+            transaction.end_to_end_id parameter is optional 
+
+            - 
+
+            - For US ACH Direct Debit, this parameter is mandatory
+          example: pay02052023456r
+          title: end_to_end_id
+        amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000000
+          description: >-
+            Transaction amount 
+             - For Brazil QR Creation decimal values are mandatory for transaction.amount and it must have 2 digits 
+             - For Brazil QR Creation maxmium amount limit is 9999999999.99 
+            - For US RFP, this parameter is mandatory with maximum amount limit
+            1000000.00 
+
+            - For US ACH Direct Debit, this parameter is mandatory with 18
+            digits & 2 decimals 
+
+            - For Brazil PIX, this parameter is mandatory with 18 digits
+            including 2 decimals
+          example: 200
+          title: amount
+        tax_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: |-
+            Merchant's payee identification (e.g., email address) 
+             - For Brazil QR creation merchant.payee_id parameter is mandatory, allowed maxlength is 77
+          example: 1.020.340/8910-22
+          title: tax_id
+        creation_date_time:
+          type: string
+          format: date-time
+          description: >-
+            GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) 
+
+            - Instant Payment (Credit) - Date time, either provided by the
+            debtor bank or generated by Citi's transaction processing
+            application, when a transaction was created 
+
+            - For US RFP this parameter is mandatory 
+
+            - For US ACH Direct Debit, this parameter is mandatory 
+
+            - For Brazil PIX, this parameter is mandatory
+          example: '2022-09-13T08:23:49.114Z'
+          title: creation_date_time
+        additional_info:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: >-
+            Additional information provided by payor 
+
+            - For Brazil QR PIX and UK PAYBYBANK transactions
+            transaction.additional_info parameter is optional
+          example: Payment for Goods
+          title: additional_info
+        full_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000000
+          description: >-
+            Amount that is the gross amount payable by client 
+
+            - For US RFP transactions transaction.full_amount parameter is
+            optional
+          title: full_amount
+        discount_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000000
+          description: >-
+            Amount that is the discount from the gross amount 
+
+            - For US RFP transactions transaction.discount_amount parameter is
+            optional, If populated, message.transaction.full_amount must also be
+            populated.
+          title: discount_amount
+        original_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000000
+          description: >-
+            Amount that was originally sent by our client 
+
+            - For US RFP transactions transaction.original_amount parameter is
+            optional
+          title: original_amount
+        status:
+          type: string
+          enum:
+            - SETTLED
+            - FAILED
+            - PENDING
+            - POSTING_PENDING
+            - CANCELLED
+          description: |-
+            Transaction Status 
+            - Transaction settled
+          title: status
+        description:
+          type: string
+          maxLength: 1000
+          description: |-
+            Transaction Status Description 
+            - SETTLED - Transaction settled
+          example: Transaction settled
+          title: description
+        reference:
+          description: >-
+            Transaction additional information. 
+
+            - For  India UPI transactions transaction.reference parameter is
+            optional (NPCI Reference number for UPI). 
+
+            - For US RFP, this parameter will contain the unique reference
+            (instruction) id with max length 35
+          example: REPAY
+          maxLength: 250
+          minLength: 1
+          type: string
+          title: reference
+        status_date_time:
+          format: date-time
+          type: string
+          description: >-
+            Date & Time when Payer bank provided their response GMT (ISO 8601
+            YYYY-MM-DDTHH:MM:SS.sssZ) 
+
+            - This parameter is mandatory for Brazil PIX
+          example: '2022-09-13T08:23:49.114Z'
+          title: status_date_time
+        settlement_date:
+          type: string
+          format: date
+          description: The date on which transaction is settled.
+          example: '2022-09-07'
+          title: settlement_date
+        clearing_local_code:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Local Clearing code
+          example: 008T
+          title: clearing_local_code
+        bill_id_1:
+          description: Bill identification for a bill payment
+          maxLength: 128
+          minLength: 1
+          pattern: ^[0-9A-Z]{1,128}$
+          type: string
+          example: '77889900'
+          title: bill_id_1
+        bill_id_2:
+          description: Bill identification for a bill payment
+          maxLength: 128
+          minLength: 1
+          pattern: ^[0-9A-Z]{1,128}$
+          type: string
+          example: '77889901'
+          title: bill_id_2
+        bill_id_3:
+          description: Bill identification for a bill payment
+          maxLength: 128
+          minLength: 1
+          pattern: ^[0-9A-Z]{1,128}$
+          type: string
+          example: '77889902'
+          title: bill_id_3
+        bill_due_date:
+          description: ISO 8601 (YYYY-MM-DD) bill due date
+          type: string
+          format: date
+          example: '2025-01-01'
+          title: bill_due_date
+        wht_rate:
+          description: Withholding tax (WHT) rate
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 10
+          title: wht_rate
+        wht_amount:
+          description: Withholding tax (WHT) amount
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          example: 1000
+          title: wht_amount
+        wht_code:
+          description: >-
+            Withholding tax (WHT) code A for WHT always paid by the seller, S
+            for WHT once paid by the seller and B for WHT paid by the buyer
+          type: string
+          enum:
+            - A
+            - S
+            - B
+          example: A
+          title: wht_code
+        processing_code:
+          description: Code defined by regulator to identify different kind of payments
+          type: string
+          minLength: 1
+          maxLength: 35
+          example: '550000'
+          title: processing_code
+        purpose:
+          description: Purpose of a payment
+          type: string
+          minLength: 1
+          maxLength: 35
+          example: SALARY PAYMENT
+          title: purpose
+        income_type:
+          description: Income type
+          type: string
+          pattern: ^(00[0-9]|01[0-2])$
+          example: '001'
+          title: income_type
+        vat_rate:
+          description: Value-added tax (VAT) rate
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 10
+          title: wht_rate
+        vat_amount:
+          description: Value-added tax (VAT) amount
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          example: 100
+          title: vat_amount
+        acceptance_date_time:
+          description: The time at which beneficiary bank accepted message from clearing
+          type: string
+          format: date-time
+          example: '2022-09-13T08:23:49.114Z'
+          title: acceptance_date_time
+        category_purpose:
+          description: Category purpose of original payment
+          type: string
+          maxLength: 128
+          minLength: 1
+          example: Salary
+          title: category_purpose
+        charges_paid_by:
+          description: Indicates who will bear charges for the payment
+          type: string
+          maxLength: 128
+          minLength: 1
+          example: SHAR
+          title: charges_paid_by
+        regulatory_reporting:
+          type: object
+          title: RegulatoryReporting
+          properties:
+            type:
+              description: Regulatory Reporting details type
+              maxLength: 35
+              minLength: 1
+              type: string
+              example: More details here
+              title: type
+            code:
+              description: Regulatory Reporting details code
+              maxLength: 35
+              minLength: 1
+              type: string
+              example: NOC
+              title: code
+    Unstructured:
+      type: string
+      maxLength: 140
+      minLength: 1
+      description: “Unstructured remittance information”
+      title: Unstructured
+    Message-Request:
+      type: object
+      title: MessageRequest
+      properties:
+        message_type:
+          type: string
+          description: |-
+            Message Type provided by the customer 
+            - RPCR - Response to Payment Confirmation Request
+          enum:
+            - RPCR
+          title: message_type
+        message:
+          oneOf:
+            - $ref: >-
+                #/components/schemas/Final-Response-To-Payment-Confirmation-Request
+      required:
+        - message_type
+        - message
+    Final-Response-To-Payment-Confirmation-Request:
+      type: object
+      title: FinalResponseToPaymentConfirmationRequest
+      description: Outgoing Response to Payment Confirmation Request
+      properties:
+        sub_merchant_name:
+          type: string
+          description: Sub Merchant name
+          minLength: 1
+          maxLength: 50
+          title: sub_merchant_name
+        status:
+          type: object
+          title: status
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: UTC (YYYY-MM-DDTHH:MM:SS.sssZ) date time
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+                - ACSC
+                - RJCT
+              title: code
+            description:
+              type: string
+              description: |-
+                Status code description 
+                - ACSC - Accepted 
+                - RJCT - Rejected
+              minLength: 1
+              maxLength: 105
+              title: description
+          required:
+            - date_time
+            - code
+            - description
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: >-
+                Reason code (mandatory when status is rejected) 
+
+                - For US RPCR, client need to pass reason.code only
+                AC02,AC03,AC04,AC06,AC11,AC13,AC14,AG01,AG03,AM02,AM04,AM09,AM12,AM13,AM14,NARR 
+
+                - For Thailand RPCR, client need to pass reason.code only AM09
+                or NARR 
+
+                - For SEPA RPCR, client need to pass reason.code only
+                AM05,AC01,AC04,AC06,RR04,AG01,MS03,MS02
+              enum:
+                - AC02
+                - AC03
+                - AC04
+                - AC06
+                - AC11
+                - AC13
+                - AC14
+                - AG01
+                - AG03
+                - AM02
+                - AM04
+                - AM09
+                - AM12
+                - AM13
+                - AM14
+                - NARR
+                - AM05
+                - AC01
+                - RR04
+                - MS02
+                - MS03
+              title: code
+            description:
+              type: string
+              description: >-
+                Reason code description 
+                 - AC02- Debtor account number invalid or missing 
+                 - AC03- Creditor account number invalid or missing 
+                - AC04- Account number specified has been closed on the bank of
+                account’s books 
+
+                - AC06- Account specified is blocked,prohibiting posting of
+                transactions against it 
+
+                - AC11- Creditor account currency is invalid or missing 
+
+                - AC13- Debtor account type invalid 
+
+                - AC14- Creditor account type invalid 
+
+                - AG01- Transaction forbidden on this type of account (formerly
+                NoAgreement) 
+
+                - AG03- Transaction type not supported / authorized on this
+                account 
+
+                - AM02- Specific transaction/message amount is greater than
+                allowed maximum 
+
+                - AM04- Amount of funds available to  cover specified message
+                amount is insufficient 
+
+                - AM09- Amount received is not the  amount agreed or expected 
+
+                - AM12- Amount is invalid or missing 
+
+                - AM13- Transaction amount exceeds limits set by clearing
+                system 
+
+                - AM14- Transaction amount exceeds limits agreed between bank
+                and client 
+
+                - NARR- Put the description as per clearing guideline for NARR 
+                (if reasons.code is NARR, reasons.decription is mandatory) 
+
+                - AM05-  Duplication 
+
+                - AC01-  Incorrect Account Number 
+
+                - RR04-  Regulatory Reason 
+
+                - MS03-  Not Specified Reason Agent Generated 
+
+                - MS02- Not Specified Reason Customer Generated
+              minLength: 1
+              maxLength: 105
+              title: description
+      required:
+        - status
+  examples:
+    Th-Pending-Request:
+      value:
+        transaction:
+          id: REF123456
+          end_to_end_id: ref34SKtUcdGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          network_id: clr02052023478
+          batch_id: batch12345
+          value_date: '2022-09-07'
+          creation_date_time: '2022-09-13T08:23:49.112Z'
+          status_date_time: '2022-09-14T08:00:00.000Z'
+          bill_id_1: '77889900'
+          bill_id_2: '77889901'
+          bill_id_3: '77889902'
+          purpose: PAYMENT
+          tax_id: '2'
+          wht_code: A
+          wht_rate: 10
+          wht_amount: 1000
+          income_type: '001'
+          bill_due_date: '2022-09-07'
+          vat_rate: 10
+          vat_amount: 1000
+          amount: 5000
+          currency_code: THB
+          additional_info: Credit Payment
+          status: PENDING
+          description: Transaction pending
+        merchant:
+          account:
+            number: '123456'
+            virtual_account: '998877'
+            bank_id: CITITHBX
+            branch_id: '123'
+            proxy_id: raja@citi.com
+            proxy_type: BIID
+          tax_id: tax123
+          name: Thomas
+        customer:
+          account:
+            number: '987654'
+            virtual_account: '1122334455'
+            bank_id: CITITHBX
+            branch_id: '123'
+            proxy_id: raja@citi.com
+            proxy_type: BIID
+          tax_id: tax123
+          name:
+            first_name: Wilson
+        sender:
+          name: Gary
+          address:
+            city: Phuket
+            country_code: TH
+        method:
+          type: IP
+    Th-Response-To-Payment-Confirmation-Sucess-Request-Example:
+      value:
+        message_type: RPCR
+        message:
+          sub_merchant_name: MERCHAT
+          status:
+            date_time: '2023-01-10T07:57:10.489Z'
+            code: ACSC
+            description: Accepted
+    Th-Response-To-Payment-Confirmation-Reject-Request-Example:
+      value:
+        message_type: RPCR
+        message:
+          sub_merchant_name: MERCHAT
+          status:
+            date_time: '2023-01-10T07:57:10.489Z'
+            code: RJCT
+            description: Rejected
+          reasons:
+            code: AM09
+            description: Amount received is not the amount agreed or expected
+    Payment-Success-Thailand-IP-Credit-Status-Notification:
+      value:
+        transaction:
+          id: REF123456
+          end_to_end_id: ref34SKtUcdGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          network_id: clr02052023478
+          batch_id: batch12345
+          value_date: '2022-09-07'
+          creation_date_time: '2022-09-13T08:23:49.112Z'
+          status_date_time: '2022-09-14T08:00:00.000Z'
+          bill_id_1: '77889900'
+          bill_id_2: '77889901'
+          bill_id_3: '77889902'
+          purpose: PAYMENT
+          processing_code: '58000'
+          tax_id: '2'
+          wht_code: A
+          wht_rate: 10
+          wht_amount: 1000
+          income_type: '001'
+          bill_due_date: '2022-09-07'
+          vat_rate: 10
+          vat_amount: 1000
+          amount: 5000
+          currency_code: THB
+          additional_info: Credit Payment
+          reference: payment for september
+          status: SETTLED
+          description: Transaction settled
+        merchant:
+          account:
+            number: '123456'
+            virtual_account: '998877'
+            bank_id: CITITHBX
+            branch_id: '123'
+            proxy_id: raja@citi.com
+            proxy_type: BIID
+          tax_id: tax123
+          name: Thomas
+        customer:
+          account:
+            number: '987654'
+            virtual_account: '1122334455'
+            bank_id: CITITHBX
+            branch_id: '123'
+            proxy_id: raja@citi.com
+            proxy_type: BIID
+          tax_id: tax123
+          name:
+            first_name: Wilson
+        sender:
+          name: Gary
+          address:
+            city: Phuket
+            country_code: TH
+        method:
+          type: IP
+    Payment-Failed-Thailand-IP-Credit-Status-Notification:
+      value:
+        transaction:
+          id: REF123456
+          end_to_end_id: ref34SKtUcdGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          network_id: clr02052023478
+          batch_id: batch12345
+          value_date: '2022-09-07'
+          creation_date_time: '2022-09-13T08:23:49.112Z'
+          status_date_time: '2022-09-14T08:00:00.000Z'
+          bill_id_1: '77889900'
+          bill_id_2: '77889901'
+          bill_id_3: '77889902'
+          purpose: PAYMENT
+          processing_code: '58000'
+          tax_id: '2'
+          wht_code: A
+          wht_rate: 10
+          wht_amount: 1000
+          income_type: '001'
+          bill_due_date: '2022-09-07'
+          vat_rate: 10
+          vat_amount: 1000
+          amount: 5000
+          currency_code: THB
+          additional_info: Credit Payment
+          reference: payment for september
+          status: FAILED
+          reason_code: CFP009
+          description: Transaction has been rejected/cancelled after compliance review.
+        merchant:
+          account:
+            number: '123456'
+            virtual_account: '998877'
+            bank_id: CITITHBX
+            branch_id: '123'
+            proxy_id: raja@citi.com
+            proxy_type: BIID
+          tax_id: tax123
+          name: Thomas
+        customer:
+          account:
+            number: '987654'
+            virtual_account: '1122334455'
+            bank_id: CITITHBX
+            branch_id: '123'
+            proxy_id: raja@citi.com
+            proxy_type: BIID
+          tax_id: tax123
+          name:
+            first_name: Wilson
+        sender:
+          name: Gary
+          address:
+            city: Phuket
+            country_code: TH
+        method:
+          type: IP
+    Payment-Success-Australia-IP-Credit-Status-Notification:
+      value:
+        transaction:
+          country_code: AU
+          currency_code: AUD
+          creation_date_time: '2022-09-13T08:22:49.112Z'
+          status_date_time: '2022-09-13T08:23:49.112Z'
+          end_to_end_id: RMTEST16SEP03
+          settlement_date: '2022-09-13'
+          status: SETTLED
+          description: Transaction settled
+          uetr: 7c6e36c0-8538-4309-afe2-535053df2a42
+        method:
+          type: IP
+        merchant:
+          account:
+            number: '0100599074'
+            bank_id: TYEG6758
+          name: ROLF RICHARDUS
+        customer:
+          account:
+            bank_id: RSBKAU2SXXX
+            number: '5589089'
+          name:
+            first_name: vopak terminals
+    Payment-Failed-Australia-IP-Credit-Status-Notification:
+      value:
+        transaction:
+          country_code: AU
+          currency_code: AUD
+          creation_date_time: '2022-09-13T08:22:49.112Z'
+          status_date_time: '2022-09-13T08:23:49.112Z'
+          end_to_end_id: RMTEST16SEP03
+          settlement_date: '2022-09-13'
+          status: FAILED
+          description: Charge code is Invalid
+          reason_code: FF01
+          uetr: 7c6e36c0-8538-4309-afe2-535053df2a42
+        method:
+          type: IP
+        merchant:
+          account:
+            number: '0100599074'
+            bank_id: TYEG6758
+          name: ROLF RICHARDUS
+        customer:
+          account:
+            bank_id: RSBKAU2SXXX
+            number: '5589089'
+          name:
+            first_name: vopak terminals
+    Payment-Success-Incoming-Brazil-PIX-Credit-Status-Notification:
+      value:
+        method:
+          type: PIX
+        customer:
+          account:
+            number: '97150300543944526009'
+            bank_id: CITIBRXXX
+            name: Jack
+          tax_id: TAX123
+          name:
+            first_name: Jack
+        merchant:
+          account:
+            number: '62080300543944526226'
+            bank_id: '33479023'
+            name: Kingston
+          name: Kingston
+          tax_id: TAX234
+        transaction:
+          end_to_end_id: 12345678dd
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          creation_date_time: '2024-09-13T08:23:49.114Z'
+          country_code: BR
+          currency_code: BRL
+          value_date: '2025-03-10'
+          amount: 800.21
+          status: SETTLED
+          description: Transaction Settled
+          status_date_time: '2024-05-26T08:20:49.114Z'
+    Payment-Failed-Incoming-Brazil-PIX-Credit-Status-Notification:
+      value:
+        method:
+          type: PIX
+        customer:
+          account:
+            number: '97150300543944526009'
+            bank_id: CITIBRXXX
+            name: Jack
+          tax_id: TAX123
+          name:
+            first_name: Jack
+        merchant:
+          account:
+            number: '62080300543944526226'
+            bank_id: '33479023'
+            name: Kingston
+          name: Kingston
+          tax_id: TAX234
+        transaction:
+          end_to_end_id: 12345678dd
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          creation_date_time: '2024-09-13T08:23:49.114Z'
+          country_code: BR
+          currency_code: BRL
+          value_date: '2025-03-10'
+          amount: 800.21
+          status: FAILED
+          reason_code: AM02
+          description: Transaction Failed
+          status_date_time: '2024-05-26T08:20:49.114Z'

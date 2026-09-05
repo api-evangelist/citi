@@ -1,0 +1,648 @@
+openapi: 3.0.1
+info:
+  title: Dual Auth Authorization API
+  description: >
+    The **Dual Auth Authorization API** enables real-time authorization of card
+
+    transactions by forwarding ISO 8583-based authorization requests to the
+
+    appropriate downstream systems.
+
+
+    This API is consumed by Citi's internal systems and is designed to support
+
+    Visa and Mastercard transaction flows, including standard purchases,
+
+    recurring payments, and reversals.
+
+
+    ## Authentication
+
+
+    This API uses **Mutual TLS (mTLS)** for authentication. Both the client
+
+    (consumer) and the server (provider) must present valid certificates during
+
+    the TLS handshake to establish a secure, authenticated connection.
+
+
+    ### Certificate Exchange Process
+
+    Prior to integration, the following certificates must be exchanged between
+
+    the consumer and the API provider:
+
+
+    - **Root Certificate** — The top-level Certificate Authority (CA)
+    certificate
+      that establishes the chain of trust.
+    - **Intermediary Certificate** — An intermediate CA certificate that sits
+      between the root CA and the end-entity certificate.
+
+    Both certificates must be exchanged and configured before any API calls can
+
+    be made. Certificate exchange is handled as part of the formal onboarding
+
+    process (see **Entitlements** below).
+
+
+    ## Rate Limits
+
+
+    There are **no hard rate limits** enforced on this API — throughput is
+
+    governed by the capacity of the underlying system.
+
+
+    However, based on observed production traffic, the API has been seen to
+
+    handle a peak of approximately **150 Transactions Per Second (TPS)**.
+
+    Consumers should use this as a practical guideline when planning their
+
+    integration capacity and load testing strategies.
+
+
+    | Metric | Value |
+
+    |--------|-------|
+
+    | Hard Rate Limit | None enforced |
+
+    | Observed Peak (Production) | ~150 TPS |
+
+    | Recommended Max (per consumer) | Plan within observed peak |
+
+
+    ## Entitlements & Onboarding
+
+
+    Access to this API requires a **formal onboarding process**. No API calls
+
+    can be made until all onboarding steps are completed. The process involves
+
+    the following steps:
+
+
+    ### Step 1 — Certificate Exchange (mTLS Setup)
+
+    The consumer must exchange their root and intermediary TLS certificates with
+
+    the API provider. These certificates are used to establish mutual
+
+    authentication during the TLS handshake (see **Authentication** above).
+
+
+    ### Step 2 — SSG Endpoint Whitelisting
+
+    The consumer's endpoint URL must be whitelisted on **SSG (Citi's API
+
+    Gateway)**. This ensures that only approved client endpoints can receive
+
+    routed authorization requests.
+
+
+    > ⚠️ Both steps must be completed before the API can be accessed. Contact
+
+    > the support team (see below) to initiate the onboarding process.
+
+
+
+    ## Support & Escalation
+
+
+    For all support queries, integration assistance, and escalations, please
+
+    contact the Product Manager directly:
+
+
+    | | |
+
+    |-|-|
+
+    | **Name** | Mohammed Irfan Kamdar  |
+
+    | **Email** | mohammed.irfan.kamdar@citi.com |
+
+
+    Please include the following details in your support request to expedite
+
+    resolution:
+
+
+    - A description of the issue
+
+    - The `traceId` from the error response (if applicable)
+
+    - The `SystemTraceAuditNumber` of the affected transaction(s)
+
+    - The timestamp of the issue
+  version: 2.0.0
+servers:
+  - url: https://prod.api.placeholder.com/dual-auth
+    description: >-
+      Production environment — placeholder URL. Actual base URL to be confirmed
+      with the API provider.
+  - url: https://sandbox.api.placeholder.com/dual-auth
+    description: >-
+      Sandbox environment — placeholder URL. Actual base URL to be confirmed
+      with the API provider.
+tags:
+  - name: Authorization
+    description: Dual Auth Authorization Request and Response
+paths:
+  /api/authorization:
+    post:
+      tags:
+        - Authorization
+      summary: Submit a card authorization request
+      description: >-
+        Submits a real-time card authorization request. The request payload
+        follows ISO 8583 field conventions and supports both Visa and Mastercard
+        transaction types.
+
+        **Note:** Visa-specific fields (prefixed `VisaF`) and
+        Mastercard-specific fields (prefixed `MCF`) are mutually exclusive.
+        Include only the fields relevant to the card network of the transaction.
+
+        **HTTP Response:** This API returns HTTP `200` for all processed
+        requests. The outcome of the authorization is indicated by the
+        `respCode` field in the response body (e.g., `00` for Approved, `05` for
+        Declined). No other HTTP response codes are defined by the provider.
+      parameters:
+        - name: EASDualAuth-endpoint
+          in: header
+          description: >-
+            The actual client endpoint URL to which the authorization request
+            will be routed. This header is used for internal routing purposes
+            only and is **not** forwarded to the external endpoint.
+          required: true
+          schema:
+            type: string
+            example: https://client-endpoint.example.com/auth
+      requestBody:
+        description: Authorization Request Body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/authorizationRequest'
+            examples:
+              mastercard_standard_purchase:
+                summary: Standard Mastercard Purchase (Production Sample)
+                description: >-
+                  A standard card-present Mastercard purchase transaction
+                  originating from Singapore.
+                value:
+                  MessageTypeID: '0100'
+                  PrimaryAccountNumber: '5529244000020003000'
+                  ProcessingCode: '000000'
+                  TransactionAmount: '15.06'
+                  BillingAmount: '23.53'
+                  TransmissionDateAndTime: '1107083315'
+                  SystemTraceAuditNumber: '005619'
+                  LocalTransactionTime: '223315'
+                  LocalTransactionDate: '1106'
+                  CardExpiryDate: '2912'
+                  MCCMerchantType: '5999'
+                  AcquirerCountryCode: '702'
+                  POSEntryMode: '812'
+                  POSConditionCode: ''
+                  AcquirerInstitutionID: '000004'
+                  RetrievalReferenceNumber: '331108005619'
+                  CardAcceptorTerminalID: '03461004'
+                  CardAcceptorIDCode: '543457031007388'
+                  CardAcceptorNameLocation: 'CITIONLINE SINGAPORE SG                 '
+                  CurrencyCodeTransaction: '702'
+                  CurrencyCodeBilling: '702'
+                  MCF61POSTermAtt: '0'
+                  MCF61POSCHPresence: '0'
+                  MCF61POSCdPresence: '0'
+                  MCF61POSTranStatus: '0'
+                  MCF61POSTranSec: '0'
+                  MCF61POSChActTermLvl: '6'
+                  MCF61POSCountryCode: '702'
+      responses:
+        '200':
+          description: >-
+            The only HTTP response code returned by this API. All authorization
+            requests that are successfully processed — whether approved or
+            declined — will return HTTP 200. The `respCode` field in the
+            response body indicates the actual authorization outcome.
+
+            > ℹ️ **Note:** A declined transaction (e.g., `respCode: "05"`) is >
+            still returned as HTTP 200. HTTP status codes do **not** reflect >
+            the card authorization decision.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/authorizationResponse'
+              examples:
+                approved:
+                  summary: Approved Transaction
+                  description: The authorization was approved by the issuer.
+                  value:
+                    respCode: '00'
+                declined:
+                  summary: Declined Transaction
+                  description: >-
+                    The authorization was declined by the issuer (e.g., do not
+                    honor). Note this is still returned as HTTP 200.
+                  value:
+                    respCode: '05'
+      x-codegen-request-body-name: request-body
+components:
+  securitySchemes:
+    mutualTLS:
+      type: http
+      scheme: mutual-tls
+      description: >-
+        Mutual TLS (mTLS) authentication. Both root and intermediary
+        certificates must be exchanged with the API provider as part of the
+        formal onboarding process before any API calls can be made.
+  schemas:
+    authorizationRequest:
+      type: object
+      required:
+        - MessageTypeID
+        - PrimaryAccountNumber
+        - ProcessingCode
+        - TransactionAmount
+        - BillingAmount
+        - TransmissionDateAndTime
+        - SystemTraceAuditNumber
+        - LocalTransactionTime
+        - LocalTransactionDate
+        - CardExpiryDate
+        - MCCMerchantType
+        - AcquirerCountryCode
+        - POSEntryMode
+        - POSConditionCode
+        - AcquirerInstitutionID
+        - RetrievalReferenceNumber
+        - CardAcceptorTerminalID
+        - CardAcceptorIDCode
+        - CardAcceptorNameLocation
+        - CurrencyCodeTransaction
+        - CurrencyCodeBilling
+      properties:
+        MessageTypeID:
+          type: string
+          minLength: 4
+          maxLength: 4
+          description: >-
+            ISO 8583 Message Type Identifier. Defines the purpose of the message
+            in the transaction lifecycle.
+
+            | Value | Meaning | |-------|---------| | `0100` | Authorization
+            Request | | `0120` | Authorization Advice | | `0400` | Reversal
+            Request | | `0420` | Reversal Advice |
+          enum:
+            - '0100'
+            - '0120'
+            - '0400'
+            - '0420'
+          example: '0100'
+        PrimaryAccountNumber:
+          type: string
+          minLength: 19
+          maxLength: 19
+          description: >-
+            The cardholder's Primary Account Number (PAN) — the real card
+            number. This is a sensitive field and must be handled in accordance
+            with PCI-DSS requirements.
+          example: '5529244000020003000'
+        ProcessingCode:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: >-
+            A 6-digit code that describes the type of transaction being
+            performed and the accounts affected. `000000` represents a standard
+            purchase transaction.
+          example: '000000'
+        TransactionAmount:
+          type: string
+          minLength: 1
+          maxLength: 13
+          description: >-
+            The transaction amount in the currency of the acquirer
+            (`CurrencyCodeTransaction`). Expressed as a decimal string (e.g.,
+            `"15.06"` for $15.06).
+          example: '15.06'
+        BillingAmount:
+          type: string
+          minLength: 1
+          maxLength: 13
+          description: >-
+            The amount billed to the cardholder in the cardholder's billing
+            currency (`CurrencyCodeBilling`). May differ from
+            `TransactionAmount` when a currency conversion is applied.
+          example: '23.53'
+        TransmissionDateAndTime:
+          type: string
+          minLength: 10
+          maxLength: 10
+          description: >-
+            The date and time the message was transmitted, in `MMDDHHmmSS`
+            format (Month, Day, Hour, Minute, Second).
+          example: '1107083315'
+        SystemTraceAuditNumber:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: >-
+            A unique 6-digit number assigned by the message initiator to
+            identify a specific cardholder transaction. Used to correlate all
+            message types (auth, advice, reversal) that belong to the same
+            transaction.
+          example: '005619'
+        LocalTransactionTime:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: >-
+            The local time at the point of transaction, in `HHmmSS` format
+            (Hour, Minute, Second).
+          example: '223315'
+        LocalTransactionDate:
+          type: string
+          minLength: 4
+          maxLength: 4
+          description: >-
+            The local date at the point of transaction, in `MMDD` format (Month,
+            Day).
+          example: '1106'
+        CardExpiryDate:
+          type: string
+          minLength: 4
+          maxLength: 4
+          description: The card's expiration date in `YYMM` format (Year, Month).
+          example: '2912'
+        MCCMerchantType:
+          type: string
+          minLength: 4
+          maxLength: 4
+          description: >-
+            The Merchant Category Code (MCC) — a 4-digit code classifying the
+            type of business the merchant operates. Defined by Visa/Mastercard
+            specifications.
+          example: '5999'
+        AcquirerCountryCode:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: >-
+            The ISO 3166-1 numeric country code of the country where the
+            acquiring institution is located (e.g., `702` for Singapore, `840`
+            for USA).
+          example: '702'
+        POSEntryMode:
+          type: string
+          minLength: 3
+          maxLength: 4
+          description: >-
+            Indicates the method used to capture the PAN and the PIN entry
+            capability of the terminal. Composed of a PAN entry mode code and a
+            PIN capability code.
+          example: '812'
+        POSConditionCode:
+          type: string
+          minLength: 0
+          maxLength: 2
+          description: >-
+            **(Visa only)** A code identifying the transaction conditions at the
+            point-of-sale. For Mastercard transactions, refer to the `MCF61`
+            fields instead. May be empty for non-Visa transactions.
+          example: ''
+        AcquirerInstitutionID:
+          type: string
+          minLength: 6
+          maxLength: 11
+          description: >-
+            Identifies the acquiring institution (e.g., the merchant's bank) or
+            its agent. Also known as the Bank Identification Number (BIN) of the
+            acquirer.
+          example: '000004'
+        RetrievalReferenceNumber:
+          type: string
+          minLength: 12
+          maxLength: 12
+          description: >-
+            A 12-character reference number supplied by the acquiring system.
+            Used to locate the original source document of the transaction and
+            to correlate related messages (e.g., reversals).
+          example: '331108005619'
+        CardAcceptorTerminalID:
+          type: string
+          minLength: 8
+          maxLength: 8
+          description: >-
+            An 8-character identifier for the specific terminal at the card
+            acceptor's location (e.g., a POS terminal ID).
+          example: '03461004'
+        CardAcceptorIDCode:
+          type: string
+          minLength: 15
+          maxLength: 15
+          description: >-
+            The Merchant ID (MID) — a 15-character code that uniquely identifies
+            the merchant in the transaction.
+          example: '543457031007388'
+        CardAcceptorNameLocation:
+          type: string
+          minLength: 40
+          maxLength: 40
+          description: >-
+            The name and location of the card acceptor (merchant), padded to 40
+            characters. Typically formatted as `<MERCHANT NAME> <CITY> <COUNTRY
+            CODE>`.
+          example: 'CITIONLINE SINGAPORE SG                 '
+        CurrencyCodeTransaction:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: >-
+            The ISO 4217 numeric currency code for the transaction currency —
+            the local currency at the point of sale (e.g., `702` for SGD, `840`
+            for USD).
+          example: '702'
+        CurrencyCodeBilling:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: >-
+            The ISO 4217 numeric currency code used to bill the cardholder's
+            account. May differ from `CurrencyCodeTransaction` when a currency
+            conversion is applied.
+          example: '702'
+        VisaF60TermEntCapab:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Visa only)** Terminal Entry Capability — identifies the
+            terminal's ability to electronically read account numbers and
+            expiration dates from cards.
+          example: '1'
+        VisaF60ChipCondCode:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Visa only)** Chip Condition Code — provides information about
+            fallback transactions initiated from the magnetic stripe of a VSDC
+            card at a VSDC terminal.
+          example: '0'
+        VisaF60SpclCondIndic:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Visa only)** Special Condition Indicator — describes selected
+            special conditions at the point-of-sale.
+          example: '2'
+        VisaF60ChipTxnIndic:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Visa only)** Chip Transaction Indicator — set by full VSDC data
+            acquirers when the terminal indicates a chip-based transaction.
+          example: '1'
+        VisaF60MoToECIndic:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: >-
+            **(Visa only)** Mail Order / Telephone Order / E-Commerce Indicator.
+            For MOTO transactions (field 25 = `08`), identifies the order type.
+            For e-commerce transactions (field 25 = `59`), identifies the
+            security level used.
+          example: '05'
+        VisaF123VirtualCardNbr:
+          type: string
+          minLength: 19
+          maxLength: 19
+          description: >-
+            **(Visa only)** The Visa Virtual Card Number (token). Present when
+            the transaction is initiated using a tokenized card (e.g., via a
+            digital wallet).
+          example: '5566801000000113'
+        VisaF123WalletSPId:
+          type: string
+          minLength: 11
+          maxLength: 11
+          description: >-
+            **(Visa only)** Token Requestor ID / Wallet Service Provider ID.
+            Identifies the digital wallet or token requestor that initiated the
+            transaction.
+          example: '43158104465'
+        VisaF126RecurTxnIndic:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Visa only)** Recurring Transaction Indicator. A value of `R`
+            identifies this as a recurring transaction (e.g., a subscription).
+          enum:
+            - R
+          example: R
+        MCF48VirtualCardNbr:
+          type: string
+          minLength: 19
+          maxLength: 19
+          description: >-
+            **(Mastercard only)** The Mastercard Virtual Card Number (token).
+            Present when the transaction is initiated using a tokenized card
+            (e.g., via a digital wallet).
+          example: '5566801000000113'
+        MCF48WalletSPId:
+          type: string
+          minLength: 11
+          maxLength: 11
+          description: >-
+            **(Mastercard only)** Token / Wallet Service Provider ID. Identifies
+            the digital wallet or token requestor that initiated the
+            transaction.
+          example: '43158104465'
+        MCF61POSTermAtt:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Mastercard only)** POS Terminal Attendance — indicates whether
+            the card acceptor is attending the terminal at the time of the
+            transaction.
+          example: '0'
+        MCF61POSCHPresence:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Mastercard only)** POS Cardholder Presence — indicates whether
+            the cardholder is physically present at the point of service. A
+            value of `4` indicates a recurring transaction.
+          example: '0'
+        MCF61POSCdPresence:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Mastercard only)** POS Card Presence — indicates whether the
+            physical card is present at the point of service.
+          example: '0'
+        MCF61POSTranStatus:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Mastercard only)** POS Transaction Status — indicates the purpose
+            or current status of the authorization request.
+          example: '0'
+        MCF61POSTranSec:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Mastercard only)** POS Transaction Security — indicates the card
+            acceptor's confidence level in the security of the transaction.
+          example: '0'
+        MCF61POSChActTermLvl:
+          type: string
+          minLength: 1
+          maxLength: 1
+          description: >-
+            **(Mastercard only)** Cardholder-Activated Terminal Level —
+            indicates the type of cardholder-activated terminal used to initiate
+            the transaction (e.g., ATM, kiosk).
+          example: '6'
+        MCF61POSCountryCode:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: >-
+            **(Mastercard only)** POS Country Code — the ISO 3166-1 numeric
+            country code of the POS location (not the acquirer location).
+          example: '702'
+    authorizationResponse:
+      type: object
+      required:
+        - respCode
+      properties:
+        respCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: >-
+            ISO 8583 Response Code indicating the outcome of the authorization
+            request. This API always returns HTTP 200 — the `respCode` field is
+            the authoritative indicator of whether the transaction was approved
+            or declined. Refer to Visa/Mastercard specifications for the full
+            list of values.
+
+            | Code | Meaning | |------|---------| | `00` | Approved | | `05` |
+            Do Not Honor (Declined) |
+          example: '00'
+security:
+  - mutualTLS: []

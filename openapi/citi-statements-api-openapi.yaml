@@ -1,0 +1,627 @@
+openapi: 3.0.1
+info:
+  title: Statement Services
+  description: >-
+    Using the Statements API, you can retrieve account statements in a range of
+    globally-supported file formats. 
+
+
+    Account statements may include:
+
+
+    * your incoming payments
+
+    * any transfers or deposits made
+
+    * cash withdrawals
+
+    * interest accruals and any charges as applicable
+
+    * start and end balances 
+
+
+    ### Retrieving account statements
+
+
+    To retrieve an account statement for one or more of your accounts:
+
+
+    1. Post a request to the
+    ``/accountstatementservices/v1/statement/initiation`` endpoint. This request
+    returns a Statement Identifier.
+
+    2. Post a second request to the
+    ``/accountstatementservices/v1/statement/retrieval`` endpoint using the
+    Statement Identifier. This will return your statement(s).
+
+
+    Download our SDKs:
+
+
+    * [Python
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=python&apiTitle=all&isClientSecReq=true)
+
+    * [Java
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=java&apiTitle=all&isClientSecReq=true)
+
+    * [.Net
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=dotnet&apiTitle=all&isClientSecReq=true)
+
+    * [Ruby
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ruby&apiTitle=all&isClientSecReq=true)
+
+    * [NodeJS
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=nodejs&apiTitle=all&isClientSecReq=true)
+
+    * [Go
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=go&apiTitle=all&isClientSecReq=true)
+
+    * [CLI Tool
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ccapi-cli&apiTitle=all&isClientSecReq=true)
+
+
+    Note: You must be logged in to download the SDKs. 
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+servers:
+  - url: >-
+      https://tts.sandbox.apib2b.citi.com/citiconnect/sb/accountstatementservices/v1
+    description: Statement initiation CTE/Sandbox url
+  - url: >-
+      https://tts.sandbox.apib2b.citi.com/citiconnect/sb/accountstatementservices/v1/mock
+    description: Statement retrieval CTE/Sandbox url
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/accountstatementservices/v1
+    description: Production gateway url
+tags:
+  - name: Statement Services v1
+    description: Statement Services v1
+security:
+  - clientCredentials: []
+paths:
+  /statement/initiation:
+    post:
+      tags:
+        - Statement Services v1
+      description: >-
+        The Statement Initiation endpoint follows a custom XML format. The
+        response from this endpoint returns a ``statementId``. This identifier
+        must then be used in the retrieval request.
+
+
+        **Note:** Statement initiation requires some time to be processed to
+        allow successful retrieval. It will depend on the statement size – best
+        practice is to set the retrieval interval every 15 seconds until you
+        receive a 200 successful response. It may take from 15 seconds to a few
+        minutes before the statement is generated.
+      servers:
+        - url: >-
+            https://tts.apib2b.citi.com/citiconnect/prod/accountstatementservices/v1
+          description: production gateway URL
+        - url: >-
+            https://tts.sandbox.apib2b.citi.com/citiconnect/sb/accountstatementservices/v1
+          description: sandbox URL for statement initiation only
+      operationId: initiateAccountStatement
+      summary: Statement Initiation Request
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          description: Supports XML.
+          required: true
+          schema:
+            type: string
+        - name: Timezone
+          in: header
+          description: >-
+            Time zone used to generate the statement. If not provided, the
+            default timezone is applied.  Examples include 'EST', 'EDT', 'IST'.
+          required: false
+          schema:
+            type: string
+            maxLength: 4
+          example: EST
+        - name: Attachment-Encoding
+          in: header
+          description: >-
+            Specifies the preferred content encoding for the response. To enable
+            gZip compression for the statement file, set this header value to
+            gzip. Using compression is highly recommended for large statement
+            files, as it can significantly reduce the download size and help
+            prevent API failures related to gateway file size limits. If this
+            header is sent, the API will return the statement file in a
+            compressed format. The client application is responsible for
+            decompressing the file.
+          required: false
+          schema:
+            type: string
+          example: gzip
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/StatementInitiationRequest'
+            example: >-
+              <?xml version="1.0" encoding="UTF-8"?><statementInitiationRequest
+              xmlns="http://com.citi.citiconnect/services/types/inquiries/statement/v1"><accountNumber>12216795</accountNumber><formatName>SWIFT_MT940</formatName><fromDate>2024-05-14</fromDate><toDate>2024-05-24</toDate><strLibrayName>APISTR</strLibrayName></statementInitiationRequest>
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatementInitiationResponse'
+              example: >-
+                <statementInitiationResponse
+                xmlns="http://com.citi.citiconnect/services/types/inquiries/statement/v1"
+                xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><statementId>53132148</statementId></statementInitiationResponse>
+        '400':
+          description: Bad Request
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpCode>400</httpCode><httpMessage>Bad_Request</httpMessage><moreInformation>Schema
+                Validation Failed</moreInformation></errormessage>
+        '401':
+          description: Unauthorized
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpCode>401</httpCode><httpMessage>Invalid OAuth
+                Token</httpMessage><moreInformation>Please use valid OAuth
+                Token</moreInformation></errormessage>
+        '403':
+          description: Forbidden
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpMessage>Forbidden</httpMessage><httpCode>403</httpCode><moreInformation>You
+                are forbidden to access this
+                service.</moreInformation></errormessage>
+        '404':
+          description: Not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpCode>404</httpCode><httpMessage>Not
+                Found</httpMessage><moreInformation>No resources match requested
+                URI</moreInformation></errormessage>
+        '500':
+          description: Internal Server Error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Internal Server Error:
+                  value: >-
+                    <errormessage
+                    xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><httpCode>500</httpCode><httpMessage>INTERNAL_ERROR</httpMessage><moreInformation>Internal
+                    server error. Please consult logs for further
+                    details.</moreInformation></errormessage>
+                Previoud Request Is In Progress:
+                  value: >-
+                    <errormessage
+                    xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><httpCode>500</httpCode><httpMessage>PREVIOUS_STATEMENT_IS_STILL_BEEN_PROCESSED</httpMessage><moreInformation>The
+                    previous Statement Initiation request is still being
+                    processed, please try again
+                    later</moreInformation></errormessage>
+                Statement Account Mandatory:
+                  value: >-
+                    <errormessage
+                    xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><httpCode>500</httpCode><httpMessage>STATEMENT_ACCOUNT_MANDATORY</httpMessage><moreInformation>Mandatory
+                    field is not populated.</moreInformation></errormessage>
+  /statement/retrieval:
+    post:
+      tags:
+        - Statement Services v1
+      description: >-
+        When you have completed the statement initiation, use the
+        ``statementId`` returned in the response as the only parameter in the
+        request body to initiate the statement retrieval request.
+
+
+        Limitations include: 
+
+
+        - Multiple requests are not supported.
+
+        - Only one statement generation process may run using a template
+        regardless of which channel initiated the request. Running multiple
+        statement generation processes is not supported. 
+
+
+        Use the statementId, which is received as an output from your Statement
+        Initiatin request, in the Statement Retrieval Request to generate your
+        account statements. The response to your Statement Retrieval request
+        will contain a single file with 1 or more statements, based on your
+        request.
+
+
+        The request follows custom XML format, and the response also follows a
+        custom XML format and contains the Account Statement file in the
+        required format: 
+
+
+        * ISO XML 
+            * camt.053.001.02 
+            * SWIFT MT940 
+        * ISO XML 
+            * camt.052.001.02 
+            * SWIFT MT942
+
+            
+        If the request is rejected due to validation errors or data issues, the
+        response follows a custom XML format.
+      operationId: getAccountStatement
+      summary: Statement Retrieval Request
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          description: Supports \"application/xml\" and \"application/json\".
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/StatementRetrievalRequest'
+            example: >-
+              <?xml version="1.0" encoding="utf-8"?><statementRetrievalRequest
+              xmlns="http://com.citi.citiconnect/services/types/attachments/v1"><statementId>111111111</statementId></statementRetrievalRequest>
+        required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            Attachment-Encoding:
+              description: >-
+                Indicates that the attachment (the statement file) has been
+                compressed. A value of gzip means the client must decompress the
+                file using the gZip algorithm to access the original statement
+                content. This header is only present when gZip compression is
+                requested in the Initiation and compression is successfully
+                applied on the attachment.
+              schema:
+                type: string
+                example: gzip
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatementRetrievalResponse'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><ns2:statementRetrievalResponse><ns2:statementId>45227678</ns2:statementId><ns2:fileCheckSum>770d285d1505da11034f729484d4d7250b30dde1101730bed129283476715e14fc5835de5d49d3b17c55ba5908bcfb50ab212edc4bb9c7e1ee08a4e03fcc6f4a</ns2:fileCheckSum><ns2:attachmentDecryptionKey>5sBk5UDQgBx7gJUh3m0owRRyQALojfSA</ns2:attachmentDecryptionKey><ns2:statementStream><xop:Include
+                href="cid:337895adcfe006ba4c40fa0bba7ed157076ef9e3455e1e7e@apache.org"></xop:Include></ns2:statementStream></ns2:statementRetrievalResponse>
+        '400':
+          description: Bad Request
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpCode>400</httpCode><httpMessage>Bad_Request</httpMessage><moreInformation>Schema
+                Validation Failed</moreInformation></errormessage>
+        '401':
+          description: Unauthorized
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpCode>401</httpCode><httpMessage>Invalid OAuth
+                Token</httpMessage><moreInformation>Please use valid OAuth
+                Token</moreInformation></errormessage>
+        '403':
+          description: Forbidden
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Request-Forbidden-Example:
+                  value: >-
+                    <errormessage><httpMessage>Forbidden</httpMessage><httpCode>403</httpCode><moreInformation>You
+                    are forbidden to access this
+                    service.</moreInformation></errormessage>
+        '404':
+          description: Not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <errormessage><httpCode>404</httpCode><httpMessage>Not
+                Found</httpMessage><moreInformation>No resources match requested
+                URI</moreInformation></errormessage>
+        '500':
+          description: Internal Server Error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Internal Server Errors:
+                  value: >-
+                    <errormessage
+                    xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><httpCode>500</httpCode><httpMessage>INTERNAL_ERROR</httpMessage><moreInformation>Internal
+                    server error. Please consult logs for further
+                    details.</moreInformation></errormessage>
+                Invalid Statement Id:
+                  value: >-
+                    <errormessage
+                    xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><httpCode>500</httpCode><httpMessage>INVALID_REQUEST</httpMessage><moreInformation>Your
+                    entitlements do not allow you to perform this
+                    action.</moreInformation></errormessage>
+                Empty Statement Id:
+                  value: >-
+                    <errormessage
+                    xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><httpCode>500</httpCode><httpMessage>INVALID_REQUEST</httpMessage><moreInformation>Your
+                    entitlements do not allow you to perform this
+                    action.</moreInformation></errormessage>
+                Without Statement Id Field:
+                  value: >-
+                    <errormessage
+                    xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><httpCode>500</httpCode><httpMessage>INVALID_REQUEST</httpMessage><moreInformation>Your
+                    entitlements do not allow you to perform this
+                    action.</moreInformation></errormessage>
+components:
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v1/oauth/token
+          scopes: {}
+  schemas:
+    StatementRetrievalRequest:
+      title: StatementRetrievalRequest
+      required:
+        - statementId
+      properties:
+        statementId:
+          description: >-
+            The unique ID of the statement file generated by your Statement
+            Initiation request.
+          type: string
+          title: statementId
+          example: '12312312'
+      xml:
+        name: statementRetrievalRequest
+    StatementRetrievalResponse:
+      title: StatementRetrievalResponse
+      properties:
+        statementId:
+          description: >-
+            The ID of statement file that was passed in the Statement Retrieval
+            request.
+          type: string
+          title: statementId
+          xml:
+            name: ns2:statementId
+          example: '45227678'
+        fileCheckSum:
+          description: >-
+            The sha512 hash value of the statement file. It can be used to
+            verify whether the file is not corrupted.
+          type: string
+          title: fileCheckSum
+          xml:
+            name: ns2:fileCheckSum
+          example: >-
+            770d285d1505da11034f729484d4d7250b30dde1101730bed129283476715e14fc5835de5d49d3b17c55ba5908bcfb50ab212edc4bb9c7e1ee08a4e03fcc6f4a
+        attachmentDecryptionKey:
+          description: The key required to decrypt the attachment content.
+          type: string
+          title: attachmentDecryptionKey
+          xml:
+            name: ns2:attachmentDecryptionKey
+          example: 5sBk5UDQgBx7gJUh3m0owRRyQALojfSA
+        statementStream:
+          description: The Statement binary stream.
+          type: object
+          title: statementStream
+          xml:
+            name: ns2:statementStream
+          properties:
+            xop:
+              type: object
+              title: xop
+              xml:
+                name: xop:Include
+              properties:
+                href:
+                  type: string
+                  title: href
+                  xml:
+                    attribute: true
+                  example: >-
+                    cid:337895adcfe006ba4c40fa0bba7ed157076ef9e3455e1e7e@apache.org
+      required:
+        - statementStream
+      xml:
+        name: ns2:statementRetrievalResponse
+    StatementInitiationRequest:
+      title: StatementInitiationRequest
+      properties:
+        accountNumber:
+          description: >-
+            The account number(s) for which the account statement is to be
+            retrieved. You can specify multiple accounts by using multiple
+            account objects.  If no value is sent the Statements API will send a
+            reject response with an error message. 
+          type: array
+          title: accountNumber
+          example:
+            - '12345'
+          items:
+            type: string
+          minItems: 1
+        formatName:
+          description: >-
+            Specifies the format of the statement(s) to be generated. Valid
+            values include:
+
+
+            * SWIFT_MT940 
+
+            * CAMT_053_001_02
+
+            * SWIFT MT942
+
+            * CAMT_052_001_02
+
+
+            **Note:** ``formatName`` will be ignored if ``templateName`` is
+            supplied, but ``formatName`` is still required for completeness.
+          type: string
+          title: formatName
+          example: CAMT_053_001_02
+          enum:
+            - SWIFT_MT940
+            - CAMT_053_001_02
+            - SWIFT MT942
+            - CAMT_052_001_02
+        fromDate:
+          description: ' Specifies the beginning date for the statement request. ``fromDate`` uses  _YYYY-MM-DD_ format.'
+          type: string
+          title: fromDate
+          format: YYYY-MM-DD
+          example: '2017-04-01'
+        toDate:
+          description: ' Specifies the ending date for the statement request. ``fromDate`` uses _YYYY-MM-DD_ format.'
+          type: string
+          format: YYYY-MM-DD
+          title: toDate
+          example: '2017-04-03'
+        templateName:
+          description: >-
+            The template name, as defined in CitiDirect BE File Services (STR
+            Library Number). 
+
+
+            Before you make your first statement API request, make sure that the
+            correct template (also known as an "export profile") has been set up
+            using CitiDirect BE. 
+
+
+            For help setting up a template contact your Citi representative. 
+
+
+            The template contains the following:
+
+
+            * the format standard
+
+            * the list of transaction codes and descriptions
+
+            * the display of itemized entries for bulk debits
+
+            * the list of the date and time stamps
+
+
+            You can choose between:
+
+
+            * Detailed itemized entries - list all transactions on the
+            statement. If you would like an itemized Statement Retrieval (STR),
+            please contact your Citi representative to perform the setup on your
+            behalf. You must then use the STR library Name in your statement
+            initiation request.
+
+            * A single consolidated debit entry - one debit entry that can
+            contain several smaller transactions. These are also known as bulk
+            debit transactions.
+
+
+            When creating the template, the time zone where the template is
+            initially set up will be used when generating the account statement
+            as well as the frequency and interval specified. 
+          type: string
+          title: templateName
+        strLibrayName:
+          description: >-
+            Specifies the STR Library name created as part of STR profile by the
+            Citi representative, if itemization data is required.
+          type: string
+          title: strLibrayName
+          example: APISTR
+        baiCode:
+          description: >-
+            Transaction classification code indicating the type of financial
+            transaction.
+          type: string
+          title: baiCode
+          example: SWIFT4
+      xml:
+        name: statementInitiationRequest
+      required:
+        - accountNumber
+        - formatName
+        - fromDate
+        - toDate
+    StatementInitiationResponse:
+      title: StatementInitiationResponse
+      properties:
+        statementId:
+          description: >-
+            The unique ID for your newly generated statement. Use this ID in
+            your Statement Request to retrieve the statement file generated by
+            your initiation request.
+          type: string
+          title: statementId
+          example: '86756565'
+      required:
+        - statementId
+      xml:
+        name: statementInitiationResponse
+    ErrorMessage:
+      properties:
+        httpCode:
+          format: int32
+          type: integer
+        httpMessage:
+          type: string
+        moreInformation:
+          type: string
+      required:
+        - httpCode
+      xml:
+        name: errormessage

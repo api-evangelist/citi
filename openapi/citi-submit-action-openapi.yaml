@@ -1,0 +1,289 @@
+openapi: 3.1.0
+info:
+  title: ACES ETF Order Approval API
+  version: '1.0'
+  description: >-
+    The ACES ETF Order Approval API receives order action requests from Citi ETF
+    Sponsor clients, processes the necessary order approvals, and returns the
+    status of the request.
+  x-ibm-name: aces-order-approval
+security:
+  - clientCredentials: []
+servers:
+  - url: https://sit.b2b.tts.icgservices.citi.com/tts
+    description: SIT Environment URL
+  - url: https://qa.b2b.tts.icgservices.citi.com/tts
+    description: QA Environment URL
+  - url: https://uat.b2b.tts.icgservices.citi.com/tts
+    description: UAT Environment URL
+  - url: https://tts.sandbox.apib2b.citi.com/tts
+    description: CTE Environment URL
+paths:
+  /etf/api/v1/order/submitAction:
+    post:
+      description: >-
+        Posts an action request - Approve, Reject, or Cancel, allowing a PM/CM/D
+        to approve or reject orders on the ACES Dealing Portal.
+      operationId: submitAction
+      summary: Request Action On An Order
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports \"application/json\".
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          schema:
+            type: string
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for OAuth token.
+            generation
+          schema:
+            type: string
+      requestBody:
+        description: Order Submit Action Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/submitAction'
+      responses:
+        '200':
+          description: OK.  Returns a confirmation of the action submission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ackResponse'
+        '400':
+          description: Bad Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/nackResponse'
+              examples:
+                InvalidOrderId:
+                  summary: Invalid Order ID
+                  value:
+                    orderResponse:
+                      clientRefId: ABC1234
+                      orderId: '100021822'
+                      responseTimeStamp: 2025-07-26 10:30:10EST
+                      respStatus: Failed
+                      respCode: '400'
+                      error: Invalid Order ID.
+                InvalidAction:
+                  summary: Invalid Order ID
+                  value:
+                    orderResponse:
+                      clientRefId: ABC1234
+                      orderId: '100021822'
+                      responseTimeStamp: 2025-07-26 10:30:10EST
+                      respStatus: Failed
+                      respCode: '400'
+                      error: Invalid action performed for the order.
+                InvalidRole:
+                  summary: Invalid Role
+                  value:
+                    orderResponse:
+                      clientRefId: ABC1234
+                      orderId: '100021822'
+                      responseTimeStamp: 2025-07-26 10:30:10EST
+                      respStatus: Failed
+                      respCode: '400'
+                      error: Invalid Role.
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/nackResponse'
+              example:
+                orderResponse:
+                  clientRefId: ABC1234
+                  orderId: '100021822'
+                  responseTimeStamp: 2025-07-26 10:30:10EST
+                  respStatus: Failed
+                  respCode: '500'
+                  error: >-
+                    Unable to serve your request at this moment. Please try
+                    again later.
+components:
+  schemas:
+    submitAction:
+      title: Order Action Request Object
+      type: object
+      properties:
+        orderRequest:
+          type: object
+          required:
+            - clientRefId
+            - orderId
+            - citiVelocityUserId
+            - requestTimestamp
+            - role
+            - statusUpdate
+            - basketType
+          properties:
+            clientRefId:
+              title: Client Reference ID
+              type: string
+              description: >-
+                Unique Client assigned identifier for each API request and
+                response.
+              example: ABC1234
+            orderId:
+              title: Order ID
+              type: string
+              description: >-
+                ACES Dealing Portal Order ID for which action is being
+                submitted.
+              example: '100021822'
+            citiVelocityUserId:
+              title: Citi Velocity User ID
+              type: string
+              description: ACES User ID for authentication.
+              example: ps90033
+            requestTimestamp:
+              title: Request Timestamp
+              type: string
+              description: >-
+                Timestamp of the request in EST (Format:-"yyyy-MM-dd
+                HH:mm:ssEST").
+              example: 2025-07-26 10:30:00EST
+            role:
+              title: User Role
+              type: string
+              description: Role of the user submitting the action.
+              enum:
+                - PM
+                - CM/D
+              example: PM
+            statusUpdate:
+              title: Status Update
+              description: >-
+                The action to be applied to the order (for example "APPROVED",
+                REJECTED", "CANCEL_APPROVED", "CANCEL_REJECTED").
+              type: string
+              enum:
+                - APPROVED
+                - REJECTED
+                - CANCEL_APPROVED
+                - CANCEL_REJECTED
+              example: APPROVED
+            basketType:
+              title: Basket Type
+              type: string
+              enum:
+                - STANDARD
+                - CUSTOM
+              description: >-
+                Specifies the basketType of the order. Can be applied by the
+                portfolio manager.
+              example: STANDARD
+            comments:
+              title: Comments
+              type: string
+              description: Optional comments regarding the action.
+              example: Portfolio Manager ok with the order.
+    ackResponse:
+      title: Order Action ACK Response Object
+      type: object
+      properties:
+        orderResponse:
+          type: object
+          properties:
+            clientRefId:
+              title: Client Reference ID
+              type: string
+              description: >-
+                Unique Client assigned identifier for each API request and
+                response..
+              example: ABC1234
+            orderId:
+              title: Order ID
+              type: string
+              description: ACES Dealing Portal Order ID for which action is submitted.
+              example: '100021822'
+            responseTimeStamp:
+              title: Response Timestamp
+              type: string
+              description: >-
+                Timestamp of the response in EST (Format:-"yyyy-MM-dd
+                HH:mm:ssEST")..
+              example: 2025-07-26 10:30:10EST
+            respStatus:
+              title: Response Status
+              type: string
+              description: >-
+                Status of the request (e.g., "Success" for successfully
+                processed).
+              example: Success
+            respCode:
+              title: Response Code
+              type: string
+              description: Successful response Code.
+              example: '200'
+    nackResponse:
+      title: Order Action NACK Response Object
+      type: object
+      properties:
+        orderResponse:
+          type: object
+          properties:
+            clientRefId:
+              title: Client Reference ID
+              type: string
+              description: >-
+                Unique Client assigned identifier for each API request and
+                response..
+              example: ABC1234
+            orderId:
+              title: Order ID
+              type: string
+              description: ACES Dealing Portal Order ID for which action is submitted.
+              example: '100021822'
+            responseTimeStamp:
+              title: Response Timestamp
+              type: string
+              description: >-
+                Timestamp of the response in EST (Format:-"yyyy-MM-dd
+                HH:mm:ssEST")..
+              example: 2025-07-26 10:30:10EST
+            respStatus:
+              title: Response Status
+              type: string
+              description: Status of the request (e.g.,"Failed" for any failures).
+              example: Failed
+            respCode:
+              title: Response Code
+              type: string
+              description: Error response Code.
+              example: '400'
+            error:
+              type: string
+              description: Description of the error encountered.
+              example: Invalid Order ID.
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All APIs use the oAuth2 authentication scheme, which requires a bearer
+        token to authenticate your API call. The Token URL includes the version
+        of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /tts/internal/api/oauth2
+          scopes:
+            read: Grants read access
+            write: Grants write access

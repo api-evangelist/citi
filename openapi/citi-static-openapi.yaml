@@ -1,0 +1,457 @@
+openapi: 3.0.3
+info:
+  title: Brazil QR code - Static Collections
+  description: >-
+    This API has the ability to create a static collection QR Code that could be
+    paid by PIX.
+  version: 1.0.0
+servers:
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/
+    description: production gateway url
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/
+    description: sandbox url
+security:
+  - clientCredentials: []
+paths:
+  /paymentservices/collections/qrcodes:
+    post:
+      summary: >-
+        This API has an ability to create a QR Code for user which will allow
+        their customer to initiate payment by scanning this QR Code.
+      description: >-
+        QR Code Creation API has an ability to create a QR Code for user and is
+        supported JSON format. This API can be initiated by forming a
+        well-defined POST request. Finally, you encrypt the payload, place it in
+        your request and send it via your application.<br><br><font
+        size='2'><b>Content-Type</b> : Supports application/json.
+        <br><b>Authorization</b>: The OAuth Token prefixed with Bearer and space
+        in between.
+      operationId: qrCodeCreation
+      parameters:
+        - $ref: '#/components/parameters/ClientId'
+        - $ref: '#/components/parameters/CountryCode'
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/PaymentMethod'
+        - $ref: '#/components/parameters/Language'
+      requestBody:
+        description: Describes the QR Code creation APIs request body fields.
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/BrazilStaticQRCodeRequest'
+            examples:
+              BrazilStaticQRCodeExample:
+                $ref: '#/components/examples/BrazilStaticQRCodeExample'
+        required: true
+      responses:
+        '201':
+          $ref: '#/components/responses/CreatedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+      security:
+        - oAuth2:
+            - paymentservices
+components:
+  schemas:
+    BrazilStaticQRCodeRequest:
+      type: object
+      description: >-
+        Describes the  Brazil QR Code Creation APIs request fields.This Schema
+        is applicable only when country is BR, payment method is PIX and
+        language is Portuguese.
+      required:
+        - chave
+      properties:
+        txid:
+          type: string
+          pattern: ^[a-zA-Z0-9 ]{1,25}$
+          maxLength: 25
+          description: >-
+            Transaction identifier (the purpose of this field is to be an
+            element that allows the recipient's PSP to present the payment
+            reconciliation functionality to the recipient user).
+        chave:
+          type: string
+          maxLength: 77
+          description: >-
+            Pix alias registered in the DICT that will be used for the
+            collection. This key will be read by the payer's PSP application for
+            consultation with the DICT, which will return information that will
+            identify the recipient of the collection.
+        infoAdicionais:
+          type: string
+          maxLength: 72
+          description: >-
+            Additional information that will be displayed to the Payer when
+            reading the QR code.
+        valor:
+          type: string
+          pattern: ^[0-9]{1,10}.[0-9][0-9]$
+          description: >-
+            Collection amount. The decimal separator is the period character.
+            Thousands separator not applicable.
+        nomeBeneficiario:
+          type: string
+          pattern: ^[a-zA-Z0-9 ]{1,25}$
+          maxLength: 25
+          description: Beneficiary / recipient name
+        cidadeBeneficiario:
+          type: string
+          pattern: ^[a-zA-Z0-9 ]{1,15}$
+          maxLength: 15
+          description: >-
+            City where the transaction is made or city of the recipients bank
+            counter
+        saque:
+          type: string
+          default: '0'
+          enum:
+            - '0'
+            - '1'
+          description: >-
+            identify the static qrcode for withdrawal <br> 1 - this qr code
+            request is for the purpose of saque <br>0 - this qr code is not for
+            the withdrawal purpose and this will be default
+    BrazilStaticQRCodeResponse:
+      type: object
+      description: >-
+        Describes the QR Code Creation APIs response fields when user initiated
+        request is with country BR, payment method PIX and language Portuguese.
+      required:
+        - txid
+        - qrcode
+      properties:
+        txid:
+          type: string
+          pattern: ^[a-zA-Z0-9 ]{1,25}$
+          maxLength: 25
+          description: Identical to the one informed with input parameter
+        valor:
+          type: string
+          pattern: ^[0-9]{1,10}.[0-9][0-9]$
+          description: Collection amount, identical to that received
+        qrcode:
+          type: string
+          maxLength: 300
+          description: QR code string representation, EMV standard
+    BrazilstaticQRCodeErrorResponse:
+      type: object
+      description: >-
+        Describes the QR Code Creation APIs error response fields when user
+        initiated request is with country BR, payment method PIX and language
+        Portuguese.
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          maxLength: 77
+          description: >-
+            Reference URI that identifies the type of problem. According to RFC
+            7807.
+        title:
+          type: string
+          maxLength: 50
+          description: message for error.
+        status:
+          type: string
+          maxLength: 3
+          description: HTTP status code returned.
+        detail:
+          type: string
+          maxLength: 150
+          description: Complete description of the problem.
+        corelationId:
+          type: string
+          maxLength: 40
+          description: >-
+            unique id to which will allocate to every request when request come
+            to us.
+        violacoes:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/PortugeseErrorDetail'
+    PortugeseErrorDetail:
+      type: object
+      description: >-
+        Describes the reason for errors when user initiated request is with
+        country BR, payment method PIX and language Portuguese.
+      properties:
+        razao:
+          type: string
+          maxLength: 150
+          description: this field is used to describe the reason for failure.
+        propriedade:
+          type: string
+          maxLength: 30
+          description: this field is used to show above reason is for this Property name
+        valor:
+          type: string
+          maxLength: 12
+          description: Property value
+  parameters:
+    ClientId:
+      name: client_id
+      in: query
+      description: >-
+        Unique reference which was shared during CitiConnect API on-boarding
+        (ClientId-which used during oauth token generation)
+      required: true
+      schema:
+        type: string
+        example: 898918181818181aczta
+    CountryCode:
+      name: country_code
+      in: query
+      description: >-
+        a two-letter code (alpha-2) which is used to represent the country. This
+        country_code field is used to identify particular request to create QR
+        Code is for which country.
+      required: true
+      schema:
+        type: string
+        maxLength: 2
+        example: BR
+    ApiVersion:
+      name: api_version
+      in: query
+      description: >-
+        Users input of api version that is intended for their business purpose.
+        Please contact Implementation team during onboarding to know the current
+        default version.
+      schema:
+        type: string
+        example: '1.0'
+        maxLength: 3
+    PaymentMethod:
+      name: payment_method
+      in: query
+      description: >-
+        This field is used to identify method of payment used to initiate a
+        payment.
+      schema:
+        type: string
+        maxLength: 10
+        example: PIX
+    Language:
+      name: language
+      in: query
+      description: This field is used to mention language used in request body fields.
+      schema:
+        type: string
+        maxLength: 10
+        example: PT
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            paymentservices: Grant read-only access to payment services
+  responses:
+    CreatedResponse:
+      description: Created
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BrazilStaticQRCodeResponse'
+          examples:
+            CreatedResponseExample:
+              $ref: '#/components/examples/BrazilStaticQRCodeOKResponseExample'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            BadRequestExampleInPortugese:
+              $ref: '#/components/examples/BadRequestExampleInPortugese'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            UnauthorizedExampleInPortugese:
+              $ref: '#/components/examples/UnauthorizedExampleInPortugese'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            ForbiddenExampleInPortugese:
+              $ref: '#/components/examples/ForbiddenExampleInPortugese'
+    MethodNotAllowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            MethodNotAllowedExampleInPortugese:
+              $ref: '#/components/examples/MethodNotAllowedExampleInPortugese'
+    UnsupportedMediaType:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            UnsupportedMediaTypeExampleInPortugese:
+              $ref: '#/components/examples/UnsupportedMediaTypeExampleInPortugese'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            InternalServerErrorExampleInPortugese:
+              $ref: '#/components/examples/InternalServerErrorExampleInPortugese'
+    ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            ServiceUnavailableExampleInPortugese:
+              $ref: '#/components/examples/ServiceUnavailableExampleInPortugese'
+    GatewayTimeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            GatewayTimeoutExampleInPortugese:
+              $ref: '#/components/examples/GatewayTimeoutExampleInPortugese'
+  examples:
+    BrazilStaticQRCodeOKResponseExample:
+      value:
+        txid: QR00012346789079769986667
+        valor: '120.90'
+        qrcode: >-
+          00020126580014BR.GOV.BCB.PIX0136115d2b81-1744-4567-867d-ba2fdb47f53c5204000053039865406112.505802BR5925URBANIA
+    BadRequestExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/cobEstaticoOperacaoInvalida
+        title: cobranca invalida
+        status: 400
+        detail: >-
+          A requisição que busca criar uma cobrança para pagamento imediato
+          estático não respeita o schema ou está semanticamente errada
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+        violacoes:
+          - razao: O campo chave não respeita o schema
+            propriedade: cobestatico.chave
+    UnauthorizedExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 401
+        detail: >-
+          Requisição de participante autenticado que viola alguma regra de
+          autorização.
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+    ForbiddenExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: >-
+          Requisição de participante autenticado que viola alguma regra de
+          autorização.
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+    MethodNotAllowedExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/Metodoinvalido
+        title: Metodo invalido
+        status: 405
+        detail: Requisição enviada com metodo invalido
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+        violacoes:
+          - razao: Metodo Invalido
+    UnsupportedMediaTypeExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/midianaosuportada
+        title: Midia invalida
+        status: 415
+        detail: Requisição enviada com midia não suportada
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+        violacoes:
+          - razao: Midia não suportada
+    InternalServerErrorExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 500
+        detail: >-
+          Serviço não está disponível no momento. Serviço solicitado pode estar
+          em manutenção ou fora da janela de funcionamento
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+    ServiceUnavailableExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: >-
+          Serviço não está disponível no momento. Serviço solicitado pode estar
+          em manutenção ou fora da janela de funcionamento
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+    GatewayTimeoutExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 504
+        detail: >-
+          Serviço não está disponível no momento. Serviço solicitado pode estar
+          em manutenção ou fora da janela de funcionamento
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+    BrazilStaticQRCodeExample:
+      value:
+        txid: QR00012346789079769986667
+        chave: '12345678901234'
+        infoAdicionais: Valor com desconto
+        valor: '120.90'
+        nomeBeneficiario: John Heten
+        cidadeBeneficiario: Sao Paulo
+        saque: '1'

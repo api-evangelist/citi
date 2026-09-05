@@ -1,0 +1,266 @@
+openapi: 3.0.1
+info:
+  title: Authentication Services
+  description: >-
+    Citi uses access tokens to maintain stateless sessions for API requests that
+    are authenticated using your client ID & secret key. Use the Authentication
+    API to generate your access tokens. 
+
+
+    Once a successful server Authentication handshake is established over mTLS
+    and your API credentials are validated, the OAuth token will be generated
+    and returned to you in the response. This version of the Authentication
+    endpoint supports JSON. 
+
+
+    **NOTE:** The access token is provided through the HTTP Authorization header
+    `Authorization: Bearer {access token}` and is valid for 1800 seconds. When
+    the access token has expired, your application will need to generate another
+    access token. Any CitiConnect API call using an expired access token will
+    return the HTTP status code 401 Unauthorized. 
+        
+  version: 1.0.0
+  x-ibm-name: authenticationservices
+servers:
+  - url: >-
+      https://b2b.tts.icgservices.citi.com/citiconnect/openbanking/ukr/authenticationservices/v1
+    description: production gateway url
+  - url: >-
+      https://sanbox.tts.icgservices.citi.com/citiconnect/openbanking/ukr/authenticationservices/v1
+    description: sbox url
+tags:
+  - name: Authentication
+    description: Client Authentication.
+paths:
+  /oauth/token:
+    post:
+      tags:
+        - Authentication
+      summary: Request Access Token
+      description: >-
+        The OAuth token request authenticates your API message sent in either
+        JSON formats and responds with an access token. In compliance with RFC
+        6749, requests to this endpoint MUST use the HTTP POST method and the
+        request body MUST be URL-encoded (application/x-www-form-urlencoded).
+      operationId: authentication
+      parameters:
+        - name: Authorization
+          in: header
+          description: >
+            The authorization will include "Basic" followed by a single space,
+            followed by the Base64 encoded value of the APIm `client_id` &
+            `secret key`. 
+
+
+            In the above example, the `client_id` is
+            *1234a5b6-cde7-8f90-12gh-345ij6789012* & secret key is
+            *abcdefghijklmnop*.  
+
+
+            The Base64 value after appending by adding “:” in between will be
+            “MTIzNGE1YjYtY2RlNy04ZjkwLTEyZ2gtMzQ1aWo2Nzg5MDEyOmFiY2RlZmdoaWprbG1ub3A=”. 
+          required: true
+          schema:
+            type: string
+            format: byte
+      requestBody:
+        description: Request body for the OAuth Token.
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Request'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error_message'
+              example:
+                httpMessage: Bad Request
+                httpCode: '400'
+                moreInformation: please provide valid value for request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error_message'
+              example:
+                httpMessage: UNAUTHORIZED
+                httpCode: '401'
+                moreInformation: >-
+                  The server could not verify that you are authorized to access
+                  the URL
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error_message'
+              example:
+                httpMessage: NOT FOUND
+                httpCode: '404'
+                moreInformation: No resources match requested URI
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error_message'
+              example:
+                httpMessage: METHOD NOT ALLOWED
+                httpCode: '405'
+                moreInformation: The method is not allowed for the requested URL
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error_message'
+              example:
+                httpMessage: UNSUPPORTED MEDIA TYPE
+                httpCode: '415'
+                moreInformation: Unsupported Content-Type application/octet-stream
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error_message'
+              example:
+                httpMessage: Internal Server Error
+                httpCode: '500'
+                moreInformation: Internal Server Error
+      deprecated: false
+      security:
+        - BasicAuthentication: []
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    error_message:
+      description: >-
+        Error payload returned to the TPP when the token request cannot be
+        processed or authorized.
+      required:
+        - httpCode
+      title: ErrorMessage
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+          example: Bad Request
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: moreInformation
+          example: please provide valid value for request
+    Request:
+      type: object
+      description: >-
+        Form-encoded token request body sent by the TPP to obtain an OAuth
+        access token using client credentials.
+      required:
+        - grant_type
+        - scope
+      title: Request
+      properties:
+        grant_type:
+          type: string
+          title: grantType
+          description: >-
+            You must always pass 'client_credentials' in this field because Citi
+            only provides credentials-based authentication for API users.
+          enum:
+            - client_credentials
+        scope:
+          type: string
+          title: scope
+          description: This is the version scope of the authentication call.
+    Response:
+      required:
+        - access_token
+        - expires_in
+        - token_type
+      type: object
+      description: >-
+        Successful token response returned to the TPP, containing the bearer
+        token and its validity details.
+      title: Response
+      properties:
+        token_type:
+          type: string
+          description: Token type issued by the authorization server; value is "Bearer".
+          title: token_type
+          enum:
+            - Bearer
+        access_token:
+          type: string
+          description: >-
+            OAuth access token to be presented by the TPP in the Authorization
+            header for subsequent API requests.
+          title: access_token
+        expires_in:
+          type: integer
+          description: Lifetime of the access token in seconds from the time of issuance.
+          title: expires_in
+        scope:
+          type: string
+          title: scope
+          description: Scope associated with the issued access token.
+  securitySchemes:
+    BasicAuthentication:
+      type: http
+      description: >-
+        Username is the application's client_id and password is the
+        client_secret.
+      scheme: basic
+    clientIdHeader:
+      type: apiKey
+      name: X-IBM-Client-Id
+      in: header
+    clientSecretHeader:
+      type: apiKey
+      name: X-IBM-Client-Secret
+      in: header
+x-original-swagger-version: '2.0'
+x-ibm-configuration:
+  type: oauth
+  oauth2:
+    client-type: confidential
+    scopes:
+      /authenticationservices/v1: base path
+    grants:
+      - application
+      - implicit
+    authorization:
+      type: authenticated
+    identity-extraction:
+      type: basic
+    access-token:
+      ttl: 1800
+    revocation:
+      type: gateway
+    authentication:
+      x-ibm-authentication-url:
+        url: https://example.com/auth/url
+  enforced: true
+  testable: true
+  phase: realized
+  cors:
+    enabled: true

@@ -1,0 +1,951 @@
+openapi: 3.1.0
+info:
+  title: Account Statement Services
+  version: 1.0.0
+  description: >-
+    The Account Statement Services API offers you Blocks and Filters related
+    services, such as:<br>- POST Create Blocks and Filters<br>- PUT Create
+    Filters<br>- PATCH Update existing Blocks and Filters<br>- DELETE Delete
+    existing Blocks and Filters<br>- GET Retrive status of Blocks and Filters
+    request
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+servers:
+  - url: >-
+      https://tts.sit.apib2b.citi.com/citiconnect/sit5/accountstatementservices/v1
+    description: dev gateway url
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/accountstatementservices/v1
+    description: production gateway url
+  - url: >-
+      https://tts.sandbox.apib2b.citi.com/citiconnect/sb/accountstatementservices/v1
+    description: sbox url
+tags:
+  - name: Blocks & Filters
+    description: API services to provide Block & Filters in an account.
+security:
+  - clientCredentials:
+      - /authenticationservices/v1
+paths:
+  /blocksandfilters:
+    post:
+      tags:
+        - Blocks & Filters
+      summary: Block your account
+      description: >-
+        This endpoint allows the Merchant to create Block or Block & Filter on a
+        given account against incoming payment/ request where block refers to
+        restrict all parties and filter refers to restrict specific party. 
+
+        - Please save the respective block id or/and filter id that will be sent
+        in positive response which will be useful to carry out further
+        operations
+      operationId: Blocks
+      parameters:
+        - $ref: '#/components/parameters/Client-Id'
+        - $ref: '#/components/parameters/Idempotency-Id'
+        - $ref: '#/components/parameters/Country-Code'
+      requestBody:
+        description: Block request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Blocks-And-Filters-Create-Request'
+            examples:
+              Us-Blocks-Create-Request:
+                $ref: '#/components/examples/Us-Blocks-Create-Request-Example'
+              Us-Blocks-And-Filters-Create-Request:
+                $ref: >-
+                  #/components/examples/Us-Blocks-And-Filters-Create-Request-Example
+      responses:
+        '200':
+          description: OK
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blocks-And-Filters-Create-Response'
+              examples:
+                Us-Blocks-Create-Response:
+                  $ref: '#/components/examples/Us-Blocks-Create-Response-Example'
+                Us-Blocks-And-Filters-Create-Response:
+                  $ref: >-
+                    #/components/examples/Us-Blocks-And-Filters-Create-Response-Example
+        '400':
+          $ref: '#/components/responses/Blocks-And-Filters-Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - clientCredentials:
+            - /authenticationservices/v1
+  /blocksandfilters/{type}/{id}:
+    get:
+      tags:
+        - Blocks & Filters
+      summary: Get details of Block and Filters request.
+      description: >-
+        Retrieve details of Block and Filters request on an account. 
+
+        - For US ACH you can retrieve request details using country-code +
+        client_id + type + id
+      operationId: getBlockAndFiltersStatus
+      parameters:
+        - $ref: '#/components/parameters/Country-Code'
+        - $ref: '#/components/parameters/Client-Id'
+        - $ref: '#/components/parameters/Type'
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/Page_No'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+            Pagination-Metadata:
+              description: >-
+                This header contains a JSON object with details about the
+                response. The full schema is available in the
+                'Pagination-Metadata' schema section below
+              schema:
+                $ref: '#/components/schemas/Blocks-And-Filters-Pagination-Metadata'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blocks-And-Filters-Get-Response'
+              examples:
+                Us-Blocks-Get-Response:
+                  $ref: '#/components/examples/Us-Blocks-Get-Response-Example'
+                Us-Blocks-And-Filters-Get-Response:
+                  $ref: >-
+                    #/components/examples/Us-Blocks-And-Filters-Get-Response-Example
+        '400':
+          $ref: '#/components/responses/Blocks-And-Filters-Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - clientCredentials:
+            - /authenticationservices/v1
+    patch:
+      tags:
+        - Blocks & Filters
+      summary: Update an existing Block or Filter request.
+      description: >-
+        This endpoint allows the Merchant to update an existing block request
+        using Block or Filter ID.
+      operationId: updateBlockAndFilter
+      parameters:
+        - $ref: '#/components/parameters/Country-Code'
+        - $ref: '#/components/parameters/Client-Id'
+        - $ref: '#/components/parameters/Type'
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        description: Block Update Request.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Blocks-And-Filters-Update-Request'
+            examples:
+              Us-Blocks-Update-Request:
+                $ref: '#/components/examples/Us-Blocks-Update-Request-Example'
+              Us-Filters-Update-Request:
+                $ref: '#/components/examples/Us-Filters-Update-Request-Example'
+      responses:
+        '200':
+          description: OK
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blocks-And-Filters-Response'
+              examples:
+                Us-Blocks-Update-Response:
+                  $ref: '#/components/examples/Us-Blocks-Update-Response-Example'
+                Us-Filters-Update-Response:
+                  $ref: '#/components/examples/Us-Filters-Update-Response-Example'
+        '400':
+          $ref: '#/components/responses/Blocks-And-Filters-Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - clientCredentials:
+            - /authenticationservices/v1
+    delete:
+      tags:
+        - Blocks & Filters
+      summary: Delete an existing Block or Filter request.
+      description: >-
+        This endpoint allows the Merchant to delete an existing Block or Filter
+        request.
+      operationId: deleteBlockAndFilter
+      parameters:
+        - $ref: '#/components/parameters/Country-Code'
+        - $ref: '#/components/parameters/Client-Id'
+        - $ref: '#/components/parameters/Type'
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blocks-And-Filters-Response'
+              examples:
+                Us-Blocks-Delete-Response:
+                  $ref: '#/components/examples/Us-Blocks-Delete-Response-Example'
+                Us-Filters-Delete-Response:
+                  $ref: '#/components/examples/Us-Filters-Delete-Response-Example'
+        '400':
+          $ref: '#/components/responses/Blocks-And-Filters-Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - clientCredentials:
+            - /authenticationservices/v1
+  /blocks/{id}/filters:
+    put:
+      tags:
+        - Blocks & Filters
+      summary: Create a new filter request.
+      description: >-
+        This endpoint allows the Merchant to create a new filter request on
+        existing Block ID, where a filter will restrict specific party to send
+        incoming payment/ request.
+      operationId: createFilters
+      parameters:
+        - $ref: '#/components/parameters/Country-Code'
+        - $ref: '#/components/parameters/Client-Id'
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        description: Filters Create Request.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Filters-Create-Request'
+            examples:
+              Us-Filters-Create-Request:
+                $ref: '#/components/examples/Us-Filters-Create-Request-Example'
+      responses:
+        '200':
+          description: OK
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blocks-And-Filters-Create-Response'
+              examples:
+                Us-Filters-Create-Response:
+                  $ref: '#/components/examples/Us-Filters-Create-Response-Example'
+        '400':
+          $ref: '#/components/responses/Blocks-And-Filters-Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - clientCredentials:
+            - /authenticationservices/v1
+components:
+  parameters:
+    Client-Id:
+      in: query
+      name: client_id
+      required: true
+      schema:
+        type: string
+        title: Client Identifier
+      description: >-
+        Your unique ID. This is the same as the ID you used for OAuth token
+        generation. Citi shared this ID with you during your CitiConnect API
+        onboarding.
+      example: '54563213246'
+    Limit:
+      in: query
+      name: limit
+      description: The number of records to display per page.
+      schema:
+        default: 1000
+        maximum: 10000
+        minimum: 1
+        type: integer
+        title: Limit
+    Idempotency-Id:
+      name: Idempotency-Id
+      in: header
+      required: true
+      description: >-
+        Your unique identification for a POST request 
+         - Maximum length is 128. 
+        -  CitiConnect API responds with an error (HTTP status 4XX) if your POST
+        request idempotency identification value is a duplicate across a recent
+        history of idempotency identifications in Citi's database.
+      schema:
+        type: string
+        maxLength: 128
+        description: >-
+          Your unique identification for a POST request 
+           - Maximum length is 128. 
+          -  CitiConnect API responds with an error (HTTP status 4XX) if your
+          POST request idempotency identification value is a duplicate across a
+          recent history of idempotency identifications in Citi's database. 
+
+          - If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from
+          Citi to your POST request and you wish to retry, reinitiate your
+          request with the same idempotency identification to prevent accidental
+          duplicate payment.
+      example: a44cbb60-6de4-4edb-9a7a-123414bba3bb
+    Country-Code:
+      name: country-code
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+          - US
+      description: Country code
+      example: US
+    Id:
+      name: id
+      in: path
+      required: true
+      description: |-
+        Block or Filter ID 
+        - For PUT only Block ID is applicable
+      schema:
+        type: string
+        pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+      example: 921a9445-97df-4118-9a55-68d14667624c
+    Type:
+      name: type
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+          - BLOCK
+          - FILTER
+      description: Type
+      example: BLOCK
+    Page_No:
+      in: query
+      name: page_no
+      required: false
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+        maximum: 1000
+      description: Page number which client want to fetch.
+  schemas:
+    Blocks-And-Filters-Pagination-Metadata:
+      description: >-
+        <br> current_page: Current page number<br> total_pages: Total number of
+        pages available for this request<br> page_size: The number of records to
+        display per page<br> has_more: Any more messages or records expected
+      type: object
+      title: Pagination Metadata
+      properties:
+        current_page:
+          description: Current page number
+          type: integer
+          minimum: 1
+          maximum: 1000
+          example: 1
+          title: current_page
+        total_pages:
+          description: Total number of pages available for this request
+          type: integer
+          minimum: 1
+          maximum: 1000
+          example: 1
+          title: total_pages
+        page_size:
+          description: Number of records to display per page
+          type: integer
+          minimum: 1
+          maximum: 10000
+          example: 1
+          title: page_size
+        has_more:
+          description: Any more messages or records expected
+          type: boolean
+          example: true
+          title: has_more
+      example:
+        current_page: 1
+        total_pages: 10
+        page_size: 100
+        has_more: true
+    Error-Response:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the transaction.
+          title: Identification Reference
+          xml:
+            name: RefId
+        error_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+          title: The details of the error.
+          xml:
+            name: ErrorDetails
+    Error-Detail:
+      type: object
+      title: The details of the error.
+      xml:
+        name: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 200
+          description: More details about the issue.
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 350
+          description: Corrective action to be taken to resolve the issue.
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 8
+          description: System-generated unique code for the issue.
+          title: code
+          xml:
+            name: Code
+    Blocks-And-Filters-Create-Request:
+      title: Block And Filters Create Request
+      allOf:
+        - $ref: '#/components/schemas/Block-Details'
+        - type: object
+        - required:
+            - account_number
+            - payment_method
+            - type
+            - start_date
+          properties:
+            filters:
+              type: array
+              maxItems: 1
+              items:
+                $ref: '#/components/schemas/Filter-Request'
+    Blocks-And-Filters-Get-Response:
+      title: Block and Filters response
+      allOf:
+        - $ref: '#/components/schemas/Block-Details'
+        - type: object
+          properties:
+            id:
+              description: Block ID generated against a request
+              pattern: >-
+                ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+              type: string
+              example: 921a9445-97df-4118-9a55-68d14667624c
+              title: id
+            filters:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/Filter-Request'
+                  - type: object
+                  - required:
+                      - id
+                    properties:
+                      id:
+                        description: Filter ID generated against a request
+                        pattern: >-
+                          ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+                        type: string
+                        example: 921a9445-97df-4118-9a55-68d14667624c
+                        title: id
+    Block-Details:
+      title: Block Details
+      allOf:
+        - $ref: '#/components/schemas/Block-Update-Detail'
+        - type: object
+          properties:
+            account_number:
+              description: Merchant's VA Wallet number
+              maxLength: 35
+              minLength: 1
+              type: string
+              title: account_number
+              example: '123456'
+            payment_method:
+              description: Method specified by the merchant for the transaction
+              type: string
+              enum:
+                - ACH
+              example: ACH
+              title: payment_method
+    Filters-Create-Request:
+      title: Filters Create Request
+      type: array
+      maxItems: 1
+      minItems: 1
+      items:
+        $ref: '#/components/schemas/Filter-Request'
+    Filter-Request:
+      allOf:
+        - $ref: '#/components/schemas/Filter-Details'
+        - type: object
+        - required:
+            - sender_id
+            - start_date
+            - end_date
+            - amount_type
+            - amount
+          properties:
+            sender_id:
+              description: >-
+                Sender identifier of the sender party on which filter would be
+                applied
+              pattern: ^[A-Za-z0-9]{0,10}$
+              type: string
+              example: '1122334455'
+              title: sender_id
+            sender_name:
+              description: Sender name of the sender party on which filter would be applied
+              maxLength: 100
+              minLength: 1
+              type: string
+              example: Winston
+              title: sender_name
+    Blocks-And-Filters-Update-Request:
+      title: Block And Filters Update Request
+      allOf:
+        - $ref: '#/components/schemas/Block-Update-Detail'
+        - type: object
+          properties:
+            filter:
+              $ref: '#/components/schemas/Filter-Details'
+    Block-Update-Detail:
+      title: Block Update Detail
+      type: object
+      properties:
+        type:
+          description: Type of block
+          type: string
+          enum:
+            - CREDIT
+            - DEBIT
+            - CREDIT_AND_DEBIT
+          example: CREDIT
+          title: type
+        start_date:
+          description: Effective start date for the block in YYYY-MM-DD format
+          type: string
+          format: date
+          example: '2025-12-07'
+          title: start_date
+    Filter-Details:
+      title: Filter Details
+      type: object
+      properties:
+        start_date:
+          description: >-
+            Effective start date for the filter in YYYY-MM-DD format (should be
+            equal to or greater than current date)
+          type: string
+          format: date
+          example: '2025-12-07'
+          title: start_date
+        end_date:
+          description: >-
+            Effective end date for the filter in YYYY-MM-DD format (should be
+            equal to or greater than start date)
+          type: string
+          format: date
+          example: '2025-12-07'
+          title: end_date
+        amount_type:
+          description: Indicates if the amount is fixed or max
+          type: string
+          enum:
+            - FIXED
+            - MAX
+          example: FIXED
+          title: amount_type
+        amount:
+          description: Amount to be filtered from the customer's account
+          minimum: 0.01
+          maximum: 99999999.99
+          type: number
+          example: 1000
+          title: amount
+        sender_name:
+          description: Sender name of the sender party on which filter would be applied
+          maxLength: 100
+          minLength: 1
+          type: string
+          example: Winston
+          title: sender_name
+    Blocks-And-Filters-Create-Response:
+      title: Block and filters response
+      allOf:
+        - $ref: '#/components/schemas/Blocks-And-Filters-Response'
+        - type: object
+          properties:
+            filter:
+              $ref: '#/components/schemas/Filter-Ids'
+    Filter-Ids:
+      type: object
+      title: filter IDs
+      required:
+        - id
+      properties:
+        id:
+          type: array
+          maxItems: 1
+          items:
+            description: Filter IDs generated against a request
+            pattern: >-
+              ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+            type: string
+            example: 921a9445-97df-4118-9a55-68d14667624c
+            title: id
+    Blocks-And-Filters-Response:
+      type: object
+      title: blocks response
+      required:
+        - id
+        - status
+        - description
+      properties:
+        id:
+          description: Block/Filter ID generated against a request
+          pattern: >-
+            ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          type: string
+          example: 921a9445-97df-4118-9a55-68d14667624c
+          title: id
+        status:
+          description: Request Status
+          type: string
+          example: SUCCESS
+          title: status
+        description:
+          type: string
+          maxLength: 500
+          description: Staus description
+          example: The request has successfully been created
+          title: description
+  responses:
+    Blocks-And-Filters-Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Blocks-And-Filters-Bad-Request:
+              $ref: '#/components/examples/Blocks-And-Filters-Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            UnsupportedMediaType:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            UnsupportedMediaType:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+  examples:
+    Blocks-And-Filters-Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+          - code: VC00013
+            issue: >-
+              invalid value provided for property country-code, which is not
+              acceptable enum value
+            action: please provide valid value for property country-code
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - code: CC00007
+            issue: User not authorized for this functionality.
+            action: Please use valid credentials to access this functionality.
+    Not-Found-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+          - code: CC00006
+            issue: Resource that you are searching is not found.
+            action: Please use valid resource details.
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - code: CC00007
+            issue: Method Not Allowed.
+            action: Please use a valid method type.
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - code: CC00004
+            issue: Unable to serve your request at this time.
+            action: Please contact support.
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - code: CC00002
+            issue: Media type is not supported.
+            action: Please use valid content-type in the header.
+    Idempotency-Id-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: Idempotency-Id provided is currently being used in another request
+            action: please do not repeat the same request again
+            code: VC00016
+    Us-Blocks-Create-Request-Example:
+      value:
+        account_number: '1234567890'
+        payment_method: ACH
+        type: CREDIT
+        start_date: '2025-01-01'
+    Us-Blocks-And-Filters-Create-Request-Example:
+      value:
+        account_number: '1234567890'
+        payment_method: ACH
+        type: CREDIT
+        start_date: '2025-01-01'
+        filters:
+          - sender_id: ABC1234567
+            start_date: '2025-01-01'
+            end_date: '2025-01-31'
+            amount_type: FIXED
+            amount: 123.12
+    Us-Blocks-Create-Response-Example:
+      value:
+        id: 921a9445-97df-4118-9a55-68d14667624c
+        status: SUCCESS
+        description: The request has successfully been created
+    Us-Blocks-And-Filters-Create-Response-Example:
+      value:
+        id: 921a9445-97df-4118-9a55-68d14667624c
+        filter:
+          id:
+            - 921a9445-97df-4118-9a55-68d14667624a
+        status: SUCCESS
+        description: The request has successfully been created
+    Us-Blocks-Get-Response-Example:
+      value:
+        id: 921a9445-97df-4118-9a55-68d14667624c
+        account_number: '1234567890'
+        payment_method: ACH
+        type: CREDIT
+        start_date: '2025-01-01'
+    Us-Blocks-And-Filters-Get-Response-Example:
+      value:
+        id: 921a9445-97df-4118-9a55-68d14667624c
+        account_number: '1234567890'
+        payment_method: ACH
+        type: CREDIT
+        start_date: '2025-01-01'
+        filters:
+          - sender_id: ABC1234567
+            start_date: '2025-01-01'
+            end_date: '2025-01-31'
+            amount_type: FIXED
+            amount: 123.12
+            id: 921a9445-97df-4118-9a55-68d14667624a
+    Us-Filters-Create-Request-Example:
+      value:
+        - sender_id: ABC1234567
+          start_date: '2025-01-01'
+          end_date: '2025-01-31'
+          amount_type: FIXED
+          amount: 123.12
+    Us-Blocks-Update-Request-Example:
+      value:
+        type: DEBIT
+        start_date: '2025-07-01'
+    Us-Filters-Update-Request-Example:
+      value:
+        filter:
+          amount_type: MAX
+          amount: 500
+    Us-Blocks-Update-Response-Example:
+      value:
+        id: 921a9445-97df-4118-9a55-68d14667624c
+        status: SUCCESS
+        description: The request has successfully been updated
+    Us-Filters-Update-Response-Example:
+      value:
+        id: 921a9445-97df-4118-9a55-68d14667624a
+        status: SUCCESS
+        description: The request has successfully been updated
+    Us-Filters-Create-Response-Example:
+      value:
+        id: 921a9445-97df-4118-9a55-68d14667624c
+        filter:
+          id:
+            - 921a9445-97df-4118-9a55-68d14667624a
+        status: SUCCESS
+        description: The request has successfully been created
+    Us-Blocks-Delete-Response-Example:
+      value:
+        id: 921a9445-97df-4118-9a55-68d14667624c
+        status: SUCCESS
+        description: The request has successfully been deleted
+    Us-Filters-Delete-Response-Example:
+      value:
+        id: 921a9445-97df-4118-9a55-68d14667624a
+        status: SUCCESS
+        description: The request has successfully been deleted
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Access to Blocks and Filters functionalities

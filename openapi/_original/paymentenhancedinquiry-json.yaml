@@ -1,0 +1,1282 @@
+openapi: 3.0.1
+info:
+  title: Enhanced Payment Status Inquiry
+  description: >-
+    CitiConnect® Payment Status Inquiry provides access to payment status and
+    next steps in the payment workflow in real-time, providing increased
+    visibility and control.
+
+
+
+    ## Transaction Inquiry Parameters: `EndToEndID`, `UETR`, and
+    `transaction_flow_indicator`
+
+
+    When querying for specific transactions, clients can utilize either the
+    `EndToEndID` or the `UETR` (Unique End-to-End Transaction Reference) as
+    primary identifiers. Additionally, the `transaction_flow_indicator`
+    parameter can be specified to distinguish between debit (`DR`) and credit
+    (`CR`) transactions.
+
+
+    ### Key Usage Guidelines:
+
+
+    *   **Primary Identifiers:** You should specify either `EndToEndID` or
+    `UETR` to identify the transaction you are inquiring about.
+
+    *   **Transaction Flow Indicator:** The `transaction_flow_indicator`
+    parameter accepts two values:
+        *   `"DR"`: To inquire about a debit transaction.
+        *   `"CR"`: To inquire about a credit transaction.
+    It is highly recommended to explicitly use this indicator to ensure the
+    retrieval of the correct transaction type.
+
+
+    ### Default Behavior (When `transaction_flow_indicator` is Omitted):
+
+
+    1.  **`EndToEndID` Only:** If you provide only the `EndToEndID` and do not
+    specify the `transaction_flow_indicator`, the API will, by default, filter
+    for and return **debit transactions** associated with that `EndToEndID`.
+
+    2.  **`UETR` Only:** If you provide only the `UETR` and do not specify the
+    `transaction_flow_indicator`, the API will, by default, filter for and
+    return **debit transactions** associated with that `UETR`.
+
+
+    ### Recommendation for Unique Record Retrieval:
+
+
+    To guarantee the retrieval of a unique transaction record, it is strongly
+    recommended to use the **`UETR` (Unique End-to-End Transaction Reference)**.
+    The `EndToEndID`, while useful, may in certain circumstances be associated
+    with multiple transaction records, potentially leading to duplicate results.
+    Therefore, for precise and unique transaction identification, `UETR` is the
+    preferred parameter.
+
+
+    Additionally, to prevent ambiguity and ensure that you always retrieve the
+    intended transaction type (debit or credit), always include the
+    `transaction_flow_indicator` parameter with either `"DR"` or `"CR"` when
+    performing a transaction inquiry.
+
+
+    Download our SDKs:
+
+
+    * [Python
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=python&apiTitle=all&isClientSecReq=true)
+
+    * [Java
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=java&apiTitle=all&isClientSecReq=true)
+
+    * [.Net
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=dotnet&apiTitle=all&isClientSecReq=true)
+
+    * [Ruby
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ruby&apiTitle=all&isClientSecReq=true)
+
+    * [NodeJS
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=nodejs&apiTitle=all&isClientSecReq=true)
+
+    * [Go
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=go&apiTitle=all&isClientSecReq=true)
+
+    * [CLI Tool
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ccapi-cli&apiTitle=all&isClientSecReq=true)
+
+
+    Note: You must be logged in to download the SDKs.
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 3.0.3
+servers:
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/paymentservices/v3
+  - url: 'https://tts.sandbox.apib2b.citi.com/citiconnect/sb/paymentservices/v3 '
+security:
+  - clientCredentials: []
+paths:
+  /payment/enhancedinquiry:
+    post:
+      summary: Payment Status Inquiry
+      description: >-
+        This API returns details of your transactions for both Incoming and
+        Outgoing payments based on specified parameters.<br><br><font
+        size='2'><b>Content-Type</b> : Supports application/json.
+      operationId: paymentStatusInquiry
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: >-
+            Oauth token used to authenticate the user. This token is short
+            lived, so make sure valid token used.
+          required: true
+          schema:
+            type: string
+        - name: Accept
+          in: header
+          description: >-
+            This header represents the format in which the response output is
+            needed. I.e. Input will be application/json;format=PSRJ03
+          required: true
+          schema:
+            type: string
+          example: application/json;format=PSRJ03
+        - name: Content-type
+          in: header
+          description: Specify 'application/json' as the response type.
+          required: true
+          schema:
+            type: string
+          example: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnhancedRequest'
+            examples:
+              Inquiry-Request-Example-EndtoEndId:
+                $ref: '#/components/examples/Inquiry-Request-Example-EndtoEndId'
+              Inquiry-Request-Example-UETR:
+                $ref: '#/components/examples/Inquiry-Request-Example-UETR'
+              Inquiry-Request-Example-EndtoEndId-Transaction-Flow-Indicator:
+                $ref: >-
+                  #/components/examples/Inquiry-Request-Example-EndtoEndId-Transaction-Flow-Indicator
+              Inquiry-Request-Example-UETR-Transaction-Flow-Indicator:
+                $ref: >-
+                  #/components/examples/Inquiry-Request-Example-UETR-Transaction-Flow-Indicator
+        required: true
+      responses:
+        '200':
+          description: OK. successful operation response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+              examples:
+                Inquiry-Response-Example:
+                  $ref: '#/components/examples/Inquiry-Response-Example'
+                Inquiry-Response-Return-Example:
+                  $ref: '#/components/examples/Inquiry-Response-Return-Example'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+              example:
+                errors:
+                  - action: >-
+                      Resend request with valid Transaction flow indicator,
+                      Indicator should be CR or DR.
+                    issue: Invalid Transaction flow indicator
+                  - action: Resend request with valid UETR.
+                    issue: UETR cannot be empty or invalid format
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response'
+              example:
+                httpCode: '401'
+                httpMessage: Unauthorized
+                moreInformation: >-
+                  This server could not verify that you are authorized to access
+                  the URL
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response'
+              example:
+                httpCode: '404'
+                httpMessage: Not Found
+                moreInformation: No resources match requested URI
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response'
+              example:
+                httpCode: '405'
+                httpMessage: Method Not Allowed
+                moreInformation: The method is not allowed for the requested URL
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response'
+              example:
+                httpCode: '415'
+                httpMessage: Unsupported Media Type
+                moreInformation: Unsupported Content-Type
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response'
+              example:
+                httpCode: '429'
+                httpMessage: Too Many Requests
+                moreInformation: Rate Limit exceeded
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+              example:
+                errors:
+                  - action: Check the service of API.
+                    issue: Internal Server Error
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+              example:
+                errors:
+                  - action: Please try again later/ after some time.
+                    issue: Service Unavailable
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+              example:
+                errors:
+                  - action: Look for server connectivity issues.
+                    issue: Gateway timeout issue
+      security:
+        - clientCredentials: []
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    error_detail:
+      type: object
+      properties:
+        action:
+          maxLength: 150
+          minLength: 1
+          type: string
+          description: correction action needs to be done
+        issue:
+          maxLength: 150
+          minLength: 1
+          type: string
+          description: more details about the issue
+    errors:
+      type: object
+      properties:
+        error:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/error_detail'
+    Gateway-Error-Response:
+      type: object
+      title: GatewayErrorResponse
+      xml:
+        name: GatewayErrorResponse
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: http_code
+          example: '400'
+          xml:
+            name: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: http_message
+          example: Bad Request
+          xml:
+            name: httpMessage
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: more_information
+          example: please provide valid value for request
+          xml:
+            name: moreInformation
+    EnhancedRequest:
+      type: object
+      properties:
+        uetr:
+          maxLength: 105
+          minLength: 1
+          pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          type: string
+          description: >-
+            Input UETR number. Unique EndtoEnd Transaction Reference
+            identification assigned by the initiating party or payment
+            processing bank to uniquely identify the transaction. 36 characters,
+            made up to 32 hexadecimal characters, shown in five parts divided by
+            hyphens/dashes as follows - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
+            Please provide either of uetr or end_to_end_identification.
+          xml:
+            name: UETR
+        end_to_end_identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Unique identification assigned by the initiating party to clearly
+            identify the transaction. This Identification is passed on,
+            unchanged, throughout the entire end-to-end chain.   Please provide
+            either of uetr or end_to_end_identification.
+          xml:
+            name: endToEndId
+        transaction_flow_indicator:
+          type: string
+          description: >-
+            This value indicates whether the transaction is a Credit or debit
+            with the values CR or DR respectively. For Debit Transaction
+            inquiry, this input is not required as by default Sytem will
+            consider the query to be Debit.  However for Credit Transaction
+            inquiry this must be inputted as CR. Debit account number should be
+            specified for outgoing transaction.Credit account number should be
+            specified for incoming transaction
+          xml:
+            name: txnFlowInd
+    TransactionResponse:
+      required:
+        - created_date_time
+      type: object
+      properties:
+        created_date_time:
+          $ref: '#/components/schemas/ISODateTime'
+        transactions:
+          type: array
+          description: >-
+            Information about a each transaction. It is repeated as many times
+            as there are transactions to be returned.
+          items:
+            $ref: '#/components/schemas/PaymentTransaction'
+    PaymentTransaction:
+      required:
+        - confirmed_amount
+        - creditor
+        - creditor_account
+        - creditor_agent
+        - debtor
+        - debtor_account
+        - debtor_agent
+        - instructed_amount
+        - payment_event
+        - service_type_indicator
+        - transaction_status
+        - uetr
+      type: object
+      properties:
+        uetr:
+          allOf:
+            - $ref: '#/components/schemas/UUIDv4Identifier'
+            - description: >-
+                string of unique characters attached to payment
+                messages,designed to provide complete transparency for all
+                parties in a payment. It identifies the payment resource.
+        end_to_end_identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Unique identification assigned by the initiating party to
+            unambiguously identify the transaction
+        instruction_identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Contains Payer Company's Transaction ID. Its a Unique identification
+            as assigned by an instructing party for an instructed party to
+            unambiguously identify the instruction
+        account_servicer_reference:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            It contains Citi Transaction Reference Number. Its Internal Citi's
+            product processors's reference number to track the transaction
+        clearing_system_reference:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Information used to identify a member within a clearing
+            system.Contain FMI ISO name code, FMI Reference number.eg -
+            FDW/20200102B1Q1234C123456
+        service_type_indicator:
+          maxLength: 3
+          minLength: 3
+          type: string
+          description: >-
+            It indicates whether the transaction is credit or debit. Possible
+            values for credit 007 and for debit 003.
+        transaction_status:
+          type: object
+          properties:
+            status:
+              type: string
+              description: >-
+                Specifies the status of a transaction, in a coded form. Possible
+                Values - PDNG/ACCP/ACSC/ACSP/ACCC/RJCT. <br><br>ACCC (Accepted
+                Credit Settlement Completed). Settlement on the creditors
+                account has been completed <br><br> ACSC (Accepted Settlement
+                Completed), Settlement on the debtors account has been completed
+                <br><br> ACSP (Accepted Settlement In Process), All preceding
+                checks such as technical validation and customer profile were
+                successful and therefore the payment initiation has been
+                accepted for execution <br><br>PDNG (Pending), Payment or
+                individual transaction included in the payment is pending.
+                Further checks and status update will be performed <br><br>RJCT
+                (Rejected), Payment initiation or individual transaction
+                included in the payment initiation has been rejected
+              enum:
+                - PDNG
+                - ACCP
+                - ACSC
+                - ACSP
+                - ACCC
+                - RJCT
+            status_reason_information:
+              type: array
+              description: >-
+                Information about a each transaction. It is repeated as many
+                times as there are transactions to be returned.
+              items:
+                $ref: '#/components/schemas/StatusReasonInformation'
+          description: >-
+            Indicates the payment transaction status and optionally the reason
+            for that status.
+        event_time:
+          description: >-
+            Time(format YYYY-MM-DDThh:mm:ss.sssZ) when the transaction had taken
+            place
+          allOf:
+            - $ref: '#/components/schemas/ISODateTime'
+        originator:
+          maxLength: 35
+          minLength: 1
+          pattern: ^[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}$
+          type: string
+          description: >-
+            Code allocated to a financial or non-financial institution by  the
+            ISO 9362 Registration Authority, as described in ISO 9362 2014
+            Banking Banking telecommunication messages - Business identifier
+            code (BIC)
+        instructed_amount:
+          type: object
+          description: >-
+            A number of monetary units specified in an active or a historic
+            currency where the unit of currency is explicit and compliant with
+            ISO 4217
+          allOf:
+            - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        confirmed_amount:
+          required:
+            - amount
+          type: object
+          properties:
+            amount:
+              type: string
+              description: >-
+                Its a Final confirmed amount after dedcution of charges.A number
+                of monetary units specified in an active or a historic currency
+                where the unit of currency is explicit and compliant with iso
+                4217.
+            currency:
+              pattern: ^[A-Z]{3,3}$
+              type: string
+              description: >-
+                Its a Final Confirmed currency. A code allocated to a currency
+                by a Maintenance Agency under an international identification
+                scheme, as described in the latest edition of the international
+                standard ISO 4217
+          description: >-
+            A number of monetary units specified in an active or a historic
+            currency where the unit of currency is explicit and compliant with
+            ISO 4217
+        request_execution_date:
+          type: object
+          description: >-
+            Date at which the initiating party requests the clearing agent to
+            process the payment.  
+          allOf:
+            - $ref: '#/components/schemas/ISODate'
+        debtor:
+          type: object
+          description: Party that owes an amount of money to the (ultimate) creditor.
+          allOf:
+            - $ref: '#/components/schemas/PartyIdentification'
+        debtor_account:
+          type: object
+          description: >-
+            Unambiguous identification of the account of the debtor to which a
+            debit entry will be made as a result of the transaction
+          allOf:
+            - $ref: '#/components/schemas/CashAccount'
+        debtor_agent:
+          type: object
+          description: Financial institution servicing an account for the debtor.
+          allOf:
+            - $ref: '#/components/schemas/PartyAgent'
+        creditor:
+          type: object
+          description: Creditor is the Party to which an amount of money is due.
+          allOf:
+            - $ref: '#/components/schemas/PartyIdentificationCreditor'
+        creditor_account:
+          type: object
+          description: >-
+            Unambiguous identification of the account of the creditor to which a
+            credit entry will be posted as a result of the payment transaction.
+          allOf:
+            - $ref: '#/components/schemas/CashAccount'
+        creditor_agent:
+          type: object
+          description: Financial institution servicing an account for the creditor.
+          allOf:
+            - $ref: '#/components/schemas/PartyAgent'
+        unstructured_remittance_information:
+          type: string
+          description: >-
+            Contains Remittance Information or Payment details. Information
+            supplied to enable the matching/reconciliation of an entry with the
+            items that the payment is intended to settle, such as commercial
+            invoices in an accounts' receivable system, in a structured form.
+        payment_event:
+          type: array
+          description: >-
+            Information about an event which is a payment message or status
+            confirmation update. It is repeated as many times as there are
+            events to be returned.
+          items:
+            $ref: '#/components/schemas/PaymentEventDetail'
+      description: Contains the details on the payment transaction.
+    StatusReasonInformation:
+      required:
+        - reason
+      type: object
+      properties:
+        reason:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            specifies the status reason code. Value like MS03, AC01 (will be
+            populated only in case of rejection/returns at debit side)
+        reason_description:
+          type: string
+          description: >-
+            specifies the status reason description.Details about the payment
+            information.
+        type:
+          type: string
+          description: >-
+            Describe the type. Value like RETN (will be populated only in case
+            of rejection/returns at debit side)
+          items:
+            $ref: '#/components/schemas/Max105Text'
+    Max105Text:
+      maxLength: 105
+      type: string
+    AddtlRemInf:
+      type: object
+      properties:
+        confidential:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Indicates whether the confidential by Yes or No
+        credit_virtual_account:
+          type: string
+          description: >-
+            a system generated unique account number which is based on logic and
+            masks the original account number
+        debit_virtual_account:
+          type: string
+          description: >-
+            a system generated unique account number which is based on logic and
+            masks the original account number'
+        payment_contract:
+          type: string
+          description: >-
+            A payment agreement contract is a legally binding document between
+            two parties � the lender and the borrower, this include info how
+            payments will be made
+        payment_method:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: The way one pays for a transaction - ACH, Book Transfer, etc.
+        return_account:
+          maxLength: 35
+          type: string
+          description: >-
+            Account number which is dedicated to track all transactions for
+            returns
+        return_amount:
+          type: string
+          description: >-
+            Return Amount of money to be moved between the debtor and creditor,
+            before deduction of charges, expressed in the currency as ordered by
+            the initiating party.
+        return_charge_amount:
+          type: string
+          description: Transaction charges to be paid by the charge bearer during return
+        return_charge_currency:
+          type: string
+          description: >-
+            A code allocated to a currency by a Maintenance Agency under an
+            international identification scheme, as described in the latest
+            edition of the international standard ISO 4217 Codes for the
+            representation of currencies and funds
+        return_contract:
+          type: string
+          description: >-
+            A return payment agreement contract is a legally binding document
+            between two parties � the lender and the borrower, this include info
+            how return payments will be made
+        return_currency:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            A code allocated to a currency for return by a Maintenance Agency
+            under an international identification scheme, as described in the
+            latest edition of the international standard ISO 4217 Codes for the
+            representation of currencies and funds
+        return_exchange_rate:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: "specifies the factor used to convert an amount from one currency into another. this reflects the price at which one currency was bought with another currency.\r\n\r\nusage: exchangerate expresses the ratio between unitcurrency and quotedcurrency (exchangerate = unitcurrency/quotedcurrency)."
+        return_source_currency:
+          type: string
+          description: >-
+            A code allocated to a currency by a Maintenance Agency under an
+            international identification scheme, as described in the latest
+            edition of the international standard ISO 4217 Codes for the
+            representation of currencies and funds
+        return_created_date_time:
+          type: string
+          format: date-time
+          description: Return created date time
+        return_processed_date_time:
+          type: string
+          format: date-time
+          description: Return processed date time
+        other_identification:
+          type: array
+          description: Other information related to return or remittance
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                maxLength: 4
+                description: >
+                  To indicate any additional remittance information related to
+                  transaction, e.g. return identification reference or modified
+                  account number
+              value:
+                type: string
+                maxLength: 140
+                description: >
+                  To indicate any additional remittance information related to
+                  transaction, e.g. return identification reference or modified
+                  account number
+        return_target_currency:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            A code allocated to a currency by a Maintenance Agency under an
+            international identification scheme, as described in the latest
+            edition of the international standard ISO 4217 Codes for the
+            representation of currencies and funds
+    PaymentEventDetail:
+      type: object
+      properties:
+        additional_remittance_information:
+          type: object
+          description: >-
+            Information supplied to enable the matching of an entry with the
+            items that the transfer is intended to settle, such as commercial
+            invoices in an accounts' receivable system.
+          allOf:
+            - $ref: '#/components/schemas/AddtlRemInf'
+        charge_amount:
+          type: object
+          description: >-
+            A number of monetary units specified in an active or a historic
+            currency where the unit of currency is explicit and compliant with
+            ISO 4217.
+          allOf:
+            - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        charge_bearer:
+          type: string
+          description: >-
+            Specifies which party/parties will bear the charges associate with
+            the processing of the payment transaction. Charge bearer details
+            DEBT/CRED/SHAR/SLEV. DEBT - All transaction charges are to be borne
+            by the debtor. CRED - All transaction charges are to be borne by the
+            creditor. SHAR - In a credit transfer context, means that
+            transaction charges on the sender side are to be borne by the
+            debtor, transaction charges on the receiver side are to be borne by
+            the creditor. In a direct debit context, means that transaction
+            charges on the sender side are to be borne by the creditor,
+            transaction charges on the receiver side are to be borne by the
+            debtor. SLEV - Charges are to be applied following the rules agreed
+            in the service level and/or scheme.
+          enum:
+            - DEBT
+            - CRED
+            - SHAR
+            - SLEV
+        date_time:
+          description: >-
+            Time(format YYYY-MM-DDThh:mm:ss.sssZ) when this particular instance
+            of the payment is captured in SWIFT GPI
+          allOf:
+            - $ref: '#/components/schemas/ISODateTime'
+        foreign_exchange_details:
+          type: object
+          description: >-
+            Contains the set of elements used to provide details of the currency
+            exchange
+          allOf:
+            - $ref: '#/components/schemas/CurrencyExchange'
+        from:
+          description: ' BIC of the source bank. Code allocated to a financial or non-financial institution by the ISO 9362 Registration Authority, as described in ISO 9362: 2014'
+          allOf:
+            - $ref: '#/components/schemas/AnyBICIdentifier'
+        to:
+          description: >-
+            BIC of the destination bank. Code allocated to a financial or
+            non-financial institution by the ISO 9362 Registration Authority, as
+            described in ISO 9362: 2014
+          allOf:
+            - $ref: '#/components/schemas/AnyBICIdentifier'
+      description: "This groups the information of an event, namely of a payment message or status confirmation update. \r\nUsage:\r\nIt is repeated as many times as there are events to be returned."
+    CurrencyExchange:
+      maxLength: 70
+      type: object
+      properties:
+        exchange_rate:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: "Specifies the factor used to convert an amount from one currency into another. This reflects the price at which one currency was bought with another currency.\r\n\r\nUsage: ExchangeRate expresses the ratio between UnitCurrency and QuotedCurrency (ExchangeRate = UnitCurrency/QuotedCurrency)."
+        source_currency:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: >-
+            Its the source currency. A code allocated to a currency by a
+            Maintenance Agency under an international identification scheme, as
+            described in the latest edition of the international standard ISO
+            4217 Codes for the representation of currencies and funds
+        target_currency:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Its the target currency A code allocated to a currency by a
+            Maintenance Agency under an international identification scheme, as
+            described in the latest edition of the international standard ISO
+            4217 Codes for the representation of currencies and funds
+      description: >-
+        Contains the set of elements used to provide details of the currency
+        exchange.
+    PartyAgent:
+      type: object
+      properties:
+        any_bic:
+          description: >-
+            Code allocated to a financial institution or non financial
+            institution by the ISO 9362 Registration Authority as described in
+            ISO 9362 Banking - Banking telecommunication messages - Business
+            identifier code (BIC)
+          allOf:
+            - $ref: '#/components/schemas/AnyBICIdentifier'
+        branch_id:
+          maxLength: 35
+          type: string
+          description: >-
+            Identifies a specific branch of a financial institution.It Contains
+            the Party's accout branch number
+        clearing_code:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Identification of a clearing system, in a coded form as published in
+            an external list.Routing Code of debtor bank (Other Bank) for Debtor
+            OR beneficiary bank (Citi Bank) for Creditor - if Non BIC
+    CashAccount:
+      required:
+        - identification
+      type: object
+      properties:
+        identification:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/AccountIdentification47Choice'
+      description: Provides the details to identify an account.
+    AccountIdentification47Choice:
+      type: object
+      properties:
+        iban:
+          type: object
+          description: >-
+            International Bank Account Number (IBAN) - identifier used
+            internationally by financial institutions to uniquely identify the
+            account of a customer
+          allOf:
+            - $ref: '#/components/schemas/IBANIdentifier'
+        identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            It is assigned for making a payment to an account that doesn't have
+            an IBAN
+      description: >-
+        Specifies the unique identification of an account as assigned by the
+        account servicer.
+    IBANIdentifier:
+      pattern: ^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$
+      type: string
+      description: >-
+        An identifier used internationally by financial institutions to uniquely
+        identify the account of a customer at a financial institution, as
+        described in the latest edition of the international standard ISO 13616
+        - 2007 - Banking and related financial services - International Bank
+        Account Number (IBAN).
+    ISODate:
+      pattern: >-
+        ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+      type: string
+      description: >-
+        A particular point in the progression of time in a calendar year
+        expressed in the YYYY-MM-DD format. This representation is defined in
+        "XML Schema Part 2: Datatypes Second Edition - W3C Recommendation 28
+        October 2004" which is aligned with ISO 8601.
+    UUIDv4Identifier:
+      maxLength: 105
+      minLength: 1
+      pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+      type: string
+      description: >-
+        Universally Unique IDentifier (UUID) version 4, as described in IETC RFC
+        4122 "Universally Unique IDentifier (UUID) URN Namespace".
+    PartyIdentification:
+      type: object
+      properties:
+        address_line_1:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_2:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_3:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_4:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_5:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_6:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_7:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        any_bic:
+          description: >-
+            Code allocated to a financial institution or non financial
+            institution by the ISO 9362 Registration Authority as described in
+            ISO 9362 Banking - Banking telecommunication messages - Business
+            identifier code (BIC).
+          allOf:
+            - $ref: '#/components/schemas/AnyBICIdentifier'
+        country:
+          pattern: '[A-Z]{2,2}'
+          type: string
+          description: Nation with its own government.
+        country_sub_division:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Identifies a subdivision of a country such as state, region, county '
+        identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Other identification maintained apart from BIC.
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: >-
+            Name by which a party is known and which is usually used to identify
+            that party.
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: >-
+            Identifier consisting of a group of letters and/or numbers that is
+            added to a postal address to assist the sorting of mail.
+        town:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Name of a built-up area, with defined boundaries, and a local
+            government.Its a Debtors Town Name.
+      description: Specifies the identification of a person or an organisation.
+    PartyIdentificationCreditor:
+      type: object
+      properties:
+        address_line_1:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_2:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_3:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_4:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_5:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_6:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        address_line_7:
+          type: string
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+        any_bic:
+          description: >-
+            Code allocated to a financial institution or non financial
+            institution by the ISO 9362 Registration Authority as described in
+            ISO 9362 Banking - Banking telecommunication messages - Business
+            identifier code (BIC).
+          allOf:
+            - $ref: '#/components/schemas/AnyBICIdentifier'
+        country:
+          pattern: '[A-Z]{2,2}'
+          type: string
+          description: Nation with its own government.
+        country_sub_division:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Identifies a subdivision of a country such as state, region, county '
+        identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Other identification maintained apart from BIC.
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: >-
+            Name by which a party is known and which is usually used to identify
+            that party.
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: >-
+            Identifier consisting of a group of letters and/or numbers that is
+            added to a postal address to assist the sorting of mail.
+        town:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: >-
+            Name of a built-up area, with defined boundaries, and a local
+            government.Its a Debtors Town Name.
+      description: Specifies the identification of a person or an organisation.
+    ActiveOrHistoricCurrencyAndAmount:
+      required:
+        - amount
+        - currency
+      type: object
+      properties:
+        amount:
+          type: string
+          description: >-
+            a number of monetary units specified in an active or a historic
+            currency where the unit of currency is explicit and compliant with
+            iso 4217.
+        currency:
+          pattern: ^[A-Z]{3,3}$
+          type: string
+          description: >-
+            A code allocated to a currency by a Maintenance Agency under an
+            international identification scheme, as described in the latest
+            edition of the international standard ISO 4217
+      description: >-
+        A number of monetary units specified in an active or a historic currency
+        where the unit of currency is explicit and compliant with ISO 4217.
+    AnyBICIdentifier:
+      pattern: ^[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}$
+      type: string
+      description: >-
+        Code allocated to a financial or non-financial institution by the ISO
+        9362 Registration Authority, as described in ISO 9362: 2014 - "Banking -
+        Banking telecommunication messages - Business identifier code (BIC)".
+    ISODateTime:
+      pattern: >-
+        ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.[0-9]+)?(?:Z|[+-][01]\d:[0-5]\d)?$
+      type: string
+      description: >-
+        Date & time(format YYYY-MM-DDThh:mm:ss.sssZ) when this particular of
+        transaction status is captured. A particular point in the progression of
+        time defined by a mandatory date and a mandatory time component,
+        expressed in either UTC time format (YYYY-MM-DDThh:mm:ss.sssZ), local
+        time with UTC offset format (YYYY-MM-DDThh:mm:ss.sss+/-hh:mm), or local
+        time format (YYYY-MM-DDThh:mm:ss.sss). These representations are defined
+        in "XML Schema Part 2: Datatypes Second Edition - W3C Recommendation 28
+        October 2004" which is aligned with ISO 8601.
+
+        Note on the time format:
+
+        1) beginning / end of calendar day
+
+        00:00:00 = the beginning of a calendar day
+
+        24:00:00 = the end of a calendar day
+
+        2) fractions of second in time format
+
+        Decimal fractions of seconds may be included. In this case, the involved
+        parties shall agree on the maximum number of digits that are allowed.
+  examples:
+    Inquiry-Request-Example-EndtoEndId:
+      value:
+        end_to_end_identification: API2307202501
+    Inquiry-Request-Example-UETR:
+      value:
+        uetr: bd97a464-ec40-4054-9a5c-ddd097f7681f
+    Inquiry-Request-Example-EndtoEndId-Transaction-Flow-Indicator:
+      value:
+        end_to_end_identification: API2307202501
+        transaction_flow_indicator: CR
+    Inquiry-Request-Example-UETR-Transaction-Flow-Indicator:
+      value:
+        uetr: bd97a464-ec40-4054-9a5c-ddd097f7681f
+        transaction_flow_indicator: CR
+    Inquiry-Response-Example:
+      value:
+        created_date_time: '2025-08-01T09:49:31.837658377Z'
+        transactions:
+          - uetr: bd97a464-ec40-4054-9a5c-ddd097f7681f
+            end_to_end_identification: API2307202501
+            instruction_identification: API2307202501
+            account_servicer_reference: '3539253208'
+            service_type_indicator: '003'
+            transaction_status:
+              status: ACCP
+            event_time: '2020-10-05T08:35:55.000Z'
+            originator: CITIGB2LXXX
+            instructed_amount:
+              currency: USD
+              amount: '1.00'
+            confirmed_amount:
+              currency: USD
+              amount: '1.00'
+            interbank_settlement_date: '2025-07-24'
+            debtor:
+              name: CITIBANK E-BUSINESS EUR DUM DEMO
+            debtor_account:
+              identification:
+                identification: '10012345'
+            debtor_agent:
+              branch_id: '600'
+            creditor:
+              name: 8010643122X XXXXXXXXXXXXX XXX
+            creditor_account:
+              identification:
+                identification: '10012262'
+            creditor_agent:
+              branch_id: '600'
+            unstructured_remittance_information: TR002638
+            payment_event:
+              - from: CITIGB2LXXX
+                to: CITIGB2LXXX
+                charge_bearer: SHAR
+                charge_amount:
+                  currency: USD
+                  amount: '0.00'
+                date_time: '2025-07-23T11:54:02.000Z'
+                additional_remittance_information:
+                  credit_virtual_account: '10012262'
+                  payment_method: FT
+                  return_charge_amount: '0.00'
+                  confidential: 'N'
+    Inquiry-Response-Return-Example:
+      value:
+        created_date_time: '2025-08-01T09:49:31.837658377Z'
+        transactions:
+          - uetr: bd97a464-ec40-4054-9a5c-ddd097f7681f
+            end_to_end_identification: API2307202501
+            instruction_identification: API2307202501
+            account_servicer_reference: '3539253208'
+            clearing_system_reference: FDW/20200102B1Q1234C123456
+            service_type_indicator: '003'
+            transaction_status:
+              status: ACCP
+              status_reason_information:
+                - reason: MS03
+                  type: RETN
+                  reason_description: Returned transaction
+            event_time: '2025-07-24T08:35:55Z'
+            originator: CITIGB2LXXX
+            instructed_amount:
+              currency: USD
+              amount: '100.00'
+            confirmed_amount:
+              currency: USD
+              amount: '98.50'
+            requested_execution_date: '2025-07-23'
+            debtor:
+              name: CITIBANK DEMO
+              any_bic: CITIGB2LXXX
+              identification: D-123
+              postal_code: '600096'
+              town: Chennai
+              country_sub_division: TN
+              country: IN
+              address_line_1: CAXTON HOUSE
+              address_line_2: IN, GB
+              address_line_3: GB SW1H 9NA
+            debtor_account:
+              identification:
+                identification: '10012262'
+            debtor_agent:
+              branch_id: '600'
+            creditor:
+              name: BENEFICIARY
+              any_bic: CITIGB2LXXX
+              identification: C-456
+              postal_code: '10001'
+              town: New York
+              country_sub_division: NY
+              country: US
+            creditor_account:
+              identification:
+                identification: '20023344'
+            creditor_agent:
+              branch_id: '700'
+            unstructured_remittance_information: Invoice 998
+            payment_event:
+              - from: CITIGB2LXXX
+                to: CITIUS33XXX
+                charge_bearer: SHAR
+                charge_amount:
+                  currency: USD
+                  amount: '1.50'
+                date_time: '2025-07-23T11:54:02Z'
+                foreign_exchange_details:
+                  source_currency: USD
+                  target_currency: USD
+                  exchange_rate: '1.0'
+                additional_remittance_information:
+                  debit_virtual_account: V123
+                  credit_virtual_account: V456
+                  payment_method: FT
+                  confidential: 'N'
+                  payment_contract: PC-001
+                  return_contract: RC-001
+                  return_source_currency: USD
+                  return_target_currency: USD
+                  return_exchange_rate: '1.0'
+                  return_charge_currency: USD
+                  return_charge_amount: '1.00'
+                  return_currency: USD
+                  return_amount: '50.00'
+                  return_account: RET001
+                  return_created_date_time: '2025-07-25T11:54:02Z'
+                  return_processed_date_time: '2025-07-25T11:54:02Z'
+                  other_identification:
+                    - code: MD06
+                      value: US5WLEFK
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      flows:
+        clientCredentials:
+          tokenUrl: https://authenticationservices/v3/oauth/token
+          scopes: {}
+x-original-swagger-version: '2.0'

@@ -1,0 +1,50 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements — Citi Trade Services
+  version: 1.0.0
+  description: Non-destructive annotations applied on top of the 2 Citi Trade Services contract(s) in openapi/.
+    Adds provenance, cross-links to the derived artifacts in this repository, and two safety facts about the estate
+    that no single contract states. The original specifications are never mutated.
+x-generated: '2026-09-05'
+x-method: generated
+x-source: openapi/ — Citi contracts harvested verbatim from https://developer.citi.com/apidocs on 2026-09-05
+extends:
+- openapi/citi-finance-undertaking-api-openapi.yaml
+- openapi/citi-trade-api-openapi.yaml
+actions:
+- target: $.info
+  description: Record where this contract came from and when it was harvested, so a consumer can re-fetch the original
+    and diff it.
+  update:
+    x-apievangelist-source: https://developer.citi.com/apidocs/redocusaurus/
+    x-apievangelist-harvested: '2026-09-05'
+    x-apievangelist-family: Trade Services
+    x-apievangelist-provider: Citi
+- target: $.info
+  description: Attach the cross-cutting runtime semantics that are true of this contract but are not expressible
+    inside it.
+  update:
+    x-conventions: conventions/citi-conventions.yml
+    x-error-catalog: errors/citi-problem-types.yml
+    x-decline-codes: errors/citi-decline-codes.yml
+    x-authentication: authentication/citi-authentication.yml
+    x-rate-limits: rate-limits/citi-rate-limits.yml
+    x-lifecycle: lifecycle/citi-lifecycle.yml
+- target: $.info
+  description: State the idempotency and reversibility posture for this family, measured across the whole estate.
+  update:
+    x-idempotency-coverage: partial
+    x-idempotency-header: Idempotency-Id
+    x-reversibility-grade: documented
+    x-reversibility-note: Reversal operations exist; no reversal WINDOW is published in any Citi contract or guide.
+- target: $.paths.*.*[?(@.responses['429'])]
+  description: Flag that a 429 on this estate usually arrives with no RateLimit-* headers and no Retry-After, so
+    clients must back off exponentially.
+  update:
+    x-rate-limit-signal: status-code-only
+    x-retry-strategy: exponential-backoff
+- target: $.paths.*.post
+  description: Warn that most POST operations in this estate do not declare an Idempotency-Id header, so a timeout
+    is ambiguous and must be resolved by inquiry rather than by retry.
+  update:
+    x-retry-safety: inquire-before-retry

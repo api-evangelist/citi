@@ -1,0 +1,2499 @@
+openapi: 3.0.0
+info:
+  version: 2.0.0
+  title: VCA Life Cycle Management
+  description: Virtual Card Create, Modify, Cancel request.
+  x-ibm-name: vca-life-cycle-management
+  contact:
+    name: GLOBAL Commercial Cards API Production support
+    email: >-
+      dl.icg.global.commercial.cards.digital.production.support@imcap.ap.ssmb.com
+tags:
+  - name: VirtualCardController
+    description: Using this API we can create, modify, cancel virtual cards
+servers:
+  - url: https://tts.apib2b.citi.com/tts/cards/vca/v2
+    description: Base URL for the API
+paths:
+  /create:
+    post:
+      tags:
+        - VirtualCardController
+      operationId: create
+      summary: >-
+        Create VCA for secure purchasing. It allows you to place a VCA creation
+        request, with increased Transaction-Level Controls,  limit card number
+        use by MCC, amounts, dates and even specific suppliers
+      description: >-
+        Create a virtual card and set its associated spending controls, custom
+        reference data and payment beneficiaries. It allows you to place a a
+        virtual card account creation request for secure purchasing, with
+        increased transaction-Level controls, limit card number use by MCC,
+        amounts, dates and even specific suppliers.<br/><br/>Note: In a Create
+        VCA Request call for a Mastercard program, you must specify at least one
+        instance of whichever velocity control the purchase template that is
+        setup in the VCA application contains. Other controls are optional in
+        the API request to Citi, even if they are included in the purchase
+        template that is setup in the VCA application. If you indicate that you
+        would like to use an optional control by sending the enable flag as
+        TRUE, you have to specify all parameters listed in the control section
+        unless otherwise specified, else, the API request will be rejected.
+      parameters:
+        - name: Authorization
+          in: header
+          description: Oauth token
+          required: true
+          schema:
+            type: string
+        - name: country
+          in: header
+          required: true
+          schema:
+            type: string
+          description: country of the Client
+        - name: region
+          in: header
+          required: true
+          schema:
+            type: string
+          description: region of the client(Apac/EMEA/NAM)
+        - name: req-sys-id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: >-
+            Client Unique id to identify the particular request.<br> `Format`:
+            UUID <br> `Example`: 123d837e-958a-4e9f-bc97-4843ec948123
+      requestBody:
+        required: true
+        description: Request body description
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vca-Create-Request'
+            examples:
+              Mastercard:
+                summary: VCA Create - Mastercard Sample Request
+                value:
+                  fundingSourceId: '15016'
+                  fundingSourceName: GRACE RCN 1
+                  programId: '431341'
+                  messageId: 908c090d1995490eb3b431a1f37356df
+                  templateId: 23358
+                  expiryDate: '112026'
+                  currencyCode: '008'
+                  currencyType: B
+                  timeZone: UTC+10:00
+                  getCardImage: false
+                  paymentBeneficiaryId: 19180
+                  paymentBeneficiaryEmails:
+                    - anistone.thobias@citi.com
+                  customReference:
+                    - customReferenceLabel: Invoice No.
+                      customReferenceValue: '1234'
+                    - customReferenceLabel: Cost Center
+                      customReferenceValue: NAM Hub
+                    - customReferenceLabel: Deparment
+                      customReferenceValue: Marketing
+                  mccGrouping:
+                    - All MCCs
+                  enableAgingVelocityControl: true
+                  authorizationHoldDays: 5
+                  cumulativeSpendLimit: 2000
+                  enableSpendVelocityControl: false
+                  spendVelocity:
+                    - cumulativeSpendLimit: 2000
+                      maxAuth: 5
+                      periodType: D
+                  enableCurfewControl: true
+                  curfewTime:
+                    startTime: '12:30'
+                    endTime: '13:30'
+                    weekdaysEffective:
+                      - MON
+                  enableTimeOfDayControl: false
+                  timeOfDay:
+                    - startTime: '12:30'
+                      endTime: '13:30'
+                      weekdayEffective: MON
+                    - startTime: '13:30'
+                      endTime: '14:30'
+                      weekdayEffective: TUE
+                  enableValidityPeriodControl: true
+                  validityStartDate: '2022-06-16'
+                  validityEndDate: '2022-06-17'
+                  enableAmountRangeControl: true
+                  minAmount: 1000.01
+                  maxAmount: 2000.01
+              Visa:
+                summary: VCA Create - Visa Sample Request
+                value:
+                  fundingSourceId: GBP2145
+                  programId: '918'
+                  messageId: BA12345V2Create20260226131411
+                  currencyCode: '752'
+                  currencyType: M
+                  timeZone: UTC+05:30
+                  mccRange:
+                    - 4812-4814
+                    - 4816-4817
+                    - 5044-5045
+                  mccgAllowed: true
+                  customReference:
+                    - customReferenceLabel: Invoice No.
+                      customReferenceValue: '1234'
+                    - customReferenceLabel: Cost Center
+                      customReferenceValue: NAM Hub
+                    - customReferenceLabel: Department
+                      customReferenceValue: Marketing
+                  enableSpendVelocityControl: true
+                  spendVelocity:
+                    - cumulativeSpendLimit: 300000
+                      maxAuth: 1
+                      periodType: '3'
+                  enableValidityPeriodControl: true
+                  validityStartDate: '2026-12-10'
+                  validityEndDate: '2026-12-25'
+                  enableAmountRangeControl: true
+                  minAmount: 1000.1
+                  maxAmount: 10000.1
+                  enableTransactionLimitControl: false
+                  amountLimit: 1000.1
+                  enableTimeOfDayControl: true
+                  timeOfDay:
+                    - startTime: '10:00'
+                      endTime: '11:00'
+                      weekdayEffective: MON
+                  enableGeographyControl: true
+                  countryCodes:
+                    - USA
+                    - ZMB
+                    - ZWE
+                    - SWZ
+                  allowed: false
+                  enableMerchantIdControl: true
+                  merchantId:
+                    allowed: true
+                    merchantIds:
+                      - cardAcceptorId: '1234560'
+                        acquirerId: '132412'
+                      - cardAcceptorId: '1234561'
+                        acquirerId: '1324121'
+                      - cardAcceptorId: '1234561'
+                        acquirerId: '1324112'
+      responses:
+        '200':
+          description: Create Virtual Card response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Create-Response'
+              examples:
+                Mastercard:
+                  summary: VCA Create - Mastercard Sample Response
+                  value:
+                    vcaId: '7890123456789'
+                    virtualCardAccountNumber: '5412345678901234'
+                    securityCode: '123'
+                    expiryDate: '112026'
+                    programId: '431341'
+                    messageId: 908c090d1995490eb3b431a1f37356df
+                    currencyCode: '008'
+                    currencyType: B
+                    timeZone: UTC+10:00
+                    paymentBeneficiaryId: 19180
+                    paymentBeneficiaryEmails:
+                      - abcd@citi.com
+                    customReference:
+                      - customReferenceLabel: Invoice No.
+                        customReferenceValue: '1234'
+                      - customReferenceLabel: Cost Center
+                        customReferenceValue: NAM Hub
+                      - customReferenceLabel: Department
+                        customReferenceValue: Marketing
+                    templateId: 23358
+                    mccGrouping:
+                      - All MCCs
+                    enableAgingVelocityControl: true
+                    authorizationHoldDays: 5
+                    cumulativeSpendLimit: 2000
+                    availableBalance: 2000
+                    enableSpendVelocityControl: false
+                    enableCurfewControl: true
+                    curfewTime:
+                      startTime: '12:30'
+                      endTime: '13:30'
+                      weekdaysEffective:
+                        - MON
+                    enableTimeOfDayControl: false
+                    enableValidityPeriodControl: true
+                    validityStartDate: '2022-06-16'
+                    validityEndDate: '2022-06-17'
+                    enableAmountRangeControl: true
+                    minAmount: 1000.01
+                    maxAmount: 2000.01
+                    standInVca: false
+                Visa:
+                  summary: VCA Create - Visa Sample Response
+                  value:
+                    vcaId: '5678901234567'
+                    virtualCardAccountNumber: '4012345678901234'
+                    securityCode: '456'
+                    expiryDate: '122025'
+                    programId: '918'
+                    messageId: BA12345V2Create20260226131411
+                    currencyCode: '752'
+                    currencyType: M
+                    timeZone: UTC+05:30
+                    mccRange:
+                      - 4812-4814
+                      - 4816-4817
+                      - 5044-5045
+                    mccgAllowed: true
+                    customReference:
+                      - customReferenceLabel: Invoice No.
+                        customReferenceValue: '1234'
+                      - customReferenceLabel: Cost Center
+                        customReferenceValue: NAM Hub
+                      - customReferenceLabel: Department
+                        customReferenceValue: Marketing
+                    enableSpendVelocityControl: true
+                    spendVelocity:
+                      - cumulativeSpendLimit: 300000
+                        maxAuth: 1
+                        periodType: '3'
+                    enableValidityPeriodControl: true
+                    validityStartDate: '2026-12-10'
+                    validityEndDate: '2026-12-25'
+                    enableAmountRangeControl: true
+                    minAmount: 1000.1
+                    maxAmount: 10000.1
+                    enableTransactionLimitControl: false
+                    enableTimeOfDayControl: true
+                    timeOfDay:
+                      - startTime: '10:00'
+                        endTime: '11:00'
+                        weekdayEffective: MON
+                    enableGeographyControl: true
+                    countryCodes:
+                      - USA
+                      - ZMB
+                      - ZWE
+                      - SWZ
+                    allowed: false
+                    enableMerchantIdControl: true
+                    merchantInfo:
+                      - allowed: true
+                        merchantIds:
+                          - cardAcceptorId: '1234560'
+                            acquirerId: '132412'
+                          - cardAcceptorId: '1234561'
+                            acquirerId: '1324121'
+                          - cardAcceptorId: '1234561'
+                            acquirerId: '1324112'
+                    standInVca: false
+        '400':
+          description: Invalid Create Virtual Card request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Create-Failure-Response'
+        '401':
+          description: Unauthorized Create Virtual Card request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Create-Failure-Response'
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Create-Failure-Response'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Create-Failure-Response'
+  /modify:
+    post:
+      tags:
+        - VirtualCardController
+      operationId: modify
+      summary: >-
+        Modify VCA for secure purchasing. It allows you to place a VCA update
+        request,to alter Transaction-Level Controls,  limit card number use by
+        MCC, amounts, dates and even specific suppliers
+      description: >-
+        Modify a virtual card and set its associated spending controls, custom
+        reference data and payment beneficiaries. It allows you to place a a
+        virtual card account update request for secure purchasing, to alter
+        transaction-Level controls, limit card number use by MCC, amounts, dates
+        and even specific suppliers.<br/><br/>Note: In a Create VCA Request call
+        for a Mastercard program, you must specify at least one instance of
+        whichever velocity control the purchase template that is setup in the
+        VCA application contains. Other controls are optional in the API request
+        to Citi, even if they are included in the purchase template that is
+        setup in the VCA application. If you indicate that you would like to use
+        an optional control by sending the enable flag as TRUE, you have to
+        specify all parameters listed in the control section unless otherwise
+        specified, else, the API request will be rejected. payments
+      parameters:
+        - name: Authorization
+          in: header
+          description: Oauth token
+          required: true
+          schema:
+            type: string
+        - name: country
+          in: header
+          required: true
+          schema:
+            type: string
+          description: country of the Client
+        - name: region
+          in: header
+          required: true
+          schema:
+            type: string
+          description: region of the client(Apac/EMEA/NAM)
+        - name: req-sys-id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: >-
+            Client Unique id to identify the particular request. Format: UUID.
+            Example: 123d837e-958a-4e9f-bc97-4843ec948123
+      requestBody:
+        required: true
+        description: Request body description
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vca-Modify-Request'
+            examples:
+              Mastercard:
+                summary: VCA Modify - Mastercard Sample Request
+                value:
+                  vcaId: 7890123456789
+                  fundingSourceId: '15016'
+                  fundingSourceName: GRACE RCN 1
+                  programId: '431341'
+                  messageId: 908c090d1995490eb3b431a1f37356ef
+                  templateId: 23358
+                  expiryDate: '112027'
+                  currencyCode: '008'
+                  currencyType: B
+                  timeZone: UTC+10:00
+                  paymentBeneficiaryId: 19180
+                  paymentBeneficiaryEmails:
+                    - anistone.thobias@citi.com
+                  customReference:
+                    - customReferenceLabel: Invoice No.
+                      customReferenceValue: '5678'
+                    - customReferenceLabel: Cost Center
+                      customReferenceValue: NAM Hub
+                    - customReferenceLabel: Department
+                      customReferenceValue: Finance
+                  mccGrouping:
+                    - All MCCs
+                  modifyAgingVelocityControl: true
+                  authorizationHoldDays: 10
+                  cumulativeSpendLimit: 5000
+                  modifySpendVelocityControl: false
+                  spendVelocity:
+                    - cumulativeSpendLimit: 5000
+                      maxAuth: 10
+                      periodType: M
+                  modifyCurfewControl: true
+                  curfewTime:
+                    startTime: '09:00'
+                    endTime: '17:00'
+                    weekdaysEffective:
+                      - MON
+                      - TUE
+                  modifyTimeOfDayControl: false
+                  timeOfDay:
+                    - startTime: '09:00'
+                      endTime: '17:00'
+                      weekdayEffective: MON
+                  modifyValidityPeriodControl: true
+                  validityStartDate: '2026-06-01'
+                  validityEndDate: '2026-06-30'
+                  modifyAmountRangeControl: true
+                  minAmount: 500
+                  maxAmount: 5000
+              Visa:
+                summary: VCA Modify - Visa Sample Request
+                value:
+                  vcaId: 5678901234567
+                  fundingSourceId: GBP2145
+                  programId: '918'
+                  messageId: BA12345V2Modify20260226131411
+                  currencyCode: '752'
+                  currencyType: M
+                  timeZone: UTC+05:30
+                  mccRange:
+                    - 4812-4814
+                    - 4816-4817
+                  mccgAllowed: true
+                  customReference:
+                    - customReferenceLabel: Invoice No.
+                      customReferenceValue: '5678'
+                    - customReferenceLabel: Cost Center
+                      customReferenceValue: EMEA Hub
+                    - customReferenceLabel: Department
+                      customReferenceValue: Finance
+                  modifySpendVelocityControl: true
+                  spendVelocity:
+                    - cumulativeSpendLimit: 500000
+                      maxAuth: 2
+                      periodType: '3'
+                  modifyValidityPeriodControl: true
+                  validityStartDate: '2026-12-01'
+                  validityEndDate: '2026-12-31'
+                  modifyAmountRangeControl: true
+                  minAmount: 2000
+                  maxAmount: 20000
+                  modifyTransactionLimitControl: false
+                  amountLimit: 2000
+                  modifyTimeOfDayControl: true
+                  timeOfDay:
+                    - startTime: '08:00'
+                      endTime: '18:00'
+                      weekdayEffective: TUE
+                  modifyGeographyControl: true
+                  countryCodes:
+                    - GBR
+                    - DEU
+                    - FRA
+                  allowed: true
+                  modifyMerchantIdControl: true
+                  merchantId:
+                    allowed: true
+                    merchantIds:
+                      - cardAcceptorId: '9876540'
+                        acquirerId: '567812'
+                      - cardAcceptorId: '9876541'
+                        acquirerId: '567813'
+      responses:
+        '200':
+          description: Modify Virtual Card response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Modify-Response'
+              examples:
+                Mastercard:
+                  summary: VCA Modify - Mastercard Sample Response
+                  value:
+                    vcaId: '7890123456789'
+                    virtualCardAccountNumber: '5412345678901234'
+                    securityCode: '123'
+                    expiryDate: '112027'
+                    programId: '431341'
+                    messageId: 908c090d1995490eb3b431a1f37356ef
+                    currencyCode: '008'
+                    currencyType: B
+                    timeZone: UTC+10:00
+                    paymentBeneficiaryId: 19180
+                    paymentBeneficiaryEmails:
+                      - anistone.thobias@citi.com
+                    customReference:
+                      - customReferenceLabel: Invoice No.
+                        customReferenceValue: '5678'
+                      - customReferenceLabel: Cost Center
+                        customReferenceValue: NAM Hub
+                      - customReferenceLabel: Department
+                        customReferenceValue: Finance
+                    templateId: 23358
+                    mccGrouping:
+                      - All MCCs
+                    modifyAgingVelocityControl: true
+                    authorizationHoldDays: 10
+                    cumulativeSpendLimit: 5000
+                    availableBalance: 5000
+                    modifySpendVelocityControl: false
+                    modifyCurfewControl: true
+                    curfewTime:
+                      startTime: '09:00'
+                      endTime: '17:00'
+                      weekdaysEffective:
+                        - MON
+                        - TUE
+                    modifyTimeOfDayControl: false
+                    modifyValidityPeriodControl: true
+                    validityStartDate: '2026-06-01'
+                    validityEndDate: '2026-06-30'
+                    modifyAmountRangeControl: true
+                    minAmount: 500
+                    maxAmount: 5000
+                Visa:
+                  summary: VCA Modify - Visa Sample Response
+                  value:
+                    vcaId: '5678901234567'
+                    virtualCardAccountNumber: '4012345678901234'
+                    securityCode: '456'
+                    expiryDate: '122026'
+                    programId: '918'
+                    messageId: BA12345V2Modify20260226131411
+                    currencyCode: '752'
+                    currencyType: M
+                    timeZone: UTC+05:30
+                    mccRange:
+                      - 4812-4814
+                      - 4816-4817
+                    mccgAllowed: true
+                    customReference:
+                      - customReferenceLabel: Invoice No.
+                        customReferenceValue: '5678'
+                      - customReferenceLabel: Cost Center
+                        customReferenceValue: EMEA Hub
+                      - customReferenceLabel: Department
+                        customReferenceValue: Finance
+                    modifySpendVelocityControl: true
+                    spendVelocity:
+                      - cumulativeSpendLimit: 500000
+                        maxAuth: 2
+                        periodType: '3'
+                    modifyValidityPeriodControl: true
+                    validityStartDate: '2026-12-01'
+                    validityEndDate: '2026-12-31'
+                    modifyAmountRangeControl: true
+                    minAmount: 2000
+                    maxAmount: 20000
+                    modifyTransactionLimitControl: false
+                    modifyTimeOfDayControl: true
+                    timeOfDay:
+                      - startTime: '08:00'
+                        endTime: '18:00'
+                        weekdayEffective: TUE
+                    modifyGeographyControl: true
+                    countryCodes:
+                      - GBR
+                      - DEU
+                      - FRA
+                    allowed: true
+                    modifyMerchantIdControl: true
+                    merchantInfo:
+                      - allowed: true
+                        merchantIds:
+                          - cardAcceptorId: '9876540'
+                            acquirerId: '567812'
+                          - cardAcceptorId: '9876541'
+                            acquirerId: '567813'
+        '400':
+          description: Invalid Modify Virtual Card request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Modify-Failure-Response'
+        '401':
+          description: Unauthorized Modify Virtual Card request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Modify-Failure-Response'
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Modify-Failure-Response'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Modify-Failure-Response'
+  /cancel:
+    post:
+      tags:
+        - VirtualCardController
+      operationId: cancel
+      summary: >-
+        Cancel VCA allows to turn a VCA to in-active status, in-order to suspend
+        any payment requests
+      description: >-
+        Cancel VCA allows to turn a VCA to in-active status, in-order to suspend
+        any payment requests
+      parameters:
+        - name: Authorization
+          in: header
+          description: Oauth token
+          required: true
+          schema:
+            type: string
+        - name: country
+          in: header
+          required: true
+          schema:
+            type: string
+          description: country of the Client
+        - name: region
+          in: header
+          required: true
+          schema:
+            type: string
+          description: region of the client(Apac/EMEA/NAM)
+        - name: req-sys-id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: >-
+            Client Unique id to identify the particular request. Format: UUID.
+            Example: 123d837e-958a-4e9f-bc97-4843ec948123
+      requestBody:
+        required: true
+        description: Request body description
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vca-Cancel-Request'
+            examples:
+              Mastercard:
+                summary: VCA Cancel - Mastercard Sample Request
+                value:
+                  vcaIds:
+                    - '7890123456789'
+                    - '7890123456790'
+                  programId: '431341'
+                  messageId: 908c090d1995490eb3b431a1f37356aa
+              Visa:
+                summary: VCA Cancel - Visa Sample Request
+                value:
+                  vcaIds:
+                    - '5678901234567'
+                  virtualCardAccountNumber: '4012345678901234'
+                  programId: '918'
+                  messageId: BA12345V2Cancel20260226131411
+      responses:
+        '200':
+          description: Cancel Virtual Card response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Cancel-Response'
+              examples:
+                Mastercard:
+                  summary: VCA Cancel - Mastercard Sample Response
+                  value:
+                    programId: '431341'
+                    messageId: 908c090d1995490eb3b431a1f37356aa
+                    vcaResponse:
+                      - programId: '431341'
+                        vcaId: 7890123456789
+                      - programId: '431341'
+                        vcaId: 7890123456790
+                Visa:
+                  summary: VCA Cancel - Visa Sample Response
+                  value:
+                    programId: '918'
+                    messageId: BA12345V2Cancel20260226131411
+                    vcaResponse:
+                      - programId: '918'
+                        vcaId: 5678901234567
+        '400':
+          description: Invalid Cancel Virtual Card request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Cancel-Failure-Response'
+        '401':
+          description: Unauthorized Virtual Card request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Cancel-Failure-Response'
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Cancel-Failure-Response'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vca-Cancel-Failure-Response'
+components:
+  securitySchemes:
+    ClientCredentials:
+      type: oauth2
+      description: ''
+      flows:
+        clientCredentials:
+          tokenUrl: https://tts.apib2b.citi.com/tts/api/v1/oauth2/token
+          scopes:
+            /api: ''
+  schemas:
+    Vca-Cancel-Request:
+      type: object
+      title: VcaCancelRequest
+      required:
+        - vcaIds
+        - programId
+        - messageId
+      properties:
+        vcaIds:
+          type: array
+          description: Unique Identifier for each Virtual card request.
+          items:
+            type: string
+        virtualCardAccountNumber:
+          type: string
+          description: >-
+            The virtual card account number for which the modifications are
+            requested.
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.
+        blockVca:
+          type: boolean
+          description: Allow a client to block/unblock the VCAs associated to the VCA IDs.
+    Error-Message:
+      type: object
+      title: ErrorMessage
+      properties:
+        errorCode:
+          type: string
+          enum:
+            - EVB0014
+            - EVB0010
+            - EVB0017
+            - EVB0018
+            - EVB0020
+            - EVB0030
+            - EVB0033
+            - EVB0042
+            - EVB0044
+            - EVB0037
+            - EVB0032
+            - EVB0040
+            - EVB0045
+            - EVB0046
+            - EVB0050
+            - EVB0053
+            - EVB0060
+            - EVB0061
+            - EVB0062
+            - EVB0063
+            - EVB0065
+            - EVB0066
+            - EVB0070
+            - EVB0071
+            - EVB0099
+            - EVB0104
+            - EVB0106
+            - EVB0107
+            - EVB0110
+            - EVB0113
+            - EVB0114
+            - EVB0112
+            - EVB0120
+            - EVB0121
+            - EVB0124
+            - EVB0125
+            - EVB0126
+            - EVB0133
+            - EVB0136
+            - EVB0137
+            - EVB0138
+            - EVB0140
+            - EVB0141
+            - EVB0143
+            - EVB0151
+            - EVB0163
+            - EVB0170
+            - EVB0201
+            - EVB0202
+            - EVB0213
+            - EVB0214
+            - EVB0215
+            - EVB0216
+            - EVB0222
+            - EVB0224
+            - EVB0241
+            - EVB0243
+            - EVB0245
+            - EVB0251
+            - EVB0252
+            - EVB0244
+            - EVB0246
+            - EVB0247
+            - EVB0248
+            - EVB0250
+            - EVB0253
+            - EVB0254
+            - EVB0255
+            - EVB0256
+            - EVB0257
+            - EVB0258
+            - EVB0025
+            - EVB0261
+            - EVB0262
+            - EVB0264
+            - EVB0265
+            - EVB0267
+            - EVB0270
+            - EVB0271
+            - EVB0272
+            - EVB0273
+            - EVB0290
+            - EVB0350
+            - EVB0351
+            - EVB0352
+            - EVB0353
+            - EVB0354
+            - EVB0355
+            - EVB0356
+            - EVB0357
+            - EVB0358
+            - EVB0359
+            - EVB0360
+            - EVB0361
+            - EVB0362
+            - EVB0363
+            - EVB0364
+            - EVB0365
+            - EVB0366
+            - EVB0367
+            - EVB0368
+            - EVB0369
+            - EVB0370
+            - EVB0371
+            - EVB0372
+            - EVB0373
+            - EVB0374
+            - EVB0375
+            - EVB0378
+            - EVB0381
+            - EVB0401
+            - EVB0404
+            - EVB0430
+            - EVB0431
+            - EVB0432
+            - EVB0435
+            - EVB0436
+            - EVB0437
+            - EVB0438
+            - EVB0406
+            - EVB0440
+            - EVB0441
+            - EVB0530
+            - EVB0607
+            - EVB0211
+            - EVB0212
+            - EVB0219
+            - EVB0230
+            - EVB0231
+            - EVB0281
+            - EVB1185
+            - EVB1300
+            - EVB1301
+            - EVB1302
+            - EVB1303
+            - EVB1304
+            - EVB1305
+            - EVB1306
+            - EVB1307
+            - EVB1308
+            - EVB1309
+            - EVB1310
+            - EVB1311
+            - EVB1312
+            - EVB0260
+            - EVB1314
+            - EVB1315
+            - EVB0162
+            - EVB0236
+            - EVB0903
+            - EVB0902
+            - EVB0611
+            - EVB0612
+            - EVB0618
+            - EVB0619
+            - EVB0616
+            - EVB0237
+            - EVB0217
+            - EVB0238
+            - EVB0218
+            - EVB0600
+            - EVB0232
+            - EVB0235
+            - EVB0233
+            - EVB0011
+            - EVB0625
+            - ERS0087
+            - GRC0001
+            - GRC0002
+            - GRC0003
+            - GRC0004
+            - GRC0005
+            - GRC0006
+            - GRC0007
+            - GRC0009
+            - GRC0011
+            - GRC0012
+            - GRC0014
+            - EVB1410
+            - EVB1411
+            - EVB1412
+            - EVB1413
+        errorDescription:
+          type: string
+          description: >
+            The error description that corresponds to error code when there is
+            any error occurred while retrieving the transaction.
+
+              * `EVB0010` - vcaId size must be between 1 and 19 digits
+              * `EVB0014` - vcaId value must be a numeric
+              * `EVB0017` - vcaID is empty or null
+              * `EVB0018` - No previously approved vcaID is present
+              * `EVB0020` - vcaID and programId combination is not present
+              * `EVB0030` - FundingSourceId cannot be modified
+              * `EVB0033` - FundingSourceId cannot be null
+              * `EVB0042` -  FundingSourceName cannot be null
+              * `EVB0044` - Funding source Id|Funding source Name|Template Id is not required for cancel request
+              * `EVB0037` - fundingSourceId is mandatory
+              * `EVB0032` - fundingSourceId value must be a numeric
+              * `EVB0040` - fundingSourceName is mandatory
+              * `EVB0045` - Funding source Id|Funding source Name|Template Id|PaymentBeneficiaryId cannot be modified
+              * `EVB0046` - FundingSourceName cannot be modified
+              * `EVB0050` - paymentBeneficiaryId cannot be modified
+              * `EVB0053` - paymentBeneficiaryEmails must be alphanumeric and have value with proper email format: "." and "@"
+              * `EVB0060` - expiryDate is mandatory
+              * `EVB0061` - expiryDate length exceeds max length allowed of: 6 characters
+              * `EVB0062` - TimeZone is mandatory if any of the following controls are set to true: Validity Period, Aging Velocity (MasterCard only), Curfew Control, Time of Day Control
+              * `EVB0063` - timeZone field has an invalid UTC offset time zone format
+              * `EVB0065` - currencyCode cannot be null
+              * `EVB0066` - ClientId and programId combination is not valid
+              * `EVB0070` - templateId cannot be modified
+              * `EVB0071` - templateId cannot be null
+              * `EVB0099` - currencyCode length allowed is:  3 digits
+              * `EVB0104` - currencyType must have value which matches regex: M|B|m|b
+              * `EVB0106` - minAmount is mandatory if enableAmountRangeControl is true
+              * `EVB0107` - maxAmount is mandatory if enableAmountRangeControl is true
+              * `EVB0110` - startTime value must have valid format: HH:MM
+              * `EVB0113` - startTime is mandatory if CurfewControl is true
+              * `EVB0114` - endTime is mandatory if CurfewControl is true
+              * `EVB0112` - endTime value must have valid format: HH:MM
+              * `EVB0120` - validityEndDate value must have valid format: YYYY-MM-DD
+              * `EVB0121` - validityStartDate value must have valid format: YYYY-MM-DD
+              * `EVB0124` - timeZone is mandatory if Validity Period control is set to true
+              * `EVB0125` - validityStartDate is mandatory if ValidityPeriodControl is true
+              * `EVB0126` - validityEndDate is mandatory if ValidityPeriodControl is true
+              * `EVB0133` - VelocityControlType-periodType is mandatory.
+              * `EVB0136` - currencyType is mandatory
+              * `EVB0137` - spendVelocityControl-cumulativeSpendLimit is mandatory
+              * `EVB0138` - spendVelocityControl-maxAuth is mandatory
+              * `EVB0140` - periodType length exceeds max length allowed of: 1 character
+              * `EVB0141` - periodType is mandatory if enablespendvelocity is true
+              * `EVB0143` - periodType is mandatory
+              * `EVB0151` - Cannot add any new controls to a previously created VCA
+              * `EVB0163` - authorizationHoldDays is mandatory if agingVelocityControl is true
+              * `EVB0170` - amountLimit is mandatory if TransactionLimitControl is true
+              * `EVB0201` - We were unable to process your request. Please try again, or contact Citi support if you have any further questions or comments.
+              * `EVB0202` - We were unable to process your request. Please try again, or contact Citi support if you have any further questions or comments
+              * `EVB0213` - virtualCardAccountNumber is Invalid
+              * `EVB0214` - Validity Period Control must be set to true and validityStartDate and validityEndDate are mandatory if periodType = 3
+              * `EVB0215` - Validity Period Control must be set to true and validityStartDate and validityEndDate are mandatory if periodType = C
+              * `EVB0216` - VcaId Should be a Valid Long Value
+              * `EVB0222` - messageId cannot be null
+              * `EVB0224` - messageId size must be between 28 and 36 characters
+              * `EVB0241` - Transaction Not Found for the respective client id and message id on grace.
+              * `EVB0243` - Program Id is not present
+              * `EVB0245` - currencyCode value must be numeric [0-9]
+              * `EVB0251` - ExpiryDate is not required
+              * `EVB0252` - messageId should be alphanumeric without special characters
+              * `EVB0254` - FundingSourceName size must be between 1 and 100 characters
+              * `EVB0244` - TemplateId Should be a Valid Long Value
+              * `EVB0246` - paymentBeneficiaryId cannot be null
+              * `EVB0247` - paymentBeneficiaryId size must be between 1 and 19 digits
+              * `EVB0248` - paymentBeneficiaryId Should be a Valid Long Value
+              * `EVB0250` - FundingSourceName is not required
+              * `EVB0253` - mccGrouping should not contain multiple values
+              * `EVB0255` - customReference size should be between 1 and 29
+              * `EVB0256` - customReferenceValue should be between 1 and 100 characters
+              * `EVB0257` - vcaId should not be null or empty
+              * `EVB0258` - customReferenceLabel should be between 1 and 50 characters
+              * `EVB00259`- expiryDate must have format: MMYYYY
+              * `EVB0261` - cardAcceptorId length exceeds max length allowed of 15 character
+              * `EVB0262` - weekdaysEffective is mandatory if enableCurfewControl is true
+              * `EVB0264` - spendVelocityControl is Mandatory
+              * `EVB0265` - mccGrouping cannot be null or empty
+              * `EVB0267` - ProgramId should be alphanumeric without special characters
+              * `EVB0270` - Not allowed to modify when control indicator is disabled
+              * `EVB0271` - ExpiryDate field cannot be NULL
+              * `EVB0272` - Both Aging and Spend Velocity Control cannot be enabled
+              * `EVB0273` - Either Aging or Spend Velocity Control should be enabled
+              * `EVB0290` - Bulk Cancellation is not Allowed for visa
+              * `EVB0350` - virtualCardAccountNumber length should be 16 characters
+              * `EVB0351` - virtualCardAccountNumber is Mandatory
+              * `EVB0352` - FundingSourceId is Invalid. FundingSourceId value should be a valid long value and size must be between 1 and 19 digits
+              * `EVB0353` - customReferenceValue should be between 1 and 80 characters
+              * `EVB0354` - AmountRangeControl-minAmount length exceed max length allowed is: 14 characters
+              * `EVB0355` - AmountRangeControl-maxAmount length exceed max length allowed is: 14 characters
+              * `EVB0356` - minAmount & maxAmount values must be a numeric positive value with a maximum of 2 decimals digits
+              * `EVB0357` - ProgramId must be numeric
+              * `EVB0358` - programId value must be between 1 and 19 digits
+              * `EVB0359` - programId value must be between 1 and 25 digits
+              * `EVB0360` - Invalid JSON input
+              * `EVB0361` - Invalid JSON input
+              * `EVB0362` - Invalid maxAuth format. maxAuth value cannot exceed 8 digits
+              * `EVB0363` - cumulativeSpendLimit max field length is 12 digits with 10 digits to the left of the decimal and 2 digits to the right of the decimal
+              * `EVB0364` - transactionLimitControl-amount value must be a numeric positive value with a maximum of 2 decimals digits
+              * `EVB0365` - periodType is mandatory if enableSpendVelocity is true
+              * `EVB0366` - resetDay value must an integer between 1-28
+              * `EVB0367` - startTime is mandatory if Time Of Day Control is true
+              * `EVB0368` - weekdayEffective must have value which matches regex: SUN|MON|TUE|WED|THU|FRI|SAT
+              * `EVB0369` - cumulativeSpendLimit is mandatory if Aging Velocity Control is set to true
+              * `EVB0370` - countryCodes is required if Geography Control is set to true
+              * `EVB0371` - allowed field is required if Geography Control is set to true
+              * `EVB0372` - merchantId is mandatory if Merchant ID Control is true
+              * `EVB0373` - merchantId length exceeds max length allowed of 15 characters
+              * `EVB0374` - acquirerId is mandatory if Merchant ID Control is true
+              * `EVB0375` - acquirerId length exceeds max length allowed of 15 characters
+              * `EVB0378` - allowed field is required if Merchant ID Control is set to true
+              * `EVB0381` - AmountRangeControl-minAmount is greater than maxAmount
+              * `EVB0607` - At least one spend control is mandatory
+              * `EVB0625` - cumulativeSpendLimit max field length is 14 digits with 12 digits to the left of the decimal and 2 digits to the right of the decimal
+              * `EVB0903` - Atleast one Spend velocity control is required, When enableSpendVelocity is true
+              * `EVB0902` - For VISA, Only one Spend velocity control should be present
+              * `EVB0611` - Invalid periodType value. periodType can contain a value of either 1, 2, or 3
+              * `EVB0612` - resetDay is mandatory if periodType = 1
+              * `EVB0618` - Amount Range Control minAmount field length is 12 digits with 10 digits to the left of the decimal and 2 digits to the right of the decimal
+              * `EVB0619` - Amount Range Control maxAmount field length is 12 digits with 10 digits to the left of the decimal and 2 digits to the right of the decimal
+              * `EVB0616` - validityPeriodControl is Mandatory
+              * `EVB0237` - The date specified in validityStartDate does not exist
+              * `EVB0217` - validityStartDate cannot be a past date
+              * `EVB0238` - The date specified in validityEndDate does not exist
+              * `EVB0218` - validityEndDate cannot be a past date
+              * `EVB0600` - validityStartDate should be before validityEndDate
+              * `EVB0232` - weekdayEffective is mandatory if TimeOfDayControl is true
+              * `EVB0235` - startTime value cannot exceed the requested end Time value
+              * `EVB0233` - endTime is mandatory if TimeOfDayControl is true
+              * `EVB0011` - vcaId have value which matches regex:[0-9]
+              * `ERS0087` - Duplicate message id provided for VCA creation. Please call getVCADetails with original create message id to get vca details.
+              * `GRC0001` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments
+              * `GRC0002` - Client ID is missing in the request header
+              * `GRC0003` - Country code is not available in the request
+              * `GRC0004` - Region ID is not available in the request
+              * `GRC0005` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments
+              * `GRC0006` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments
+              * `GRC0007` - Client requested MediaType is not supported.
+              * `GRC0009` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments
+              * `GRC0011` - Client ID and/or Country and/or region id is missing in Client Onboard Configuration setup. Contact Citi support.
+              * `GRC0012` - Necessary header value is missing
+              * `GRC0014` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments
+              * `EVB1410` - Unable to block a previously blocked virtual card.
+              * `EVB1411` - Unable to unblock a previously unblocked virtual card.
+              * `EVB1412` - Unable to block or unblock a cancelled virtual card.
+              * `EVB1413` - Unable to modify a virtual card with a blocked status.
+    Vca-Cancel-Response:
+      type: object
+      title: VcaCancelResponse
+      properties:
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.
+        vcaResponse:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vca-Response'
+    Vca-Response:
+      type: object
+      title: VcaResponse
+      properties:
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        vcaId:
+          type: number
+          description: >-
+            A reference number that uniquely identifies the virtual card
+            account.
+    Vca-Cancel-Failure-Response:
+      type: object
+      title: VcaCancelFailureResponse
+      properties:
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.
+        vcaResponse:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vca-Failure-Response'
+    Vca-Failure-Response:
+      type: object
+      title: VcaFailureResponse
+      properties:
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        vcaId:
+          type: number
+          description: >-
+            A reference number that uniquely identifies the virtual card
+            account.
+        errorMessage:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Message'
+    Custom-Reference:
+      type: object
+      title: CustomReference
+      properties:
+        customReferenceValue:
+          type: string
+          description: >-
+            Specifies the value of a custom reference field. Conditionally
+            required if customReferenceLabel is included in
+            request.<br><br>Mastercard - Max Length - 80 characters<br>Visa -
+            Max Length - 100 characters
+        customReferenceLabel:
+          type: string
+          maxLength: 50
+          description: >-
+            Specifies the label of a custom reference field.<br>Mastercard: If
+            the template used for this VCA request identifies a given custom
+            reference field as required, then the custom reference label must be
+            provided in the request.
+    Time-Of-Day:
+      type: object
+      title: TimeOfDay
+      properties:
+        startTime:
+          type: string
+          description: >-
+            Specifies the start time from which the virtual card account can be
+            used on the particular day specified in weekDaysEffective. Format
+            24-hour format<br><br>Mastercard - Optional<br>Visa - Optional. The
+            minutes digit must be populated with zero only
+        endTime:
+          type: string
+          description: >-
+            Specifies the end time until which the virtual card account can be
+            used on the particular day specified in weekDaysEffective. Format
+            24-hour format<br><br>Mastercard - Optional<br>Visa - Optional. The
+            minutes digit must be populated with zero only
+        weekdayEffective:
+          type: string
+          description: >-
+            Specifies the day applicable to the start and end times
+            defined.<br>Mastercard - Optional<br>Visa - Optional<br><br>Possible
+            Values:<br><br>Mon<br>Tue<br>Wed<br>Thu<br>Fri<br>Sat<br>Sun
+    Merchant-Id-Response:
+      type: object
+      title: MerchantIdResponse
+      properties:
+        allowed:
+          type: boolean
+          description: >-
+            Indicate whether the values in merchantId and acquirerId are allowed
+            or disallowed.<br> True = values provided in merchantId and
+            acquirerId are allowed<br> False = values provided in merchantId and
+            acquirerId are not allowed.<br>Mastercard - Conditionally required
+            if merchant ID control is enabled<br>Visa - Conditionally required
+            if merchant ID control is enabled
+        merchantIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Merchant-Id'
+    Merchant-Id:
+      type: object
+      title: MerchantId
+      properties:
+        cardAcceptorId:
+          type: string
+          maxLength: 15
+          description: >-
+            Specifies the Card Acceptor ID that should be allowed / disallowed
+            when transacting with the virtual card.<br>Mastercard - Not
+            applicable<br>Visa - Conditionally required if merchant ID control
+            is enabled
+          example: '123456'
+        acquirerId:
+          type: string
+          maxLength: 15
+          description: >-
+            Specifies the Acquirer ID that should be allowed / disallowed when
+            transacting with the virtual card.<br>Mastercard - Not
+            applicable<br>Visa - Optional
+          example: '123456'
+    Merchant-Id-Request:
+      type: object
+      title: MerchantIdRequest
+      properties:
+        allowed:
+          type: boolean
+          description: >-
+            Indicate whether the values in merchantId and acquirerId are allowed
+            or disallowed.<br> True = values provided in merchantId and
+            acquirerId are allowed<br> False = values provided in merchantId and
+            acquirerId are not allowed.<br>Mastercard - Conditionally required
+            if merchant ID control is enabled<br>Visa - Conditionally required
+            if merchant ID control is enabled
+        merchantIds:
+          type: array
+          description: >-
+            Specifies the Merchant ID that should be allowed / disallowed when
+            transacting with the virtual card.
+          items:
+            $ref: '#/components/schemas/Merchant-Id'
+    Spend-Velocity-Response:
+      type: object
+      title: SpendVelocityResponse
+      properties:
+        maxAuth:
+          type: number
+          description: >-
+            Limits the number of authorizations that can be made with a VCA.
+            Should be set to 1, if a single-use VCA is created. Specify any
+            value larger than one for a multi-use VCA. Mastercard: Set to 0, if
+            unlimited authorizations should be allowed. (0 is not applicable for
+            Visa)
+        cumulativeSpendLimit:
+          type: number
+          description: >-
+            Limits the overall amount that can be spent on the virtual card
+            account.<br>Mastercard - Allows a maximum of 14 digits (12 digits to
+            the left of the decimal and 2 digits to the right of the
+            decimal)<br>Visa - Allows a maximum of 12 digits (10 digits to the
+            left of the decimal and 2 digits to the right of the decimal)
+        periodType:
+          type: string
+          description: >
+            Period for which the control values are valid before they
+            reset<br><br>Mastercard:<br>
+
+              * `D` - Daily. The balances of control parameters enabled for a VCA are reset with their original values every day at 00:00:00.
+              * `M` - Monthly. The balances of control parameters enabled for a VCA are reset with their original values at the start of every month.
+              * `W` - Weekly. The balances of control parameters enabled for a VCA are reset with their original values every Monday at 00:00:00.
+              * `Q` - Quarterly. The balances of control parameters enabled for a VCA are reset with their original values on the first day of every quarter at 00:00:00.
+              * `Y` - Annually. The balances of control parameters enabled for a VCA are reset with their original values every year on January 1st at 00:00:00.
+              * `C` - Continuous. The balances of control parameters enabled for a VCA are retained continuously for the validity period defined.<br><br>Visa:<br>
+              * `1` - Recurring. The balances of control parameters enabled for a VCA are reset with their original values on a specified recurring day for every month. If you select this periodType, you must also populate the resetDay field.
+              * `2` - Monthly. The balances of control parameters enabled for a VCA are reset with their original values on a specified recurring day for every month.
+              * `3` - Date Range. The balances of control parameters enabled for a VCA are retained continuously for the validity period defined. If you select this periodType, then validityStartDate and validityEndDate fields are required.
+        availableBalance:
+          type: number
+          description: The remaining balance available to spend on the virtual card.
+        periodEndDate:
+          type: string
+          description: End date of the current period based on the periodType selected.
+        resetDay:
+          type: number
+          description: >-
+            Select a number between 1-28 to identify the day each month when the
+            control parameter balances should reset to their original value.
+            This field is only applicable if periodType was defined as "1".
+    Spend-Velocity-Request:
+      type: object
+      title: SpendVelocityRequest
+      properties:
+        maxAuth:
+          type: number
+          description: >-
+            Limits the number of authorizations that can be made with a VCA.
+            Should be set to 1, if a single-use VCA is created. Specify any
+            value larger than one for a multi-use VCA. Mastercard: Set to 0, if
+            unlimited authorizations should be allowed. (0 is not applicable for
+            Visa)<br><br>Mastercard - Optional. Allows a maximum of 8
+            digits<br><br>Visa - Required. Allows a maximum of 10 digits
+        cumulativeSpendLimit:
+          type: number
+          description: >-
+            Limits the overall amount that can be spent on the virtual card
+            account.<br><br>Mastercard - Optional. Allows a maximum of 14 digits
+            (12 digits to the left of the decimal and 2 digits to the right of
+            the decimal)<br><br>Visa - Required. Allows a maximum of 12 digits
+            (10 digits to the left of the decimal and 2 digits to the right of
+            the decimal)
+        periodType:
+          type: string
+          description: >
+            Period for which the control values are valid before they
+            reset<br><br>Mastercard:<br>
+
+              * `D` - Daily. The balances of control parameters enabled for a VCA are reset with their original values every day at 00:00:00.
+              * `M` - Monthly. The balances of control parameters enabled for a VCA are reset with their original values at the start of every month.
+              * `W` - Weekly. The balances of control parameters enabled for a VCA are reset with their original values every Monday at 00:00:00.
+              * `Q` - Quarterly. The balances of control parameters enabled for a VCA are reset with their original values on the first day of every quarter at 00:00:00.
+              * `Y` - Annually. The balances of control parameters enabled for a VCA are reset with their original values every year on January 1st at 00:00:00.
+              * `C` - Continuous. The balances of control parameters enabled for a VCA are retained continuously for the validity period defined.<br><br>Visa:<br>
+              * `1` - Recurring. If you select this periodType, you must also populate the resetDay field.
+              * `2` - Monthly. The balances of control parameters enabled for a VCA are reset with their original values on a specified recurring day for every month.
+              * `3` - Date Range. If you select this periodType, you must also populate the validityStartDate and validityEndDate fields.
+        resetDay:
+          type: number
+          description: >-
+            Select a number between 1-28 to identify the day each month when the
+            control parameter balances should reset to their original value.
+            This field is only applicable if periodType was defined as "1".
+    Curfew-Time:
+      type: object
+      title: CurfewTime
+      properties:
+        startTime:
+          type: string
+          description: >-
+            Specifies the start time until which the virtual card account can be
+            used on the particular day specified in weekDaysEffective. Format -
+            24-hour format<br>Mastercard - Optional<br>Visa - Not applicable
+        endTime:
+          type: string
+          description: >-
+            Specifies the end time until which the virtual card account can be
+            used on the particular day specified in weekDaysEffective. Format -
+            24-hour format<br>Mastercard - Optional<br>Visa - Not applicable
+        weekdaysEffective:
+          type: array
+          description: >-
+            Specifies the day applied to start and end times.<br>Mastercard -
+            Optional<br>Visa - Not applicable<br><br>Possible
+            Values:<br><br>Mon<br>Tue<br>Wed<br>Thu<br>Fri<br>Sat<br>Sun
+          items:
+            type: string
+    Vca-Create-Request:
+      type: object
+      title: VcaCreateRequest
+      required:
+        - programId
+        - messageId
+        - fundingSourceId
+        - timeZone
+        - customReference
+      properties:
+        fundingSourceId:
+          type: string
+          description: >-
+            Unique identifier of the funding source to which the virtual card
+            rolls up to.<br/><br/>Mastercard - This value is returned in the ID
+            Provisioning API. Mastercard generates this value when a funding
+            account is onboarded to the VCA platform.<br/><br/>Visa - This is
+            the proxy pool account name/number that is onboarded to the Visa VCA
+            platform
+        fundingSourceName:
+          type: string
+          description: >-
+            Descriptive name of the real card to which the virtual card rolls up
+            to.<br/><br/>Mastercard - Required. This value is returned in the ID
+            Provisioning API<br/><br/>Visa - Not applicable
+        programId:
+          type: string
+          description: >-
+            Unique ID of the company record defined in the virtual cards
+            platform.<br/><br/>Mastercard - This value is returned in the ID
+            Provisioning API.<br/><br/>Visa - This value is generated when the
+            VCA program is onboarded to Visa's VCA platform
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.
+        mccGrouping:
+          type: array
+          description: >-
+            Limits authorizations to defined Merchant Category Codes. Cannot be
+            used in conjunction with the mccRange field.<br/><br/>Mastercard -
+            The name of the Purchase Type configured on the Purchase
+            Template.<br/><br/>Visa - Pass a list of MCCGs defined by Visa to
+            allow or block VCA transactions.
+          items:
+            type: string
+        mccRange:
+          type: array
+          description: >-
+            Limits authorizations to a defined range of Merchant Category
+            Codes.(eg: [0001-9999, 2000-2999]). Cannot be used in conjunction
+            with the mccGrouping field.<br>Mastercard - Not Applicable<br>Visa -
+            Optional
+          items:
+            type: string
+        mccgAllowed:
+          type: boolean
+          description: >-
+            Required if the mccGrouping field is populated or if the mccRange
+            field is populated. Specifies whether the mccGrouping or mccRange is
+            allowed or disallowed.<br/><br/>Mastercard - Not applicable<br>Visa
+            - Conditionally required, if mccGrouping or mccRange is provided
+          example: true
+        getCardImage:
+          type: boolean
+          description: >-
+            Specifies whether cardImage field needs to be included in the
+            response or not.
+
+            <br>Visa - Not applicable
+
+            Mastercard - `Optional field` if not included, cardImage will be
+            sent in the response.
+
+            * True = cardImage field will be sent in the response
+
+            * False = cardImage field will not be sent in the response.
+        currencyCode:
+          type: string
+          description: >-
+            Currency Code in which VCA amounts are expressed. <br>Mastercard -
+            currencyCode is not required if currencyType = "B" for billing
+            account currency. currencyCode is required if currencyType = "M" for
+            merchant transaction currency. <br>Visa - Required
+        currencyType:
+          type: string
+          description: >-
+            Mastercard - Defines the type of the VCA currency.<br> - Value "B"
+            stands for Billing Currency which indicates that the VCA spend limit
+            is expressed in the billing account currency of the underlying
+            funding source.<br> - Value "M" stands for Merchant Currency which
+            indicates that Merchant transactions are limited to the VCA currency
+            provided in the currencyCode field. <br>Visa - The only valid value
+            is "M", which stands for Merchant Currency.
+        timeZone:
+          type: string
+          description: >-
+            Defines the time zone applicable for any of the following date or
+            time parameters within controls set for a VCA:
+
+            * Validity Period Control
+
+            * Aging Velocity Control (Mastercard only)
+
+            * Curfew Control
+
+            * Time of Day Control
+        paymentBeneficiaryId:
+          type: number
+          description: >-
+            Uniquely identifies the payment beneficiary for which the virtual
+            card is created.<br>Mastercard - Required<br>Visa - Not applicable
+        paymentBeneficiaryEmails:
+          type: array
+          description: >-
+            Lists of up to 5 email addresses separated by semicolon to which the
+            virtual card details should be sent to.<br><br>Mastercard -
+            Optional<br>Visa - Not applicable
+          items:
+            type: string
+        customReference:
+          type: array
+          description: >-
+            Up to 29 custom reference field labels and values can be defined in
+            a given request. A custom reference value cannot be sent without a
+            corresponding custom reference label.
+          items:
+            $ref: '#/components/schemas/Custom-Reference'
+        templateId:
+          type: number
+          description: >-
+            Identifies the template that was setup in the VCA system and that
+            should be used for this virtual card.<br><br>Mastercard -
+            Required<br>Visa - Not applicable
+        expiryDate:
+          type: string
+          description: >-
+            Expiry Date of the virtual card account. Represented in UTC time
+            zone. Must be at least 1 month into the future and cannot be more
+            than 24 months in the future. Format - MMYYYY<br>Mastercard -
+            Required<br>Visa - Not applicable. The expiry date is inherited from
+            the underlying funding account
+        enableSpendVelocityControl:
+          type: boolean
+          description: >-
+            Limits the frequency and total cumulative amount of authorizations
+            performed on the VCA within a specified period.<br/><br/>Mastercard:
+            The control is mandatory unless Aging Velocity Control is used. This
+            control cannot be used in combination with the Aging Velocity
+            Control.<br/><br/>Visa: Spend Velocity Control is mandatory.
+        spendVelocity:
+          type: array
+          items:
+            $ref: '#/components/schemas/Spend-Velocity-Request'
+        enableValidityPeriodControl:
+          type: boolean
+          description: >-
+            Limits authorization activity to a specific time
+            period.<br>Mastercard - Optional<br>Visa - Required
+        validityStartDate:
+          type: string
+          description: >-
+            Identifies the date from which the virtual card account can be used
+            for transactions. Format - YYYY-MM-DD<br>Mastercard -
+            Optional<br>Visa - Optional. If not provided, then will be defaulted
+            to today's date
+        validityEndDate:
+          type: string
+          description: >-
+            Identifies the date until which the virtual card account can be used
+            for transactions. Format - YYYY-MM-DD<br>Mastercard -
+            Optional<br>Visa - Required
+        enableAmountRangeControl:
+          type: boolean
+          description: >-
+            Approves a transaction only if the requested amount for
+            authorization is equal to or greater than the Minimum Amount and
+            less than or equal to the Maximum Amount. This control cannot be
+            used in combination with Transaction Limit Control.<br>Mastercard -
+            Optional<br>Visa - Optional
+        maxAmount:
+          type: number
+          description: >-
+            Identifies the maximum allowed transaction amount.<br><br>Mastercard
+            - Optional. Max character length - 14 digits (12 digits to the left
+            of the decimal and 2 digits to the right of the decimal)<br><br>Visa
+            - Optional. Max character length - 12 digits (10 digits to the left
+            of the decimal and 2 digits to the right of the decimal)
+        minAmount:
+          type: number
+          description: >-
+            Identifies the minimum allowed transaction amount.<br><br>Mastercard
+            - Max character length - 14 digits (12 digits to the left of the
+            decimal and 2 digits to the right of the decimal)<br><br>Visa -
+            Optional. Max character length - 12 digits (10 digits to the left of
+            the decimal and 2 digits to the right of the decimal)
+        enableTransactionLimitControl:
+          type: boolean
+          description: >-
+            Limits individual transactions to a maximum amount. This control
+            cannot be used in combination with Amount Range
+            Control.<br>Mastercard - Optional<br>Visa - Optional
+        amountLimit:
+          type: number
+          description: >-
+            Identifies the maximum allowed transaction amount.<br><br>Mastercard
+            - Optional. Max character length - 17<br><br>Visa - Optional. Only
+            integer value allowed. Max character length - 7
+        enableCurfewControl:
+          type: boolean
+          description: >-
+            Limits authorization activity to a single time period for each day
+            selected. This control cannot be used in combination with Time Of
+            Day Control.<br>Mastercard - Optional<br>Visa - Not applicable
+        curfewTime:
+          $ref: '#/components/schemas/Curfew-Time'
+        enableTimeOfDayControl:
+          type: boolean
+          description: >-
+            Limits authorization request to defined time periods each
+            day.<br>Mastercard - Optional<br>Visa - Optional
+        timeOfDay:
+          type: array
+          items:
+            $ref: '#/components/schemas/Time-Of-Day'
+        enableAgingVelocityControl:
+          type: boolean
+          description: >-
+            Sets a cumulative amount and keeps track of the current remaining
+            balance. Allows the requester to 'age off' approved authorization
+            requests that have not been cleared by the merchant after a defined
+            number of days.<br>Mastercard - Optional<br>Visa - Not applicable
+        cumulativeSpendLimit:
+          type: number
+          description: >-
+            Limits the overall amount that can be spent on the virtual card
+            account. This field is associated to the Aging Velocity
+            Control.<br>Mastercard - Optional. Max character length - 14 digits
+            (12 digits to the left of the decimal and 2 digits to the right of
+            the decimal)<br>Visa - Not applicable
+        authorizationHoldDays:
+          type: number
+          description: >-
+            Identifies the number of days after which an authorization gets aged
+            off if no matching clearing record was received.<br>Mastercard -
+            Optional<br>Visa - Not applicable
+        enableGeographyControl:
+          type: boolean
+          description: >-
+            Limits authorization requests to a defined geographic location. This
+            is an optional control. If this control is not used, pass False or
+            leave this section out from the request. If value passed is True,
+            all fields in this section are required.<br>Mastercard -
+            Optional<br>Visa - Optional
+        countryCodes:
+          type: array
+          example:
+            - USA
+          description: >-
+            Comma delimited list defining the merchant country in which the VCA
+            can or cannot be used.<br>Mastercard - Optional<br>Visa - Optional
+          items:
+            type: string
+        allowed:
+          type: boolean
+          description: >-
+            Indicate whether the values in countryCode are allowed or
+            disallowed.<br> True = values provided in countryCode are
+            allowed<br> False = values provided in countryCode are not
+            allowed<br>Mastercard - Optional<br>Visa - Optional
+        enableMerchantIdControl:
+          type: boolean
+          description: >-
+            Limits authorizations to a particular merchant using the Merchant ID
+            and Acquirer ID (Mastercard) or Card Acceptor ID
+            (Visa).<br>Mastercard - Optional<br>Visa - Optional
+        merchantId:
+          $ref: '#/components/schemas/Merchant-Id-Request'
+    Vca-Create-Response:
+      type: object
+      title: VcaCreateResponse
+      properties:
+        vcaId:
+          type: string
+          description: >-
+            A reference number that uniquely identifies the virtual card
+            account.
+        cardImage:
+          type: string
+          description: A visual representation of the virtual card account front and back.
+        currencyCode:
+          type: string
+          description: >-
+            Currency Code in which VCA amounts are expressed. Mastercard -
+            currencyCode is not required if currencyType = "B". Visa - Specifies
+            whether Merchant transactions are limited to the VCA currency
+            provided in the currencyCode field. The only possible value is "M".
+        timeZone:
+          type: string
+          description: >-
+            Defines the time zone applicable for any date or time parameters
+            within controls set for a VCA.
+        virtualCardAccountNumber:
+          type: string
+          description: The virtual card account number to use for transactions.
+        expiryDate:
+          type: string
+          description: >-
+            Expiry Date of the virtual card account. Represented in UTC time
+            zone. Format - MMYYYY
+        securityCode:
+          type: string
+          description: >-
+            The security code (i.e. cvv) corresponding to the virtual card
+            account.
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.
+        mccGrouping:
+          type: array
+          description: Limits authorizations to defined Merchant Category Codes.
+          items:
+            type: string
+        mccRange:
+          type: array
+          description: >-
+            Limits authorizations to a defined range of Merchant Category
+            Codes.(eg: [0001-9999, 2000-2999])
+          items:
+            type: string
+        mccgAllowed:
+          type: boolean
+          description: >-
+            Required if the mccGrouping field is populated with either a range
+            of MCCs, or a MCCG (ex: AUTO, AIR). Specify whether the mccGrouping
+            are allowed or disallowed.
+          example: true
+        currencyType:
+          type: string
+          description: >-
+            Mastercard - Defines the type of the VCA currency. - Value "B"
+            stands for Billing Currency. - Value "M" stands for Merchant
+            Currency. Visa - The only possible value is "M".
+        paymentBeneficiaryId:
+          type: number
+          description: >-
+            Uniquely identifies the payment beneficiary for which the virtual
+            card is created.
+        paymentBeneficiaryEmails:
+          type: array
+          description: >-
+            Lists of up to 5 email addresses separated by semicolon to which the
+            virtual card details should be sent to.<br><br>Mastercard -
+            Optional<br>Visa - Not applicable
+          items:
+            type: string
+        customReference:
+          type: array
+          items:
+            $ref: '#/components/schemas/Custom-Reference'
+        templateId:
+          type: number
+          description: >-
+            Identifies the template that was setup in the VCA system and that
+            should be used for this virtual card.
+        cumulativeSpendLimit:
+          type: number
+          description: >-
+            Limits the overall amount that can be spent on the virtual card
+            account. This field is associated to the Aging Velocity
+            Control.<br>Mastercard - Optional. Max character length - 14 digits
+            (12 digits to the left of the decimal and 2 digits to the right of
+            the decimal)<br>Visa - Not applicable
+        standInVca:
+          type: boolean
+          description: >-
+            Indicates whether the VCA details returned are generated from the
+            VCA platform, or a pre-generated VCA from Citi. If "true" is
+            returned then the VCA returned is a pre-generated VCA from Citi. If
+            the "false" is returned or if the field is not returned then the VCA
+            returned is from the backend VCA platform.
+        warning:
+          type: array
+          description: >-
+            Warning information regarding a non-fatal response condition that
+            may be taken into account, but can be ignored
+          example:
+            - >-
+              The VCA Details returned are for a pre-generated VCA from Citi, as
+              the backend VCA platform is currently unavailable
+          items:
+            type: string
+        enableSpendVelocityControl:
+          type: boolean
+          description: >-
+            Limits the frequency and total cumulative amount of authorizations
+            performed on the VCA within a specified period.
+        spendVelocity:
+          type: array
+          items:
+            $ref: '#/components/schemas/Spend-Velocity-Response'
+        enableValidityPeriodControl:
+          type: boolean
+          description: Limits authorization activity to a specific time period.
+        validityStartDate:
+          type: string
+          description: >-
+            Identifies the date from which the virtual card account can be used
+            for transactions. Format - YYYY-MM-DD
+        validityEndDate:
+          type: string
+          description: >-
+            Identifies the date until which the virtual card account can be used
+            for transactions. Format - YYYY-MM-DD
+        enableAmountRangeControl:
+          type: boolean
+          description: >-
+            Approves a transaction only if the requested amount for
+            authorization is equal to or greater than the Minimum Amount and
+            less than or equal to the Maximum Amount.
+        maxAmount:
+          type: number
+          description: Identifies the maximum allowed transaction amount.
+        minAmount:
+          type: number
+          description: Identifies the minimum allowed transaction amount.
+        enableTransactionLimitControl:
+          type: boolean
+          description: Limits individual transactions to a maximum amount.
+        amountLimit:
+          type: number
+          description: Identifies the maximum allowed transaction amount.
+        enableCurfewControl:
+          type: boolean
+          description: >-
+            Limits authorization activity to a single time period for each day
+            selected.
+        curfewTime:
+          $ref: '#/components/schemas/Curfew-Time'
+        enableTimeOfDayControl:
+          type: boolean
+          description: Limits authorization request to defined time periods each day.
+        timeOfDay:
+          type: array
+          items:
+            $ref: '#/components/schemas/Time-Of-Day'
+        enableAgingVelocityControl:
+          type: boolean
+          description: >-
+            Sets a cumulative amount and keeps track of the current remaining
+            balance. Allows the requester to age off approved authorization
+            requests that have not been cleared by the merchant after a defined
+            number of days.
+        authorizationHoldDays:
+          type: number
+          description: >-
+            Identifies the number of days after which an authorization gets aged
+            off if no matching clearing record was received.
+        availableBalance:
+          type: number
+          description: >-
+            The current available balance for the virtual card account,
+            associated to Aging Velocity Control. This is provided at the
+            message level for easy access.
+        enableGeographyControl:
+          type: boolean
+          description: >-
+            Limits authorization requests to a defined geographic location. This
+            is an optional control. If this control is not used, pass False or
+            leave this section out from the request. If value passed is True,
+            all fields in this section are required.<br>Mastercard -
+            Optional<br>Visa - Optional
+        countryCodes:
+          type: array
+          example:
+            - USA
+          description: >-
+            Defines the merchant country in which the VCA can or cannot be
+            used.<br>Mastercard - Optional<br>Visa - Optional
+          items:
+            type: string
+        allowed:
+          type: boolean
+          description: >-
+            Indicate whether the values in countryCode are allowed or
+            disallowed. True = values provided in countryCode are allowed False
+            = values provided in countryCode are not allowed
+        enableMerchantIdControl:
+          type: boolean
+          description: >-
+            Limits authorizations to a particular merchant using the Merchant ID
+            and Acquirer ID (Mastercard) or Card Acceptor ID (Visa).
+        merchantInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/Merchant-Id-Response'
+    Vca-Modify-Request:
+      type: object
+      title: VcaModifyRequest
+      required:
+        - vcaId
+        - programId
+        - messageId
+        - fundingSourceId
+        - customReference
+      properties:
+        vcaId:
+          type: number
+          description: >-
+            A reference number that uniquely identifies the virtual card
+            account.
+        fundingSourceId:
+          type: string
+          description: >-
+            Unique identifier of the funding source to which the virtual card
+            rolls up to.<br/><br/>Mastercard - This value is returned in the ID
+            Provisioning API. Mastercard generates this value when a funding
+            account is onboarded to the VCA platform.<br/><br/>Visa - This is
+            the proxy pool account name/number that is onboarded to the Visa VCA
+            platform
+        fundingSourceName:
+          type: string
+          description: >-
+            Descriptive name of the real card to which the virtual card rolls up
+            to.<br/><br/>Mastercard - Required. This value is returned in the ID
+            Provisioning API<br/><br/>Visa - Not applicable
+        programId:
+          type: string
+          description: >-
+            Unique ID of the company record defined in the virtual cards
+            platform.<br/><br/>Mastercard - This value is returned in the ID
+            Provisioning API.<br/><br/>Visa - This value is generated when the
+            VCA program is onboarded to Visa's VCA platform
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.
+        mccGrouping:
+          type: array
+          description: >-
+            Limits authorizations to defined Merchant Category Codes. Cannot be
+            used in conjunction with the mccRange field.<br/><br/>Mastercard -
+            The name of the Purchase Type configured on the Purchase
+            Template.<br/><br/>Visa - Pass a list of MCCGs defined by Visa to
+            allow or block VCA transactions.
+          items:
+            type: string
+        mccRange:
+          type: array
+          description: >-
+            Limits authorizations to a defined range of Merchant Category
+            Codes.(eg: [0001-9999, 2000-2999]). Cannot be used in conjunction
+            with the mccGrouping field.<br>Mastercard - Not Applicable<br>Visa -
+            Optional
+          items:
+            type: string
+        mccgAllowed:
+          type: boolean
+          description: >-
+            Required if the mccGrouping field is populated or if the mccRange
+            field is populated. Specifies whether the mccGrouping or mccRange is
+            allowed or disallowed.<br/><br/>Mastercard - Not applicable<br>Visa
+            - Conditionally required, if mccGrouping or mccRange is provided
+          example: true
+        getCardImage:
+          type: boolean
+          description: >-
+            Specifies whether cardImage field needs to be included in the
+            response or not.
+
+            <br>Visa - Not applicable
+
+            Mastercard - `Optional field` if not included, cardImage will be
+            sent in the response.
+
+            * True = cardImage field will be sent in the response
+
+            * False = cardImage field will not be sent in the response.
+        currencyCode:
+          type: string
+          description: >-
+            Currency Code in which VCA amounts are expressed. <br>Mastercard -
+            currencyCode is not required if currencyType = "B" for billing
+            account currency. currencyCode is required if currencyType = "M" for
+            merchant transaction currency. <br>Visa - Required
+        currencyType:
+          type: string
+          description: >-
+            Mastercard - Defines the type of the VCA currency.<br> - Value "B"
+            stands for Billing Currency which indicates that the VCA spend limit
+            is expressed in the billing account currency of the underlying
+            funding source.<br> - Value "M" stands for Merchant Currency which
+            indicates that Merchant transactions are limited to the VCA currency
+            provided in the currencyCode field. <br>Visa - The only valid value
+            is "M", which stands for Merchant Currency.
+        timeZone:
+          type: string
+          description: >-
+            Defines the time zone applicable for any of the following date or
+            time parameters within controls set for a VCA:
+
+            * Validity Period Control
+
+            * Aging Velocity Control (Mastercard only)
+
+            * Curfew Control
+
+            * Time of Day Control
+        paymentBeneficiaryId:
+          type: number
+          description: >-
+            Uniquely identifies the payment beneficiary for which the virtual
+            card is created.<br>Mastercard - Required<br>Visa - Not applicable
+        paymentBeneficiaryEmails:
+          type: array
+          description: >-
+            Lists of up to 5 email addresses separated by semicolon to which the
+            virtual card details should be sent to.<br><br>Mastercard -
+            Optional<br>Visa - Not applicable
+          items:
+            type: string
+        customReference:
+          type: array
+          description: >-
+            Up to 29 custom reference field labels and values can be defined in
+            a given request. A custom reference value cannot be sent without a
+            corresponding custom reference label.
+          items:
+            $ref: '#/components/schemas/Custom-Reference'
+        templateId:
+          type: number
+          description: >-
+            Identifies the template that was setup in the VCA system and that
+            should be used for this virtual card.<br><br>Mastercard -
+            Required<br>Visa - Not applicable
+        expiryDate:
+          type: string
+          description: >-
+            Expiry Date of the virtual card account. Represented in UTC time
+            zone. Must be at least 1 month into the future and cannot be more
+            than 24 months in the future. Format - MMYYYY<br>Mastercard -
+            Required<br>Visa - Not applicable. The expiry date is inherited from
+            the underlying funding account
+        cumulativeSpendLimit:
+          type: number
+          description: >-
+            Limits the overall amount that can be spent on the virtual card
+            account. This field is associated to the Aging Velocity
+            Control.<br>Mastercard - Optional. Max character length - 14 digits
+            (12 digits to the left of the decimal and 2 digits to the right of
+            the decimal)<br>Visa - Not applicable
+        maxAuth:
+          type: number
+          description: Limits the number of authorizations that can be made with a VCA.
+        modifySpendVelocityControl:
+          type: boolean
+          description: >-
+            Limits the frequency and total cumulative amount of authorizations
+            performed on the VCA within a specified period.<br/><br/>Mastercard:
+            The control is mandatory unless Aging Velocity Control is used. This
+            control cannot be used in combination with the Aging Velocity
+            Control.<br/><br/>Visa: Spend Velocity Control is mandatory.
+        spendVelocity:
+          type: array
+          items:
+            $ref: '#/components/schemas/Spend-Velocity-Request'
+        modifyValidityPeriodControl:
+          type: boolean
+          description: >-
+            Limits authorization activity to a specific time
+            period.<br>Mastercard - Optional<br>Visa - Required
+        validityStartDate:
+          type: string
+          description: >-
+            Identifies the date from which the virtual card account can be used
+            for transactions. Format - YYYY-MM-DD<br>Mastercard -
+            Optional<br>Visa - Optional. If not provided, then will be defaulted
+            to today's date
+        validityEndDate:
+          type: string
+          description: >-
+            Identifies the date until which the virtual card account can be used
+            for transactions. Format - YYYY-MM-DD<br>Mastercard -
+            Optional<br>Visa - Required
+        modifyAmountRangeControl:
+          type: boolean
+          description: >-
+            Approves a transaction only if the requested amount for
+            authorization is equal to or greater than the Minimum Amount and
+            less than or equal to the Maximum Amount. This control cannot be
+            used in combination with Transaction Limit Control.<br>Mastercard -
+            Optional<br>Visa - Optional
+        maxAmount:
+          type: number
+          description: >-
+            Identifies the maximum allowed transaction amount.<br><br>Mastercard
+            - Optional. Max character length - 14 digits (12 digits to the left
+            of the decimal and 2 digits to the right of the decimal)<br><br>Visa
+            - Optional. Max character length - 12 digits (10 digits to the left
+            of the decimal and 2 digits to the right of the decimal)
+        minAmount:
+          type: number
+          description: >-
+            Identifies the minimum allowed transaction amount.<br><br>Mastercard
+            - Max character length - 14 digits (12 digits to the left of the
+            decimal and 2 digits to the right of the decimal)<br><br>Visa -
+            Optional. Max character length - 12 digits (10 digits to the left of
+            the decimal and 2 digits to the right of the decimal)
+        modifyTransactionLimitControl:
+          type: boolean
+          description: >-
+            Limits individual transactions to a maximum amount. This control
+            cannot be used in combination with Amount Range
+            Control.<br>Mastercard - Optional<br>Visa - Optional
+        amountLimit:
+          type: number
+          description: >-
+            Identifies the maximum allowed transaction amount.<br><br>Mastercard
+            - Optional. Max character length - 17<br><br>Visa - Optional. Only
+            integer value allowed. Max character length - 7
+        modifyCurfewControl:
+          type: boolean
+          description: >-
+            Limits authorization activity to a single time period for each day
+            selected. This control cannot be used in combination with Time Of
+            Day Control.<br>Mastercard - Optional<br>Visa - Not applicable
+        curfewTime:
+          $ref: '#/components/schemas/Curfew-Time'
+        modifyTimeOfDayControl:
+          type: boolean
+          description: >-
+            Limits authorization request to defined time periods each
+            day.<br>Mastercard - Optional<br>Visa - Optional
+        timeOfDay:
+          type: array
+          items:
+            $ref: '#/components/schemas/Time-Of-Day'
+        modifyAgingVelocityControl:
+          type: boolean
+          description: >-
+            Sets a cumulative amount and keeps track of the current remaining
+            balance. Allows the requester to 'age off' approved authorization
+            requests that have not been cleared by the merchant after a defined
+            number of days.<br>Mastercard - Optional<br>Visa - Not applicable
+        authorizationHoldDays:
+          type: number
+          description: >-
+            Identifies the number of days after which an authorization gets aged
+            off if no matching clearing record was received.<br>Mastercard -
+            Optional<br>Visa - Not applicable
+        modifyGeographyControl:
+          type: boolean
+          description: >-
+            Limits authorization requests to a defined geographic location. This
+            is an optional control. If this control is not used, pass False or
+            leave this section out from the request. If value passed is True,
+            all fields in this section are required.<br>Mastercard -
+            Optional<br>Visa - Optional
+        countryCodes:
+          type: array
+          example:
+            - USA
+          description: >-
+            Comma delimited list defining the merchant country in which the VCA
+            can or cannot be used.<br>Mastercard - Optional<br>Visa - Optional
+          items:
+            type: string
+        allowed:
+          type: boolean
+          description: >-
+            Indicate whether the values in countryCode are allowed or
+            disallowed.<br> True = values provided in countryCode are
+            allowed<br> False = values provided in countryCode are not
+            allowed<br>Mastercard - Optional<br>Visa - Optional
+        modifyMerchantIdControl:
+          type: boolean
+          description: >-
+            Limits authorizations to a particular merchant using the Merchant ID
+            and Acquirer ID (Mastercard) or Card Acceptor ID
+            (Visa).<br>Mastercard - Optional<br>Visa - Optional
+        merchantId:
+          $ref: '#/components/schemas/Merchant-Id-Request'
+    Vca-Modify-Response:
+      type: object
+      title: VcaModifyResponse
+      properties:
+        vcaId:
+          type: string
+          description: >-
+            A reference number that uniquely identifies the virtual card
+            account.
+        cardImage:
+          type: string
+          description: A visual representation of the virtual card account front and back.
+        currencyCode:
+          type: string
+          description: >-
+            Currency Code in which VCA amounts are expressed. Mastercard -
+            currencyCode is not required if currencyType = "B". Visa - Specifies
+            whether Merchant transactions are limited to the VCA currency
+            provided in the currencyCode field. The only possible value is "M".
+        timeZone:
+          type: string
+          description: >-
+            Defines the time zone applicable for any date or time parameters
+            within controls set for a VCA.
+        virtualCardAccountNumber:
+          type: string
+          description: The virtual card account number to use for transactions.
+        expiryDate:
+          type: string
+          description: >-
+            Expiry Date of the virtual card account. Represented in UTC time
+            zone. Format - MMYYYY
+        securityCode:
+          type: string
+          description: >-
+            The security code (i.e. cvv) corresponding to the virtual card
+            account.
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.
+        mccGrouping:
+          type: array
+          description: Limits authorizations to defined Merchant Category Codes.
+          items:
+            type: string
+        mccRange:
+          type: array
+          description: >-
+            Limits authorizations to a defined range of Merchant Category
+            Codes.(eg: [0001-9999, 2000-2999])
+          items:
+            type: string
+        mccgAllowed:
+          type: boolean
+          description: >-
+            Required if the mccGrouping field is populated with either a range
+            of MCCs, or a MCCG (ex: AUTO, AIR). Specify whether the mccGrouping
+            are allowed or disallowed.
+          example: true
+        currencyType:
+          type: string
+          description: >-
+            Mastercard - Defines the type of the VCA currency. - Value "B"
+            stands for Billing Currency. - Value "M" stands for Merchant
+            Currency. Visa - The only possible value is "M".
+        paymentBeneficiaryId:
+          type: number
+          description: >-
+            Uniquely identifies the payment beneficiary for which the virtual
+            card is created.
+        paymentBeneficiaryEmails:
+          type: array
+          description: >-
+            Lists of up to 5 email addresses separated by semicolon to which the
+            virtual card details should be sent to.<br><br>Mastercard -
+            Optional<br>Visa - Not applicable
+          items:
+            type: string
+        customReference:
+          type: array
+          items:
+            $ref: '#/components/schemas/Custom-Reference'
+        templateId:
+          type: number
+          description: >-
+            Identifies the template that was setup in the VCA system and that
+            should be used for this virtual card.
+        cumulativeSpendLimit:
+          type: number
+          description: >-
+            Limits the overall amount that can be spent on the virtual card
+            account. This field is associated to the Aging Velocity
+            Control.<br>Mastercard - Optional. Max character length - 14 digits
+            (12 digits to the left of the decimal and 2 digits to the right of
+            the decimal)<br>Visa - Not applicable
+        modifySpendVelocityControl:
+          type: boolean
+          description: >-
+            Limits the frequency and total cumulative amount of authorizations
+            performed on the VCA within a specified period.
+        spendVelocity:
+          type: array
+          items:
+            $ref: '#/components/schemas/Spend-Velocity-Response'
+        modifyValidityPeriodControl:
+          type: boolean
+          description: Limits authorization activity to a specific time period.
+        validityStartDate:
+          type: string
+          description: >-
+            Identifies the date from which the virtual card account can be used
+            for transactions. Format - YYYY-MM-DD
+        validityEndDate:
+          type: string
+          description: >-
+            Identifies the date until which the virtual card account can be used
+            for transactions. Format - YYYY-MM-DD
+        modifyAmountRangeControl:
+          type: boolean
+          description: >-
+            Approves a transaction only if the requested amount for
+            authorization is equal to or greater than the Minimum Amount and
+            less than or equal to the Maximum Amount.
+        maxAmount:
+          type: number
+          description: Identifies the maximum allowed transaction amount.
+        minAmount:
+          type: number
+          description: Identifies the minimum allowed transaction amount.
+        modifyTransactionLimitControl:
+          type: boolean
+          description: Limits individual transactions to a maximum amount.
+        amountLimit:
+          type: number
+          description: Identifies the maximum allowed transaction amount.
+        modifyCurfewControl:
+          type: boolean
+          description: >-
+            Limits authorization activity to a single time period for each day
+            selected.
+        curfewTime:
+          $ref: '#/components/schemas/Curfew-Time'
+        modifyTimeOfDayControl:
+          type: boolean
+          description: Limits authorization request to defined time periods each day.
+        timeOfDay:
+          type: array
+          items:
+            $ref: '#/components/schemas/Time-Of-Day'
+        modifyAgingVelocityControl:
+          type: boolean
+          description: >-
+            Sets a cumulative amount and keeps track of the current remaining
+            balance. Allows the requester to age off approved authorization
+            requests that have not been cleared by the merchant after a defined
+            number of days.
+        authorizationHoldDays:
+          type: number
+          description: >-
+            Identifies the number of days after which an authorization gets aged
+            off if no matching clearing record was received.
+        availableBalance:
+          type: number
+          description: >-
+            The current available balance for the virtual card account,
+            associated to Aging Velocity Control. This is provided at the
+            message level for easy access.
+        modifyGeographyControl:
+          type: boolean
+          description: >-
+            Limits authorization requests to a defined geographic location. This
+            is an optional control. If this control is not used, pass False or
+            leave this section out from the request. If value passed is True,
+            all fields in this section are required.<br>Mastercard -
+            Optional<br>Visa - Optional
+        countryCodes:
+          type: array
+          example:
+            - USA
+          description: >-
+            Defines the merchant country in which the VCA can or cannot be
+            used.<br>Mastercard - Optional<br>Visa - Optional
+          items:
+            type: string
+        allowed:
+          type: boolean
+          description: >-
+            Indicate whether the values in countryCode are allowed or
+            disallowed. True = values provided in countryCode are allowed False
+            = values provided in countryCode are not allowed
+        modifyMerchantIdControl:
+          type: boolean
+          description: >-
+            Limits authorizations to a particular merchant using the Merchant ID
+            and Acquirer ID (Mastercard) or Card Acceptor ID (Visa).
+        merchantInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/Merchant-Id-Response'
+    Vca-Create-Failure-Response:
+      type: object
+      title: VcaCreateFailureResponse
+      properties:
+        vcaId:
+          type: string
+          description: >-
+            A reference number that uniquely identifies the virtual card
+            account.
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Message'
+    Vca-Modify-Failure-Response:
+      type: object
+      title: VcaModifyFailureResponse
+      properties:
+        vcaId:
+          type: string
+          description: >-
+            A reference number that uniquely identifies the virtual card
+            account.
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Message'
+security:
+  - ClientCredentials:
+      - /api
+x-ibm-configuration:
+  enforced: true
+  testable: true
+  phase: realized
+  cors:
+    enabled: false
+  assembly:
+    execute:
+      - gatewayscript:
+          title: gatewayscript
+          version: 1.0.0
+          source: "var hm = require('header-metadata');\r\nvar client_id = apim.getvariable('client.app.id');\r\napim.setvariable('message.headers.x-citiportal-apim-client-id',client_id);\r\nif(apim.getvariable('oauth.miscinfo') !=null){\r\nvar oauthmiscinfo = apim.getvariable('oauth.miscinfo');\r\napim.setvariable(\"message.headers.ssoId\",oauthmiscinfo.substring(2));\r\nconsole.error(\"vminfo API failed with return code=\" + oauthmiscinfo.substring(2) );\r\napim.setvariable('message.headers.x-citiportal-apim-client-id',client_id);\r\napim.setvariable(\"message.headers.x-citiportal-loginid\",oauthmiscinfo.substring(2));  \r\n}"
+      - proxy:
+          title: proxy
+          timeout: 60
+          verb: keep
+          cache-response: protocol
+          cache-ttl: 900
+          version: 1.0.0
+          tls-profile: icg-tts-ic
+          target-url: $(hostName)$(api.operation.path)
+      - activity-log:
+          title: activity-log
+          content: header
+          error-content: header
+          version: 1.0.0
+    catch: []
+  properties:
+    hostName:
+      value: >-
+        https://base-b-grace-engine-nam.cloudgsl.nam.nsroot.net/api/tts/cards/vca/v2
+      description: ''
+      encoded: false
+  categories:
+    - ICG_COMMERCIAL_CARDS
+  catalogs:
+    External:
+      properties:
+        hostName: >-
+          https://base-b-grace-engine-nam.cloudgsl.nam.nsroot.net/api/tts/cards/vca/v2
+    UAT2:
+      properties:
+        hostName: >-
+          https://base-b-grace-engine-uat2-icg-tts-grace-173707.apps.namicgswd22u.ecs.dyn.nsroot.net/api/tts/cards/vca/v2
+x-apigee-configuration:
+  lob: tts
+  basepath: /tts/cards/vca/v2
+  org: external
+  eSSL: mtls
+  tlsprofile: smb-ext-egress-tls
+  ingressSecurity: oauth
+  egressSecurityJWT: 'false'
+  jwtHeader: ''
+  jwtSubject: ''
+  spikeEnabled: 'true'
+  quotaEnabled: 'true'
+  oauthProduct: oauth2-tts-api-authentication_1-0-0_ttsapiauthentication30mins
+  tokenURL: /tts/api/v1/oauth2/token
+  scope: /api
+  targethost: >-
+    base-b-grace-engine-dev-icg-tts-grace-173707.apps.namicggtd29d.ecs.dyn.nsroot.ne
+  targetpath: /api/tts/cards/vca/v2
+  setPortalHeaders: ''
+  csiId: 173707
+  apiproxyname: vca-life-cycle-management_2-0-0
+  email: pk85409@citi.com

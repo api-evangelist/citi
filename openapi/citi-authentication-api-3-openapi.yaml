@@ -1,0 +1,307 @@
+openapi: 3.0.1
+info:
+  title: Authentication Services
+  description: >-
+    Citi uses access tokens to maintain stateless sessions for API requests that
+    are authenticated using your client ID & secret key. Use the Authentication
+    API to generate your access tokens. 
+
+
+    Once a successful server Authentication handshake is established over mTLS
+    and your API credentials are validated, the OAuth token will be generated
+    and returned to you in the response. This version of the Authentication
+    endpoint supports both XML and JSON. 
+
+
+    **NOTE:** The access token is provided through the HTTP Authorization header
+    `Authorization: Bearer {access token}` and is valid for 1800 seconds. When
+    the access token has expired, your application will need to generate another
+    access token. Any CitiConnect API call using an expired access token will
+    return the HTTP status code 401 Unauthorized.
+  version: ''
+servers:
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+    description: 'CTE/Sandbox url '
+  - url: https://tts.apib2b.citi.com/citiconnect/prod
+    description: Production gateway url
+paths:
+  /authenticationservices/v3/oauth/token:
+    post:
+      summary: Request v3 Access Token
+      description: >-
+        The OAuth v3 token request authenticates your API message sent in either
+        JSON or XML formats and responds with an access token.
+      operationId: oAuthV3UsingPOST
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports \"application/xml\" and \"application/json\".
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: >
+            The authorization will include "Basic" followed by a single space,
+            followed by the Base64 encoded value of the APIm `client_id` &
+            `secret key`. 
+
+
+            In the above example, the `client_id` is
+            *1234a5b6-cde7-8f90-12gh-345ij6789012* & secret key is
+            *abcdefghijklmnop*.  
+
+
+            The Base64 value after appending by adding “:” in between will be
+            “MTIzNGE1YjYtY2RlNy04ZjkwLTEyZ2gtMzQ1aWo2Nzg5MDEyOmFiY2RlZmdoaWprbG1ub3A=”. 
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Request'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Request'
+            example: >-
+              <?xml version="1.0" encoding="UTF-8"?><oAuthToken
+              xmlns="http://com.citi.citiconnect/services/types/oauthtoken/v2"><grantType>client_credentials</grantType><scope>/authenticationservices/v1</scope><sourceApplication>CCF</sourceApplication></oAuthToken>
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Response'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><token><token_type>Bearer</token_type><access_token>O0n8J+fXQr32nrmBI5let6iDqg5F1iMlocBhqwokdtU3d0C/gNKVPYnmxJYheps4YdnuIijt9E3LKYMEab+lP5M34yGNumBLQUUE8myVo40y3Tyo4d2j1cYYF9RGfpOVzAtb9VrhoMdJORJaIcIvTlRpcqCI/c0kV5t5mk0wmL7blWiTF0NW+w6Y57p4iikn0H+zMQ4zMmZiYI06t0VIH4yQrFw6N4tsoN1GD2A3/XKVVi5CO+I71aq0CaDlR/qEUfyZ6psyqqg94W54Eaq5m5Wp1uq5aQXK+A1II8zHNcARV/Iot3ZUGVYcPfvNEYZaANRbJcXhGepOwkDrRu/jYBguWm+/Vmvr3cIFaQ1bvhpCHxTAW7uJerWJzBE11RE0wv8HGsznQRUsbSq0woOa69Pe0Oym5qzeo9Ar139DIpp0hmeU5Ee8qWZBTalW5QdDIEhWdizlxK/1gvrOU8TK+AR/fI/2h3ApPUf+pT67gqh+EhWlEr0U2jM3EcJmL7aMVjZu9dswX79aGK7ss+JB3iEoC9tD/2cBRbHuitrqiRqp1Bd2L6w9bKx6tUQk+l9/KOX6h/5kOxlFc2z6CXpc1MVXlBQOSdJdj/2ILJ7UPCdmlzBG3q9WtJi1MaeNefUaQlNQUGpP017zLKxNIW5OtSJCneGeOjAxsdtZunO0LUS+2Z6OiiRxsYIZJMzmQ5dh4vGLzMFTH9bG74se1EuPHw==</access_token><expires_in>1800</expires_in><scope>/authenticationservices/v3</scope></token>
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: Bad Request
+                httpCode: 400
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><errormessage><httpMessage>Bad
+                Request</httpMessage><httpCode>400</httpCode></errormessage>
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: UNAUTHORIZED
+                httpCode: 401
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><errormessage><httpMessage>UNAUTHORIZED</httpMessage><httpCode>401</httpCode></errormessage>
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: NOT FOUND
+                httpCode: 404
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><errormessage><httpMessage>NOT
+                FOUND</httpMessage><httpCode>404</httpCode></errormessage>
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: METHOD NOT ALLOWED
+                httpCode: 405
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><errormessage><httpMessage>METHOD NOT
+                ALLOWED</httpMessage><httpCode>405</httpCode></errormessage>
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: UNSUPPORTED MEDIA TYPE
+                httpCode: 415
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><errormessage><httpMessage>UNSUPPORTED MEDIA
+                TYPE</httpMessage><httpCode>415</httpCode></errormessage>
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: Internal Server Error
+                httpCode: 500
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><errormessage><httpMessage>Internal Server
+                Error</httpMessage><httpCode>500</httpCode></errormessage>
+      deprecated: false
+      security:
+        - Basic Authentication: []
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    Response:
+      title: oAuthTokenResponse
+      description: >-
+        The response body for the v3 authentication service to retrieve an OAuth
+        token.
+      type: object
+      properties:
+        token:
+          required:
+            - access_token
+            - expires_in
+            - scope
+          type: object
+          properties:
+            access_token:
+              type: string
+              description: >-
+                Contains the OAuth Token that will be used for authenticating
+                successive API calls.
+            token_type:
+              type: string
+              description: Default value will be “Bearer".
+            scope:
+              type: string
+              description: >-
+                The version scope of the authentication call. The value will be
+                the same for all the API versions.
+            expires_in:
+              type: string
+              description: The expiry time of the OAuth Token in seconds.
+          xml:
+            name: Token
+      example:
+        token:
+          token_type: Bearer
+          access_token: >-
+            BVG0wllkALQd773fXp6TwHj8GkQO+ck2oPXK0wRYaYH0Ellj7TQRcsZG2jtSnM7yw7V70+l11NZWw62v2XkobNa5o9qtC8wq/jKp7++ZFlFikvUlDFiaJgvj2AAqPVZpMar23fnMB4Hvy3ykXzuYqr1rlN2gqDZ02bw7GBqYOlekqs9xOjb69tHWRfqeFv+N7GN0DwUbN6YoicixWaR1TGZp1p3MaDbDwLmKA0fgwgO//14NPq2utvFLNSpPa4EgV5olzcopq3fpSvm3pxUO0pqjw8nY+ApTHcW2+Y4r2eLTBhboJFMONYw3cbI71X/LWG2Hh8HmVZ9ZEeo7oZ0poD5SBbk4a4Kf0laK0WcJ9xaGheG5WoHtc6H07d1Zgu91J0pC2cNIUSvej+6RzV/y7Ei75rxvS0zIu5vzTMu4j9UHe9cRAZv/i8o09r0VgxPYdOKrJJv3zf8hysKSEd9bFK4N5P/c3ztqRHOVQyEfYG3rR7fl80J71s0MNd7yIUy1mk5cMQJur2ggSAhrJrQKCUaBLPDCmfCEx5qpg9KdI/QELyoUlcu7MhL/AjhStEcZ/9yJJKoDieg+cDDIenGMl5LbAy3PqeuGI0lfDCKmOIh/LlHQVELJvHTkfmKlPEJV85/+edQTtvKYA4XvcOjGo1mtpAVRufHW76yraWHSHT40qeMS0RkSk+JlitSq/vQNX3BLnMAZEmb07a6KDbdrHfWQ/MYb9L7HJs5Qk7UiuuERyZMlhvsI/Y3vbzQxxLqE7GKRnNP77BHPxoviMN5mY7HEFq67ZAeo/7iQuagU779jbsPdzTH7+2cMcYru1w/XWm+hB1Sz2Mhj+N3wXsIzy1BYy3t99+FKBurRAK7KhF1iyqsOz1dqchQbkJLOsRsF
+          expires_in: '1800'
+          scope: /authenticationservices/v1
+    ErrorMessage:
+      required:
+        - httpCode
+      properties:
+        httpCode:
+          type: integer
+          format: int32
+        httpMessage:
+          type: string
+      xml:
+        name: errormessage
+    Request:
+      properties:
+        oAuthToken:
+          $ref: '#/components/schemas/OAuthTokenType'
+    OAuthTokenType:
+      required:
+        - grantType
+        - scope
+      properties:
+        grantType:
+          type: string
+          description: >-
+            You must always pass 'client_credentials' in this field because Citi
+            only provides credentials-based authentication for API users.
+          xml:
+            name: grantType
+            attribute: false
+            wrapped: false
+        scope:
+          type: string
+          description: >-
+            This is the version scope of the authentication call. Note that this
+            value will be the same for ALL versions of the Authentication API
+            and should be `/authenticationservices/v1` (even for versions 2, 3,
+            and 4).
+          xml:
+            name: scope
+            attribute: false
+            wrapped: false
+      example:
+        grantType: client_credentials
+        scope: /authenticationservices/v1
+      xml:
+        namespace: http://com.citi.citiconnect/services/types/oauthtoken/v1
+    access_token_response:
+      required:
+        - access_token
+        - expires_in
+        - token_type
+      type: object
+      properties:
+        token_type:
+          type: string
+          description: Default value will be “Bearer”
+          enum:
+            - bearer
+        access_token:
+          type: string
+          description: >-
+            This has the OAuth Token which will be used for authenticating
+            successive API calls
+        expires_in:
+          type: integer
+          description: This represents the expiry time of the OAuth Token in seconds
+        scope:
+          type: string
+  securitySchemes:
+    Basic Authentication:
+      type: http
+      description: >-
+        Username is the application's client_id and password is the
+        client_secret.
+      scheme: basic
+    clientIdHeader:
+      type: apiKey
+      name: X-IBM-Client-Id
+      in: header
+    clientSecretHeader:
+      type: apiKey
+      name: X-IBM-Client-Secret
+      in: header
+x-original-swagger-version: '2.0'

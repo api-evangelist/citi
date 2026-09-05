@@ -1,0 +1,921 @@
+swagger: '2.0'
+info:
+  description: >-
+    The eMandate API allows you to access CitiDirect based mandate services in a
+    light weight message exchange interface. This API supports
+    `theMandateInitiationRequest` message and `MandateAcceptanceReport` message.
+    A `MandateInitiationRequestmessage` which is sent by the initiator of the
+    request to his agent. The initiator can either be the debtor or the
+    creditor. A MandateAcceptanceReport message is used to confirm the
+    acceptance or rejection of a Mandate Request message.
+  version: 2.0.0
+  title: eMandate API
+host: tts.apib2b.citi.com
+basePath: /citiconnect/prod
+schemes:
+  - https
+paths:
+  /emandateservices/v2/emandateinitiation:
+    post:
+      summary: Initiate An eMandate
+      description: >-
+        The eMandate Initiation API is sent by an initiating party (Creditor)to
+        the receiving party (Debtor) in the collection chain to register an
+        eMandate. CitiConnect clients can initiate eMandate Initiation for the
+        direct debit collections. Currently, this functionality is applicable
+        for the UK and for SEPA countries. The eMandate request will be sent in
+        JSON message. The Push Notification API will enable eMandate API clients
+        to receive proactive notification via a JSON Mandate Status Report if
+        their Mandate Creation status changes. The push notification will only
+        be sent for mandates initiated via API and client will receive multiple
+        JSON Mandate Status Reports based on mandate status
+        movement.<br><br><font size='2'><b>Content-Type</b>: Supports
+        'application/json'<br><b>Authorization</b>: The OAuth Token prefixed
+        with “Bearer“ and space in between.
+      operationId: eMandateInitiation
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          type: string
+        - name: Content-Type
+          in: header
+          description: Currently supports “application/JSON.
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          type: string
+        - name: region
+          in: header
+          description: >-
+            Specifies merchant's region from where the mandate request is
+            initiated i.e. 'EMEA'.
+          required: true
+          type: string
+        - in: body
+          name: Create Mandate Request Body
+          required: true
+          schema:
+            $ref: '#/definitions/mandate_full_details'
+      responses:
+        '200':
+          description: OK
+          examples:
+            application/json:
+              mandate_acceptance:
+                - mandate_identification: test2402
+                  mandate_request_identification: e27kpp59yb
+                  scheme_identification: w24no84ybp
+                  accepted: 'NO'
+                  reasons:
+                    - code: PDNG
+                      description: READY_FOR_EXPORT
+          schema:
+            $ref: '#/definitions/mandate_response'
+        '400':
+          description: Bad Request
+          examples:
+            application/json:
+              errors:
+                - action: Please send valid value for property account_id.
+                  issue: account_id cannot be null or empty
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+        '401':
+          description: Unauthorized
+          examples:
+            application/json:
+              errors:
+                - action: Get the new oauth token and resend the request.
+                  issue: Provided oauth token is invalid.
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+        '405':
+          description: Method Not Allowed
+          examples:
+            application/json:
+              errors:
+                - action: Resend the request with valid HTTP POST verb.
+                  issue: HTTP verb used is not allowed.
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+        '415':
+          description: Unsupported Media Type
+          examples:
+            application/json:
+              errors:
+                - action: >-
+                    Resend the request with content-type as application/json in
+                    header.
+                  issue: Provided content-type is not allowed.
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+        '500':
+          description: Internal Server Error
+          examples:
+            application/json:
+              errors:
+                - action: >-
+                    Please verify the transaction status using url provided in
+                    links. Based on the transaction status re-initiate the
+                    request.
+                  issue: Unable to process your request at this moment.
+              links:
+                - href: >-
+                    /mandate/status/1234568/mandate_request_identification?fields=status
+                  method: GET
+                  rel: status
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+      security:
+        - clientCredentials: []
+  /emandateservices/v2/emandatestatusinquiry:
+    get:
+      summary: Get The Status Of An eMandate
+      description: >-
+        The eMandate Status Inquiry API V2 allows you to access the status of
+        your eMandate and generates eMandate details with the status of the
+        transaction. After the initial eMandate initiation call, there is an
+        ability to view transaction status at any later point using the eMandate
+        Status Inquiry API V2. You generate these details by passing values for
+        the following fields in your request: Mandate Req ID, Scheme ID. The
+        request follows custom schema formatting, and the response follows JSON
+        message format. <br><br><font size='2'><b>Content-Type</b>: Supports
+        'application/json'.<br><b>Authorization</b>: The OAuth Token prefixed
+        with “Bearer“ and space in between. 
+      operationId: eMandateStatusInquiry
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: Accept
+          in: header
+          description: Supports "application/json".
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          type: string
+        - name: region
+          in: header
+          description: >-
+            Specifies merchant's region from where the mandate request is
+            initiated i.e. 'EMEA'.
+          required: true
+          type: string
+        - name: mandateRefId
+          in: query
+          description: >-
+            Unique identification assigned/generated by the initiating party or
+            by Origix platform respectively to clearly identify the transaction.
+            This Identification is passed on, unchanged, throughout the entire
+            end-to-end chain.
+          required: true
+          type: string
+        - name: schemeId
+          in: query
+          description: SchemeId assigned to each merchant during onboarding process.
+          required: true
+          type: string
+        - name: mandateId
+          in: query
+          description: mandateId  is to retreive the status of mandate.
+          required: false
+          type: string
+        - name: payer_reference_number
+          in: query
+          description: >-
+            Unique and unambiguous identification as assigned by the creditor to
+            the referred document shared with the debtor for its own
+            reference.<br>Specify the reference document  for the mandate,  to
+            be referred by debtor..
+          required: false
+          type: string
+        - name: max_transaction_amount
+          in: query
+          description: >-
+            Maximum amount that may be collected from the debtor's account,per
+            instruction.<br>Amount of the transaction. Determine how and when a
+            currency fractional (decimals) should be indicated in each
+            transaction.Maximum of 15 Digits (Including decimals).
+          required: false
+          type: number
+        - name: currency_code
+          in: query
+          description: >-
+            Maximum amount that may be collected from the debtor's account, per
+            instruction.<br>Amount of the transaction. Determine how and when a
+            currency fractional (decimals) should be indicated in each
+            transaction. Maximum of 15 Digits (Including decimals).
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          examples:
+            application/json:
+              mandate_acceptance:
+                - mandate_identification: test2402
+                  mandate_request_identification: e27kpp59yb
+                  scheme_identification: w24no84ybp
+                  accepted: 'NO'
+                  reasons:
+                    - code: PDNG
+                      description: READY_FOR_EXPORT
+              mandate_full_details:
+                mandate_details:
+                  mandate_occurence:
+                    sequence_type: RCUR
+                  tracking_indicator: false
+                debtor:
+                  name: Samiel
+                  address:
+                    address_line_1: OlympusA
+                    address_line_2: Rodas enclave
+                    town_name: Ireland
+                    postal_code: '12345'
+                    country_code: IE
+                  contact:
+                    mobile_number: '9167632379'
+                    email: kalpita1.sawant@citi.com
+                  account:
+                    identification: '00100560'
+                    iban: GB62CITI18500800100560
+                    bic: CITIGB2LXXX
+                scheme:
+                  private_identification: w24no84ybp
+                creditor:
+                  account:
+                    iban: GB42CLRB04041320000046
+                    bic: CLRBGB21
+          schema:
+            $ref: '#/definitions/mandateInqResponse'
+        '400':
+          description: Bad Request
+          examples:
+            application/json:
+              errors:
+                - action: please send valid value for property account_id
+                  issue: account_id cannot be null or empty
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+        '401':
+          description: Unauthorized
+          examples:
+            application/json:
+              errors:
+                - action: get the new oauth token and resend the request
+                  issue: provided oauth token is invalid
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+        '405':
+          description: Method Not Allowed
+          examples:
+            application/json:
+              errors:
+                - action: resend the request with HTTP POST verb
+                  issue: HTTP verb used is not allowed
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+        '415':
+          description: Unsupported Media Type
+          examples:
+            application/json:
+              errors:
+                - action: >-
+                    resend the request with content-type as application/json in
+                    header
+                  issue: provided content-type is not allowed
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+        '500':
+          description: Internal Server Error
+          examples:
+            application/json:
+              errors:
+                - action: >-
+                    please verify the transaction status using url provided in
+                    links. Based on the transaction status re-initiate the
+                    request
+                  issue: unable to process your request at this moment
+              links:
+                - href: >-
+                    /mandate/status/1234568/mandate_request_identification?fields=status
+                  method: GET
+                  rel: status
+              mandate_request_identification: '12345678'
+              status: FAILED
+          schema:
+            $ref: '#/definitions/errors'
+      security:
+        - clientCredentials: []
+securityDefinitions:
+  clientCredentials:
+    description: >+
+      All CitiConnect APIs use the oAuth2 authentication scheme, which requires
+      a bearer token to authenticate your API call. The Token URL includes the
+      version of authentication used by this API. See <a
+      href="../../authentication/authentication-api-reference/"
+      target="_blank">the Citi Authentication API reference</a> for information
+      on requesting a token.
+
+    type: oauth2
+    tokenUrl: >-
+      https://tts.sandbox.apib2b.citi.com/citiconnect/sb/authenticationservices/v1/oauth/token
+    flow: application
+    scopes: null
+definitions:
+  errors:
+    type: object
+    properties:
+      errors:
+        type: array
+        uniqueItems: true
+        items:
+          $ref: '#/definitions/error_detail'
+      links:
+        type: object
+        properties:
+          links:
+            type: array
+            items:
+              $ref: '#/definitions/link'
+      status:
+        type: string
+        description: HTTP method for above URI. Possible values are GET, POST, PUT, DELETE
+  error_detail:
+    type: object
+    properties:
+      action:
+        type: string
+        description: What corrective action to be taken to resolve above issue.
+        maxLength: 150
+      issue:
+        type: string
+        description: More details about the issue.
+        maxLength: 150
+  link:
+    type: object
+    properties:
+      href:
+        type: string
+        description: URI for related operation
+      method:
+        type: string
+        description: HTTP method for above URI. Possible values are GET, POST, PUT, DELETE.
+      rel:
+        type: string
+        description: How this is related to current resource.
+  mandate_full_details:
+    type: object
+    required:
+      - creditor
+      - debtor
+      - mandate_details
+    properties:
+      mandate_details:
+        type: object
+        description: >-
+          Set of elements used to provide the details of the mandate signed
+          between the (ultimate) creditor and the (ultimate) debtor.
+        allOf:
+          - $ref: '#/definitions/mandate_details'
+      debtor:
+        type: object
+        description: Account details about the party who initiates this payment.
+        allOf:
+          - $ref: '#/definitions/party'
+      scheme:
+        type: object
+        description: >-
+          Require for SEPA and BACS e-Mandate creation. Account details about
+          the party who initiates this payment.
+        allOf:
+          - $ref: '#/definitions/scheme_definition'
+      creditor:
+        type: object
+        description: Account details about the party who receives this payment.
+        allOf:
+          - $ref: '#/definitions/party'
+  mandate_details:
+    type: object
+    required:
+      - mandate_occurence
+      - mandate_request_identification
+      - mandate_type
+    properties:
+      mandate_identification:
+        type: string
+        description: >-
+          Unique identification, as assigned by the creditor, to unambiguously
+          identify the mandate.<br>For SEPA max of 35 characters can be
+          used.<br>Recommendation for BACS: Merchant to assign max of 14 chars
+          as Mandate Reference.<br>In Bacs, EndToEnd Identifier = Mandate
+          Reference + 4 random chars for uniqueness.<br>The4 characters would
+          enable Sentenial to build unique end to end reference for the
+          DDs.<br>For IN-UPI ID: It is mandatory to mention the payee UPIID for
+          creating mandate.
+        maxLength: 35
+      mandate_request_identification:
+        type: string
+        description: >-
+          Unique identification, as assigned by the creditor, to unambiguously
+          identify the mandate.<br>For SEPA max of 35 characters can be
+          used.<br>Recommendation for BACS: Merchant to assign max of 14 chars
+          as Mandate Reference.<br>InBacs, EndToEnd Identifier = Mandate
+          Reference + 4 random chars for uniqueness.<br>The4 characters would
+          enable Sentenial to build unique end to end reference for the DDs.
+        maxLength: 35
+      mandate_occurence:
+        $ref: '#/definitions/occurence'
+      tracking_indicator:
+        type: boolean
+        description: >-
+          Require for SEPA and BACS clients. Specifies whether the directdebit
+          instructions should be automatically re-submitted periodically when
+          bilaterally agreed. <br> Recommendation : To be used as Migrating
+          mandate indicator. <br> True - mandate will be treated as a migrating
+          mandate.<br> False - mandate will be treated as a new mandate.
+      token_identification_type:
+        type: string
+        description: >-
+          Require for HK. Specify the value only when the Mandate request is
+          other than Payer(Debtor) Account Number.<br>Specify the Possible
+          Values as mentioned below<br>If Token ID Type is  'Proxy ID - Email
+          Address then populate the Code :'EMAL'<br>If Token ID Type is 'Credit
+          Card Number'  then populate the code- 'AIIN'<br>If Token ID Type is
+          'Proxy ID - FPSIdentifier' then populate  the code- 'SVID'<br>If Token
+          ID Type is  'ProxyID - Mobile Number' then populate the code- 'MOBN'.
+        maxLength: 30
+      token_identification:
+        type: string
+        description: >-
+          Require for HK. Identification used to indicate the
+          accountidentification under another specified name.<br>If Token ID
+          Type is 'CreditCard Number' then specify the 'AIIN' Value<br>If Token
+          ID Type is 'ProxyID - FPS Identifier' then specify the  'SVID'
+          Value<br>If Token ID Typeis 'Proxy ID - Mobile Number' then specify
+          the  'MOBN' Value<br>If TokenID Type is  'Proxy ID - Email Address'
+          then specify the 'EMAL' Value.
+        maxLength: 34
+      mandate_start_date:
+        type: string
+        description: Require for IN.<br>This includes start date of the mandate.
+        pattern: YYYY-MM-DD
+      mandate_expiry_date:
+        type: string
+        description: >-
+          Require for HK & IN.Length of time for which the mandate remains
+          valid.<br>Specify the expiry date of the mandate Maximum date
+          supported: 9999-12-31.<br>A particular point in the progression of
+          time in a calendar year expressed in the YYYY-MM-DD format.
+        pattern: YYYY-MM-DD
+      mandate_type:
+        type: object
+        description: Specifies the type of mandate, such as paper, electronic or scheme.
+        allOf:
+          - $ref: '#/definitions/mandate_codes'
+      mandate_reference:
+        type: object
+        description: >-
+          Require for HK. Specifies the type of mandate, such as paper,
+          electronic or scheme.
+        allOf:
+          - $ref: '#/definitions/reference'
+      mandate_transactions:
+        type: object
+        description: >-
+          Require for HK e-mandate creation. Transaction details for themandate
+          which is requested for creation
+        allOf:
+          - $ref: '#/definitions/transaction_info'
+  mandate_codes:
+    type: object
+    required:
+      - local_instrument
+      - service_level
+    properties:
+      local_instrument:
+        type: object
+        description: >-
+          User community specific instrument.This element is used to specifya
+          local instrument, local clearing option and/or further qualify the
+          serviceor service level.<br><br>For BACS only 'CORE’ to be
+          used.<br><br> SEPAUsage Rule(s) Only ‘CORE’ or 'B2B' is
+          allowed.<br>For HK Specify the MandateType code as 'DDMU'- Direct
+          Debit Unconfirmed Electronic Mandate.
+        allOf:
+          - $ref: '#/definitions/codeOrProprietary'
+      service_level:
+        type: object
+        description: >-
+          Specifies a pre-agreed service or level of service between theparties,
+          as published in an external service level code list.<br><br>ForBACS
+          only 'BACS' to be used.<br><br>SEPA Usage Rule(s) Only ‘SEPA’
+          isallowed.
+        allOf:
+          - $ref: '#/definitions/codeOrProprietary'
+  codeOrProprietary:
+    type: object
+    properties:
+      code:
+        type: string
+        description: >-
+          This element is used to specify a local instrument, local
+          clearingoption and/or further qualify the service or service level.
+        maxLength: 4
+      proprietary:
+        type: string
+        description: Citi Proprietary definition for local instrument code.
+        maxLength: 4
+  occurence:
+    type: object
+    required:
+      - frequency
+      - sequence_type
+    properties:
+      sequence_type:
+        type: string
+        description: >-
+          Required for SEPA, BACS & IN. <br>Identifies the underlying
+          transaction sequence as either recurring or one-off.<br><br> For BACS
+          Only ‘RCUR’ to be allowed.<br>SEPA Usage rules only FRST, RCUR,
+          FNAL,OOFF is allowed.<br> For IN also OOFF is possible (<br>In case
+          the mandate is ‘One Time’ debit can be initiated only once by the
+          Payee PSP. ‘One time’ mandate supports an additional functionality
+          called ‘Share with Payee’. If this tag is NOT SET by the Payer (User)
+          then Payee PSP will NOT share the information about the mandate
+          creation with Payee (User at the receiving end).
+        maxLength: 4
+      frequency:
+        type: string
+        description: >-
+          Required for Hk & IN. Frequency expressed as an ISO 20022 code.<br>For
+          HK & IN Possible Values: YEAR – Annual<br>MNTH – Monthly<br>QURT –
+          Quarterly<br>MIAN– Semi Annual<br>WEEK – Weekly<br>DAIL – Daily
+        maxLength: 4
+  reference:
+    type: object
+    properties:
+      payer_reference_number:
+        type: string
+        description: >-
+          Unique and unambiguous identification as assigned by the creditor to
+          the referred document shared with the debtor for its own
+          reference.<br>Specify the reference document  for the mandate,  to be
+          referred by debtor.
+        maxLength: 60
+      payer_code:
+        type: string
+        description: >-
+          Proprietary identification of the type of the remittance
+          document.<br>Specifythe code 'PAYC' followed by the value.
+        maxLength: 20
+      payment_reference_number:
+        type: array
+        items:
+          type: string
+          description: Proprietary identification of the type of the remittance document.
+          maxLength: 35
+        maxItems: 3
+  party:
+    type: object
+    required:
+      - account
+      - name
+    properties:
+      name:
+        type: string
+        description: >-
+          Name by which a party is known and which is usually used to identify
+          that party.<br>Note for BACS client: Only 18 characters are allowed
+          for party names in the files submitted to BACS scheme.<br>Sentenial
+          would take request up to 70 chars but only first 18 chars would be
+          used and send to the scheme.
+        maxLength: 70
+      identification:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: >-
+                Unique and unambiguous way to identify an
+                organisation.Identificationassigned by an institution.<br>IF
+                COID = Provide Business Registrationnumber.<br>IF CINC = Provide
+                Certificate of Incorporation number<br>IFNIDN = Provide Hong
+                Kong Identification- 'HKID' number <br>IF CCPT-Provide Passport
+                Number <br>If OTHR= Provide the corresponding IDnumber and
+                Require for HK.
+              maxLength: 30
+            type:
+              type: string
+              description: >-
+                Require for HK. Name of the identification scheme, in a coded
+                form as published in an external list.<br>Specify the respective
+                code of the debtor identification as below:<br>If  'Business
+                Registration use code as = 'COID'<br>If  'Certificate of
+                Incorporation' use code as = 'CINC'<br>If  (Hong Kong
+                Identification) 'HKID' use code as = 'NIDN'<br>If 'Passport' =
+                use code as = 'CCPT'<br>If any other Identification (can be
+                respective ) use code = 'OTHR'.
+              maxLength: 30
+        maxItems: 3
+      address:
+        type: object
+        description: >-
+          Address of the party who involves in the payment flow.<br>Applicable
+          only for Creditor.<br> BACS  Rule(s)  - Debtor Postal Address is never
+          passed in the files to the scheme.<br> SEPA Usage Rule(s)  - Postal
+          Address is optional but mandatory if or when the Creditor Bank or the
+          Debtor Bank is located in a non-EEA SEPA country or territory.
+        allOf:
+          - $ref: '#/definitions/address'
+      contact:
+        type: object
+        description: >-
+          Collection of information that identifies a mobile phone number, FAX
+          number as defined by telecom services.<br> Mobile Number Format<br>-
+          Full international dialing code to be provided.<br> - No non-numeric
+          characters allowed<br> - GB phone number +44 28 123 4567 would need to
+          be provided as 44281234567.
+        allOf:
+          - $ref: '#/definitions/contact'
+      account:
+        type: object
+        description: >-
+          A valid IBAN consists of all three of the following components:Country
+          Code, check digits and BBAN. <br> BACS Usage Rule(s)  - EitherIBAN or
+          Domestic Account number is allowed.<br> SEPA Usage Rule(s)  -Only IBAN
+          is allowed.
+        allOf:
+          - $ref: '#/definitions/account'
+  scheme_definition:
+    type: object
+    required:
+      - identification
+      - name
+      - type
+    properties:
+      classification:
+        type: string
+        description: >-
+          Defines Creditor or Debtor Scheme classification. For SEPA, BACS, and
+          HK only Creditor scheme is applicable for now. Allowed values are CR
+          or DR.
+        maxLength: 2
+      identification:
+        type: string
+        description: >-
+          Originator Creditor Scheme Identifier.<br><br>For BACS SUN number to
+          be inputted, A Service User Number (SUN) is a unique six-digit number
+          allocated to a Service User collecting payments by Direct Debit. SUN
+          number should be of 6-digits only. You can think of it as a license
+          given from a bank to a business/organization to join the Direct Debit
+          scheme.
+        maxLength: 35
+      private_identification:
+        type: string
+        description: >-
+          Private Identification’ is mandatory to identify either an
+          organization or a private person.
+        maxLength: 35
+      type:
+        type: string
+        description: Should be inputted as 'SEPA' or 'BACS'.<br> Not required forHK.
+        maxLength: 4
+      name:
+        type: string
+        description: Name of the identification scheme, in a free text form.
+        maxLength: 35
+  account:
+    type: object
+    required:
+      - bic
+      - branch_country
+      - currency_code
+    properties:
+      identification:
+        type: string
+        description: >-
+          For BACS either IBAN or Domestic Account number can be
+          used.<br><br>Avalid Domestic account number includes Branch
+          Identifier(6 digits) andAcccount number(8 digits).
+        maxLength: 35
+      iban:
+        type: string
+        description: >-
+          SEPA Usage Rule(s)  - Only IBAN is allowed.<br> <br>InternationalBank
+          Account Number (IBAN) - identifier used internationally by
+          financialinstitutions to uniquely identify the account of a customer
+          For SEPA.International Bank Account Number (IBAN) - identifier used
+          internationallyby financial institutions to uniquely identify the
+          account of a customer.Further specifications of the format andcontent
+          of the IBAN can be foundin the standard ISO 13616 Banking and related
+          financial services -InternationalBank Account Number (IBAN) version
+          1997-10-01, or later revisions.<br>A valid IBAN consists of all three
+          of the following components: CountryCode, check digits and BBAN.
+        maxLength: 35
+      currency_code:
+        type: string
+        description: >-
+          For HK, Specify creditor account Currency - HKD / CNY.<br><br>Account
+          Currency should be Citi client account currency.
+        minLength: 3
+        maxLength: 3
+      bic:
+        type: string
+        description: >-
+          Code allocated to a financial institution by the ISO 9362
+          RegistrationAuthority as described in ISO 9362 Banking - Banking
+          telecommunicationmessages - Business identifier code (BIC).
+        maxLength: 11
+      branch_country:
+        type: string
+        description: Require for HK. To identify the Bank branch country.
+        minLength: 2
+        maxLength: 2
+  address:
+    type: object
+    properties:
+      address_line_1:
+        type: string
+        description: >-
+          Information that locates and identifies a specific address, as defined
+          by postal services, presented in free format text.
+        maxLength: 70
+      address_line_2:
+        type: string
+        description: >-
+          Information that locates and identifies a specific address,as defined
+          by postal services, presented in free format text.
+        maxLength: 70
+      town_name:
+        type: string
+        description: >-
+          Name of a built-up area, with defined boundaries, and a
+          localgovernment.
+        maxLength: 70
+      postal_code:
+        type: string
+        description: >-
+          Identifier consisting of a group of letters and/or numbers thatis
+          added to a postal address to assist the sorting of mail.
+        maxLength: 16
+      country_code:
+        type: string
+        description: >-
+          Country of the Creditor address.<br> Must be a valid countrycode
+          according to ISO3166 alpha -2<br> 'Postal Address’ is optional
+          butCountry element mandatory if 'Postal Address provided by the
+          Creditor.
+        minLength: 2
+        maxLength: 2
+  contact:
+    type: object
+    properties:
+      mobile_number:
+        type: string
+        description: >-
+          Collection of information that identifies a mobile phone number, as
+          defined by telecom services.<br> Mobile Number Format<br> - Full
+          international dialling code to be provided.<br> - No non-numeric
+          characters allowed<br>- GB phone number +44 28 123 4567 would need to
+          be provided as 44281234567
+      fax_number:
+        type: string
+        format: number
+        description: >-
+          Collection of information that identifies a FAX number, as definedby
+          telecom services.
+      email:
+        type: string
+        format: email
+        description: >-
+          Address for electronic mail (e-mail).<br> string <= 254
+          characters.*@.* 
+  transaction_info:
+    type: object
+    required:
+      - cumulative_amount
+    properties:
+      amount:
+        type: number
+        description: >-
+          Maximum amount that may be collected from the debtor's account, per
+          instruction.<br>Amount of the transaction. Determine how and when a
+          currency fractional (decimals) should be indicated in each
+          transaction. Maximum of 15 Digits (Including decimals).
+      rule:
+        type: string
+        description: >-
+          Require for IN. <br>To specify amount & amount rule: Amountrule can
+          will have either 'MAX' or 'EXACT' as the values.
+        maxLength: 5
+      count:
+        type: number
+        description: >-
+          Specify the number of instructions to be created and processed during
+          the specified period.
+        maximum: 5
+      cumulative_amount:
+        type: number
+        description: >-
+          Specify cumulative fixed amount to be collected from the debtor's
+          account.
+  mandate_response:
+    type: object
+    required:
+      - mandate_acceptance
+    properties:
+      mandate_acceptance:
+        type: array
+        description: >-
+          Indicates whether the mandate request was accepted or rejected or
+          in-progress.<br> Accepted - 'Yes'<br>In-Progress, Rejected -
+          'No'<br>Possible DDI status for BACS -'Active', 'Cancelled',
+          'Complete', 'Pending', 'Ready for Export', 'Exported'<br> Possible DDI
+          status for SEPA -'Active', 'Cancelled', 'Complete', 'Pending'<br>
+          Possible Mandate status for HK - 'Processed', 'CB-Rejected', 'Deleted'
+        items:
+          $ref: '#/definitions/acceptance_detail'
+  acceptance_detail:
+    type: object
+    required:
+      - accepted
+      - mandate_request_identification
+      - reasons
+      - scheme_identification
+    properties:
+      accepted:
+        type: string
+        description: >-
+          Indicates whether the mandate request was accepted or
+          rejected.<br><br>Accepted - 'Yes' <br> In-Progress, Rejected - 'No'
+      mandate_identification:
+        type: string
+        description: Mandate Id is to retreive the status of mandate.
+      mandate_request_identification:
+        type: string
+        description: >-
+          Encoded resource ID from Sentenial, which must be used for Inquiring
+          Mandate.
+      reasons:
+        type: array
+        description: Reasons to populate when mandate rejected.
+        items:
+          $ref: '#/definitions/reason'
+      scheme_identification:
+        type: string
+        description: >-
+          Encoded scheme ID from Sentenial, which must be used for Inquiring
+          mandate.
+  reason:
+    type: object
+    properties:
+      code:
+        type: string
+        description: >-
+          Reason, as published in an external reason code list.
+          <br>ExternalMandateReason1Code<br> Cannot be used at the same time as
+          reason_properitory (below) (schemavalidation).
+      description:
+        type: string
+        description: >-
+          Reason, in a description form. <br> Cannot be used at the same time as
+          reason_code (above) (schema validation).
+  mandateInqResponse:
+    allOf:
+      - $ref: '#/definitions/mandate_response'
+      - $ref: '#/definitions/mandate_full_detailsAdd'
+  mandate_full_detailsAdd:
+    type: object
+    properties:
+      mandate_full_details:
+        type: object
+        allOf:
+          - $ref: '#/definitions/mandate_full_details'

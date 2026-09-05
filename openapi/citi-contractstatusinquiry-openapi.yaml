@@ -1,0 +1,682 @@
+openapi: 3.0.2
+info:
+  description: >-
+    WorldLink is a complete cross-border payment and Foreign-Exchange (FX)
+    service that allows you to perform payments in 135 currencies without having
+    the need to maintain local currency accounts for each of them. CitiConnect
+    API now offers you WorldLink services of FX Contract Status Inquiry, FX rate
+    enquiry, FX deal booking, cross-border payment initiation with 24X7
+    availability.
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+  title: WorldLink Payment
+servers:
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/worldlinkservices
+    description: production gateway url
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/worldlinkservices
+    description: sandbox url
+tags:
+  - name: Contract status inquiry
+security:
+  - clientCredentials: []
+paths:
+  /worldlinkservices/v1/fx/inquiry:
+    get:
+      tags:
+        - Contract status inquiry
+      summary: Contract Status Inquiry
+      description: >-
+        Currently FX rates can be retrieved through the WorldLink FX Rate
+        Inquiry endpoint, Book FX through WorldLink FX Book API endpoint and
+        Cancel FX via the WorldLink FX Cancel API endpoint. The FX contract
+        Status endpoint verifies the FX status if the the response of FX Book is
+        not received or non-conclusive. The FX contract might be in various
+        statuses - such as Booked, Cancelled, or Not found because the Deal may
+        not even exist. The FX Contract Status will inquire about the
+        whereabouts of an FX deal. <br>Supports “application/XML” and
+        “application/JSON”. <br> The OAuth Token prefixed with “Bearer“ and
+        space in between. 
+      servers:
+        - url: https://tts.apib2b.citi.com/citiconnect/prod
+      operationId: processContractStatus
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports "application/XML" and "application/JSON"
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          schema:
+            type: string
+        - name: WLClntId
+          in: header
+          description: >-
+            WorldLink Client ID. WorldLink Client Number and Branch Number.
+            Provide Branch number if the same was part of FX request
+          required: true
+          schema:
+            type: string
+            maxLength: 9
+          example: '123451234'
+        - name: ContractRef
+          in: query
+          description: >-
+            WorldLink Contract Reference number. WorldLink Contract Number and
+            WorldLink Sequence Number - this is the true unique identifier. 
+            External interfaces use contract number concatenated to sequence
+            number to designate unique deals. Please use this if available.
+          schema:
+            type: string
+            maxLength: 15
+          example: M10001000123456
+        - name: UserId
+          in: query
+          description: >-
+            Unique UserId created by WorldLink and returned as part of FX Deal
+            confirmation. If User inquires using UserId, then other parameters
+            PymtCcy, FundCcy and PymtCcyAmt/FundCcyAmt will be mandatory. If
+            Contract Reference number is provided UserId can be left blank
+          schema:
+            type: string
+            maxLength: 8
+          example: WL123456
+        - name: PymtCcy
+          in: query
+          description: >-
+            WorldLink Payment Currency SWIFT code. Mandatory parameter to
+            proceed with search by `UserId` parameter.
+          schema:
+            type: string
+            maxLength: 3
+          example: GBP
+        - name: PymtCcyAmt
+          in: query
+          description: >-
+            WorldLink Payment Currency amount.  The actual deal amount must be
+            greater than this amount.  There are cases where the same deal
+            number is passed by the source system for multiple payments
+            therefore an amount less than the full deal amount can be a match.  
+            If not included the funding/remit amount must be included. Either of
+            PymtCcyAmt or FundCcyAmt to be provided to proceed with search by
+            `UserId` parameter
+          schema:
+            type: string
+            maxLength: 16
+            pattern: ^\d{1,13}(\.\d{1,2})?$
+          example: '1234567891234.00'
+        - name: FundCcy
+          in: query
+          description: >-
+            WorldLink Funding Currency SWIFT code. Mandatory parameter to
+            proceed with search by `UserId` parameter. 
+          schema:
+            type: string
+            maxLength: 3
+          example: EUR
+        - name: FundCcyAmt
+          in: query
+          description: >-
+            WorldLink Funding Currency amount.  The actual deal amount must be
+            greater than this amount.  There are cases where the same deal
+            number is passed by the source system for multiple payments
+            therefore an amount less than the full deal amount can be a match. 
+            If not included the payment amount must be included.  Either of
+            PymtCcyAmt or FundCcyAmt to be provided to proceed with search by
+            `UserId` parameter.
+          schema:
+            type: string
+            maxLength: 16
+            pattern: ^\d{1,13}(\.\d{1,2})?$
+          example: '1234567891234.00'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxGetDealOperationResponse'
+              examples:
+                Deal-Response-Success:
+                  $ref: '#/components/examples/FxGetDealOperationResponse'
+                Deal-Response-Deal-Not-Found:
+                  $ref: >-
+                    #/components/examples/Fx-Deal-Inquiry-API-Response-Deal-Not-Found-Example
+                Deal-Response-Cancelled:
+                  $ref: >-
+                    #/components/examples/Fx-Deal-Inquiry-API-Response-Deal-Cancelled-Example
+                Deal-Response-Invalid-Contract-Reference:
+                  $ref: >-
+                    #/components/examples/Fx-Deal-Inquiry-API-Response-Invalid-Contract-Reference-Example
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/FxGetDealOperationResponse'
+              examples:
+                Deal-Response-Success:
+                  value: >-
+                    <FxGetDealOperationResponse><FXP588INOperationResponse><FxDealInquiryRsp><PymtCcyAmt>145.00</PymtCcyAmt><StatusMsg>000: 
+                    Requested deal
+                    found</StatusMsg><FundCcy>EUR</FundCcy><WLClntId>629550001</WLClntId><FundActTotalLmt>90.04</FundActTotalLmt><Symbol>CADEUR</Symbol><Rate>0.62100000</Rate><PymtActAvlLmt>145.00</PymtActAvlLmt><PymtCcy>CAD</PymtCcy><PymtActTotalLmt>145.00</PymtActTotalLmt><PymtActUtilLmt>0.00</PymtActUtilLmt><DealTs>2025-10-24-04.02.26.701438</DealTs><StatusCode>000</StatusCode><Source>APIM</Source><FundActUtilLmt>0.00</FundActUtilLmt><PymtActEarMrkLmt>0.00</PymtActEarMrkLmt><FundActAvlLmt>90.04</FundActAvlLmt><UserId>XBACBC4</UserId><FundActEarMrkLmt>0.00</FundActEarMrkLmt><BookDate>20251024</BookDate><ContractRef>M16463100879607</ContractRef><ResTime>2026-04-13-10:15:40</ResTime><ValueDate>20251027</ValueDate><FundCcyAmt>90.04</FundCcyAmt></FxDealInquiryRsp></FXP588INOperationResponse></FxGetDealOperationResponse>
+                Deal-Response-Deal-Not-Found:
+                  value: >-
+                    <FxGetDealOperationResponse><FXP588INOperationResponse><FxDealInquiryRsp><PymtCcyAmt>145</PymtCcyAmt><StatusMsg>100:
+                    No FX contract found matching the search criteria. Please
+                    review and
+                    re-input</StatusMsg><FundCcy>EUR</FundCcy><WLClntId>629550001</WLClntId><UserId>XBACBC4</UserId><ContractRef>M16463100879607</ContractRef><ResTime>2026-04-10-10:42:22</ResTime><PymtCcy>CAR</PymtCcy><StatusCode>100</StatusCode><Source>APIM</Source><FundCcyAmt>90.04</FundCcyAmt></FxDealInquiryRsp></FXP588INOperationResponse></FxGetDealOperationResponse>
+                Deal-Response-Cancelled:
+                  value: >-
+                    <FxGetDealOperationResponse><FXP588INOperationResponse><FxDealInquiryRsp><PymtCcyAmt>145</PymtCcyAmt><StatusMsg>177:
+                    Deal already
+                    cancelled.</StatusMsg><FundCcy>EUR</FundCcy><WLClntId>629550001</WLClntId><UserId>XBACBC4</UserId><ContractRef>AA8260101555410</ContractRef><ResTime>2026-04-14-13:17:37</ResTime><PymtCcy>CAD</PymtCcy><StatusCode>177</StatusCode><Source>APIM</Source><FundCcyAmt>90.04</FundCcyAmt></FxDealInquiryRsp></FXP588INOperationResponse></FxGetDealOperationResponse>
+                Deal-Response-Invalid-Contract-Reference:
+                  value: >-
+                    <FxGetDealOperationResponse><FXP588INOperationResponse><FxDealInquiryRsp><PymtCcyAmt>87.16</PymtCcyAmt><StatusMsg>003:
+                    Invalid FX contract
+                    number</StatusMsg><FundCcy>USD</FundCcy><WLClntId>583700001</WLClntId><UserId>XML10N34</UserId><ContractRef>M1646310087960</ContractRef><ResTime>2026-04-10-11:10:33</ResTime><PymtCcy>EUR</PymtCcy><StatusCode>003</StatusCode><Source>APIM</Source><FundCcyAmt>100.00</FundCcyAmt></FxDealInquiryRsp></FXP588INOperationResponse></FxGetDealOperationResponse>
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Response'
+              examples:
+                Bad-Request-Example-ClientId-Missing:
+                  $ref: '#/components/examples/Bad-Request-Example-ClientId-Missing'
+                Bad-Request-Example-ContractRef-UserId-Missing:
+                  $ref: >-
+                    #/components/examples/Bad-Request-Example-ContractRef-UserId-Missing
+                Bad-Request-Example-Funding-Currency-Missing:
+                  $ref: >-
+                    #/components/examples/Bad-Request-Example-Funding-Currency-Missing
+                Bad-Request-Example-Payment-Currency-Missing:
+                  $ref: >-
+                    #/components/examples/Bad-Request-Example-Payment-Currency-Missing
+                Bad-Request-Example-Currency-Amount-Missing:
+                  $ref: >-
+                    #/components/examples/Bad-Request-Example-Currency-Amount-Missing
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Response'
+              examples:
+                Bad-Request-Example-ClientId-Missing:
+                  value: >-
+                    <Response><status>400</status><message>Mismatch of WorldLink
+                    Client ID or Client ID not
+                    maintained</message><correlationId>q2te~bd8e9b8f-d8e5-4a48-ad13-5d1ec8bb32e829318</correlationId></Response>
+                Bad-Request-Example-ContractRef-UserId-Missing:
+                  value: >-
+                    <Response><correlationId>q2te~120f2560-c6aa-4061-9038-bdb53da20d1043650</correlationId><message>ContractRef
+                    or UserId is mandatory. Please provide value for either of
+                    ContractRef or
+                    UserId.</message><status>400</status></Response>
+                Bad-Request-Example-Funding-Currency-Missing:
+                  value: >-
+                    <Response><correlationId>q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8343578</correlationId><message>FundCcy
+                    is mandatory when UserId is selected. Please provide value
+                    for FundCcy.</message><status>400</status></Response>
+                Bad-Request-Example-Payment-Currency-Missing:
+                  value: >-
+                    <Response><correlationId>q2te~bd8e9b8f-d8e5-4a48-ad13-5d1ec8bb32e829332</correlationId><message>PymtCcy
+                    is mandatory when UserId is selected. Please provide value
+                    for PymtCcy.</message><status>400</status></Response>
+                Bad-Request-Example-Currency-Amount-Missing:
+                  value: >-
+                    <Response><correlationId>q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8343581</correlationId><message>PymtCcyAmt
+                    or FundCcyAmt is mandatory when UserId is selected. Please
+                    provide value for either of PymtCcyAmt or
+                    FundCcyAmt.</message><status>400</status></Response>
+        '401':
+          description: >-
+            The request is Unauthorized. Please try again with valid
+            credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Unauthorized-Example:
+                  $ref: '#/components/examples/Unauthorized-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Unauthorized-Example:
+                  value: >-
+                    <errormessage><httpCode>401</httpCode><httpMessage>Invalid
+                    OAuth Token</httpMessage><moreInformation>Please use valid
+                    OAuth Token</moreInformation></errormessage>
+        '403':
+          description: The request is Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Request-Forbidden-Example:
+                  $ref: '#/components/examples/Request-Forbidden-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Request-Forbidden-Example:
+                  value: >-
+                    <errormessage><httpMessage>Forbidden</httpMessage><httpCode>403</httpCode><moreInformation>You
+                    are forbidden to access this
+                    service.</moreInformation></errormessage>
+        '404':
+          description: Not Found. Please check your URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Not-Found-Example:
+                  $ref: '#/components/examples/Not-Found-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Not-Found-Example:
+                  value: >-
+                    <errormessage><httpCode>404</httpCode><httpMessage>Not
+                    Found</httpMessage><moreInformation>No resources match
+                    requested URI</moreInformation></errormessage>
+        '500':
+          description: Unable to serve your request at this moment. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Response'
+              examples:
+                Internal-Server-Example:
+                  $ref: '#/components/examples/Internal-Server-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Response'
+              examples:
+                Internal-Server-Example:
+                  value: >-
+                    <Response><status>500</status><message>Unable to process
+                    your
+                    request</message><correlationId>q2te~120f2560-c6aa-4061-9038-bdb53da20d1043788</correlationId></Response>
+components:
+  schemas:
+    FxGetDealOperationResponse:
+      title: Fx-Deal-Inquiry-API-Response
+      properties:
+        FXP588INOperationResponse:
+          $ref: '#/components/schemas/FXP588INOperationResponse'
+    FXP588INOperationResponse:
+      type: object
+      title: Fx-Get-Deal-Operation-Response
+      required:
+        - FxDealInquiryRsp
+      properties:
+        FXP588IN-Operation-Response:
+          $ref: '#/components/schemas/FxDealInquiryRsp'
+    FxDealInquiryRsp:
+      type: object
+      title: FXP588IN-Operation-Response
+      properties:
+        WLClntId:
+          type: string
+          description: >-
+            WorldLink Client ID. WorldLink Client Number and Branch Number.
+            Provide Branch number if the Branch Number was part of FX request
+          maxLength: 9
+          example: '123451234'
+          title: WLClntId
+        ContractRef:
+          type: string
+          description: >-
+            WorldLink Contract Reference number. WorldLink Contract Number and
+            WorldLink Sequence Number - this is the true unique identifier. 
+            External interfaces use contract number concatenated to sequence
+            number to designate unique deals. Please use this if available.
+          maxLength: 15
+          example: M10001000123456
+          title: ContractRef
+        UserId:
+          type: string
+          description: >-
+            Unique UserId created by WorldLink. It will be used as a key to
+            reference the requests and accepts.  For successful deal lookup
+            responses, UserId will be mandatorily populated by WorldLink.  In
+            case the lookup fails or the Deal is not found in WorldLink, then
+            UserId will not be populated in the response.
+          maxLength: 8
+          example: ABCD1234
+          title: UserId
+        ResTime:
+          type: string
+          description: >-
+            Date and Time when the response is generated by WorldLink.  Format:
+            "YYYY-MM-DD-HH:MM:SS"
+          maxLength: 19
+          example: 2024-07-07-07:07:07
+          title: ResTime
+        PymtCcy:
+          type: string
+          description: WorldLink Payment Currency SWIFT code.
+          maxLength: 3
+          example: GBP
+          title: PymtCcy
+        PymtCcyAmt:
+          type: string
+          description: WorldLink Payment Currency amount.
+          maxLength: 16
+          example: '1234567891234.00'
+          title: PymtCcyAmt
+        FundCcy:
+          type: string
+          description: WorldLink Funding Currency SWIFT code.
+          maxLength: 3
+          example: USD
+          title: FundCcy
+        FundCcyAmt:
+          type: string
+          description: WorldLink Funding Currency amount.
+          maxLength: 16
+          example: '1234567891234.00'
+          title: FundCcyAmt
+        Rate:
+          type: number
+          description: FX Rate for Prebook.
+          maximum: 99999999.99999999
+          example: 100.1010101
+          title: Rate
+        BookDate:
+          type: string
+          description: >-
+            FX Booking date in WorldLink. If the deal is found the actual
+            booking date is shared  Format: YYYYMMDD.
+          maxLength: 8
+          example: '20200626'
+          title: BookDate
+        ValueDate:
+          type: string
+          description: 'FX Contract Value Date Format: YYYYMMDD.'
+          maxLength: 8
+          example: '20200426'
+          title: ValueDate
+        DealTs:
+          type: string
+          description: >-
+            Date and Time when the prebook deal was booked in OLR. Format:
+            "YYYY-MM-DD-HH.MM.SS.nnnnnn"
+          maxLength: 26
+          example: 2024-12-03-03.51.04.146766
+          title: DealTs
+        FundActTotalLmt:
+          type: string
+          description: >-
+            Total FX limit set-up by OLR - Funding account. This will only be
+            populated if LinkToPymt is "N"
+          maxLength: 16
+          example: '1234567891234.00'
+          title: FundActTotalLmt
+        FundActAvlLmt:
+          type: string
+          description: >-
+            Total available limit - Funding account (Total limit - Limit
+            earmarked). This will only be populated if LinkToPymt is "N"
+          maxLength: 16
+          example: '1234567891234.00'
+          title: FundActAvlLmt
+        FundActEarMrkLmt:
+          type: string
+          description: >-
+            Current limit earmarked - Funding account (Current earmarked limit +
+            current drawdown amt). This will only be populated if LinkToPymt is
+            "N"
+          maxLength: 16
+          example: '1234567891234.00'
+          title: FundActEarMrkLmt
+        FundActUtilLmt:
+          type: string
+          description: >-
+            Funding account - Current FX limit utilized post payment release
+            (current utilized limit + receipt of infotelex). This will only be
+            populated if LinkToPymt is "N"
+          maxLength: 16
+          example: '1234567891234.00'
+          title: FundActUtilLmt
+        PymtActTotalLmt:
+          type: string
+          description: >-
+            Total FX limit set-up by OLR - Payment account. This will only be
+            populated if LinkToPymt is "N"
+          maxLength: 16
+          example: '1234567891234.00'
+          title: PymtActTotalLmt
+        PymtActAvlLmt:
+          type: string
+          description: >-
+            Total available limit - Payment account. Total limit - Limit
+            earmarked . This will only be populated if LinkToPymt is "N"
+          maxLength: 16
+          example: '1234567891234.00'
+          title: PymtActAvlLmt
+        PymtActEarMrkLmt:
+          type: string
+          description: >-
+            Current limit earmarked - Payment account (Current earmarked limit +
+            current drawdown amt). This will only be populated if LinkToPymt is
+            "N"
+          maxLength: 16
+          example: '1234567891234.00'
+          title: PymtActEarMrkLmt
+        PymtActUtilLmt:
+          type: string
+          description: >-
+            Payment account - Current FX limit utilized post payment release
+            (current utilized limit + receipt of infotelex). This will only be
+            populated if LinkToPymt is "N"
+          maxLength: 16
+          example: '1234567891234.00'
+          title: PymtActUtilLmt
+        StatusCode:
+          type: string
+          description: >-
+            This parameter will be mandatorily sent in WorldLink response as per
+            the following scenarios -  1. For successful execution WorldLink
+            will return "000" 2. For any detail level error, a non-zero value is
+            shown
+          maxLength: 3
+          example: '000'
+          title: StatusCode
+        StatusMsg:
+          type: string
+          description: >-
+            This parameter will be mandatorily sent in WorldLink response along
+            with StatusCode. Message describing the error code/reason.
+          maxLength: 255
+          example: '000: Request Processed Successfully'
+          title: StatusMsg
+    Error-Detail:
+      title: Error-Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        httpCode:
+          type: string
+          title: status
+          description: Error status that provides more details on issue.
+        httpMessage:
+          type: string
+          title: message
+          description: More information about the issue.
+        moreInformation:
+          type: string
+          title: correlationId
+          description: Unique identifier for the request.
+    Error-Response:
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        correlationId:
+          type: string
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            authenticationservices/v3: Grant read-only access to WorldLink FX service
+  examples:
+    FxGetDealOperationResponse:
+      value:
+        FxGetDealOperationResponse:
+          FXP588INOperationResponse:
+            FxDealInquiryRsp:
+              Source: APIM
+              WLClntId: '123451234'
+              ContractRef: M10001000123456
+              ResTime: 2025-08-13-04:40:37
+              UserId: XBACBC4
+              PymtCcy: CAD
+              PymtCcyAmt: '145'
+              FundCcy: EUR
+              FundCcyAmt: '90.04'
+              Symbol: CADEUR
+              Rate: 0.621
+              BookDate: '20251024'
+              ValueDate: '20251027'
+              DealTs: 2025-10-24-04.02.26.701438
+              FundActTotalLmt: '90.04'
+              FundActAvlLmt: '90.04'
+              FundActEarMrkLmt: '0.00'
+              FundActUtilLmt: '0.00'
+              PymtActTotalLmt: '145.00'
+              PymtActAvlLmt: '145.00'
+              PymtActEarMrkLmt: '0.00'
+              PymtActUtilLmt: '0.00'
+              StatusCode: '000'
+              StatusMsg: '000:  Requested deal found'
+    Fx-Deal-Inquiry-API-Response-Deal-Not-Found-Example:
+      value:
+        FxGetDealOperationResponse:
+          FXP588INOperationResponse:
+            FxDealInquiryRsp:
+              Source: APIM
+              WLClntId: '123451234'
+              ContractRef: M16463100879607"
+              UserId: XBACBC4
+              ResTime: 2025-12-12-04:40:04
+              PymtCcy: CAD
+              PymtCcyAmt: '145'
+              FundCcy: EUR
+              FundCcyAmt: '90.04'
+              StatusCode: '100'
+              StatusMsg: >-
+                100: No FX contract found matching the search criteria. Please
+                review and re-input
+    Fx-Deal-Inquiry-API-Response-Deal-Cancelled-Example:
+      value:
+        FxGetDealOperationResponse:
+          FXP588INOperationResponse:
+            FxDealInquiryRsp:
+              Source: APIM
+              WLClntId: '123451234'
+              ContractRef: M10001000123456
+              UserId: XBACBC4
+              ResTime: 2025-08-08-04:40:37
+              PymtCcy: CAD
+              PymtCcyAmt: '145'
+              FundCcy: EUR
+              FundCcyAmt: '90.04'
+              StatusCode: '177'
+              StatusMsg: '177: Deal already cancelled'
+    Fx-Deal-Inquiry-API-Response-Invalid-Contract-Reference-Example:
+      value:
+        FxGetDealOperationResponse:
+          FXP588INOperationResponse:
+            FxDealInquiryRsp:
+              Source: APIM
+              WLClntId: '123451234'
+              ContractRef: M10001000123456
+              ResTime: 2025-08-13-04:40:37
+              UserId: XBACBC4
+              PymtCcy: CAD
+              PymtCcyAmt: '145'
+              FundCcy: EUR
+              FundCcyAmt: '90.04'
+              StatusCode: '100'
+              StatusMsg: >-
+                100: No FX contract found matching the search criteria. Please
+                review and re-input
+    Bad-Request-Example-ClientId-Missing:
+      value:
+        status: '400'
+        message: >-
+          WLClntID is mandatory and it cannot be empty. Please provide valid
+          value for WLClntID.
+        correlationId: testFxContractInquiry-400
+    Bad-Request-Example-ContractRef-UserId-Missing:
+      value:
+        status: '400'
+        message: >-
+          ContractRef or UserId is mandatory. Please provide value for either of
+          ContractRef or UserId.
+        correlationId: testFxContractInquiry-400
+    Bad-Request-Example-Funding-Currency-Missing:
+      value:
+        status: '400'
+        message: >-
+          FundCcy is mandatory when UserId is selected. Please provide value for
+          FundCcy.
+        correlationId: testFxContractInquiry-400
+    Bad-Request-Example-Payment-Currency-Missing:
+      value:
+        status: '400'
+        message: >-
+          PymtCcy is mandatory when UserId is selected. Please provide value for
+          PymtCcy.
+        correlationId: testFxContractInquiry-400
+    Bad-Request-Example-Currency-Amount-Missing:
+      value:
+        status: '400'
+        message: >-
+          PymtCcyAmt or FundCcyAmt is mandatory when UserId is selected. Please
+          provide value for either of PymtCcyAmt or FundCcyAmt.
+        correlationId: testFxContractInquiry-400
+    Unauthorized-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: This server could not verify that you are authorized to access the URL
+    Request-Forbidden-Example:
+      value:
+        httpCode: '403'
+        httpMessage: Forbidden
+        moreInformation: >-
+          User does not have sufficient privileges to access this functionality.
+          Please reach out to the support team to enable this feature.
+    Not-Found-Example:
+      value:
+        httpMessage: Not Found
+        httpCode: '404'
+        moreInformation: No resources match requested URI
+    Internal-Server-Example:
+      value:
+        message: Unable to process your request
+        status: '500'
+        correlationId: q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8312352

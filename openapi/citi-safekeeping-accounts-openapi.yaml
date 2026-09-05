@@ -1,0 +1,579 @@
+openapi: 3.0.1
+info:
+  title: Custody Accounts API
+  description: >
+    The Custody Accounts API provides a robust interface for programmatic
+    retrieval of  comprehensive custody account information. It exposes key
+    account attributes,  including unique identifiers, creation and
+    last-modified timestamps, and current account status.  This facilitates
+    efficient system-to-system integration and seamless data retrieval within
+    the  custody platform. Ultimately, the API enhances operational efficiency
+    and supports  data-driven decisions by providing timely and accurate account
+    details. <br><br>**Authentication**<br><br>Client applications must supply
+    an authentication token with every request, and therefore must first
+    authenticate before it can proceed. A client can use the OAuth 2 client
+    credential grant flow to obtain a time limited access token. To get an
+    access token send a HTTP Post request to the token endpoint using basic
+    authentication with the client key and secret (provided under separate
+    cover).<br><br>**Request**<br><br>```POST {baseURL}/api/oauth2/token
+    HTTPS/1.1 
+
+    Authorization: Basic base64(key:secret) 
+
+    Content-Type:application/x-www-form-urlencoded```<br><br>
+
+    **Response**<br><br>```
+      {
+          "token_type": "bearer", 
+          "access_token": <access token>, 
+          "expires_in": <seconds until expiry>, 
+          "consented_on":<timestamp>, 
+          "scope": "/dod"`
+      }```    <br><br>The bearer token is valid for 1800 seconds (30 minutes) after which it will expire. At this point, you would need to re-authenticate.
+  version: 2.16.1
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets/dod
+    description: Sandbox server (uses test data)
+  - url: https://api.citivelocity.com/markets/dod
+    description: Production server
+security:
+  - client-Credential-Oauth-Security-Schema: []
+components:
+  headers:
+    dod-request-id:
+      schema:
+        type: string
+      description: The UUID representing the unique identifier of the dod request
+    paging-page-number:
+      schema:
+        type: string
+      description: The current page number
+    paging-total-page-count:
+      schema:
+        type: string
+      description: The total count of pages available
+    paging-total-record-count:
+      schema:
+        type: string
+      description: The total count of records
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  examples:
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: path-param servicePortableId is mandatory and it cannot be empty
+            action: please provide valid parameter values
+            code: VC00010
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Resource that you are searching is not found
+            action: Please use valid resource details
+            code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Method not supported
+            action: please use valid http verb
+            code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+  schemas:
+    56e333ad-6934-4a26-9924-4c74d60397f2-data-schema:
+      type: object
+      properties:
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: 8-DEMOCSH53JPY
+        ACCT_BUS_TYP_NME:
+          type: string
+          description: >-
+            Account Type Description indicates the type of the account. Values
+            are CASH (C), S/K (S)
+          example: C
+        ACCT_CLS_DT:
+          type: string
+          format: date
+          description: >-
+            Account Close Date is the date when the account was closed. It will
+            only have a value if the account is closed.
+          example: '2025-08-02'
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: DEMOCSH53JPY
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - Cash - Japan JPY 11
+        ACCT_OPN_DT:
+          type: string
+          format: date
+          description: Account Open Date is the date when the account was opened.
+          example: '2025-08-02'
+        ACCT_STS_TYP:
+          type: string
+          description: >-
+            Account Status provides the current status of the Cash Account
+            and/or the Safekeeping account.  Values are Open, Closed, Frozen
+          example: Open
+        ALT_ACCT_NME:
+          type: string
+          description: >-
+            Alternate Account Name is the user provided name for the account as
+            entered using the Account Cabinet. If an Alternate Account Name is
+            not provided this field will be blank.
+          example: Demo - Cash - Japan JPY 11
+        ALTV_CUR_CD:
+          type: string
+          description: Account Base Currency Code is the ISO Currency Code for the account.
+          example: JPY
+        BR_NME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: CITIBANK JAPAN LTD
+        CASH_TYPE:
+          type: number
+          format: double
+          description: >-
+            Cash Type Code pertains to US Direct Cash Accounts and indicates
+            whether the Cash Account has a split income and principal balance.
+          example: 1
+        GFC_ID:
+          type: string
+          description: >-
+            Client ID is an identifier that is available on a Cash Account
+            and/or a Safekeeping Account.
+          nullable: true
+          example: '1000123456'
+        IBAN:
+          type: string
+          description: >-
+            IBAN  ISO 13616:1997 is the International Bank Account Number for
+            the Cash Account.
+          nullable: true
+          example: null
+        LEGAL_ENTITY:
+          type: string
+          description: >-
+            This identifies the branch that is the Legal Entity for a Global
+            Window branch.
+          nullable: true
+          example: null
+        RELATED_SAFEKEEPING_ACCT_ID:
+          type: string
+          description: This provides safekeeping account related to a cash account
+          nullable: true
+          example: null
+    56e333ad-6934-4a26-9924-4c74d60397f2-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/56e333ad-6934-4a26-9924-4c74d60397f2-data-schema
+    56e333ad-6934-4a26-9924-4c74d60397f2-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/56e333ad-6934-4a26-9924-4c74d60397f2-data-schema
+      xml:
+        name: data
+    ErrorResponse:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errorDetails:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      title: Error Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+  parameters:
+    client_id:
+      description: >-
+        Your unique ID. This is the same as the ID you used for OAuth token
+        generation. Citi shared this ID with you during your Data On Demand API
+        onboarding
+      name: client_id
+      in: header
+      required: true
+      schema:
+        type: string
+    skip:
+      name: skip
+      in: query
+      description: The number of records to skip before returning the results
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    take:
+      name: take
+      in: query
+      description: The maximum number of records to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 5000
+    select:
+      name: $select
+      in: query
+      description: >-
+        The $SELECT parameter in an API allows users to specify which data
+        fields (properties or columns) they want to receive in the API response.
+        This helps improve efficiency by reducing the amount of data transferred
+        and simplifying client-side processing.
+      required: false
+      schema:
+        type: string
+    parameter-36548:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal Citi client identifier that is
+        associated to a Safekeeping or Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36545:
+      name: ACCT_BUS_TYP_NME
+      description: >-
+        Account Type Description indicates the type of the account. Values are
+        CASH (C), S/K (S)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36544:
+      name: ACCT_CLS_DT
+      description: >-
+        Account Close Date is the date when the account was closed. It will only
+        have a value if the account is closed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-36539:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36535:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36533:
+      name: ACCT_OPN_DT
+      description: Account Open Date is the date when the account was opened.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-36528:
+      name: ACCT_STS_TYP
+      description: >-
+        Account Status provides the current status of the Cash Account and/or
+        the Safekeeping Account.  Values are: Open, Closed, Frozen
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36524:
+      name: ALT_ACCT_NME
+      description: >-
+        Alternate Account Name is the user provided name for the account as
+        entered using the Account Cabinet. If an Alternate Account Name is not
+        provided this field will be blank.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36522:
+      name: ALTV_CUR_CD
+      description: Account Base Currency Code is the ISO Currency Code for the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36519:
+      name: BR_NME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36518:
+      name: CASH_TYPE
+      description: >-
+        Cash Type Code pertains to US Direct Cash Accounts and indicates whether
+        the Cash Account has a split income and principal balance.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-36505:
+      name: GFC_ID
+      description: >-
+        Client ID is an identifier that is available on a Cash Account and/or a
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36502:
+      name: IBAN
+      description: >-
+        IBAN  ISO 13616:1997 is the International Bank Account Number for the
+        Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-36551:
+      name: LEGAL_ENTITY
+      description: >-
+        This identifies the branch that is the Legal Entity for a Global Window
+        branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-47704:
+      name: RELATED_SAFEKEEPING_ACCT_ID
+      description: This provides safekeeping account related to a cash account
+      in: query
+      required: false
+      schema:
+        type: string
+  securitySchemes:
+    client-Credential-Oauth-Security-Schema:
+      type: oauth2
+      description: This API uses OAuth 2 with the client credentials flow
+      flows:
+        clientCredentials:
+          tokenUrl: /markets/api/oauth2/token
+          scopes:
+            /dod: Access to Account and Transactions Information
+paths:
+  /api/services/56e333ad-6934-4a26-9924-4c74d60397f2/filter:
+    get:
+      summary: Account Master
+      description: >-
+        All safekeeping and cash accounts are identified here, with attributes
+        such as the Account ID, the account name, the status of the account etc.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-36548'
+        - $ref: '#/components/parameters/parameter-36545'
+        - $ref: '#/components/parameters/parameter-36544'
+        - $ref: '#/components/parameters/parameter-36539'
+        - $ref: '#/components/parameters/parameter-36535'
+        - $ref: '#/components/parameters/parameter-36533'
+        - $ref: '#/components/parameters/parameter-36528'
+        - $ref: '#/components/parameters/parameter-36524'
+        - $ref: '#/components/parameters/parameter-36522'
+        - $ref: '#/components/parameters/parameter-36519'
+        - $ref: '#/components/parameters/parameter-36518'
+        - $ref: '#/components/parameters/parameter-36505'
+        - $ref: '#/components/parameters/parameter-36502'
+        - $ref: '#/components/parameters/parameter-36551'
+        - $ref: '#/components/parameters/parameter-47704'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/56e333ad-6934-4a26-9924-4c74d60397f2-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/56e333ad-6934-4a26-9924-4c74d60397f2-xml-response-schema
+              example: >-
+                <?xml version="1.0" encoding="UTF-8"?> <data> <row>
+                <ACCT_BASE_NBR>8-DEMOCSH53JPY</ACCT_BASE_NBR>
+                <ACCT_BUS_TYP_NME>C</ACCT_BUS_TYP_NME>
+                <ACCT_CLS_DT>2025-08-02</ACCT_CLS_DT>
+                <ACCT_ID>DEMOCSH53JPY</ACCT_ID> <ACCT_NME>Demo - Cash - Japan
+                JPY 11</ACCT_NME> <ACCT_OPN_DT>2025-08-02</ACCT_OPN_DT>
+                <ACCT_STS_TYP>Open</ACCT_STS_TYP> <ALT_ACCT_NME>Demo - Cash -
+                Japan JPY 11</ALT_ACCT_NME> <ALTV_CUR_CD>JPY</ALTV_CUR_CD>
+                <BR_NME>CITIBANK JAPAN LTD</BR_NME> <CASH_TYPE>1</CASH_TYPE>
+                <GFC_ID>1000123456</GFC_ID> <IBAN/> <LEGAL_ENTITY/>
+                <RELATED_SAFEKEEPING_ACCT_ID/> </row> </data>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'

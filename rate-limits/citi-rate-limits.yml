@@ -1,0 +1,45 @@
+generated: '2026-09-05'
+method: derived
+source: openapi/ — 118 first-party Citi OpenAPI/Swagger specifications harvested from https://developer.citi.com/apidocs/redocusaurus/<id>.yaml
+  on 2026-09-05
+limit_count: 0
+note: Citi declares the RUNTIME SIGNAL but never publishes a NUMBER. Three contracts specify RateLimit-* response
+  headers with real semantics, and 82 operations declare a 429 response, but no ceiling, window or burst figure
+  is published anywhere on developer.citi.com or partner.citi.com. Actual limits are set per client during relationship-managed
+  onboarding. limit_count is therefore an honest 0.
+response_headers:
+- name: RateLimit-Limit
+  semantics: '"The rate limit ceiling for that given request measured in a 24 hour cycle."'
+  type: string
+- name: RateLimit-Remaining
+  semantics: '"The number of requests left in a 15 minute window."'
+  type: string
+- name: RateLimit-Reset
+  semantics: '"The remaining window before the rate limit resets. ISO 8601-1:2019."'
+  type: string (date-time)
+header_coverage:
+  specs:
+  - openapi/citi-addonservice-openapi.yaml
+  - openapi/citi-entityid-openapi.yaml
+  - openapi/citi-vamanagement-openapi.yaml
+  note: 3 of 118 contracts. Declared on 2xx responses so a caller can track budget before exhaustion, which is the
+    right design — it is simply not applied fleet-wide.
+exhaustion:
+  status: 429
+  declared_on_operations: 82
+  retry_after: false
+  note: No Retry-After header is declared anywhere in the estate. On the 79 operations that declare 429 without
+    RateLimit-* headers, a client has no machine-readable backoff hint at all and must use exponential backoff.
+windows_observed:
+- 24 hour cycle (ceiling)
+- 15 minute window (remaining)
+scope: per client application (entitlement is granted per registered app during onboarding); Region and Country
+  request headers select the servicing entity and may carry separate limits
+probed:
+- url: https://tts.apib2b.citi.com/
+  status: 403
+  note: Gateway reachable, rejects unauthenticated calls — no anonymous response headers observable.
+- url: https://b2b.api.icg.citi.com/
+  status: 403
+- url: https://api.citivelocity.com/
+  status: 404

@@ -1,0 +1,2389 @@
+swagger: '2.0'
+info:
+  description: >-
+    Use the Mobile Virtual Card Onboarding API for card enrollment, card
+    maintenance based on Citi client's user demographic data and country of
+    issuance, and consumption of client event notifications originating from
+    purging users.
+  version: 1.0.0
+  x-ibm-name: mvca-distributed-partner-lifecycle
+  title: mVCA Distributed Partner Lifecycle APIs
+  contact:
+    name: Citi Commercial Cards Support
+    email: >-
+      dl.icg.global.commercial.cards.digital.production.support@imcap.ap.ssmb.com
+servers:
+  - url: https://tts.apib2b.citi.com/tts/cards
+    description: production gateway URL
+  - url: https://tts.sandbox.apib2b.citi.com/tts/cards
+    description: sandbox URL
+security:
+  - clientCredentials: []
+schemes:
+  - https
+produces:
+  - application/json
+paths:
+  /mvca/v1/card/enroll:
+    post:
+      summary: Enrollment Data
+      description: >-
+        Post the client's user data to enable Card Enrollment based on the
+        user's demographic data & country of issuance.
+      operationId: POST
+      parameters:
+        - name: country
+          in: header
+          description: >-
+            Country code in ISO 3166 alpha-2 format.. <br>`Example`: USA(United
+            States of America), SGP(Singapore),   PHL(Philippines),
+            THA(Thailand)
+          type: string
+          required: true
+        - name: region
+          in: header
+          description: 'region of the client. <br>`Example`: APAC, EMEA, NAM'
+          type: string
+          required: true
+        - name: authorization
+          in: header
+          description: >-
+            the OAuth Authorization header <br> **OAuth:** <br> Request contains
+            a header field in the form of Authorization: Bearer (access_token),
+            where access_token is generated using the OAuth url<br>  `Example` :
+            Bearer
+            AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4
+          type: string
+          required: true
+        - name: req-sys-id
+          in: header
+          description: >-
+            Client Unique id to identify the particular request.<br> `Format`:
+            UUID <br> `Example`: 7d13245e-243a-5e8f-bc10-8626ec728291
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          description: >-
+            The MIME type of the body of the request (used with POST and PUT
+            requests). Always pass application/json.
+          type: string
+          required: false
+        - name: Accept-Language
+          in: header
+          description: List of acceptable human languages for response.
+          type: string
+          required: false
+        - name: CardEnrollmentRequest
+          in: body
+          description: CardEnrollmentRequest
+          required: true
+          schema:
+            $ref: '#/definitions/CardEnrollmentRequest'
+      responses:
+        '200':
+          description: Success response sent to client with necessary response fields.
+          schema:
+            $ref: '#/definitions/CardEnrollmentSuccessResponse'
+        '202':
+          description: >-
+            Immediate ACK response sent to client to indicate background
+            processing.
+          schema:
+            $ref: '#/definitions/CardEnrollmentAckResponse'
+        '206':
+          description: >-
+            Partial success response sent to client with necessary response
+            fields.
+          schema:
+            $ref: '#/definitions/CardEnrollmentPartialSuccessResponse'
+        '400':
+          description: >-
+            Invalid error response sent to client indicating bad request from
+            client.
+          schema:
+            $ref: '#/definitions/CardEnrollmentValidationFailureResponse'
+        '401':
+          description: >-
+            Unauthorized error response sent to client indicating authentication
+            failure from client.
+          schema:
+            $ref: '#/definitions/CardEnrollmentUnAuthorizedResponse'
+        '405':
+          description: >-
+            Error response sent to client indicating invalid HTTP method
+            received from client.
+          schema:
+            $ref: '#/definitions/CardEnrollmentMethodNotAllowedResponse'
+        '500':
+          description: Error response to indicate the CITI server errors.
+          schema:
+            $ref: '#/definitions/CardEnrollmentInternalServerErrorResponse'
+  /mvca/v1/card/maintenance:
+    put:
+      summary: Updated User Data
+      description: >-
+        Enables maintenance of user card accounts based on the user's
+        demographic data, country of issuance, and request type combination
+      operationId: PUT
+      parameters:
+        - name: country
+          in: header
+          description: >-
+            Country code in ISO 3166 alpha-2 format.. <br>`Example`: USA(United
+            States of America), SGP(Singapore),   PHL(Philippines),
+            THA(Thailand)
+          type: string
+          required: true
+        - name: region
+          in: header
+          description: 'region of the client. <br>`Example`: APAC, EMEA, NAM'
+          type: string
+          required: true
+        - name: authorization
+          in: header
+          description: >-
+            Request should contain OAuth Authorization header <br> **OAuth:**
+            <br> Request contains a header field in the form of Authorization:
+            Bearer (access_token), where access_token is generated using the
+            OAuth url<br>  `Example` : Bearer
+            AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4
+          type: string
+          required: true
+        - name: req-sys-id
+          in: header
+          description: >-
+            Client Unique id to identify the particular request.<br> `Format`:
+            UUID <br> `Example`: 7d13245e-243a-5e8f-bc10-8626ec728291
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          description: >-
+            The MIME type of the body of the request (used with POST and PUT
+            requests). Always pass application/json.
+          type: string
+          required: false
+        - name: Accept-Language
+          in: header
+          description: List of acceptable human languages for response.
+          type: string
+          required: false
+        - name: clientMaintenanceRequest
+          in: body
+          description: clientMaintenanceRequest
+          required: true
+          schema:
+            $ref: '#/definitions/CardMaintenanceRequest'
+      responses:
+        '200':
+          description: Success response sent to client from Citi after Purge is complete.
+          schema:
+            $ref: '#/definitions/CardMaintenanceSuccessResponse'
+        '206':
+          description: Success response sent to client from Citi after Purge is complete.
+          schema:
+            $ref: '#/definitions/CardMaintenancePartialSuccessResponse'
+        '400':
+          description: >-
+            Invalid error response due to validation failure/bad request sent to
+            client from Citi.
+          schema:
+            $ref: '#/definitions/CardMaintenanceInvalidFailureResponse'
+        '401':
+          description: >-
+            Unauthorized error response due to validation failure/bad request
+            sent to client from Citi.
+          schema:
+            $ref: '#/definitions/CardMaintenanceUnAuthorizedResponse'
+        '405':
+          description: >-
+            HTTP method not allowed error response due to wrog HTTP method sent
+            to client from Citi.
+          schema:
+            $ref: '#/definitions/CardMaintenanceMethodNotAllowedResponse'
+        '500':
+          description: >-
+            Internal server error response sent to client from Citi due to
+            internal error.
+          schema:
+            $ref: '#/definitions/CardMaintenanceInternalServerErrorResponse'
+  /mvca/v1/event/notification:
+    put:
+      summary: Card Holder Deletion
+      description: >-
+        Use this endpoint to delete users and accounts based on client
+        notifications.
+      operationId: purge
+      parameters:
+        - name: country
+          in: header
+          description: >-
+            Country code in ISO 3166 alpha-2 format.. <br>`Example`: USA(United
+            States of America), SGP(Singapore),   PHL(Philippines),
+            THA(Thailand)
+          type: string
+          required: true
+        - name: region
+          in: header
+          description: 'region of the client. <br>`Example`: APAC, EMEA, NAM'
+          type: string
+          required: true
+        - name: authorization
+          in: header
+          description: >-
+            Request should contain OAuth Authorization header <br> **OAuth:**
+            <br> Request contains a header field in the form of Authorization:
+            Bearer (access_token), where access_token is generated using the
+            OAuth url<br>  `Example` : Bearer
+            AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4
+          type: string
+          required: true
+        - name: req-sys-id
+          in: header
+          description: >-
+            Client Unique id to identify the particular request.<br> `Format`:
+            UUID <br> `Example`: 7d13245e-243a-5e8f-bc10-8626ec728291
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          description: >-
+            The MIME type of the body of the request (used with POST and PUT
+            requests). Always pass application/json.
+          type: string
+          required: false
+        - name: Accept-Language
+          in: header
+          description: List of acceptable human languages for response.
+          type: string
+          required: false
+        - name: CardPurgeRequest
+          in: body
+          description: CardPurgeRequest
+          required: true
+          schema:
+            $ref: '#/definitions/CardPurgeRequest'
+      responses:
+        '202':
+          description: >-
+            Immediate ACK response sent to client to indicate background
+            processing.
+          schema:
+            $ref: '#/definitions/CardPurgeAckResponse'
+        '400':
+          description: >-
+            Invalid error response due to validation failure/bad request sent to
+            client from Citi.
+          schema:
+            $ref: '#/definitions/CardPurgeInvalidFailureResponse'
+        '401':
+          description: >-
+            Unauthorized error response due to validation failure/bad request
+            sent to client from Citi.
+          schema:
+            $ref: '#/definitions/CardPurgeUnAuthorizedResponse'
+        '405':
+          description: >-
+            HTTP method not allowed error response due to wrog HTTP method sent
+            to client from Citi.
+          schema:
+            $ref: '#/definitions/CardPurgeMethodNotAllowedResponse'
+        '500':
+          description: >-
+            Internal server error response sent to client from Citi due to
+            internal error.
+          schema:
+            $ref: '#/definitions/CardPurgeInternalServerErrorResponse'
+definitions:
+  CardEnrollmentRequest:
+    required:
+      - cardHolderUserId
+      - countryOfIssuance
+    properties:
+      cardHolderUserId:
+        description: >-
+          Unique ID to be generated & sent by Citi clients to identify user
+          profile.
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        example: Billy33896
+        maxLength: 20
+        minLength: 1
+      countryOfIssuance:
+        description: Country in which the VCA program is issued out of.
+        type: string
+        format: alphabets [a-zA-Z]
+        example: USA
+        maxLength: 3
+        minLength: 3
+      demographicData:
+        description: >-
+          Card holder/user's demographic data to be sent by client to perform
+          CITI screening based on country of issuance.
+        type: object
+        format: object
+        $ref: '#/definitions/DemographicData'
+      cardInfo:
+        description: >-
+          Card related information needs to be sent by client to create virtual
+          card via Citi.
+        type: array
+        items:
+          $ref: '#/definitions/CardInfo'
+  CardInfo:
+    properties:
+      vcaGuid:
+        description: Unique Id to refer Virtual Card Account.
+        type: integer
+        format: int64
+        example: 233191
+        maxLength: 19
+        minLength: 1
+      programId:
+        description: Unique ID of the company record defined in the virtual cards system.
+        type: string
+        format: numeric [0-9]
+        example: '233191'
+        maxLength: 19
+        minLength: 1
+      programName:
+        description: Company Name as defined in Virtual Card System.
+        type: string
+        format: alphanumeric [a-zA-Z0-9] + special character
+        example: VCA Program NAM
+        maxLength: 250
+        minLength: 1
+      fundingSourceId:
+        description: >-
+          Unique identifier of the funding source to which the virtual card
+          rolls up. It's numeric for MASTER & alphanumeric for VISA.
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        example: '2718'
+        maxLength: 19
+      fundingSourceName:
+        description: >-
+          Descriptive name of the real card to which the virtual card rolls up.
+          Apllicable only for MASTER.
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        example: Funding Account 1 for Subsidiary XYZ
+        maxLength: 100
+      expiryDate:
+        description: >-
+          Expiry Date of the virtual card account. Must not be more than 24
+          months in the future. If a modification of this parameter is not
+          needed, the field can be left out of the modification request call.
+          Citi will then apply the most recently defined value for this field.
+          Data type has been kept has String instead of Number due to prceeding
+          0 may get  truncated. Applicable only for MASTER.
+        type: string
+        format: MMYYYY ([0-9]{6})
+        example: '102021'
+        maxLength: 6
+      mccGrouping:
+        description: >-
+          Limits authorizations to defined Merchant Category Codes. Must be the
+          Purchase Type name associated to the template.
+        type: array
+        items:
+          type: string
+        format: alphabets [a-zA-Z]
+        example: '["Air MCCs"]'
+      currencyCode:
+        description: >-
+          Currency Code in which VCA amounts are expressed. currencyCode is not
+          required if currencyType = B
+        type: string
+        format: numeric [0-9]
+        example: '036'
+        maxLength: 3
+      currencyType:
+        description: >-
+          Defines the type of the VCA currency. - Value B stands for Billing
+          Currency which indicates that the VCA currency is equal to the billing
+          currency of the underlying funding source. - Value M stands for
+          Merchant Currency which indicates that the VCA currency is expressed
+          in merchant currency and not in billing currency. Mandatory for
+          Mastercard
+        type: string
+        format: B/M
+        example: M
+        enum:
+          - B
+          - M
+      timeZone:
+        description: >-
+          Defines the time zone applicable for any date or time parameters
+          within controls set for a VCA.If any of the following controls are
+          used, timeZone is required:Validity Period Control,Aging Velocity
+          Control (Mastercard only), Curfew Control and Time of Day Control.It
+          sets the specific timeframe when the account and its controls will
+          become active.
+        type: string
+        format: UTC-OFFSET (UTC-[0-9]{2}:[0-9]{2})
+        example: UTC-04:00
+        maxLength: 9
+      templateId:
+        description: >-
+          Identifies the template that was setup in the VCA system and that
+          should be used for this virtual card. The template setup in the VCA
+          system defines which controls, custom data fields and MCC groupings
+          can be used. Mandatory for Mastercard
+        type: integer
+        format: int64
+        example: 36091
+        maximum: 19
+      virtualCardAccountNumber:
+        description: VCN created by network & ready to be assigned to user.
+        type: string
+        format: numeric
+        example: '5610349130672269'
+        maxLength: 16
+        minLength: 16
+      customReference:
+        description: >-
+          Up to 29 custom reference field lables and values can be defined in a
+          given request. A custom reference value cannot be sent without a
+          corresponding custom reference label.
+        type: array
+        items:
+          $ref: '#/definitions/CustomReference'
+        example:
+          - customReferenceLabel: Ticket Class
+            customReferenceValue: Business
+          - customReferenceLabel: Departure Airport Code
+            customReferenceValue: IND
+      enableSpendVelocityControl:
+        description: >-
+          Limits the frequency and total cumulative amount of authorizations
+          performed on the VCA within a specified period. The control is
+          mandatory unless Aging Velcotiy Control is used. This control cannot
+          be used in combination with the Aging Velocity Control.
+        type: boolean
+        format: boolean
+        example: true
+      spendVelocity:
+        type: array
+        items:
+          $ref: '#/definitions/SpendVelocityRequest'
+      enableValidityPeriodControl:
+        description: >-
+          Limits authorization activity to a specific time period.  This is an
+          optional control. If this control is not used, pass False or leave
+          this section out from the request. If value passed as True,
+          validityStartDate and validityEndDate are required.
+        type: boolean
+        format: boolean
+        example: true
+      validityStartDate:
+        description: >-
+          Identifies the date from which the virtual card account can be used
+          for transactions. The Start Date must be prior to the End Date.
+          Mandatory if enableValidityPeriodControl is true. Mandatory for
+          MASTER, optional for VISA.
+        type: string
+        format: >-
+          ISO 8601: YYYY-MM-DD
+          (^(19|20)[0-9]{2}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30))))
+        example: '2024-09-28'
+        maxLength: 10
+      validityEndDate:
+        description: >-
+          Identifies the date until which the virtual card account can be used
+          for transactions. The Start Date must be prior to the End Date.
+          Mandatory if enableValidityPeriodControl is true
+        type: string
+        format: >-
+          ISO 8601: YYYY-MM-DD
+          (^(19|20)[0-9]{2}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30))))
+        example: '2024-09-28'
+        maxLength: 10
+      enableAmountRangeControl:
+        description: >-
+          Approves a transaction only if the requested amount for authorization
+          is equal to or greater than the Minimum Amount and less than or equal
+          to the Maximum Amount. This is an optional control. If this control is
+          not used, pass False or leave this section out from the request. If
+          value passed is True, maxAmount and minAmount are required.
+        type: boolean
+        format: boolean
+        example: true
+      maxAmount:
+        description: >-
+          For MASTER: Identifies the maximum allowed transaction amount. 14
+          digits max to the left of decimal and 2 digits max to the right of the
+          decimal. For VISA: Identifies the maximum allowed transaction amount.
+          12 digits max to the left of decimal and 2 digits max to the right of
+          the decimal. Mandatory if enableAmountRangeControl is true 
+        type: number
+        format: '[0-9]{17}$|(?=^.{1,18}$)^[0-9]+\.[0-9]{1,4}'
+        example: 2000.25
+        maximum: 15
+      minAmount:
+        description: >-
+          For MASTER: Identifies the minimum allowed transaction amount. 14
+          digits max to the left of decimal and 2 digits max to the right of the
+          decimal. For VISA: Identifies the maximum allowed transaction amount.
+          12 digits max to the left of decimal and 2 digits max to the right of
+          the decimal. Mandatory if enableAmountRangeControl is true 
+        type: number
+        format: '[0-9]{17}$|(?=^.{1,18}$)^[0-9]+\.[0-9]{1,4}'
+        example: 1000.75
+        maximum: 15
+      enableTransactionLimitControl:
+        description: >-
+          Limits individual transactions to a maximum amount.  This is an
+          optional control. If this control is not used, pass False or leave
+          this section out from the request. If value passed is True,
+          amountLimit is required.
+        type: boolean
+        format: boolean
+        example: true
+      amountLimit:
+        description: >-
+          Identifies the maximum allowed transaction amount. Mandatory if
+          enableTransactionLimitControl is true
+        type: number
+        format: '[0-9]{17}$|(?=^.{1,18}$)^[0-9]+\.[0-9]{1,4}'
+        example: 1000.25
+        maximum: 15
+      enableCurfewControl:
+        description: >-
+          Limits authorization activity to a single time period for each day
+          selected. This is an optional control. If this control is not used,
+          pass False or leave this section out from the request. If value passed
+          is True, curfewTime is required. Applicable only for MASTER.
+        type: boolean
+        format: boolean
+        example: true
+      curfewTime:
+        type: object
+        format: object
+        example:
+          - startTime: '12:30'
+            endTime: '13:30'
+            weekdaysEffective:
+              - Mon
+              - Tue
+      enableTimeOfDayControl:
+        description: >-
+          Limits authorization request to defined time periods each day. This is
+          an optional control. If this control is not used, pass False or leave
+          this section out from the request. If value passed is True, timeOfDay
+          is required.
+        type: boolean
+        format: boolean
+        example: true
+      timeOfDay:
+        type: array
+        items:
+          $ref: '#/definitions/TimeOfDay'
+        example:
+          - startTime: '12:30'
+            endTime: '13:30'
+            weekdayEffective: Mon
+      enableAgingVelocityControl:
+        description: >-
+          Sets a cumulative amount and keeps track of the current remaining
+          balance. Allows the requester to "age off" approved authorization
+          requests that have not been cleared by the merchant after a defined
+          number of days. This is an optional control. If this control is not
+          used, pass False or leave this section out from the request. If value
+          passed is True, authorizationHoldDays and cumulativeSpendLimit are
+          required.
+        type: boolean
+        format: boolean
+        example: true
+      authorizationHoldDays:
+        description: >-
+          Identifies the number of days after which an authorization gets aged
+          off if no matching clearing record was received. Mandatory if
+          enableAgingVelocityControl is true. Applicable only for MASTER.
+        type: number
+        format: numeric [0-9]
+        example: 21
+        maximum: 19
+      cumulativeSpendLimit:
+        description: >-
+          Limits the overall amount spend on the virtual card account. Setting
+          the this value to 0 will be interpreted as an open limit. In this
+          case, the underlying funding accounts available balance will drive the
+          authorization decision to approve or decline a transaction. Mandatory
+          if enableAgingVelocityControl is true
+        type: number
+        format: '[0-9]{17}$|(?=^.{1,18}$)^[0-9]+\.[0-9]{1,4}'
+        example: 2000.25
+        maximum: 15
+      enableGeographyControl:
+        description: >-
+          Limits authorization requests to a defined geographic location. This
+          is an optional control. If this control is not used, pass False or
+          leave this section out from the request. For Mastercard, if value
+          passed is True, countryCodes and isCountryAllowed are required.
+        type: boolean
+        format: boolean
+        example: true
+      countryCodes:
+        type: array
+        items:
+          type: string
+        example:
+          - USA
+          - IND
+        format: alphabets [a-zA-Z]
+        maximum: 3
+      isCountryallowed:
+        description: >-
+          Indicate whether the values in countryCode are allowed or disallowed.
+          True= values provided in countryCode are allowed. False = values
+          provided in countryCode are not allowed. 
+        type: boolean
+        format: boolean
+        example: true
+      enableMerchantIdControl:
+        description: >-
+          Limits authorizations to a particular merchant using the Merchant ID
+          and Acquirer ID (Mastercard) or Card Acceptor ID (Visa).
+        type: boolean
+        format: boolean
+        example: true
+      isMerchantIdAllowed:
+        description: >-
+          Indicate whether the values in merchantId and acquirerId are allowed
+          or disallowed. True = values provided in merchantId and acquirerId are
+          allowed False = values provided in merchantId and acquirerId are not
+          allowed
+        type: boolean
+        format: boolean
+        example: true
+      cardAcceptorId:
+        description: >-
+          Specifies the Card Acceptor ID that should be allowed / disallowed
+          when transacting with the virtual card. Only applicable for VISA.
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        example: CAID12345
+        maxLength: 15
+      vcaRequestor:
+        type: object
+        $ref: '#/definitions/VcaRequestor'
+      vcaUser:
+        type: object
+        $ref: '#/definitions/VcaUser'
+    required:
+      - vcaGuid
+      - programId
+      - programName
+      - fundingSourceId
+      - fundingSourceName
+      - expiryDate
+      - mccGrouping
+      - currencyType
+      - currencyCode
+      - timeZone
+      - templateId
+      - enableSpendVelocityControl
+      - spendVelocity
+      - customReference
+      - enableCurfewControl
+      - enableTransactionLimitControl
+      - enableAmountRangeControl
+      - enableValidityPeriodControl
+      - enableTimeOfDayControl
+      - enableAgingVelocityControl
+      - enableGeographyControl
+      - vcaRequestor
+      - vcaUser
+  VcaUser:
+    properties:
+      emailId:
+        description: Email Id of the card holder/user
+        type: string
+        format: alphabets [a-zA-Z]
+        example: wiccan@gmail.com
+        maxLength: 240
+      mobileNumber:
+        description: Mobile number the card holder/user
+        type: string
+        format: numeric [0-9]
+        example: '5512345678'
+        minLength: 5
+        maxLength: 13
+      mobileCountryCode:
+        description: Mobile number country code of the card holder/user
+        type: string
+        format: ^(\+[0-9]+)
+        example: '+51'
+        minLength: 2
+        maxLength: 4
+    required:
+      - emailId
+      - mobileNumber
+      - mobileCountryCode
+  CustomReference:
+    properties:
+      customReferenceLabel:
+        description: Specifies the label of a custom reference field.
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        example: Purchase Order
+        maxLength: 50
+        minLength: 1
+      customReferenceValue:
+        description: >-
+          Specifies the value of a custom reference field. If the template used
+          for this VCA request identifies a given custom reference field as
+          required, then the value provided in this field cannot be blank.
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        example: PO-1234567
+        maxLength: 80
+        minLength: 1
+  SpendVelocityRequest:
+    properties:
+      maxAuth:
+        description: >-
+          Limits the number of authorizations that can be made with a VCA.
+          Should be set to 1, if a single-use VCA is created. Specify any value
+          larger than one for a multi-use VCA.  If a modification of this
+          parameter is not needed, the field can be left out of the modification
+          request call. Citi will then apply the most recently defined value for
+          this field. Set to 0, if unlimited authorizations should be allowed.
+          For MASTER: 8, VISA: 10
+        type: number
+        format: numeric [0-9]
+        example: 10
+        maximum: 10
+      cumulativeSpendLimit:
+        description: >-
+          Limits the overall amount spend on the virtual card account. If a
+          modification of this parameter is not needed, the field can be left
+          out of the modification request call. Citi will then apply the most
+          recently defined value for this field.
+        type: number
+        format: '[0-9]{17}$|(?=^.{1,18}$)^[0-9]+\.[0-9]{1,4}'
+        example: '10000'
+        maximum: 15
+      periodType:
+        description: >-
+          Period for which the control values are valid before they reset.<br>If
+          a modification of this parameter is not needed, the field can be left
+          out of the modification request call. Citi will then apply the most
+          recently defined value for this field. Mastercard: D = Daily -- The
+          balances of control parameters enabled for a VCA are reset with their
+          original values every day at 00:00:00. M = Monthly -- The balances of
+          control parameters enabled for a VCA are reset with their original
+          values at the start of every month. W = Weekly -- The balances of
+          control parameters enabled for a VCA are reset with their original
+          values every Monday at 00:00:00. Q = Quarterly -- The balances of
+          control parameters enabled for a VCA are reset with their original
+          values on the first day of every quarter at 00:00:00.   Quarter 1:
+          January 01 - March 31.   Quarter 2: April 01 - June 30.   Quarter 3:
+          July 01 - September 30.   Quarter 4: October 01 - December 31. Y =
+          Annually -- The balances of control parameters enabled for a VCA are
+          reset with their original values every year on January 1st at
+          00:00:00. C = Continuous -- The balances of control parameters enabled
+          for a VCA are retained continuously for the validity period defined.
+          Balances do not reset with their original values throughout the
+          validity period. Visa: 1 = Recurring : The balances of control
+          parameters enabled for a VCA are reset with their original values on a
+          specified recurring day for every month. <br>If you select this
+          periodType, you must also specify the resetDay field.  2 = Monthly :
+          The balances of control parameters enabled for a VCA are reset with
+          their original values at the start of every month. 3 = Date Range :
+          The balances of control parameters enabled for a VCA are retained
+          continuously for the validity period defined. Balances do not reset
+          with their original values throughout the validity period.<br>If you
+          select this periodType, you must also specify the validityStartDate
+          and validityEndDate fields.
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        example: C
+        maxLength: 1
+    required:
+      - maxAuth
+      - cumulativeSpendLimit
+      - periodType
+  CurfewTime:
+    properties:
+      startTime:
+        description: >-
+          Specifies the start time from when the card can be used each of the
+          specified days.
+        type: string
+        format: HH:MM 24-hour format (^[0-9]{1,2}:[0-9]{2}:[0-9]{2})
+        example: '8:30'
+        maxLength: 5
+      endTime:
+        description: >-
+          Specifies the end time until which the card can be used each of the
+          specified days.
+        type: string
+        format: HH:MM 24-hour format (^[0-9]{1,2}:[0-9]{2}:[0-9]{2})
+        example: '14:30'
+        maxLength: 5
+      weekdayEffective:
+        description: Listing of days to which the time curfew applies.
+        type: array
+        items:
+          type: string
+        format: '[a-zA-Z]{3}'
+        example:
+          - Sat
+          - Mon
+          - Sun
+    required:
+      - startTime
+      - endTime
+      - weekdayEffective
+  TimeOfDay:
+    properties:
+      startTime:
+        description: >-
+          Specifies the start time from when the card can be used each of the
+          specified days.
+        type: string
+        format: HH:MM 24-hour format (^[0-9]{1,2}:[0-9]{2}:[0-9]{2})
+        example: '8:30'
+        maxLength: 5
+      endTime:
+        description: >-
+          Specifies the end time until which the virtual card account can be
+          used on the particular day specified in weekDaysEffective.
+        type: string
+        format: HH:MM 24-hour format (^[0-9]{1,2}:[0-9]{2}:[0-9]{2})
+        example: '14:30'
+        maxLength: 5
+      weekdayEffective:
+        description: Specifies the day applicable to the start and end times defined.
+        type: string
+        format: alphabets [a-zA-Z]
+        example: Wed
+        maxLength: 3
+    required:
+      - startTime
+      - endTime
+      - weekdayEffective
+  VcaRequestor:
+    properties:
+      requestorType:
+        description: >-
+          Defines whether VCA requestor type. Possible values are INDIVIDUAL,
+          ORG
+        type: string
+        format: alphabets [a-zA-Z]
+        example: INDIVIDUAL
+        maxLength: 20
+      firstName:
+        description: >-
+          Last name of Virtual Card requestor. Applicable only for
+          requestorType: INDIVIDUAL
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 140
+      middleName:
+        description: >-
+          Middle name of Virtual Card requestor. Applicable only for
+          requestorType: INDIVIDUAL
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 140
+      lastName:
+        description: >-
+          Last name of Virtual Card requestor. Applicable only for
+          requestorType: INDIVIDUAL
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 140
+      id:
+        description: >-
+          Unique ID of Virtual Card requestor. Applicable for requestorType as
+          INDIVIDUAL & ORG.
+        type: string
+        format: numeric [0-9]
+        maxLength: 200
+        minLength: 6
+      orgName:
+        description: >-
+          Organization name of Virtual Card requestor. Applicable only for
+          requestorType: ORG
+        type: string
+        example: GOOGLE
+        format: alphabets [a-zA-Z]
+        maxLength: 140
+    required:
+      - requestorType
+      - firstName
+      - middleName
+      - lastName
+      - id
+      - orgName
+  DemographicData:
+    required:
+      - firstName
+      - lastName
+      - city
+      - country
+      - zip
+      - state
+      - addressLine1
+      - dateOfBirth
+      - provinceOfBirth
+      - countryOfBirth
+      - nationalities
+      - documents
+    properties:
+      firstName:
+        description: First name of the card holder/user
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        example: William
+        maxLength: 30
+      lastName:
+        description: Last name of the card holder/user
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        maxLength: 35
+        example: Kaplan
+      middleName:
+        description: Middle name of card holder/user
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        maxLength: 35
+        example: Billy
+      city:
+        description: City of the card holder/user
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 50
+        example: New York
+      country:
+        description: Country of the card holder/user
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 10
+        example: USA
+      zip:
+        description: Zip/Postal code of the card holder/user
+        type: string
+        maxLength: 13
+        example: '123456'
+      state:
+        description: State the card holder/user
+        type: string
+        maxLength: 50
+        example: State
+      addressLine1:
+        description: Street Address Line 1.Accepts all characters
+        type: string
+        maxLength: 60
+        example: 123, ABC street
+      addressLine2:
+        description: Street Address line 2.Accepts all characters
+        type: string
+        maxLength: 60
+      addressLine3:
+        description: Street Address line 3. Accepts all characters
+        type: string
+        maxLength: 60
+      dateOfBirth:
+        description: Date of birth of Card holder/user
+        type: string
+        format: >-
+          ISO 8601: YYYY-MM-DD
+          (^(19|20)[0-9]{2}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30))))
+        example: '2000-11-27'
+        maxLength: 50
+      provinceOfBirth:
+        description: Province of Birth
+        type: string
+        maxLength: 50
+        example: abc
+      countryOfBirth:
+        description: Country of Birth
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 10
+        example: USA
+      documents:
+        description: Documents details to scrutinize a customer.
+        type: array
+        items:
+          $ref: '#/definitions/Documents'
+        example:
+          - documentType: TIN
+            documentValue: P2067921
+            country: USA
+      nationalities:
+        description: >-
+          Length represents the total length of all characters in country field
+          e.g.., nationalities[0].idValue = "CUBA" nationalities[1].idValue =
+          "UNITED STATES" nationalities[2].idValue = "IRAQ" Total Length. is 24
+          (DELIMITER CHARACTER LENGTH 1 is added for each object in the list).
+          CX will process in to a single field (ID) as below, "";CUBA;UNITED
+          STATES;IRAQ
+        type: array
+        items:
+          $ref: '#/definitions/Nationalities'
+        example:
+          - country: USA
+  Nationalities:
+    properties:
+      country:
+        description: Country
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        maxLength: 10
+        example: USA
+    required:
+      - country
+  Documents:
+    properties:
+      documentType:
+        description: >-
+          Type of the document likeSSN, TIN, SSS, GSIS, Passport, IC, Local ID
+          Number, PAN, Cadastro de Pessoas F�sicas (CPF), Registro Federal de
+          Contribuyentes (RFC), Permanent ID, DNI
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 10
+      documentValue:
+        description: Document Value
+        type: string
+        format: alphabets [a-zA-Z0-9]
+        maxLength: 50
+      country:
+        description: Country of the document
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 10
+    required:
+      - documentValue
+  CardEnrollmentSuccessResponse:
+    properties:
+      cardHolderUserId:
+        description: >-
+          Unique ID to be generated & sent by Citi clients to identify user
+          profile.
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        maxLength: 20
+        minLength: 1
+        example: Billy33896
+      countryOfIssuance:
+        description: Country in which the VCA program is issued out of.
+        type: string
+        format: alphabets [a-zA-Z]
+        example: USA
+        maxLength: 3
+        minLength: 3
+      screeningInfo:
+        description: Screening status after performing customer screening.
+        type: object
+        format: object
+        $ref: '#/definitions/ScreeningInfo'
+      cardSuccessInfo:
+        description: >-
+          VCA Card Info tagged to unique vcaRequestId generated by Citi for
+          client reference.
+        type: array
+        items:
+          $ref: '#/definitions/CardSuccessInfo'
+        example:
+          - vcaGuid: 38213
+            vcaRequestId: '5902838563832'
+          - vcaGuid: 29107
+            vcaRequestId: '7110394201820'
+  CardSuccessInfo:
+    properties:
+      vcaGuid:
+        description: Unique Id to refer Virtual Card Account.
+        type: integer
+        format: int64
+        example: 2331
+        maxLength: 19
+        minLength: 1
+      vcaRequestId:
+        description: Unique reference Id generated by Citi for MASTER network.
+        type: string
+        format: alphanumeric [a-zA-Z0-9-]
+        maxLength: 20
+  CardEnrollmentPartialSuccessResponse:
+    properties:
+      cardHolderUserId:
+        description: >-
+          Unique ID to be generated & sent by Citi clients to identify user
+          profile.
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        maxLength: 20
+        minLength: 1
+        example: Billy33896
+      countryOfIssuance:
+        description: Country in which the VCA program is issued out of.
+        type: string
+        format: alphabets [a-zA-Z]
+        example: USA
+        maxLength: 3
+        minLength: 3
+      screeningInfo:
+        description: Screening status after performing customer screening.
+        type: object
+        format: object
+        $ref: '#/definitions/ScreeningInfo'
+      cardPartialSuccessInfo:
+        description: Screening status after performing customer screening.
+        type: array
+        items:
+          $ref: '#/definitions/ValidationErrorResponseDetails'
+        example:
+          - vcaGuid: 82139
+            vcaRequestId: '5902838563832'
+          - vcaGuid: 38213
+            cardDataErrors:
+              - errorCode: EVB0271
+                errorDescription: ExpiryDate is mandatory
+  ValidationErrorResponseDetails:
+    properties:
+      vcaRequestId:
+        description: Unique reference Id generated by Citi for MASTER network.
+        type: string
+        format: alphanumeric [a-zA-Z0-9-]
+        maxLength: 20
+      vcaGuid:
+        description: Unique Id to refer Virtual Card Account.
+        type: integer
+        format: int64
+        example: 2331
+        maxLength: 19
+        minLength: 1
+      cardDataErrors:
+        type: array
+        items:
+          $ref: '#/definitions/EnrollErrorMessage'
+      userId:
+        description: >-
+          Unique ID to be generated & sent by Citi clients to identify user
+          profile.
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        example: Billy33896
+        maxLength: 20
+        minLength: 1
+      userDataErrors:
+        type: array
+        items:
+          $ref: '#/definitions/EnrollErrorMessage'
+  ScreeningInfo:
+    properties:
+      status:
+        description: Final status of Enrollment process.
+        type: string
+        format: alphabets[a-zA-Z]
+        example: UNDER CITI REVIEW
+        enum:
+          - APPROVED
+          - UNDER CITI REVIEW
+          - DECLINED
+      description:
+        description: Description of final status after performing customer screening.
+        type: string
+        format: alphabets[a-zA-Z]
+        example: >-
+          Screening is pending in review. Citi Cards Clients Services will get
+          in touch with you to process further.
+  CardEnrollmentAckResponse:
+    description: List of error code and description to be sent to the Client
+    properties:
+      message:
+        maxLength: 255
+        minLength: 1
+        type: string
+        example: We have received your request for further processing.
+        description: >-
+          Immediate ACK message sent to client indicating that back ground
+          actions are being performed.
+  CardPurgeAckResponse:
+    description: List of error code and description to be sent to the Client
+    properties:
+      message:
+        maxLength: 255
+        minLength: 1
+        type: string
+        example: We have received your request for further processing.
+        description: >-
+          Immediate ACK message sent to client indicating that back ground
+          actions are being performed.
+  EnrollErrorMessage:
+    required:
+      - errorCode
+      - errorDescription
+    type: object
+    description: List of error code and description to be sent to the Client
+    properties:
+      errorCode:
+        maxLength: 10
+        minLength: 1
+        type: string
+        description: error code to be sent to the Client
+        format: alphanumeric [a-zA-Z0-9]
+        example: EVB1257
+      errorDescription:
+        description: >-
+          The error description that corresponds to error code when there is
+          any  error occurred while retrieving the trsansaction.<br>           
+          * `GRC0001` - We have encountered an error and couldnt receive your
+          request. Please try again, or contact Citi support if you have any
+          further questions or comments <br>            * `GRC0002` - Client ID
+          is missing in the request header <br>            * `GRC0003` - Contry
+          code is not available in the request <br>            * `GRC0004` -
+          Region ID is not available in the request <br>            * `GRC0005`
+          - We have encountered an error and couldnt receive your request.
+          Please try again, or contact Citi support if you have any further
+          questions or comments <br>            * `GRC0006` - We have
+          encountered an error and couldnt receive your request. Please try
+          again, or contact Citi support if you have any further questions or
+          comments <br>            * `GRC0007` - Client requested MediaType is
+          not supported. <br>            * `GRC0009` - We have encountered an
+          error and couldnt receive your request. Please try again, or contact
+          Citi support if you have any further questions or comments
+          <br>            * `GRC0011` - Client ID and/or Country and/or region
+          id is missing in Client Onboard Configuration setup. Contact Citi
+          support. <br>            * `GRC0012` - Necessary header value is
+          missing <br>            * `GRC0003` - Invalid JSON Input
+          <br>            * `GRC0014` - We have encountered an error and couldnt
+          receive your request. Please try again, or contact Citi support if you
+          have any further questions or comments <br>           * `EVB1245` -
+          First Name is mandatory and should not be null or empty
+          <br>            * `EVB1246` - Last Name is mandatory and should not be
+          null or empty <br>            * `EVB1247` - Line 1 of address is
+          mandatory and should not be null or empty <br>            * `EVB1248`
+          - City is mandatory and should not be null or empty <br>            *
+          `EVB1249` - State is mandatory and should not be null or empty
+          <br>            * `EVB1250` - Zip code is mandatory and should not be
+          null or empty <br>            * `EVB1251` - Country is mandatory and
+          should not be null or empty <br>            * `EVB1252` - Date of
+          Birth is mandatory and should not be null or empty <br>            *
+          `EVB1253` - Country is mandatory and should not be null or empty
+          <br>            * `EVB1254` - Nationality is mandatory and should not
+          be null or empty <br>            * `EVB1257` - Document(s) is
+          mandatory and should not be null or empty and should be one of the
+          required documents<br>           * `EVB1258` - countryOfIssuance is
+          mandatory<br>           * `EVB1150` - cardHolderUserId is
+          mandatory<br>           * `EVB1152` cardHolderUserId must be plain
+          text<br>           * `EVB1151` - cardHolderUserId size must be between
+          1 and 20 characters<br>           * `EVB1259` - countryOfIssuance must
+          be exactly 3 characters<br>           * `EVB1260` - countryOfIssuance
+          must be only in upper case<br> * `EVB0017` - vcaGuid is empty or
+          null<br> * `EVB0014` - vcaGuid value must be a numeric <br> *
+          `EVB0010` - vcaGuid size must be between 1 and 19 digits<br> *
+          `EVB0033` - fundingSourceId is mandatory<br> * `EVB0032` -
+          fundingSourceId value must be numeric<br> * `EVB0352` -
+          FundingSourceId is Invalid. FundingSourceId value should be a valid
+          long value and size must be between 1 and 19 digits<br> * `EVB0042` -
+          fundingSourceName is mandatory<br> * `EVB0041` - fundingSourceName
+          must have minimum of 1 and maximum of 100 characters<br> * `EVB0271` -
+          expiryDate is mandatory<br> * `EVB0061` - expiryDate length exceeds
+          max length allowed of: 6 characters<br> * `EVB0259` - expiryDate must
+          have format: MMYYYY<br> * `EVB0219` - expiryDate month and year cannot
+          be a past or current date<br> * `EVB0626` - expiryDate cannot be more
+          than 24 months into the future<br> * `EVB0265` - mccGrouping cannot be
+          null or empty<br> * `EVB0254` - mccGrouping should not contain
+          multiple values<br> * `EVB0062` - TimeZone is mandatory<br> *
+          `EVB0063` - timeZone field has an invalid UTC offset time zone format.
+          Valid format is UTC+/-HH:MM<br> * `EVB0615` - No time zone found for
+          UTC value provided in timeZone field<br> * `EVB0071` - templateId is
+          mandatory<br> * `EVB0014` - templateId should be numeric<br> *
+          `EVB0010` - templateId should have minimum of 1 & maximum of 19
+          characters<br> * `EVB0071` - virtualCardAccountNumber is mandatory<br>
+          * `EVB0010` - virtualCardAccountNumber must have exactly 16
+          characters<br> * `EVB0502` - virtualCardAccountNumber is Invalid<br> *
+          `EVB0255` - customReference list should have minimum of 1 & maximum of
+          29 items<br> * `EVB504` - templateCustomField.customFieldName is
+          mandatory<br> * `EVB0258` - customReferenceLabel should have minimum
+          of 1 & maximum of 50 characters<br> * `EVB0505` -
+          templateCustomField.customFieldValue is mandatory<br> * `EVB0353` -
+          customReferenceValue should have minimum of 1 & maximum of 80
+          characters<br> * `EVB0136` - currencyType is mandatory<br> * `EVB0162`
+          - currencyType must have value which matches regex: M|B|m|b<br> *
+          `EVB0130` - currencyType length exceed max length allowed is:  1
+          characters<br> * `EVB0065` - currencyCode is mandatory<br> * `EVB0245`
+          - currencyCode value must be numeric [0-9]<br> * `EVB0099` -
+          currencyCode length allowed is: 3 digits<br> * `EVB0624` - The
+          currencyCode value provided is invalid. Please update the currencyCode
+          value and retry your request<br> * `EVB0272` - Both Aging and Spend
+          Velocity Control cannot be enabled<br> * `EVB0273` - Either Aging or
+          Spend Velocity Control should be enabled<br> * `EVB0903` - Atleast one
+          Spend velocity control is required, When enableSpendVelocity is
+          true<br> * `EVB503` - SpendVelocity size should not exceed 6<br> *
+          `EVB0137` - spendVelocityControl-cumulativeSpendLimit is mandatory<br>
+          * `EVB0625` - cumulativeSpendLimit max field length is 14 digits with
+          12 digits to the left of the decimal and 2 digits to the right of the
+          decimal<br> * `EVB0365` - periodType is mandatory if
+          enableSpendVelocity is true<br> * `EVB0140` - periodType length
+          exceeds max length allowed of: 1 character<br> * `EVB0610` - Invalid
+          periodType value. periodType can contain a value of either D, M, W, Q,
+          Y, or C<br> * `EVB0904` - Invalid request. Duplicate periodType values
+          cannot be included when setting the Spend Velocity Control<br> *
+          `EVB0231` - maxAuth is mandatory if enableSpendVelocityControl is set
+          to True<br> * `EVB0362` - Invalid maxAuth format. maxAuth value cannot
+          exceed 8 digits<br> * `EVB0163` - authorizationHoldDays is mandatory
+          if agingVelocityControl is true<br> * `EVB0621` -
+          authorizationHoldDays must be positive long value with a maximum of 4
+          digits<br> * `EVB0369` - cumulativeSpendLimit is mandatory if Aging
+          Velocity Control is set to true<br> * `EVB0625` - cumulativeSpendLimit
+          max field length is 14 digits with 12 digits to the left of the
+          decimal and 2 digits to the right of the decimal<br> * `EVB0378` -
+          isMerchantIdAllowed is mandatory if MerchantIdControl is enabled<br> *
+          `EVB0371` - isCountryallowed is mandatory if GeographyControl is
+          enabled<br> * `EVB0370` - countryCodes is required if Geography
+          Control is set to true<br> * `EVB0236` - Invalid countryCode,
+          countryCode doesn't exist.<br> * `EVB0367` - startTime is mandatory if
+          Time Of Day Control is true<br> * `EVB0233` - endTime is mandatory if
+          Time Of Day Control is true<br> * `EVB0110` - startTime value must
+          have valid format: HH:MM - H (0,1,2) | H (0-9) : M (0-5) | M (0-9)<br>
+          * `EVB0112` - endTime value must have valid format: HH:MM - H (0,1,2)
+          | H (0-9) : M (0-5) | M (0-9)<br> * `EVB0622` - startTime cannot be
+          equal to endTime<br> * `EVB0235` - startTime value cannot exceed the
+          requested endTime value<br> * `EVB0232` - weekdayEffective is
+          mandatory if Time Of Day Control is true<br> * `EVB0368` -
+          weekdayEffective must have value which matches regex:
+          SUN|MON|TUE|WED|THU|FRI|SAT<br> * `EVB0623` - timeOfDayControl cannot
+          have duplicate weekdayEffective values<br> * `EVB0113` - startTime is
+          mandatory if CurfewControl is true<br> * `EVB0110` - startTime value
+          must have valid format: HH:MM - H (0,1,2) | H (0-9) : M (0-5) | M
+          (0-9)<br> * `EVB0114` - endTime is mandatory if CurfewControl is
+          true<br> * `EVB0112` - endTime value must have valid format: HH:MM - H
+          (0,1,2) | H (0-9) : M (0-5) | M (0-9)<br> * `EVB0622` - startTime
+          cannot be equal to endTime<br> * `EVB0235` - startTime value cannot
+          exceed the requested endTime value<br> * `EVB0262` - weekdayEffective
+          is mandatory if enableCurfewControl is true<br> * `EVB0263` -
+          CurfewControl-weekdayEffective must have value which matches regex:
+          ((?i)(SUN|MON|TUE|WED|THU|FRI|SAT))(,(?i)(SUN|MON|TUE|WED|THU|FRI|SAT))*<br>
+          * `EVB0106` - minAmount is mandatory if enableAmountRangeControl is
+          true<br> * `EVB0354` - AmountRangeControl-minAmount length exceed max
+          length allowed is:  14 characters<br> * `EVB0107` - maxAmount is
+          mandatory if enableAmountRangeControl is true<br> * `EVB0355` -
+          AmountRangeControl-maxAmount length exceed max length allowed is:  14
+          characters<br> * `EVB0381` - AmountRangeControl-minAmount is greater
+          than maxAmount<br> * `EVB0170` - amountLimit is mandatory if
+          TransactionLimitControl is true<br> * `EVB0364` -
+          transactionlimitcontrol-amount value must be a numeric positive value
+          with a maximum of 10 digits to the left and 2 digits to the right of
+          the decimal<br> * `EVB0125` - validityStartDate is mandatory if
+          ValidityPeriodControl is true<br> * `EVB0121` - validityStartDate
+          value must have valid format: YYYY-MM-DD<br> * `EVB0211` -
+          validityStartDate invalid format. MM value must be less than or equal
+          to 12 and DD value must be less than or equal to 31<br> * `EVB0238` -
+          The date specified in validityStartDate does not exist<br> * `EVB0217`
+          - validityStartDate cannot be a past date<br> * `EVB0126` -
+          validityEndDate is mandatory if ValidityPeriodControl is true<br> *
+          `EVB0120` - validityEndDate value must have valid format:
+          YYYY-MM-DD<br> * `EVB0211` - validityEndDate invalid format. MM value
+          must be less than or equal to 12 and DD value must be less than or
+          equal to 31<br> * `EVB0237` - The date specified in validityEndDate
+          does not exist<br> * `EVB0218` - validityEndDate cannot be a past
+          date<br> * `EVB0600` - validityStartDate should be before
+          validityEndDate<br> * `EVB0215` - Validity Period Control must be set
+          to true and validityStartDate and validityEndDate are mandatory if
+          periodType = C<br> * `EVB1153` - vcaRequestor.requestorType is
+          mandatory and can be either 'INDIVIDUAL' or 'ORG'<br> * `EVB1154` -
+          vcaRequestor.id is mandatory<br> * `EVB1155` - vcaRequestor.firstName
+          is mandatory<br> * `EVB1156` - vcaRequestor.lastName is mandatory<br>
+          * `EVB1157` - vcaRequestor.middleName is mandatory<br> * `EVB1158` -
+          vcaRequestor.orgName is mandatory<br> * `EVB1161` - vcaUser.emailId is
+          mandatory<br> * `EVB1162` - vcaUser.emailId format is invalid<br> *
+          `EVB1163` - vcaUser.mobileNumber is mandatory<br> * `EVB1164` -
+          vcaUser.mobileNumber should be numeric<br> * `EVB1165` -
+          vcaUser.mobileCountryCode is mandatory<br>
+        type: string
+        example: >-
+          Document(s) is mandatory and should not be null or empty and should be
+          one of the required documents
+        format: alphanumeric [a-zA-Z0-9]
+  CardEnrollmentValidationFailureResponse:
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ValidationErrorResponseDetails'
+        example:
+          - vcaGuid: 29812
+            cardDataErrors:
+              - errorCode: EVB0607
+                errorDescription: At least one spend control is mandatory
+          - userId: Billy33896
+            userDataErrors:
+              - errorCode: EVB1257
+                errorDescription: >-
+                  Document(s) is mandatory and should not be null or empty and
+                  should be one of the required documents
+  CardEnrollmentInternalServerErrorResponse:
+    required:
+      - errors
+    type: object
+    properties:
+      errors:
+        minItems: 1
+        type: array
+        items:
+          $ref: '#/definitions/EnrollErrorMessage'
+        example:
+          - errorCode: GRC0014
+            errorDescription: >-
+              We have encountered an error and couldnt receive your request.
+              Please try again, or contact Citi support if you have any further
+              questions or comments
+  CardEnrollmentUnAuthorizedResponse:
+    required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+    type: object
+    properties:
+      httpCode:
+        maxLength: 10
+        minLength: 1
+        type: string
+        description: error code to be sent to the Client
+        example: '401'
+      httpMessage:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: error message to be sent to the Client
+        example: Unauthorized
+      moreInformation:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: more details related to the error to be sent to the Client
+        example: Access Denied
+  CardEnrollmentMethodNotAllowedResponse:
+    required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+    type: object
+    properties:
+      httpCode:
+        maxLength: 10
+        minLength: 1
+        type: string
+        description: error code to be sent to the Client
+        example: '405'
+      httpMessage:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: error message to be sent to the Client
+        example: Method Not Allowed
+      moreInformation:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: more details related to the error to be sent to the Client
+        example: Requested HTTP operation is not supported
+  CardPurgeRequest:
+    properties:
+      cardHolderUserId:
+        description: >-
+          Unique ID to be generated & sent by Citi clients to identify user
+          profile.
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        maxLength: 200
+        minLength: 6
+      countryOfIssuance:
+        description: Country based on which the santions screening rules are applied.
+        type: string
+        format: alphabets [a-zA-Z]
+        example: USA
+        maxLength: 3
+        minLength: 2
+    required:
+      - cardHolderUserId
+      - countryOfIssuance
+  CardPurgeSuccessResponse:
+    properties:
+      cardHolderUserId:
+        description: >-
+          This is a cardholder user ID which needs to be purged. Unique Id
+          belong to indiviual
+        type: string
+        format: alphanumeric [a-zA-Z0-90-9]
+        maxLength: 100
+      cardStatus:
+        description: Card status of the offboard operation at card level
+        type: array
+        items:
+          $ref: '#/definitions/CardStatus'
+      purgeStatus:
+        description: overall status of the offboard operation, success or failure
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 100
+      additionalInfo:
+        description: This is a additional information based on purge request processing
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 200
+  CardStatus:
+    properties:
+      vcaRequestId:
+        description: Citi generated unique data store ID.
+        type: string
+        format: numeric [0-9]
+        maxLength: 20
+      status:
+        description: >-
+          Card status of each card after the offboard operation for the
+          particular vcaRequestId
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 100
+  CardPurgeInvalidFailureResponse:
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/CardPurgeErrorMessage'
+  CardPurgeInternalServerErrorResponse:
+    required:
+      - errors
+    type: object
+    properties:
+      errors:
+        minItems: 1
+        type: array
+        items:
+          $ref: '#/definitions/CardPurgeErrorMessage'
+  CardPurgeUnAuthorizedResponse:
+    required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+    type: object
+    properties:
+      httpCode:
+        maxLength: 10
+        minLength: 1
+        type: string
+        description: error code to be sent to the Client
+        example: '401'
+      httpMessage:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: error message to be sent to the Client
+        example: Unauthorized
+      moreInformation:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: more details related to the error to be sent to the Client
+        example: Access Denied
+  CardPurgeMethodNotAllowedResponse:
+    required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+    type: object
+    properties:
+      httpCode:
+        maxLength: 10
+        minLength: 1
+        type: string
+        description: error code to be sent to the Client
+        example: '405'
+      httpMessage:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: error message to be sent to the Client
+        example: Method Not Allowed
+      moreInformation:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: more details related to the error to be sent to the Client
+        example: Requested HTTP operation is not supported
+  CardPurgeErrorMessage:
+    required:
+      - errorCode
+      - errorDescription
+    type: object
+    description: List of error code and description to be sent to the Client
+    properties:
+      errorCode:
+        maxLength: 10
+        minLength: 1
+        type: string
+        description: error code to be sent to the Client
+        format: alphanumeric [a-zA-Z0-9]
+        example: EVB1257
+      errorDescription:
+        description: >-
+          The error description that corresponds to  error code when there is
+          any <br> error occurred while retrieving the transactions.<br>*
+          `GRC0002` - Client ID is missing in the request header<br>* `GRC0003`
+          - Invalid JSON Input<br>* `GRC0004` - Region ID is not available in
+          the request<br>* `GRC0005` - Client Tracking ID is missing in the
+          request header<br>* `GRC0010` - Client Tracking ID length should
+          contain a min of 1 character and a max of 36 characters.<br>*
+          `GRC0011` - Client ID and/or Country and/or region id is missing in
+          Client Onboard Configuration setup. Contact Citi support.<br>*
+          `GRC0012` - Necessary header value is missing<br>* `GRC0014` - We have
+          encountered an error and couldnt receive your request. Please try
+          again, or contact Citi support if you have any further questions or
+          comments<br>* `GRC0016` - Country code is not available in the
+          request<br>* `EVB1150` - cardHolderUserID is mandatory<br>* `EVB1152`
+          cardHolderUserID must be numeric<br>* `EVB1151` - cardHolderUserID
+          size must be between 1 and 200 characters<br>* `EVB1258` -
+          countryOfIssuance is mandatory
+        type: string
+        example: >-
+          Document(s) is mandatory and should not be null or empty and should be
+          one of the required documents
+        format: alphanumeric [a-zA-Z0-9]
+  CardMaintenanceRequest:
+    properties:
+      requestType:
+        description: Action which would help to define the processing flow
+        type: string
+        example: DEMOGRAPHIC_UPDATE
+        items:
+          enum:
+            - CARD_MODIFY
+            - CARD_CANCEL
+            - DEMOGRAPHIC_UPDATE
+        format: alpha[a-zA-Z]
+      cardHolderUserId:
+        description: >-
+          Unique ID to be generated & sent by Citi clients to identify user
+          profile.
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        example: Billy33896
+        maxLength: 20
+        minLength: 1
+      countryOfIssuance:
+        description: Country based on which the santions screening rules are applied.
+        type: string
+        format: alphabets [a-zA-Z]
+        example: USA
+        maxLength: 3
+        minLength: 2
+      modifyCardInfo:
+        description: This object should be populated when requestType is CARD_MODIFY
+        type: object
+        format: object
+        $ref: '#/definitions/ModifyCardRequest'
+      cancelCardInfo:
+        description: This object should be populated when requestType is CARD_CANCEL
+        type: object
+        format: object
+        $ref: '#/definitions/CancelCardRequest'
+      demographicInfo:
+        description: This object should be populated when requestType is DEMOGRAPHIC_UPDATE
+        type: object
+        format: object
+        $ref: '#/definitions/DemographicUpdateInfo'
+    required:
+      - requestType
+      - cardHolderUserId
+      - countryOfIssuance
+  DemographicUpdateInfo:
+    required:
+      - firstName
+      - lastName
+      - city
+      - country
+      - zip
+      - state
+      - addressLine1
+      - dateOfBirth
+      - provinceOfBirth
+      - countryOfBirth
+    properties:
+      firstName:
+        description: First name of the cardholder
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 140
+        example: Bradley
+      middleName:
+        description: Middle name of the cardholder
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 140
+        example: Justin
+      lastName:
+        description: Last name of the cardholder
+        type: string
+        format: alphabets [a-zA-Z]
+        maxLength: 140
+        example: Brown
+      emailId:
+        description: Email address of the cardholder
+        type: string
+        format: alphabets [a-zA-Z]
+        example: abc@xyz.dom
+        maxLength: 240
+      mobileNumber:
+        description: Mobile number of the cardholder
+        type: string
+        format: '[0-9]'
+        example: 1234567890 , 52552345678
+        minLength: 5
+        maxLength: 13
+      mobileCountryCode:
+        description: >-
+          Mobile country code of the cardholder. It should start with +, minimum
+          length is 1 numeric digit and maximum is 3 numeric digit excluding +.
+        type: string
+        format: +[0-9]
+        example: +1 / +91 / +512
+        minLength: 3
+        maxLength: 4
+      city:
+        description: City of the cardholder
+        type: string
+        format: alphanumeric
+        example: Boston
+        maxLength: 50
+        minLength: 1
+      state:
+        description: State of the cardholder
+        type: string
+        format: alphanumeric
+        example: Massachusetts
+        maxLength: 50
+        minLength: 1
+      country:
+        description: Country of the cardholder
+        type: string
+        format: alphanumeric
+        example: United States
+        maxLength: 50
+        minLength: 1
+      zip:
+        description: Postal code of the cardholder
+        type: string
+        format: alphanumeric
+        example: '02108'
+        maxLength: 13
+        minLength: 1
+      addressLine1:
+        description: Address Line1 of the cardholder
+        type: string
+        format: alphanumeric
+        example: Boston address
+        maxLength: 100
+        minLength: 1
+      addressLine2:
+        description: Address Line2 of the cardholder
+        type: string
+        format: alphanumeric
+        example: Boston address
+        maxLength: 100
+        minLength: 1
+      addressLine3:
+        description: Address Line3 of the cardholder
+        type: string
+        format: alphanumeric
+        example: Boston address
+        maxLength: 100
+        minLength: 1
+      dateOfBirth:
+        description: Date of birth of the cardholder
+        type: string
+        format: alphanumeric
+        maxLength: 50
+        minLength: 1
+        example: 1st May 1984
+      provinceOfBirth:
+        description: Province of birth of the cardholder
+        type: string
+        format: alphanumeric
+        maxLength: 50
+        minLength: 1
+        example: Massachusetts
+      countryOfBirth:
+        description: Country of birth of the cardholder
+        type: string
+        format: alphanumeric
+        maxLength: 50
+        minLength: 1
+        example: United States
+      documents:
+        type: array
+        items:
+          $ref: '#/definitions/Documents'
+      nationalities:
+        type: array
+        items:
+          $ref: '#/definitions/Nationalities'
+  ModifyCardRequest:
+    required:
+      - vcaGuid
+      - programId
+      - vcaRequestId
+      - vcaRequestor
+      - vcaUser
+    properties:
+      vcaGuid:
+        description: Unique Id to refer Virtual Card Account.
+        type: integer
+        format: int64
+        example: 233191
+        maxLength: 19
+        minLength: 1
+      programId:
+        description: Unique ID of the company record defined in the virtual cards system.
+        type: string
+        format: numeric [0-9]
+        example: '233191'
+        maxLength: 19
+        minLength: 1
+      vcaRequestId:
+        description: Unique reference Id generated by Citi for MASTER network.
+        type: string
+        format: alphanumeric [a-zA-Z0-9-]
+        maxLength: 20
+      programName:
+        description: Company Name as defined in Virtual Card System.
+        type: string
+        format: alphanumeric [a-zA-Z0-9] + special character
+        example: VCA Program NAM
+        maxLength: 250
+        minLength: 1
+      fundingSourceId:
+        description: >-
+          Unique identifier of the funding source to which the virtual card
+          rolls up. It's numeric for MASTER & alphanumeric for VISA.
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        example: '2718'
+        maxLength: 19
+      fundingSourceName:
+        description: >-
+          Descriptive name of the real card to which the virtual card rolls up.
+          Apllicable only for MASTER.
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        example: Funding Account 1 for Subsidiary XYZ
+        maxLength: 100
+      expiryDate:
+        description: >-
+          Expiry Date of the virtual card account. Must not be more than 24
+          months in the future. If a modification of this parameter is not
+          needed, the field can be left out of the modification request call.
+          Citi will then apply the most recently defined value for this field.
+          Data type has been kept has String instead of Number due to prceeding
+          0 may get  truncated. Applicable only for MASTER.
+        type: string
+        format: MMYYYY ([0-9]{6})
+        example: '102021'
+        maxLength: 6
+      mccGrouping:
+        description: >-
+          Limits authorizations to defined Merchant Category Codes. Must be the
+          Purchase Type name associated to the template.
+        type: array
+        items:
+          type: string
+        format: alphabets [a-zA-Z]
+        example: '["Air MCCs"]'
+      currencyCode:
+        description: >-
+          Currency Code in which VCA amounts are expressed. currencyCode is not
+          required if currencyType = B
+        type: string
+        format: numeric [0-9]
+        example: '036'
+        maxLength: 3
+      currencyType:
+        description: >-
+          Defines the type of the VCA currency. - Value B stands for Billing
+          Currency which indicates that the VCA currency is equal to the billing
+          currency of the underlying funding source. - Value M stands for
+          Merchant Currency which indicates that the VCA currency is expressed
+          in merchant currency and not in billing currency. Mandatory for
+          Mastercard
+        type: string
+        format: B/M
+        example: M
+        enum:
+          - B
+          - M
+      timeZone:
+        description: >-
+          Defines the time zone applicable for any date or time parameters
+          within controls set for a VCA.If any of the following controls are
+          used, timeZone is required:Validity Period Control,Aging Velocity
+          Control (Mastercard only), Curfew Control and Time of Day Control.It
+          sets the specific timeframe when the account and its controls will
+          become active.
+        type: string
+        format: UTC-OFFSET (UTC-[0-9]{2}:[0-9]{2})
+        example: UTC-04:00
+        maxLength: 9
+      templateId:
+        description: >-
+          Identifies the template that was setup in the VCA system and that
+          should be used for this virtual card. The template setup in the VCA
+          system defines which controls, custom data fields and MCC groupings
+          can be used. Mandatory for Mastercard
+        type: integer
+        format: int64
+        example: 36091
+        maximum: 19
+      getCardImage:
+        description: A visual representation of the virtual card account front and back.
+        type: boolean
+        format: boolean
+        example: true
+      customReference:
+        description: >-
+          Up to 29 custom reference field lables and values can be defined in a
+          given request. A custom reference value cannot be sent without a
+          corresponding custom reference label.
+        type: array
+        example: >-
+          "customReference": [ { "customReferenceValue": "Business",
+          "customReferenceLabel": "Ticket Class" }, { "customReferenceValue":
+          "IND", "customReferenceLabel": "Departure Airport Code" }]
+        items:
+          $ref: '#/definitions/CustomReference'
+      modifySpendVelocityControl:
+        description: >-
+          Limits the frequency and total cumulative amount of authorizations
+          performed on the VCA within a specified period. The control is
+          mandatory unless Aging Velcotiy Control is used. This control cannot
+          be used in combination with the Aging Velocity Control.
+        type: boolean
+        format: boolean
+        example: true
+      spendVelocity:
+        type: array
+        items:
+          $ref: '#/definitions/SpendVelocityRequest'
+      modifyValidityPeriodControl:
+        description: >-
+          Limits authorization activity to a specific time period.  This is an
+          optional control. If this control is not used, pass False or leave
+          this section out from the request. If value passed as True,
+          validityStartDate and validityEndDate are required.
+        type: boolean
+        format: boolean
+        example: true
+      validityStartDate:
+        description: >-
+          Identifies the date from which the virtual card account can be used
+          for transactions. The Start Date must be prior to the End Date.
+          Mandatory if enableValidityPeriodControl is true. Mandatory for
+          MASTER, optional for VISA.
+        type: string
+        format: >-
+          ISO 8601: YYYY-MM-DD
+          (^(19|20)[0-9]{2}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30))))
+        example: '2024-09-28'
+        maxLength: 10
+      validityEndDate:
+        description: >-
+          Identifies the date until which the virtual card account can be used
+          for transactions. The Start Date must be prior to the End Date.
+          Mandatory if enableValidityPeriodControl is true
+        type: string
+        format: >-
+          ISO 8601: YYYY-MM-DD
+          (^(19|20)[0-9]{2}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30))))
+        example: '2024-09-28'
+        maxLength: 10
+      modifyAmountRangeControl:
+        description: >-
+          Approves a transaction only if the requested amount for authorization
+          is equal to or greater than the Minimum Amount and less than or equal
+          to the Maximum Amount. This is an optional control. If this control is
+          not used, pass False or leave this section out from the request. If
+          value passed is True, maxAmount and minAmount are required.
+        type: boolean
+        format: boolean
+        example: true
+      maxAmount:
+        description: >-
+          For MASTER: Identifies the maximum allowed transaction amount. 14
+          digits max to the left of decimal and 2 digits max to the right of the
+          decimal. For VISA: Identifies the maximum allowed transaction amount.
+          12 digits max to the left of decimal and 2 digits max to the right of
+          the decimal. Mandatory if enableAmountRangeControl is true 
+        type: number
+        format: '[0-9]{17}$|(?=^.{1,18}$)^[0-9]+\.[0-9]{1,4}'
+        example: 2000.25
+        maximum: 15
+      minAmount:
+        description: >-
+          For MASTER: Identifies the minimum allowed transaction amount. 14
+          digits max to the left of decimal and 2 digits max to the right of the
+          decimal. For VISA: Identifies the maximum allowed transaction amount.
+          12 digits max to the left of decimal and 2 digits max to the right of
+          the decimal. Mandatory if enableAmountRangeControl is true 
+        type: number
+        format: '[0-9]{17}$|(?=^.{1,18}$)^[0-9]+\.[0-9]{1,4}'
+        example: 1000.75
+        maximum: 15
+      modifyTransactionLimitControl:
+        description: >-
+          Limits individual transactions to a maximum amount.  This is an
+          optional control. If this control is not used, pass False or leave
+          this section out from the request. If value passed is True,
+          amountLimit is required.
+        type: boolean
+        format: boolean
+        example: true
+      amountLimit:
+        description: >-
+          Identifies the maximum allowed transaction amount. Mandatory if
+          enableTransactionLimitControl is true
+        type: number
+        format: '[0-9]{17}$|(?=^.{1,18}$)^[0-9]+\.[0-9]{1,4}'
+        example: 1000.25
+        maximum: 15
+      modifyCurfewControl:
+        description: >-
+          Limits authorization activity to a single time period for each day
+          selected. This is an optional control. If this control is not used,
+          pass False or leave this section out from the request. If value passed
+          is True, curfewTime is required. Applicable only for MASTER.
+        type: boolean
+        format: boolean
+        example: true
+      curfewTime:
+        type: object
+        format: object
+        example: >-
+          "curfewTime":  { "startTime":  "12: 30", "endTime":  "13: 30",
+          "weekdaysEffective":  ["Mon","Tue"] }
+        $ref: '#/definitions/CurfewTime'
+      modifyTimeOfDayControl:
+        description: >-
+          Limits authorization request to defined time periods each day. This is
+          an optional control. If this control is not used, pass False or leave
+          this section out from the request. If value passed is True, timeOfDay
+          is required.
+        type: boolean
+        format: boolean
+        example: true
+      timeOfDay:
+        type: array
+        example: >-
+          "timeOfDay":  [{ "startTime":  "12: 30", "endTime":  "13: 30",
+          "weekdayEffective":  "Mon" }, { "startTime":  "13: 30", "endTime": 
+          "14: 30", "weekdayEffective":  "Tue" } ]
+        items:
+          $ref: '#/definitions/TimeOfDay'
+      modifyAgingVelocityControl:
+        description: >-
+          Sets a cumulative amount and keeps track of the current remaining
+          balance. Allows the requester to "age off" approved authorization
+          requests that have not been cleared by the merchant after a defined
+          number of days. This is an optional control. If this control is not
+          used, pass False or leave this section out from the request. If value
+          passed is True, authorizationHoldDays and cumulativeSpendLimit are
+          required.
+        type: boolean
+        format: boolean
+        example: true
+      authorizationHoldDays:
+        description: >-
+          Identifies the number of days after which an authorization gets aged
+          off if no matching clearing record was received. Mandatory if
+          enableAgingVelocityControl is true. Applicable only for MASTER.
+        type: number
+        format: numeric [0-9]
+        example: 21
+        maximum: 19
+      cumulativeSpendLimit:
+        description: >-
+          Limits the overall amount spend on the virtual card account. Setting
+          the this value to 0 will be interpreted as an open limit. In this
+          case, the underlying funding accounts available balance will drive the
+          authorization decision to approve or decline a transaction. Mandatory
+          if enableAgingVelocityControl is true
+        type: number
+        format: '[0-9]{17}$|(?=^.{1,18}$)^[0-9]+\.[0-9]{1,4}'
+        example: 2000.25
+        maximum: 15
+      modifyGeographyControl:
+        description: >-
+          Limits authorization requests to a defined geographic location. This
+          is an optional control. If this control is not used, pass False or
+          leave this section out from the request. For Mastercard, if value
+          passed is True, countryCodes and isCountryAllowed are required.
+        type: boolean
+        format: boolean
+        example: true
+      countryCodes:
+        type: array
+        items:
+          type: string
+        format: alphabets [a-zA-Z]
+        example: USA
+        maximum: 3
+      isCountryallowed:
+        description: >-
+          Indicate whether the values in countryCode are allowed or disallowed.
+          True= values provided in countryCode are allowed. False = values
+          provided in countryCode are not allowed. 
+        type: boolean
+        format: boolean
+        example: true
+      modifyMerchantIdControl:
+        description: >-
+          Limits authorizations to a particular merchant using the Merchant ID
+          and Acquirer ID (Mastercard) or Card Acceptor ID (Visa).
+        type: boolean
+        format: boolean
+        example: true
+      isMerchantIdAllowed:
+        description: >-
+          Indicate whether the values in merchantId and acquirerId are allowed
+          or disallowed. True = values provided in merchantId and acquirerId are
+          allowed False = values provided in merchantId and acquirerId are not
+          allowed
+        type: boolean
+        format: boolean
+        example: true
+      cardAcceptorId:
+        description: >-
+          Specifies the Card Acceptor ID that should be allowed / disallowed
+          when transacting with the virtual card. Only applicable for VISA.
+        type: string
+        format: alphanumeric [a-zA-Z0-9//s]
+        example: CAID12345
+        maxLength: 15
+      vcaRequestor:
+        type: object
+        $ref: '#/definitions/VcaRequestor'
+      vcaUser:
+        type: object
+        $ref: '#/definitions/VcaUser'
+  CancelCardRequest:
+    properties:
+      vcaRequestId:
+        description: unique id assigned to each virtual card
+        type: string
+        format: numeric [0-9]
+        maxLength: 20
+      vcaGuid:
+        description: Unique Id to refer Virtual Card Account.
+        type: integer
+        format: int64
+        example: 'Mastercard: [93396958,93396959] VISA: [897887890]'
+        maxLength: 19
+      vcaRequestor:
+        type: object
+        $ref: '#/definitions/VcaRequestor'
+      vcaUser:
+        type: object
+        $ref: '#/definitions/VcaUser'
+    required:
+      - vcaRequestId
+      - vcaGuid
+  CardMaintenanceSuccessResponse:
+    properties:
+      requestType:
+        description: Action which would help to define the processing flow
+        type: string
+        example: DEMOGRAPHIC_UPDATE
+        items:
+          enum:
+            - CARD_MODIFY
+            - CARD_CANCEL
+            - DEMOGRAPHIC_UPDATE
+        format: alpha[a-zA-Z]
+      cardHolderUserId:
+        description: This is a card holder ID assigned to the card owner
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        maxLength: 100
+        minLength: 1
+        example: CITI-1234567890
+      countryOfIssuance:
+        description: Country based on which the santions screening rules are applied.
+        type: string
+        format: alphabets [a-zA-Z]
+        example: USA
+        maxLength: 3
+        minLength: 2
+      vcaRequestId:
+        description: Unique id assigned to each card by citi application
+        type: string
+        format: numeric [0-9]
+        maxLength: 20
+        example: '91980088'
+      additionalInfo:
+        description: Unique id assigned to each card by citi application
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+  CardMaintenancePartialSuccessResponse:
+    properties:
+      requestType:
+        description: Action which would help to define the processing flow
+        type: string
+        example: DEMOGRAPHIC_UPDATE
+        items:
+          enum:
+            - CARD_MODIFY
+            - CARD_CANCEL
+            - DEMOGRAPHIC_UPDATE
+        format: alpha[a-zA-Z]
+      cardHolderUserId:
+        description: This is a card holder ID assigned to the card owner
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        maxLength: 100
+        minLength: 1
+        example: CITI-1234567890
+      countryOfIssuance:
+        description: Country based on which the santions screening rules are applied.
+        type: string
+        format: alphabets [a-zA-Z]
+        example: USA
+        maxLength: 3
+        minLength: 2
+      vcaRequestId:
+        description: Unique id assigned to each card by citi application
+        type: string
+        format: numeric [0-9]
+        maxLength: 20
+        example: '91980088'
+      additionalInfo:
+        description: Unique id assigned to each card by citi application
+        type: string
+        format: alphanumeric [a-zA-Z0-9]CardMaintenancePartialSuccessResponse
+  MaintenanceErrorMessage:
+    properties:
+      errorCode:
+        description: which indicates the error code
+        type: string
+        format: alphanumeric [a-zA-Z0-9]
+        example: EVB1257
+      errorDescription:
+        description: >-
+          The error description that corresponds to error code when there is
+          any  error occurred while retrieving the trsansaction.<br> * `GRC0001`
+          - We have encountered an error and couldnt receive your request.
+          Please try again, or contact Citi support if you have any further
+          questions or comments <br>* `GRC0003` - Invalid JSON Input <br> *
+          `GRC0004` - Region ID is not available in the request <br> * `GRC0005`
+          - Client Tracking ID is missing in the request header <br> * `GRC0010`
+          - Client Tracking ID length should contain a min of 1 character and a
+          max of 36 characters. <br> * `GRC0011` - Client ID and/or Country
+          and/or region id is missing in Client Onboard Configuration setup.
+          Contact Citi support. <br>  * `GRC0012` - Necessary header value is
+          missing <br> * `GRC0014` - We have encountered an error and couldnt
+          receive your request. Please try again, or contact Citi support if you
+          have any further questions or comments <br> * `GRC0016` - Country code
+          is not available in the request <br> * `EVB1150` - cardHolderUserID is
+          mandatory<br>* `EVB1152` cardHolderUserID must be numeric<br>*
+          `EVB1151` - cardHolderUserID size must be between 1 and 200
+          characters<br> * `EVB1245` - First Name is mandatory and should not be
+          null or empty<br> * `EVB1246` - Last Name is mandatory and should not
+          be null or empty<br> * `EVB1247` - Line 1 of address is mandatory and
+          should not be null or empty<br> * `EVB1248` - City is mandatory and
+          should not be null or empty<br>  * `EVB1249` - State is mandatory and
+          should not be null or empty<br>  * `EVB1250` - Zip code is mandatory
+          and should not be null or empty<br>   * `EVB1251` - Country is
+          mandatory and should not be null or empty<br>  * `EVB1252` - Date of
+          Birth is mandatory and should not be null or empty<br>   * `EVB1253` -
+          Country is mandatory and should not be null or empty<br> * `EVB1254` -
+          Nationality is mandatory and should not be null or empty<br>  *
+          `EVB1257` - Document(s) is mandatory and should not be null or empty
+          and should be one of the required documents  * `EVB1258` -
+          countryOfIssuance is mandatory<br>
+        type: string
+        format: alphanumeric
+        example: >-
+          Document(s) is mandatory and should not be null or empty and should be
+          one of the required documents
+    required:
+      - errorCode
+      - errorDescription
+  CardMaintenanceInvalidFailureResponse:
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/MaintenanceErrorMessage'
+  CardMaintenanceInternalServerErrorResponse:
+    required:
+      - errors
+    type: object
+    properties:
+      errors:
+        minItems: 1
+        type: array
+        items:
+          $ref: '#/definitions/MaintenanceErrorMessage'
+  CardMaintenanceUnAuthorizedResponse:
+    required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+    type: object
+    properties:
+      httpCode:
+        maxLength: 10
+        minLength: 1
+        type: string
+        description: error code to be sent to the Client
+        example: '401'
+      httpMessage:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: error message to be sent to the Client
+        example: Unauthorized
+      moreInformation:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: more details related to the error to be sent to the Client
+        example: Access Denied
+  CardMaintenanceMethodNotAllowedResponse:
+    required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+    type: object
+    properties:
+      httpCode:
+        maxLength: 10
+        minLength: 1
+        type: string
+        description: error code to be sent to the Client
+        example: '405'
+      httpMessage:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: error message to be sent to the Client
+        example: Method Not Allowed
+      moreInformation:
+        maxLength: 255
+        minLength: 1
+        type: string
+        description: more details related to the error to be sent to the Client
+        example: Requested HTTP operation is not supported
+securityDefinitions:
+  clientCredentials:
+    type: oauth2
+    description: ''
+    flow: application
+    scopes:
+      /api: ''
+    tokenUrl: https://tts.apib2b.citi.com/tts/api/v1/oauth2/token

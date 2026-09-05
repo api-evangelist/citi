@@ -1,0 +1,563 @@
+openapi: 3.0.1
+info:
+  title: FX Transactions API
+  description: >
+    The FX Transactions API provides a comprehensive and detailed view of
+    foreign exchange (FX) transactions,  systematically organized by safekeeping
+    accounts. It enables clients to access granular transaction-level  data,
+    including rates, references, broker details, and settlement attributes,
+    thereby enhancing transparency and supporting efficient monitoring,
+    reconciliation, and analysis of integrated FX activities across  accounts.
+    <br><br>**Authentication**<br><br>Client applications must supply an
+    authentication token with every request, and therefore must first
+    authenticate before it can proceed. A client can use the OAuth 2 client
+    credential grant flow to obtain a time limited access token. To get an
+    access token send a HTTP Post request to the token endpoint using basic
+    authentication with the client key and secret (provided under separate
+    cover).<br><br>**Request**<br><br>```POST {baseURL}/api/oauth2/token
+    HTTPS/1.1 
+
+    Authorization: Basic base64(key:secret) 
+
+    Content-Type:application/x-www-form-urlencoded```<br><br>
+
+    **Response**<br><br>```
+      {
+          "token_type": "bearer", 
+          "access_token": <access token>, 
+          "expires_in": <seconds until expiry>, 
+          "consented_on":<timestamp>, 
+          "scope": "/dod"`
+      }```    <br><br>The bearer token is valid for 1800 seconds (30 minutes) after which it will expire. At this point, you would need to re-authenticate.
+  version: v1.0.0
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets/dod
+    description: Sandbox server (uses test data)
+  - url: https://api.citivelocity.com/markets/dod
+    description: Production server
+security:
+  - client-Credential-Oauth-Security-Schema: []
+components:
+  headers:
+    dod-request-id:
+      schema:
+        type: string
+      description: The UUID representing the unique identifier of the dod request
+    paging-page-number:
+      schema:
+        type: string
+      description: The current page number
+    paging-total-page-count:
+      schema:
+        type: string
+      description: The total count of pages available
+    paging-total-record-count:
+      schema:
+        type: string
+      description: The total count of records
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  examples:
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: path-param servicePortableId is mandatory and it cannot be empty
+            action: please provide valid parameter values
+            code: VC00010
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Resource that you are searching is not found
+            action: Please use valid resource details
+            code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Method not supported
+            action: please use valid http verb
+            code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+  schemas:
+    e31d9564-2523-4b96-8144-1bc9579a7f85-data-schema:
+      type: object
+      properties:
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the cash account and/or
+            the safekeeping account. If an alternate account name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - Japan 2
+        BUY_CURR_CODE:
+          type: string
+          description: >-
+            Provides the ISO 4217 currency code in which amout will be debited
+            from debit account.sample values are USD/INR.
+          example: USD
+        SELL_CURR_CODE:
+          type: string
+          description: >-
+            Provides the ISO 4217 currency code in which amout will be credited
+            in credit account.sample values are USD/INR.
+          example: USD
+        BUY_AMT:
+          type: number
+          format: double
+          description: Total Buy amount for a FX trade.
+          example: 1546.98
+        SELL_AMT:
+          type: number
+          format: double
+          description: Total Sell amount for a FX trade.
+          example: 1416.98
+        TRADE_DT:
+          type: string
+          format: date
+          description: >-
+            The date on which the actual contract is executed between the buyer
+            and seller of a specific country.
+          example: '2025-04-02'
+        VALUE_DT:
+          type: string
+          format: date
+          description: >-
+            Value Date is the delivery date on which counterparties to a
+            transaction agree to settle their respective obligations by making
+            payments and transferring ownership.
+          example: '2025-05-02'
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account.  For
+            the cash account the branch code is a numeric value and for the
+            safekeeping account it is the ISO Country code.
+          example: '484'
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a cash account and/or a
+            safekeeping account that is unique within a branch.
+          example: DEMOSK02US
+        FX_RATE:
+          type: number
+          format: double
+          description: Client rate Includes forward points on FX rate.
+          example: 1.0835
+        SENDER_REFERENCE:
+          type: string
+          description: >-
+            The Sender Reference - from the third party or the internal source
+            system.
+          example: TRX20240613567
+        CITI_REFERENCE:
+          type: string
+          description: >-
+            Custodian Reference (Internal) is a Citi generated identifier for a
+            unique cash transaction record. This attribute is only valid within
+            Citi and we recommend that it should not be used by clients.
+          example: FX98765432
+        FX_TYPE:
+          type: string
+          description: >-
+            Forex traders transact in one of three distinct marketplaces: the
+            spot, the forward, or the futures market.
+          example: SPOT
+        FX_BRKR_BIC_CODE:
+          type: string
+          description: FX Broker bank identitfier code.
+          example: CITIUS33
+        FX_BRKR_NME:
+          type: string
+          description: >-
+            FX Broker Name. A forex broker is a financial services company that
+            provides traders access to a platform for buying and selling foreign
+            currencies.
+          example: Citibank N.A
+    e31d9564-2523-4b96-8144-1bc9579a7f85-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/e31d9564-2523-4b96-8144-1bc9579a7f85-data-schema
+    e31d9564-2523-4b96-8144-1bc9579a7f85-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/e31d9564-2523-4b96-8144-1bc9579a7f85-data-schema
+      xml:
+        name: data
+    ErrorResponse:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errorDetails:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      title: Error Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+  parameters:
+    client_id:
+      description: >-
+        Your unique ID. This is the same as the ID you used for OAuth token
+        generation. Citi shared this ID with you during your Data On Demand API
+        onboarding
+      name: client_id
+      in: header
+      required: true
+      schema:
+        type: string
+    skip:
+      name: skip
+      in: query
+      description: The number of records to skip before returning the results
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    take:
+      name: take
+      in: query
+      description: The maximum number of records to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 5000
+    select:
+      name: $select
+      in: query
+      description: >-
+        The $SELECT parameter in an API allows users to specify which data
+        fields (properties or columns) they want to receive in the API response.
+        This helps improve efficiency by reducing the amount of data transferred
+        and simplifying client-side processing.
+      required: false
+      schema:
+        type: string
+    parameter-53531:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53477:
+      name: BUY_CURR_CODE
+      description: >-
+        Provides the ISO 4217 currency code in which amout will be debited from
+        debit account.sample values are USD/INR.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53519:
+      name: SELL_CURR_CODE
+      description: >-
+        Provides the ISO 4217 currency code in which amout will be credited in
+        credit account.sample values are USD/INR.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53475:
+      name: BUY_AMT
+      description: Total Buy amount for a FX trade.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-53517:
+      name: SELL_AMT
+      description: Total Sell amount for a FX trade.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-53528:
+      name: TRADE_DT
+      description: >-
+        The date on which the actual contract is executed between the buyer and
+        seller of a specific country.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-53529:
+      name: VALUE_DT
+      description: >-
+        Value Date is  the delivery date on which counterparties to a
+        transaction agree to settle their respective obligations by making
+        payments and transferring ownership.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-53472:
+      name: BR_ID
+      description: >-
+        Reflects the 2 CHAR Branch Code where the transaction was executed and
+        processed. Sample values: LO = London; JE = Jersey ; LU = Luxembourg; NY
+        = New York.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53468:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53492:
+      name: FX_RATE
+      description: Client rate Includes forward points on FX rate.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-53521:
+      name: SENDER_REFERENCE
+      description: >-
+        The Sender Reference - from the third party or the internal source
+        system.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53479:
+      name: CITI_REFERENCE
+      description: >-
+        Custodian Reference (Internal) is a Citi generated identifier for a
+        unique cash transaction record. This attribute is only valid within Citi
+        and we recommend that it should not be used by clients.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53494:
+      name: FX_TYPE
+      description: >-
+        Forex traders transact in one of three distinct marketplaces: the spot,
+        the forward, or the futures market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53490:
+      name: FX_BRKR_BIC_CODE
+      description: FX Broker bank identitfier code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53491:
+      name: FX_BRKR_NME
+      description: >-
+        FX Broker Name. A forex broker is a financial services company that
+        provides traders access to a platform for buying and selling foreign
+        currencies.
+      in: query
+      required: false
+      schema:
+        type: string
+  securitySchemes:
+    client-Credential-Oauth-Security-Schema:
+      type: oauth2
+      description: This API uses OAuth 2 with the client credentials flow
+      flows:
+        clientCredentials:
+          tokenUrl: /markets/api/oauth2/token
+          scopes:
+            /dod: Access to Cash Balances Information
+paths:
+  /api/services/e31d9564-2523-4b96-8144-1bc9579a7f85/filter:
+    get:
+      summary: FX Transaction Data
+      description: FX trade data from CR which covers both internal and external FX
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-53531'
+        - $ref: '#/components/parameters/parameter-53477'
+        - $ref: '#/components/parameters/parameter-53519'
+        - $ref: '#/components/parameters/parameter-53475'
+        - $ref: '#/components/parameters/parameter-53517'
+        - $ref: '#/components/parameters/parameter-53528'
+        - $ref: '#/components/parameters/parameter-53529'
+        - $ref: '#/components/parameters/parameter-53472'
+        - $ref: '#/components/parameters/parameter-53468'
+        - $ref: '#/components/parameters/parameter-53492'
+        - $ref: '#/components/parameters/parameter-53521'
+        - $ref: '#/components/parameters/parameter-53479'
+        - $ref: '#/components/parameters/parameter-53494'
+        - $ref: '#/components/parameters/parameter-53490'
+        - $ref: '#/components/parameters/parameter-53491'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/e31d9564-2523-4b96-8144-1bc9579a7f85-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/e31d9564-2523-4b96-8144-1bc9579a7f85-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'

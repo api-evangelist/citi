@@ -1,0 +1,165 @@
+openapi: 3.1.0
+info:
+  title: FX Authorization API
+  description: >-
+    Citi uses access tokens to maintain stateless sessions for API requests that
+    are authenticated using your client ID & secret key. Use the Authentication
+    API to generate your access tokens. 
+
+
+    Once a successful server Authentication handshake is established over TLS
+    and your API credentials are validated, the OAuth token will be generated
+    and returned to you in the response.
+
+
+    **NOTE:** The access token is provided through the HTTP Authorization header
+    `Authorization: Bearer {access token}` and is valid for 10 minutes. When the
+    access token has expired, your application will need to generate another
+    token. Any API call using an expired access token will return the HTTP
+    status code 401 Unauthorized.
+  version: ''
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets/cv/api
+    description: sandbox URL
+  - url: https://api.citivelocity.com/markets/cv/api
+    description: production URL
+paths:
+  /fx/oauth2/token:
+    post:
+      summary: Request Access Token
+      description: >-
+        The OAuth token request authenticates your API message and responds with
+        an access token.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Request'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: Bad Request
+                httpCode: 400
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                error: invalid_client
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: NOT FOUND
+                httpCode: 404
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: METHOD NOT ALLOWED
+                httpCode: 405
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                httpMessage: Internal Server Error
+                httpCode: 500
+      deprecated: false
+      security:
+        - basicAuth: []
+components:
+  schemas:
+    Request:
+      required:
+        - grantType
+        - client_id
+        - client_secret
+        - scope
+      properties:
+        grantType:
+          type: string
+          description: >-
+            You must always pass 'client_credentials' in this field because Citi
+            only provides credentials-based authentication for API users.
+        client_id:
+          type: string
+          description: Your client ID.
+        client_secret:
+          type: string
+          description: Your client secret.
+        scope:
+          type: string
+          description: >-
+            This is the scope of the authentication call. Value should be
+            `fxpai`.
+      example:
+        grantType: client_credentials
+        scope: fxpai
+        client_id: YOUR_CLIENT_ID_HERE
+        client_secret: YOUR_CLIENT_SECRET_HERE
+    Response:
+      title: oAuthTokenResponse
+      description: The response body to retrieve an OAuth token.
+      required:
+        - access_token
+        - expires_in
+        - scope
+      properties:
+        access_token:
+          type: string
+          description: >-
+            Contains the OAuth Token that will be used for authenticating
+            successive API calls. The token should be passed in the request
+            header "Authorization", prefixed with "Bearer" and a space in
+            between.
+        token_type:
+          type: string
+          description: Default value will be “Bearer".
+        scope:
+          type: string
+          description: The scope of the authentication call. The value will be `fxapi`.
+        expires_in:
+          type: string
+          description: The expiry time of the OAuth Token in seconds.
+      example:
+        token_type: Bearer
+        access_token: >-
+          AAIkYWNkODQwNzgtZTczMi00ZjczLTg3MDktYmYzODE0MTU2OGYxKbY9QECipkzJXDAf5HQONqyXdZbeJUHEykY5cgI7zk3gHsXOqZrKMeAoHRoglUyCnQ6Iye5r21XB4nOr8_t0BQ0AiJAoLZleFFZYWt2y2YAhOKxd-yBQF8XtqiOs5z32Wr-eOZwIdnyvx7_Vak2Fzw
+        expires_in: '900'
+        scope: fxapi
+    ErrorMessage:
+      required:
+        - httpCode
+      properties:
+        httpCode:
+          type: integer
+        httpMessage:
+          type: string
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: >-
+        Username is the application's client_id and password is the
+        client_secret.

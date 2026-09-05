@@ -1,0 +1,131 @@
+generated: '2026-09-05'
+method: derived
+source: https://developer.citi.com/apidocs/ — 118 first-party OpenAPI/Swagger specifications published
+  by Citi at /apidocs/redocusaurus/<id>.yaml, harvested 2026-09-05
+note: Every entry below is asserted from the contract text itself, not from a marketing claim. The evidence
+  field names the exact artifact and the string found in it.
+conformance:
+- id: oauth2
+  conforms: true
+  evidence: '110 of 118 specs declare an oauth2 securityScheme. Flows observed: clientCredentials (74),
+    authorizationCode (12), and OAS2 "application" i.e. client_credentials (24). Token endpoints include
+    https://tts.apib2b.citi.com/tts/api/v1/oauth2/token and /authenticationservices/v3/oauth/token.'
+  artifacts:
+  - authentication/citi-authentication.yml
+  - scopes/citi-scopes.yml
+- id: mutual-tls
+  conforms: true
+  evidence: 'Citi Authentication Guide: "Citi uses mutual, two-way authentication and OAuth 2.0 standard
+    to authenticate and authorize API requests from your application." One spec declares an http/mutual-tls
+    securityScheme directly.'
+  docs: https://developer.citi.com/apidocs/authentication/authentication-only-guide
+- id: message-level-encryption-and-signing
+  conforms: true
+  evidence: 'Citi Authentication Guide: "Most Citi API requests are encrypted and signed using asymmetric
+    Public Key Infrastructure (PKI) cryptography. APIs that authenticate using V4 of the authentication
+    endpoint do not require signing and encryption."'
+  docs: https://developer.citi.com/apidocs/authentication/authentication-only-guide
+- id: rfc9457
+  conforms: partial
+  evidence: 'application/problem+json appears on 12 responses across 3 of 118 specs (Brazil PIX: BrazilLocalMandate,
+    due-date, immediate). The remaining specs return bespoke JSON or ISO 20022 XML error envelopes, so
+    the fleet is not uniformly RFC 9457.'
+  artifacts:
+  - errors/citi-problem-types.yml
+- id: rfc8594-deprecation-sunset
+  conforms: partial
+  evidence: Deprecation, Sunset and Link response headers are declared with RFC 8594 semantics ("The date
+    when the API will no longer be Supported by the system owner ... ISO 8601-1:2019 format") in citi-addonservice-openapi.yaml,
+    citi-entityid-openapi.yaml and citi-vamanagement-openapi.yaml. Declared on 3 of 118 specs, not fleet-wide.
+  artifacts:
+  - lifecycle/citi-lifecycle.yml
+- id: idempotency
+  conforms: partial
+  evidence: An Idempotency-Id request header is declared on 10 of roughly 180 mutating operations, with
+    a matching 409 Idempotency-Id-Conflict response. Scoped, not fleet-wide.
+  artifacts:
+  - conventions/citi-conventions.yml
+- id: ratelimit-headers
+  conforms: partial
+  evidence: RateLimit-Limit, RateLimit-Remaining and RateLimit-Reset response headers are declared with
+    documented semantics in citi-addonservice-openapi.yaml, citi-entityid-openapi.yaml and citi-vamanagement-openapi.yaml.
+    82 operations declare a 429 response but do not declare the headers.
+  artifacts:
+  - rate-limits/citi-rate-limits.yml
+- id: openapi
+  conforms: true
+  evidence: '118 published contracts: OpenAPI 3.1.0 (20), 3.0.3 (19), 3.0.2 (12), 3.0.1 (28), 3.0.0 (15)
+    and Swagger 2.0 (24). All 118 parse.'
+- id: psd2
+  conforms: false
+  evidence: No PSD2 / Berlin Group / OBIE surface is published on developer.citi.com. The only regulated
+    open-banking contracts here are Ukraine (bank data sharing, payment service initiation) and EU commercial
+    cards. Absence recorded, not penalised.
+domain_standards:
+- id: iso-20022
+  conforms: true
+  name: ISO 20022 financial messaging
+  evidence: 'The XSD namespace urn:iso:std:iso:20022:tech:xsd:* is declared inside the contracts themselves,
+    in 16 of 118 specs. Message types observed: pain.001.001.03 (customer credit transfer initiation,
+    15 occurrences), pain.002.001.03 (payment status report, 19), pacs.008.001.08 and pacs.008.001.02
+    (FI to FI customer credit transfer), pacs.009.001.08 and pacs.009.001.02 (financial institution credit
+    transfer), pacs.002.001.10 (FI to FI payment status report), camt.056.001.09 (FI to FI payment cancellation
+    request), camt.052.001.02 (bank to customer account report), pain.008.001.02 (customer direct debit
+    initiation), pain.009/013/014 (mandate initiation and creditor payment activation).'
+  specs:
+  - citi-worldlink-v3-api-openapi.yaml
+  - citi-worldlink-v2-api-openapi.yaml
+  - citi-balances-api-openapi.yaml
+  - citi-direct-debit-api-openapi.yaml
+  - citi-e-mandate-api-v1-openapi.yaml
+  - citi-payment-reconfirmation-openapi.yaml
+  - citi-paymentcancellation-xml-openapi.yaml
+  - citi-payment-status-openapi.yaml
+  - citi-paymentinitiation-pacs009-openapi.yaml
+  - citi-payment-refund-openapi.yaml
+  - citi-proof-of-payment-openapi.yaml
+  - citi-paymentinitiation-pacs008-openapi.yaml
+  - citi-paymentenhancedinquiry-xml-openapi.yaml
+  - citi-paymentinitiation-pain103-openapi.yaml
+  - citi-paymentinitiation-pain102-openapi.yaml
+  - citi-request-to-pay-openapi.yaml
+  why_it_matters: A treasury or ERP integrator that already speaks ISO 20022 can map to these payloads
+    with no bespoke connector; the same messages drive the XML and JSON encodings Citi publishes side
+    by side.
+- id: iso-20022-external-reason-codes
+  conforms: true
+  name: ISO 20022 External Return Reason Codes
+  evidence: The Online Payment Acceptance error-code reference is published as a table of ISO reject codes
+    (AC01, AC04, AM04, BE05, ...) mapped to plain-language reasons, alongside local Australian and TCH/RTP
+    code sets.
+  docs: https://developer.citi.com/apidocs/accept-payments/online-payment-acceptance/online-payment-acceptance-error-codes
+  artifacts:
+  - errors/citi-decline-codes.yml
+- id: iso-8601
+  conforms: true
+  evidence: Deprecation, Sunset and RateLimit-Reset headers are all specified as "ISO 8601-1:2019" date-time.
+- id: iso-4217
+  conforms: true
+  evidence: Currency fields across the payment and FX contracts are constrained to ISO 4217 alphabetic
+    codes.
+- id: iso-13616-iban
+  conforms: true
+  evidence: IBAN account identifiers appear in 36 of 118 specs; BIC (ISO 9362) in 27.
+- id: brazil-pix
+  conforms: true
+  name: Banco Central do Brasil PIX / BACEN API
+  evidence: citi-brazillocalmandate-openapi.yaml is titled "API Pix" and its field names and validation
+    table are taken directly from the BACEN Pix swagger (cob, cobv, rec, solicRec, txid, idRec, devedor,
+    recebedor, paginacao).
+  docs: https://developer.citi.com/apidocs/accept-payments/online-payment-acceptance/online-payment-acceptance-error-codes
+- id: fix-protocol
+  conforms: true
+  evidence: CitiFX Gateway and Instant FX each publish a FIX channel guide alongside the REST contracts.
+  docs: https://developer.citi.com/apidocs/fx/gateway/fix-guide
+compliance_programs:
+- name: Citi Responsible Disclosure Program
+  published: true
+  url: https://www.citi.com/reporting-vulnerability
+  http_status: 200
+  note: First-party reporting page, live 2026-09-05. Also operated as a managed vulnerability disclosure
+    engagement on Bugcrowd at https://bugcrowd.com/engagements/citi (HTTP 200).

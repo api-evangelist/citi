@@ -1,0 +1,1386 @@
+openapi: 3.0.1
+info:
+  title: Custody Penalities API
+  description: >
+    The Custody Penalities APIs give clients seamless access to daily and
+    monthly settlement penalty information required under the CSDR framework.
+    They provide both day‑specific and month‑end aggregated data,  along with
+    detailed breakdowns that highlight the underlying drivers of each penalty. 
+    Together, these APIs support efficient reconciliation, improved
+    transparency, and smooth integration  into client reporting and operational
+    systems. <br><br>**Authentication**<br><br>Client applications must supply
+    an authentication token with every request, and therefore must first
+    authenticate before it can proceed. A client can use the OAuth 2 client
+    credential grant flow to obtain a time limited access token. To get an
+    access token send a HTTP Post request to the token endpoint using basic
+    authentication with the client key and secret (provided under separate
+    cover).<br><br>**Request**<br><br>```POST {baseURL}/api/oauth2/token
+    HTTPS/1.1 
+
+    Authorization: Basic base64(key:secret) 
+
+    Content-Type:application/x-www-form-urlencoded```<br><br>
+
+    **Response**<br><br>```
+      {
+          "token_type": "bearer", 
+          "access_token": <access token>, 
+          "expires_in": <seconds until expiry>, 
+          "consented_on":<timestamp>, 
+          "scope": "/dod"`
+      }```    <br><br>The bearer token is valid for 1800 seconds (30 minutes) after which it will expire. At this point, you would need to re-authenticate.
+  version: v1.0.0
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets/dod
+    description: Sandbox server (uses test data)
+  - url: https://api.citivelocity.com/markets/dod
+    description: Production server
+security:
+  - client-Credential-Oauth-Security-Schema: []
+components:
+  headers:
+    dod-request-id:
+      schema:
+        type: string
+      description: The UUID representing the unique identifier of the dod request
+    paging-page-number:
+      schema:
+        type: string
+      description: The current page number
+    paging-total-page-count:
+      schema:
+        type: string
+      description: The total count of pages available
+    paging-total-record-count:
+      schema:
+        type: string
+      description: The total count of records
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  examples:
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: path-param servicePortableId is mandatory and it cannot be empty
+            action: please provide valid parameter values
+            code: VC00010
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Resource that you are searching is not found
+            action: Please use valid resource details
+            code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Method not supported
+            action: please use valid http verb
+            code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+  schemas:
+    3de83cae-f7b8-4ba6-8f2f-4869ce6284e2-data-schema:
+      type: object
+      properties:
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - Japan 2
+        ACCT_OWN_NAME:
+          type: string
+          description: >-
+            Account Servicer/Depository is the name of the party which
+            administers the account.
+          example: Demo_d Ltd
+        CPRT_NAME:
+          type: string
+          description: >-
+            Counterparty is the name of the party imposed with the penalties or
+            credited with the penalty(ies).
+          example: ECLR/10608
+        PENALTY_DETEC_DT:
+          type: string
+          format: date
+          description: >-
+            Penalty Detection Date is the day for which the penalty was
+            computed. /nIt is the date on which the instruction matched for Late
+            Matching Fail Penalty (LMFP) or the date on which an instruction
+            fails to settle for Settlement Fail Penalty (SEFP). /nNote: This
+            date is not updated upon re-calculation of the penalty and always
+            relates to the business day for which the penalty was initially
+            computed.
+          example: '2025-03-10'
+        PENALTY_REF:
+          type: string
+          description: >-
+            Reference is assigned by the market infrastructure to the penalty
+            and is the individual identification of the penalty for the relevant
+            account owner (that is, either for the failing participant or for
+            the non-failing participant).
+          example: F260305454043360
+        COM_REF:
+          type: string
+          description: >-
+            Common Reference is assigned by the market infrastructure (for
+            example T2S) to the penalty and that is common for both the failing
+            and the non-failing participant.
+          example: C070200015097454
+        PENALTY_TYP_CD:
+          type: string
+          description: >-
+            Penalty Type indicating whether it is a Late Matching Fail Penalty
+            (LMFP) or Settlement Fail Penalty (SEFP).
+          example: LMFP
+        PENALTY_AMT_CURR:
+          type: string
+          description: >-
+            Penalty Currency is the ISO 4217 currency code for the currency of
+            the penalty amount.
+          example: USD
+        PENALTY_AMT:
+          type: number
+          format: double
+          description: >-
+            Penalty Amount is calculated based on the security and instruction
+            characteristics and the reason for the fail. For a Late Matching
+            Fail Penalty (LMFP) that spans several business days, this amount is
+            the sum of the amounts calculated for each applicable business day.
+          example: 250.75
+        PFD_ID_CTXT_CD:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID field. Values include: CUSIP, ISIN, SEDOL,
+            LOCAL, etc.
+          example: CUSIP
+        PFD_ISS_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: CSD12345
+        SEC_SHRT_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: TEMPORARY SECURITY 000BMTYVP8
+        SID_ISIN:
+          type: string
+          description: >-
+            ISIN (International Securities Identification Number) is a
+            12-character alpha-numerical code governed by ISO 6166 it is a
+            uniform identification of a security at trading and settlement. This
+            data is sourced from multiple sources and will be provided if
+            available.
+          example: US88160R1014
+        CLIENT_SEC_REF:
+          type: string
+          description: >-
+            Custodian reference is i a unique identifier assigned to a client’s
+            securities or accounts by the custodian
+          example: Demo_nnnnn086021
+        CLIENT_REF:
+          type: string
+          description: >-
+            Client Reference is a unique number assigned by the client, to the
+            transaction, for identification purposes within their organization.
+          example: Demo_xxnnn54792
+        TRADE_DT:
+          type: string
+          format: date
+          description: Date when the trade was agreed on with counterparty.
+          example: '2025-02-28'
+        SEC_PEN_RT:
+          type: number
+          format: double
+          description: Security penalty rate applied in the calculation of the penalty.
+          example: 0.005
+        CNTR_SETL_DT:
+          type: string
+          format: date
+          description: >-
+            Contractual Settlement Date represents the agreed‑upon date on which
+            a trade is supposed to settle according to market rules or
+            contractual terms.
+          example: '2025-03-03'
+        POST_QTY:
+          type: number
+          format: double
+          description: >-
+            Quantity provides the number of units, par value or nominal value
+            (for fixed income instruments), amount of currency (for FX
+            transactions), or number of shares. Indicates the contract quantity
+            on the original transaction that was given up.
+          example: 1500
+        POST_AMT_CURR:
+          type: string
+          description: Settlement Currency is the currency name for the Settlement Amount.
+          example: EUR
+        POST_AMT:
+          type: number
+          format: double
+          description: >-
+            Settlement Amount is the cash value of the trade in the market
+            currency.
+          example: 450000
+        PENALTY_STATUS:
+          type: string
+          description: >-
+            Penalty status is to check if penalty is active or inactive for a
+            given record.
+          example: ACTV
+    3de83cae-f7b8-4ba6-8f2f-4869ce6284e2-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/3de83cae-f7b8-4ba6-8f2f-4869ce6284e2-data-schema
+    3de83cae-f7b8-4ba6-8f2f-4869ce6284e2-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/3de83cae-f7b8-4ba6-8f2f-4869ce6284e2-data-schema
+      xml:
+        name: data
+    4b1404f9-e30e-434d-aca0-151861edacf1-data-schema:
+      type: object
+      properties:
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - Japan 2
+        CPRT_ACCT_SER_NAME:
+          type: string
+          description: >-
+            Counterparty's Account Servicer/Depository is the name of the
+            counterparty's account servicer/depository.
+          example: Demo_xxxden
+        RPT_PER_DT_START:
+          type: string
+          format: date-time
+          description: >-
+            The date calculated based on the Period chosen as the start date for
+            the report.
+          example: '2025-10-01 00:00:00'
+        RPT_PER_DT_END:
+          type: string
+          format: date-time
+          description: >-
+            The date calculated based on the Period chosen as the end date for
+            the report.
+          example: '2025-04-30 00:00:00'
+        CASH_ACCT_ID:
+          type: string
+          description: >-
+            Cash Account ID is the account number for the cash account. It is
+            unique within a branch.
+          example: Demo_nnn0422
+        CPRT_NET_AMT_CURR:
+          type: string
+          description: Net Amount Currency is the currency of the Net Amount.
+          example: EUR
+        AGGR_AMT:
+          type: number
+          format: double
+          description: >-
+            The global net amount for a party is the sum of all cash penalties
+            in this currency that this party is entitled to receive minus the
+            sum of all cash penalties in this currency that are imposed to the
+            party. A positive amount indicates that the party will be credited
+            with this amount; a negative amount indicates that the amount will
+            be debited.
+          example: 432.51
+        PFOD_MESG_ID:
+          type: string
+          description: Reference of the penalty payment.
+          example: P2503DASI0496761
+        ACCT_SERVR_BIC:
+          type: string
+          description: >-
+            Account Servicer/Depository BIC is the Bank Identifier code of the
+            party which administers the account.
+          example: CEDELULLXXX
+        CURRENCY:
+          type: string
+          description: Currency in which the penalties are expressed.
+          example: EUR
+        RLTD_PARTY_BIC:
+          type: string
+          description: >-
+            Identification of the party reported as party imposed with the
+            penalties reported or party credited with the penalty(ies).
+          example: '5053360000'
+        PARTY_TYPE:
+          type: string
+          description: Specifies the role of the party in the transaction.
+          example: CSDP
+        CPRT_BIC:
+          type: string
+          description: >-
+            Counterparty BIC is the Bank Identifier code of the party imposed
+            with the penalties reported or party credited with the penalty(ies).
+          example: GIBAHUHBXXX
+        CPRT_TYPE:
+          type: string
+          description: Specifies the role of the counterparty in the transaction
+          example: NCSD
+        CPRT_NET_AMT:
+          type: number
+          format: double
+          description: >-
+            The bilateral net amount for a party and counterpart will be the sum
+            of all cash penalties in this currency that this party is entitled
+            to receive (reported as credit) from the same counterpart (that is,
+            to be paid by this counterpart) minus the sum of all cash penalties
+            in this currency that are imposed to the party (reported as debit)
+            and to be paid to the given counterpart.
+          example: 782.86
+        COM_REF:
+          type: string
+          description: >-
+            Common Reference is assigned by the market infrastructure (for
+            example T2S) to the penalty and that is common for both the failing
+            and the non-failing participant.
+          example: Demo_nnnnnnn91783743
+        PENALTY_REF:
+          type: string
+          description: >-
+            Reference is assigned by the market infrastructure to the penalty
+            and is the individual identification of the penalty for the relevant
+            account owner (that is, either for the failing participant or for
+            the non-failing participant).
+          example: Demo_nnnnnnn00005816
+        PENALTY_TYP_CD:
+          type: string
+          description: >-
+            Penalty Type indicates whether the penalty is a late matching fail
+            penalty (LMFP) or a settlement fail penalty (SEFP).
+          example: SEFP
+        PENALTY_AMT_COMP:
+          type: integer
+          format: int32
+          description: >-
+            Indicates whether or not the amount calculated for the reported
+            penalty will be added to the aggregated amounts at global level.
+            There could be several reasons for not considering the penalty
+            amount. The flag is used to indicate an exceptional situation. If
+            the flag is not reported in the message this means that the penalty
+            is considered for the calculation of aggregated amounts.
+          example: 1
+        PENALTY_AMT:
+          type: integer
+          format: int32
+          description: >-
+            Penalty Amount is calculated based on the security and instruction
+            characteristics and the reason for the fail. For a Late Matching
+            Fail Penalty (LMFP) that spans several business days, this amount is
+            the sum of the amounts calculated for each applicable business day.
+          example: 257
+        CALC_METHOD:
+          type: string
+          description: >-
+            Calcualtion Method indixates the calculation rule used to compute
+            the penalty. Values are CASH, MIXE, SECU, BOTH.
+          example: CASH
+        NBR_OF_DAYS:
+          type: integer
+          format: int32
+          description: >-
+            Number of Days is the number of days over which a late matching
+            penalty has been calculated.
+          example: 16
+        ACCT_OWN_TX_ID:
+          type: string
+          description: Reference assigned to the reported transaction by the account owner.
+          example: '66176038465'
+        ACCT_SEC_TX_ID:
+          type: string
+          description: >-
+            Reference assigned to the reported transaction by the account
+            servicer.
+          example: H0000Y0ZB757CAI
+        PROCESSOR_TX_ID:
+          type: string
+          description: >-
+            Identification of the transaction assigned by the processor of the
+            instruction other than the account owner/the account servicer and
+            the market infrastructure.
+          example: CSTDY00119545130
+        MKT_INFR_TX_ID:
+          type: string
+          description: >-
+            Identification of a transaction assigned by a market infrastructure
+            other than a central securities depository, for example,
+            Target2-Securities.
+          example: '2503275363718075'
+        COMMON_ID:
+          type: string
+          description: >-
+            Unique reference agreed upon by the Investment Manager and the
+            Broker/Dealer to identify the trade. This reference should be passed
+            down and up through the whole life cycle of the transaction.
+          example: 1403X34328787
+        CORP_ACT_EV_ID:
+          type: string
+          description: >-
+            Reference assigned by the account servicer to unambiguously identify
+            a related corporate action event.
+          example: AC17062532
+        RELATED_TX_ID:
+          type: string
+          description: Reference of the linked message which was previously received.
+          example: '66149993234'
+        PEN_PY_DT:
+          type: string
+          format: date
+          description: >-
+            Payment Date is the date at which the last payment on the
+            entitlement was made. Or Date/time at which the movement is due to
+            take place (cash and/or securities).
+          example: '2025-02-10'
+        CPRT_ACCT_SER_BIC:
+          type: string
+          description: >-
+            Counterparty's Account Servicer/Depository BIC is the Bank
+            Identifier of the counterparty's account servicer/depository.
+          example: IBLSPTPPXXX
+        PENALTY_DETEC_DT:
+          type: string
+          format: date
+          description: >-
+            Penalty Detection Date is the day for which the penalty was
+            computed. /nIt is the date on which the instruction matched for Late
+            Matching Fail Penalty (LMFP) or the date on which an instruction
+            fails to settle for Settlement Fail Penalty (SEFP). /nNote: This
+            date is not updated upon re-calculation of the penalty and always
+            relates to the business day for which the penalty was initially
+            computed.
+          example: '2025-03-10'
+        PENALTY_STATUS:
+          type: string
+          description: >-
+            Penalty status is to check if penalty is active or inactive for a
+            given record.
+          example: ACTV
+    4b1404f9-e30e-434d-aca0-151861edacf1-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/4b1404f9-e30e-434d-aca0-151861edacf1-data-schema
+    4b1404f9-e30e-434d-aca0-151861edacf1-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/4b1404f9-e30e-434d-aca0-151861edacf1-data-schema
+      xml:
+        name: data
+    ErrorResponse:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errorDetails:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      title: Error Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+  parameters:
+    client_id:
+      description: >-
+        Your unique ID. This is the same as the ID you used for OAuth token
+        generation. Citi shared this ID with you during your Data On Demand API
+        onboarding
+      name: client_id
+      in: header
+      required: true
+      schema:
+        type: string
+    skip:
+      name: skip
+      in: query
+      description: The number of records to skip before returning the results
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    take:
+      name: take
+      in: query
+      description: The maximum number of records to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 5000
+    select:
+      name: $select
+      in: query
+      description: >-
+        The $SELECT parameter in an API allows users to specify which data
+        fields (properties or columns) they want to receive in the API response.
+        This helps improve efficiency by reducing the amount of data transferred
+        and simplifying client-side processing.
+      required: false
+      schema:
+        type: string
+    parameter-53377:
+      name: PENALTY_DETEC_DT
+      description: >-
+        Penalty Detection Date is the day for which the penalty was computed.
+        /nIt is the date on which the instruction matched for Late Matching Fail
+        Penalty (LMFP) or the date on which an instruction fails to settle for
+        Settlement Fail Penalty (SEFP). /nNote: This date is not updated upon
+        re-calculation of the penalty and always relates to the business day for
+        which the penalty was initially computed.
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+    parameter-53395:
+      name: PENALTY_STATUS
+      description: >-
+        Penalty status is to check if penalty is active or inactive for a given
+        record.
+      in: query
+      required: true
+      schema:
+        type: string
+    parameter-53373:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53374:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53375:
+      name: ACCT_OWN_NAME
+      description: >-
+        Account Servicer/Depository is the name of the party which administers
+        the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53376:
+      name: CPRT_NAME
+      description: >-
+        Counterparty is the name of the party imposed with the penalties
+        reported or party credited with the penalty(ies).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53378:
+      name: PENALTY_REF
+      description: >-
+        Reference is assigned by the market infrastructure to the penalty and is
+        the individual identification of the penalty for the relevant account
+        owner (that is, either for the failing participant or for the
+        non-failing participant).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53379:
+      name: COM_REF
+      description: >-
+        Common Reference is assigned by the market infrastructure (for example
+        T2S) to the penalty and that is common for both the failing and the
+        non-failing participant.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53380:
+      name: PENALTY_TYP_CD
+      description: >-
+        Penalty Type indicates whether the penalty is a late matching fail
+        penalty (LMFP) or a settlement fail penalty (SEFP).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53381:
+      name: PENALTY_AMT_CURR
+      description: >-
+        Penalty Currency is the ISO 4217 currency code for the currency of the
+        penalty amount.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53382:
+      name: PENALTY_AMT
+      description: >-
+        Penalty Amount is calculated based on the security and instruction
+        characteristics and the reason for the fail. For a Late Matching Fail
+        Penalty (LMFP) that spans several business days, this amount is the sum
+        of the amounts calculated for each applicable business day.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-53383:
+      name: PFD_ID_CTXT_CD
+      description: >-
+        Security ID Type indicates the type of identifier of the corresponding
+        Security ID field. Values include: CUSIP, ISIN, SEDOL, LOCAL, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53384:
+      name: PFD_ISS_ID
+      description: >-
+        Security ID is the most commonly used identifier for the security in a
+        given market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53385:
+      name: SEC_SHRT_NME
+      description: Issue Name is the Security Name of the security instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53386:
+      name: SID_ISIN
+      description: >-
+        ISIN (International Securities Identification Number) is a 12-character
+        alpha-numerical code governed by ISO 6166 it is a uniform identification
+        of a security at trading and settlement. This data is sourced from
+        multiple sources and will be provided if available.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53387:
+      name: CLIENT_SEC_REF
+      description: >-
+        Calcualtion Method indixates the calculation rule used to compute the
+        penalty. Values are CASH, MIXE, SECU, BOTH).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53388:
+      name: CLIENT_REF
+      description: >-
+        Number of Days is the number of days over which a late matching penalty
+        has been calculated.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53389:
+      name: TRADE_DT
+      description: Date when the trade was agreed on with counterparty.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-53390:
+      name: SEC_PEN_RT
+      description: Security penalty rate applied in the calculation of the penalty.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-53391:
+      name: CNTR_SETL_DT
+      description: >-
+        Penalty Type indicates whether the penalty is a late matching fail
+        penalty (LMFP) or a settlement fail penalty (SEFP).
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-53392:
+      name: POST_QTY
+      description: >-
+        Quantity provides the number of units, par value or nominal value (for
+        fixed income instruments), amount of currency (for FX transactions), or
+        number of shares. Indicates the contract quantity on the original
+        transaction that was given up.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-53393:
+      name: POST_AMT_CURR
+      description: Settlement Currency is the currency name for the Settlement Amount.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53394:
+      name: POST_AMT
+      description: Settlement Amount is the cash value of the trade in the market currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-53407:
+      name: RPT_PER_DT_START
+      description: >-
+        The date calculated based on the Period chosen as the start date for the
+        report.
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date-time
+    parameter-53408:
+      name: RPT_PER_DT_END
+      description: >-
+        The date calculated based on the Period chosen as the end date for the
+        report.
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date-time
+    parameter-53424:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53425:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53426:
+      name: CPRT_ACCT_SER_NAME
+      description: >-
+        Counterparty's Account Servicer/Depository is the name of the
+        counterparty's account servicer/depository.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53427:
+      name: RPT_PER_DT_START
+      description: >-
+        The date calculated based on the Period chosen as the start date for the
+        report.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-53428:
+      name: RPT_PER_DT_END
+      description: >-
+        The date calculated based on the Period chosen as the end date for the
+        report.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-53429:
+      name: CASH_ACCT_ID
+      description: >-
+        Cash Account ID is the account number for the cash account. It is unique
+        within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53430:
+      name: CPRT_NET_AMT_CURR
+      description: Net Amount Currency is the currency of the Net Amount.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53431:
+      name: AGGR_AMT
+      description: >-
+        The global net amount for a party is the sum of all cash penalties in
+        this currency that this party is entitled to receive minus the sum of
+        all cash penalties in this currency that are imposed to the party. A
+        positive amount indicates that the party will be credited with this
+        amount; a negative amount indicates that the amount will be debited.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-53432:
+      name: PFOD_MESG_ID
+      description: Reference of the penalty payment.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53433:
+      name: ACCT_SERVR_BIC
+      description: >-
+        Account Servicer/Depository BIC is the Bank Identifier code of the party
+        which administers the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53434:
+      name: CURRENCY
+      description: Currency in which the penalties are expressed.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53435:
+      name: RLTD_PARTY_BIC
+      description: >-
+        Identification of the party reported as party imposed with the penalties
+        reported or party credited with the penalty(ies).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53436:
+      name: PARTY_TYPE
+      description: Specifies the role of the party in the transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53437:
+      name: CPRT_BIC
+      description: >-
+        Counterparty BIC is the Bank Identifier code of the party imposed with
+        the penalties reported or party credited with the penalty(ies).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53438:
+      name: CPRT_TYPE
+      description: Specifies the role of the counterparty in the transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53439:
+      name: CPRT_NET_AMT
+      description: >-
+        The bilateral net amount for a party and counterpart will be the sum of
+        all cash penalties in this currency that this party is entitled to
+        receive (reported as credit) from the same counterpart (that is, to be
+        paid by this counterpart) minus the sum of all cash penalties in this
+        currency that are imposed to the party (reported as debit) and to be
+        paid to the given counterpart.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-53440:
+      name: COM_REF
+      description: >-
+        Common Reference is assigned by the market infrastructure (for example
+        T2S) to the penalty and that is common for both the failing and the
+        non-failing participant.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53441:
+      name: PENALTY_REF
+      description: >-
+        Reference is assigned by the market infrastructure to the penalty and is
+        the individual identification of the penalty for the relevant account
+        owner (that is, either for the failing participant or for the
+        non-failing participant).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53442:
+      name: PENALTY_TYP_CD
+      description: >-
+        Penalty Type indicates whether the penalty is a late matching fail
+        penalty (LMFP) or a settlement fail penalty (SEFP).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53443:
+      name: PENALTY_AMT_COMP
+      description: >-
+        Indicates whether or not the amount calculated for the reported penalty
+        will be added to the aggregated amounts at global level. There could be
+        several reasons for not considering the penalty amount. The flag is used
+        to indicate an exceptional situation. If the flag is not reported in the
+        message this means that the penalty is considered for the calculation of
+        aggregated amounts.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-53444:
+      name: PENALTY_AMT
+      description: >-
+        Penalty Amount is calculated based on the security and instruction
+        characteristics and the reason for the fail. For a Late Matching Fail
+        Penalty (LMFP) that spans several business days, this amount is the sum
+        of the amounts calculated for each applicable business day.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-53445:
+      name: CALC_METHOD
+      description: >-
+        Calcualtion Method indixates the calculation rule used to compute the
+        penalty. Values are CASH, MIXE, SECU, BOTH).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53446:
+      name: NBR_OF_DAYS
+      description: >-
+        Number of Days is the number of days over which a late matching penalty
+        has been calculated.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-53447:
+      name: ACCT_OWN_TX_ID
+      description: Reference assigned to the reported transaction by the account owner.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53448:
+      name: ACCT_SEC_TX_ID
+      description: Reference assigned to the reported transaction by the account servicer.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53449:
+      name: PROCESSOR_TX_ID
+      description: >-
+        Identification of the transaction assigned by the processor of the
+        instruction other than the account owner/the account servicer and the
+        market infrastructure.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53450:
+      name: MKT_INFR_TX_ID
+      description: >-
+        Identification of a transaction assigned by a market infrastructure
+        other than a central securities depository, for example,
+        Target2-Securities.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53451:
+      name: COMMON_ID
+      description: >-
+        Unique reference agreed upon by the Investment Manager and the
+        Broker/Dealer to identify the trade. This reference should be passed
+        down and up through the whole life cycle of the transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53452:
+      name: CORP_ACT_EV_ID
+      description: >-
+        Reference assigned by the account servicer to unambiguously identify a
+        related corporate action event.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53453:
+      name: RELATED_TX_ID
+      description: Reference of the linked message which was previously received.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53454:
+      name: PEN_PY_DT
+      description: >-
+        Payment Date is the date at which the last payment on the entitlement
+        was made. Or Date/time at which the movement is due to take place (cash
+        and/or securities).
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-53455:
+      name: CPRT_ACCT_SER_BIC
+      description: >-
+        Counterparty's Account Servicer/Depository BIC is the Bank Identifier of
+        the counterparty's account servicer/depository.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-53456:
+      name: PENALTY_DETEC_DT
+      description: >-
+        Penalty Detection Date is the day for which the penalty was computed.
+        /nIt is the date on which the instruction matched for Late Matching Fail
+        Penalty (LMFP) or the date on which an instruction fails to settle for
+        Settlement Fail Penalty (SEFP). /nNote: This date is not updated upon
+        re-calculation of the penalty and always relates to the business day for
+        which the penalty was initially computed.
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+    parameter-53457:
+      name: PENALTY_STATUS
+      description: >-
+        Penalty status is to check if penalty is active or inactive for a given
+        record.
+      in: query
+      required: true
+      schema:
+        type: string
+  securitySchemes:
+    client-Credential-Oauth-Security-Schema:
+      type: oauth2
+      description: This API uses OAuth 2 with the client credentials flow
+      flows:
+        clientCredentials:
+          tokenUrl: /markets/api/oauth2/token
+          scopes:
+            /dod: Access to Cash Balances Information
+paths:
+  /api/services/3de83cae-f7b8-4ba6-8f2f-4869ce6284e2/filter:
+    get:
+      summary: Daily Settlement Discipline Penalties
+      description: Daily Penalties Report
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-53373'
+        - $ref: '#/components/parameters/parameter-53374'
+        - $ref: '#/components/parameters/parameter-53375'
+        - $ref: '#/components/parameters/parameter-53376'
+        - $ref: '#/components/parameters/parameter-53377'
+        - $ref: '#/components/parameters/parameter-53378'
+        - $ref: '#/components/parameters/parameter-53379'
+        - $ref: '#/components/parameters/parameter-53380'
+        - $ref: '#/components/parameters/parameter-53381'
+        - $ref: '#/components/parameters/parameter-53382'
+        - $ref: '#/components/parameters/parameter-53383'
+        - $ref: '#/components/parameters/parameter-53384'
+        - $ref: '#/components/parameters/parameter-53385'
+        - $ref: '#/components/parameters/parameter-53386'
+        - $ref: '#/components/parameters/parameter-53387'
+        - $ref: '#/components/parameters/parameter-53388'
+        - $ref: '#/components/parameters/parameter-53389'
+        - $ref: '#/components/parameters/parameter-53390'
+        - $ref: '#/components/parameters/parameter-53391'
+        - $ref: '#/components/parameters/parameter-53392'
+        - $ref: '#/components/parameters/parameter-53393'
+        - $ref: '#/components/parameters/parameter-53394'
+        - $ref: '#/components/parameters/parameter-53395'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/3de83cae-f7b8-4ba6-8f2f-4869ce6284e2-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/3de83cae-f7b8-4ba6-8f2f-4869ce6284e2-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/4b1404f9-e30e-434d-aca0-151861edacf1/filter:
+    get:
+      summary: Monthly Settlement Discipline Penalties Breakdown
+      description: Monthly Penalties Breakdown Report
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-53424'
+        - $ref: '#/components/parameters/parameter-53425'
+        - $ref: '#/components/parameters/parameter-53426'
+        - $ref: '#/components/parameters/parameter-53427'
+        - $ref: '#/components/parameters/parameter-53428'
+        - $ref: '#/components/parameters/parameter-53429'
+        - $ref: '#/components/parameters/parameter-53430'
+        - $ref: '#/components/parameters/parameter-53431'
+        - $ref: '#/components/parameters/parameter-53432'
+        - $ref: '#/components/parameters/parameter-53433'
+        - $ref: '#/components/parameters/parameter-53434'
+        - $ref: '#/components/parameters/parameter-53435'
+        - $ref: '#/components/parameters/parameter-53436'
+        - $ref: '#/components/parameters/parameter-53437'
+        - $ref: '#/components/parameters/parameter-53438'
+        - $ref: '#/components/parameters/parameter-53439'
+        - $ref: '#/components/parameters/parameter-53440'
+        - $ref: '#/components/parameters/parameter-53441'
+        - $ref: '#/components/parameters/parameter-53442'
+        - $ref: '#/components/parameters/parameter-53443'
+        - $ref: '#/components/parameters/parameter-53444'
+        - $ref: '#/components/parameters/parameter-53445'
+        - $ref: '#/components/parameters/parameter-53446'
+        - $ref: '#/components/parameters/parameter-53447'
+        - $ref: '#/components/parameters/parameter-53448'
+        - $ref: '#/components/parameters/parameter-53449'
+        - $ref: '#/components/parameters/parameter-53450'
+        - $ref: '#/components/parameters/parameter-53451'
+        - $ref: '#/components/parameters/parameter-53452'
+        - $ref: '#/components/parameters/parameter-53453'
+        - $ref: '#/components/parameters/parameter-53454'
+        - $ref: '#/components/parameters/parameter-53455'
+        - $ref: '#/components/parameters/parameter-53456'
+        - $ref: '#/components/parameters/parameter-53457'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/4b1404f9-e30e-434d-aca0-151861edacf1-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/4b1404f9-e30e-434d-aca0-151861edacf1-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'

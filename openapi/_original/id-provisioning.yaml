@@ -1,0 +1,465 @@
+openapi: 3.0.0
+info:
+  description: >-
+    Retrieve VCA program details necessary to submit a request for a VCA.
+
+
+    Download our SDKs:
+
+
+    * [Python
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=python&apiTitle=all&isClientSecReq=true)
+
+    * [Java
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=java&apiTitle=all&isClientSecReq=true)
+
+    * [.Net
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=dotnet&apiTitle=all&isClientSecReq=true)
+
+    * [Ruby
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ruby&apiTitle=all&isClientSecReq=true)
+
+    * [NodeJS
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=nodejs&apiTitle=all&isClientSecReq=true)
+
+    * [Go
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=go&apiTitle=all&isClientSecReq=true)
+
+    * [CLI Tool
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ccapi-cli&apiTitle=all&isClientSecReq=true)
+
+
+    Note: You must be logged in to download the SDKs.
+  version: 1.0.0
+  title: VCA ID Provisioning
+  contact:
+    name: Global CitiConnect Support
+    email: citiconnectsupport@citi.com
+servers:
+  - url: https://tts.apib2b.citi.com/tts/cards/
+    description: production gateway URL
+  - url: https://tts.sandbox.apib2b.citi.com/tts/cards/
+    description: sandbox URL
+security:
+  - clientCredentials: []
+paths:
+  /vca/programdtls/v1/idprov:
+    post:
+      tags: []
+      summary: ID Provisioning
+      description: <br><font size='2'></font>
+      operationId: generateAuthReport_2
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports application/json
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          schema:
+            type: string
+        - name: Country
+          in: header
+          description: >-
+            Three-character length country code used during onboarding into
+            Citi.
+          required: true
+          schema:
+            type: string
+        - name: Region
+          in: header
+          description: >-
+            This value will be used by APIm to route to the respective Citi
+            backend instance.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: GenerateIdProvisioningRequest
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdProvRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdProvResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnAuthorizedResponse'
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechIssueResponse'
+components:
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.<br><br>Sandbox Token URL:
+        https://tts.sandbox.apib2b.citi.com/tts/api/oauth2/token<br>
+
+      type: oauth2
+      flows:
+        clientCredentials:
+          scopes:
+            /api: ''
+          tokenUrl: https://tts.apib2b.citi.com/tts/cards/api/oauth2/token
+  schemas:
+    BadRequestResponse:
+      type: object
+      properties:
+        messageId:
+          type: string
+          example: '1234'
+          description: >-
+            The requested `messageId` will be provided back in response. The ID
+            can be `used for investigation and troubleshooting`.
+        provisioningStatus:
+          type: string
+          description: The status of the provisioning made
+          enum:
+            - FAILED
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Errors'
+    Errors:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: The error code displayed while retrieving the transaction.
+          enum:
+            - ERC0001
+            - ERS0007
+            - ERS0064
+            - ERS0065
+            - ERS0066
+            - ERS0076
+            - ERC0002
+            - ERC0003
+            - MS0003
+            - MS0004
+            - MS0005
+            - MS0006
+            - GRC0002
+            - GRC0003
+            - GRC0004
+            - GRC0007
+            - GRC0011
+            - GRC0012
+            - GRC0013
+          example: GRC0003
+        errorDescription:
+          type: string
+          description: >-
+            The error description that corresponds to error code when there is
+            any error occurred while retrieving the
+            transaction.<br><br>message:<br>  * `ERC0001` - No ID Provisioning
+            data was found for the given Program Name: `{programName}`<br>  *
+            `ERS0007` - Invalid Message ID format<br>  * `ERS0064` - No ID
+            Provisioning data was found for the given Program Name:
+            `{programName}`<br>  * `ERS0065` - The required Program Name Field
+            was empty<br>  * `ERS0066` - The required Program Name Field count
+            exceeds the maximum limit<br>  * `ERS0076` - Client ID and/or
+            Program names are missing in Client Onboard Configuration setup.
+            Contact Citi support .<br>  * `ERC0002`  - We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments<br>  <br>  * `ERC0003`  - We have encountered an error and
+            couldn't receive your request. Please try again, or contact Citi
+            support if you have any further questions or comments<br>  *
+            `MS0003` - There was a problem retrieving the funding source data
+            for Program Name: `{programName}`<br>  * `MS0004` - There was a
+            problem retrieving ID provisioning data for Program Name:
+            `{programName}`<br>  * `MS0005` - There was a problem retrieving the
+            supplier data for the given Program Name: `{programName}`<br>  *
+            `MS0006` - Invalid vcaId value.<br>  * `GRC0002`  - Client ID is
+            missing in the request header<br>  <br>  * `GRC0003`  - Country code
+            is not available in the request<br>  <br>  * `GRC0004`  - Region ID
+            is not available in the request<br>  <br>  * `GRC0007`  - Client
+            requested MediaType is not supported.<br>  <br><br>  * `GRC0011`  -
+            Client ID and/or Country and/or region id is missing in Client
+            Onboard Configuration setup. Contact Citi support.<br>  <br>  *
+            `GRC0012`  - Necessary header value is missing<br>  <br>  *
+            `GRC0013`  - Invalid JSON Input<br>
+          example: Country code is not available in the request
+    IdProvRequest:
+      type: object
+      properties:
+        programName:
+          type: array
+          description: '`Company Name` as defined in the virtual cards system'
+          items:
+            type: string
+          maxItems: 5
+          minItems: 1
+          example:
+            - CITIBANK NA SINGAPORE VCN
+        messageId:
+          type: string
+          description: >-
+            Unique ID of the API message sent. The messageId will be provided
+            back in the corresponding response. The ID can be used for
+            investigation and troubleshooting. The ID must be unique per
+            integration.<br><br>`Rules:`<br><br>* Position 1- 4: Always
+            "CITI"<br><br>* Position 5-8 : unique identifier for the client.
+            This 4 character to be decided by Citi during client
+            integration<br><br>* Position 9 - 24: Timestamp including
+            milliseconds<br><br>* Position 25 - 28: Randomly generated value
+            from the client<br><br>* Position 29 - 36: To be reserved for future
+            use
+          minLength: 28
+          maxLength: 36
+          example: KN98420IdProvIDKNAM1647511593723
+    IdProvResponse:
+      type: object
+      properties:
+        messageId:
+          type: string
+          example: '1234'
+          description: >-
+            Unique ID of the API message sent. The `messageId` will be provided
+            back in the corresponding response. The ID can be `used for
+            investigation and troubleshooting`. The ID must be unique per
+            integration.
+        provisioningStatus:
+          type: string
+          description: |2-
+             The status of your provisioning request.
+
+             **Note:** a response of ``200: OK`` indicates only that your request is properly formed and has been successfully received. It is possible to receive a response of ``200: OK`` without successfully completing the provisioning.
+
+             See ``provisioningStatus`` for more information.
+          enum:
+            - COMPLETED
+            - PARTIALLY COMPLETED
+            - FAILED
+          example: COMPLETED
+        warningMessage:
+          type: string
+          description: >-
+            Citi API Platform onboarding was not successful. 
+
+            Please retry once. If you continue to receive this message please\
+
+            contact Citi Support for assistance.
+
+
+            **Note:** You will receive this message only if the provisionStatus
+            is ``Partially Completed`` or ``Failed``.
+          example: >-
+            Citi API Platform onboarding was not successful. Please retry once.
+            If you continue to receive this message please contact Citi Support
+            for assistance.
+        programDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProgramDetails'
+    FundingSourceDetails:
+      type: object
+      properties:
+        fundingSourceId:
+          type: integer
+          format: int64
+          description: >-
+            Unique identifier of the funding source to which the virtual card
+            rolls up.
+          example: 15510
+        fundingSourceName:
+          type: string
+          description: >-
+            Descriptive name of the real card to which the virtual card rolls
+            up.
+          example: APAC UAT GRACE TEST1
+    PaymentBeneficiaryDetails:
+      type: object
+      properties:
+        paymentBeneficiaryId:
+          type: integer
+          format: int64
+          description: >-
+            Uniquely identifies the payment beneficiary id for which the virtual
+            card is created.
+          example: 20122
+        paymentBeneficiaryName:
+          type: string
+          description: >-
+            Uniquely identifies the payment beneficiary name for which the
+            virtual card is created.
+          example: Test Company Supplier 2
+    ProgramDetails:
+      type: object
+      properties:
+        programName:
+          type: string
+          description: Company Name as defined in the virtual cards system.
+          example: INDRALOK INFOWAY
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+          example: '433161'
+        status:
+          type: string
+          description: >-
+            Defines the status of the data that was requested whether the
+            request has been processed or not.
+          enum:
+            - COMPLETED
+            - FAILED
+          example: COMPLETED
+        fundingSourceDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/FundingSourceDetails'
+        purchaseTemplates:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseTemplates'
+        paymentBeneficiaryDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentBeneficiaryDetails'
+        error:
+          $ref: '#/components/schemas/Errors'
+    PurchaseTemplates:
+      type: object
+      properties:
+        templateId:
+          type: integer
+          format: int64
+          description: >-
+            Identifies the template id that was setup in the VCA system and that
+            should be used for this virtual card.
+          example: 24694
+        templateName:
+          type: string
+          description: >-
+            Identifies the template name that was setup in the VCA system and
+            that should be used for this virtual card.
+          example: GRACE Test Template 2
+        templateDescription:
+          type: string
+          description: >-
+            Identifies the template description that was setup in the VCA system
+            and that should be used for this virtual card.
+          example: GRACE Test Template 2
+    MethodNotAllowedResponse:
+      type: object
+      properties:
+        path:
+          type: string
+          description: Requested resource path is available
+        error:
+          type: string
+          description: Method Not Allowed
+        message:
+          type: string
+          description: Detail error message with HTTP request operation type
+        timestamp:
+          type: string
+          description: Citi rejected timestamp
+        status:
+          type: string
+          description: '405'
+    UnAuthorizedResponse:
+      type: object
+      properties:
+        httpCode:
+          type: string
+          description: '401'
+        httpMessage:
+          type: string
+          description: Unauthorized
+        moreInformation:
+          type: string
+          description: >-
+            Client ID and/or Country and/or region id is missing in Client
+            Onboard Configuration setup. Contact Citi support.
+    TechIssueResponse:
+      type: object
+      properties:
+        messageId:
+          type: string
+          description: >-
+            The requested `messageId` will be provided back in response. The ID
+            can be `used for investigation and troubleshooting`.
+        provisioningStatus:
+          type: string
+          description: The status of the provisioning made
+          enum:
+            - FAILED
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechErrors'
+    TechErrors:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: >-
+            The error code if there is any error occurred while technical issue
+            is occurred in system
+          enum:
+            - ERC0002
+            - ERS0049
+            - GRC0001
+            - GRC0005
+            - GRC0006
+            - GRC0009
+            - GRC0014
+        errorDescription:
+          type: string
+          description: >-
+            The error description that corresponds to error code when there is
+            any error occurred while retrieving the transaction.<br><br>  *
+            `ERC0002` - We have encountered an error and couldn't receive your
+            request. Please try again, or contact Citi support if you have any
+            further questions or comments<br>  <br>  * `ERS0049` - We have
+            encountered an error and couldn't receive your request. Please try
+            again, or contact Citi support if you have any further questions or
+            comments<br><br>  * `GRC0001` - We have encountered an error and
+            couldn't receive your request. Please try again, or contact Citi
+            support if you have any further questions or comments<br><br>  *
+            `GRC0005` - We have encountered an error and couldn't receive your
+            request. Please try again, or contact Citi support if you have any
+            further questions or comments<br>  <br>  * `GRC0006`  - We have
+            encountered an error and couldn't receive your request. Please try
+            again, or contact Citi support if you have any further questions or
+            comments<br>  <br>  * `GRC0009`  - We have encountered an error and
+            couldn't receive your request. Please try again, or contact Citi
+            support if you have any further questions or comments<br>  <br>  *
+            `GRC0014`  - We have encountered an error and couldn't receive your
+            request. Please try again, or contact Citi support if you have any
+            further questions or comments<br>

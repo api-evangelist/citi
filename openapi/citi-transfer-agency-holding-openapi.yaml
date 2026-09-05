@@ -1,0 +1,512 @@
+openapi: 3.1.0
+info:
+  title: Transfer Agency Holding
+  description: >
+    The Transfer Agency Holding API provides programmatic access to investor
+    holding and balance data  maintained on the Transfer Agency register. It
+    allows applications to retrieve current share balances  and associated
+    valuation details for a specified value date, supporting End‑of‑Day and near
+    real-time  use cases. The API supports efficient reconciliation, oversight
+    activities, and near real-time tracking  of investor positions.
+
+    Download our SDKs:
+
+    * [Python
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=python&apiTitle=all&isClientSecReq=true)
+
+    * [Java
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=java&apiTitle=all&isClientSecReq=true)
+
+    * [.Net
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=dotnet&apiTitle=all&isClientSecReq=true)
+
+    * [Ruby
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ruby&apiTitle=all&isClientSecReq=true)
+
+    * [NodeJS
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=nodejs&apiTitle=all&isClientSecReq=true)
+
+    * [Go
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=go&apiTitle=all&isClientSecReq=true)
+
+     * [CLI Tool
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ccapi-cli&apiTitle=all&isClientSecReq=true)
+
+    Note: You must be logged in to download the SDKs.
+  version: v2.0.0
+servers:
+  - url: >-
+      https://sit.b2b.api.icg.citi.com/citiconnect/sit5/iis/api/funds/transferagency
+    description: dev gateway url
+  - url: >-
+      https://sandbox.b2b.api.icg.citi.com/citiconnect/sb/iis/api/funds/transferagency
+    description: sandbox url
+  - url: https://b2b.api.icg.citi.com/citiconnect/prod/iis/api/funds/transferagency
+    description: production gateway url
+paths:
+  /v1/holdings/{fundManagerId}:
+    get:
+      tags:
+        - Holdings
+      summary: Query current holdings across various funds and asset classes.
+      description: Query current holdings across various funds and asset classes.
+      operationId: getAccountHoldings
+      parameters:
+        - $ref: '#/components/parameters/Client-Id'
+        - $ref: '#/components/parameters/Trade-Date'
+        - $ref: '#/components/parameters/Account-Id'
+        - $ref: '#/components/parameters/Fund-Manager-Id'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: OK
+          headers:
+            x-request-id:
+              $ref: '#/components/headers/x-request-id'
+            pagination-metadata:
+              $ref: '#/components/headers/pagination-metadata'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Get-Investor-Account-Holdings-Response'
+              example:
+                fundManagerId: FM123
+                accountsHoldings:
+                  - accountId: ACCT123
+                    holdings:
+                      - fundCode: FC001
+                        shareClassCode: SCC001
+                        shareClassCurrency: USD
+                        isin: US1234567890
+                        cusip: '123456789'
+                        sedol: B000000
+                        shareBalanceAmount: 100.5
+                        shareBalanceValue: 1500.75
+                        valuationPrice: 15
+                        tradeDate: '2023-01-15'
+                        settledBalanceAmount: 100.5
+                        estimatedBalanceAmount: 100.5
+                        group1Units: 50.25
+                        group2Units: 50.25
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - oAuth2:
+            - /authenticationservices/v1
+components:
+  parameters:
+    Client-Id:
+      description: >-
+        Your unique identification, the same one you use for OAuth token
+        generation, was shared with you by Citi during the CitiConnect API
+        integration.
+      name: client_id
+      in: query
+      required: true
+      schema:
+        type: string
+      example: '54563213246'
+    Fund-Manager-Id:
+      name: fundManagerId
+      in: path
+      required: true
+      description: The unique identifier for Fund Manager.
+      schema:
+        type: string
+      example: FM001
+    Inverstor-Id:
+      name: investorId
+      in: query
+      required: false
+      description: The unique identifier for Investor.
+      schema:
+        type: string
+    Inverstor-Status:
+      name: investorStatus
+      in: query
+      required: false
+      description: Indicated whether an investor is Active, Inactive or Closed.
+      schema:
+        type: string
+        enum:
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+    Account-Id:
+      name: accountId
+      in: query
+      description: The unique ID for a trading Account linked to an Investor.
+      schema:
+        type: string
+    Account-Status:
+      name: accountStatus
+      in: query
+      required: false
+      description: Indicates if the account is Active, Inactive or Closed.
+      schema:
+        type: string
+        enum:
+          - ACTIVE
+          - INACTIVE
+          - CLOSED
+    Trade-Date:
+      name: tradeDate
+      in: query
+      required: true
+      description: >-
+        The trade date the transaction actually received on the system. If a
+        trade missed cut-off this date is the next available business date after
+        the Booking Date. Date in ISO format(YYYY-MM-DD)
+      schema:
+        type: string
+        format: date
+    From-Trade-Date:
+      name: fromTradeDate
+      in: query
+      required: true
+      description: >-
+        The trade date the transaction actually received on the system. If a
+        trade missed cut-off this date is the next available business date after
+        the Booking Date. Date in ISO format(YYYY-MM-DD)
+      schema:
+        type: string
+        format: date
+    To-Trade-Date:
+      name: toTradeDate
+      in: query
+      required: true
+      description: >-
+        The trade date the transaction actually received on the system. If a
+        trade missed cut-off this date is the next available business date after
+        the Booking Date. Date in ISO format(YYYY-MM-DD)
+      schema:
+        type: string
+        format: date
+    Offset:
+      name: offset
+      in: query
+      description: Offset records by a given number (optional).
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+    Limit:
+      name: limit
+      in: query
+      description: The maximum number of records to return.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 5000
+  headers:
+    x-request-id:
+      description: >-
+        Unique system-generated reference number generated by Citi. Use this
+        number when reporting an issue to a Citi representative in case of any
+        discrepancy.
+      schema:
+        type: string
+        maxLength: 36
+        minLength: 1
+        title: APIGEE GUID
+        examples:
+          - 6c29faa6-8e39-4829-b8ce-0ffa32c1a96c
+    pagination-metadata:
+      description: >-
+        <br> current_page: current page number<br> total_page: Total number of
+        pages available for your request<br> page_size: Total number of records
+        available in the current page<br> has_more: Any more messages or records
+        expected
+      schema:
+        type: string
+        title: Pagination Metadata
+        xml:
+          name: paginationMetadata
+        examples:
+          - current_page: 2
+            total_pages: 10
+            page_size: 100
+            has_more: true
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  examples:
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+          - issue: path-param fundManagerId is mandatory and it cannot be empty
+            action: please provide valid value for fundManagerId
+            code: VC00010
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+          - issue: Resource that you are searching is not found
+            action: Please use valid resource details
+            code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+          - issue: Method not supported
+            action: please use valid http verb
+            code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+  schemas:
+    Error-Response:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errors:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Error-Detail:
+      type: object
+      title: Error Detail
+      xml:
+        name: errors
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+    Accounts-Holdings:
+      title: AccountsHoldings
+      type: object
+      properties:
+        accountId:
+          title: Account ID
+          type: string
+          description: Provide the unique ID for a trading Account linked to an Investor.
+          maxLength: 35
+        holdings:
+          title: Holdings
+          type: array
+          items:
+            $ref: '#/components/schemas/Holdings-Response'
+      additionalProperties: false
+    Get-Investor-Account-Holdings-Response:
+      title: GetInvestorAccountHoldingsResponse
+      type: object
+      properties:
+        fundManagerId:
+          title: Fund Manager ID
+          type: string
+          description: Provides the unique identifier for Fund Manager
+          maxLength: 32
+        accountsHoldings:
+          title: Accounts Holdings
+          type: array
+          items:
+            $ref: '#/components/schemas/Accounts-Holdings'
+      additionalProperties: false
+    Holdings-Response:
+      title: HoldingsResponse
+      type: object
+      properties:
+        fundCode:
+          title: Fund Code
+          type: string
+          description: Fund Code identifier.
+          maxLength: 35
+        shareClassCode:
+          title: Share Class Code
+          type: string
+          description: Share Class Code identifier.
+          maxLength: 35
+        shareClassCurrency:
+          title: Share Class Currency
+          type: string
+          description: The Share Class currency, in ISO4217.
+          maxLength: 32
+        isin:
+          title: ISIN
+          type: string
+          description: The Share Class ISIN - primary Share Class identifier.
+          maxLength: 32
+        cusip:
+          title: CUSIP
+          type: string
+          description: The Share Class CUSIP.
+          maxLength: 32
+        sedol:
+          title: SEDOL
+          type: string
+          description: The Share Class SEDOL.
+          maxLength: 32
+        shareBalanceAmount:
+          title: Share Balance Amount
+          type: number
+          format: double
+          description: The current shareholder share balance.
+        shareBalanceValue:
+          title: Share Balance Value
+          type: number
+          format: double
+          description: The current shareholder share value.
+        valuationPrice:
+          title: Valuation Price
+          type: number
+          format: double
+          description: The current Valuation Price.
+        tradeDate:
+          title: Trade Date
+          type: string
+          format: date
+          description: >-
+            The trade date the transaction actually received on the system. If a
+            trade missed cut-off this date is the next available business date
+            after the Booking Date.
+        settledBalanceAmount:
+          title: Settled Balance Amount
+          type: number
+          format: double
+          description: The settled balance of the holding.
+        estimatedBalanceAmount:
+          title: Estimated Balance Amount
+          type: number
+          format: double
+          description: >-
+            The estimated balance of the holding e.g. the unsettled holding
+            amount.
+        group1Units:
+          title: Group 1 Units
+          type: number
+          format: double
+          description: >-
+            The number of units that a shareholder holds that fall under the
+            Group 1 category.
+        group2Units:
+          title: Group 2 Units
+          type: number
+          format: double
+          description: >-
+            The number of units that a shareholder holds that fall under the
+            Group 2 category.
+      additionalProperties: false
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Grant read-only access to IIS Funds TA apis
+tags:
+  - name: Holdings
+    description: Operations related to Holdings

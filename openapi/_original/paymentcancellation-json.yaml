@@ -1,0 +1,333 @@
+swagger: '2.0'
+info:
+  description: >-
+    The FI Payment APIs lets you reconfirm or cancel payment requests against FI
+    payments in payment insight.
+
+
+    Download our SDKs:
+
+
+    * [Python
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=python&apiTitle=all&isClientSecReq=true)
+
+    * [Java
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=java&apiTitle=all&isClientSecReq=true)
+
+    * [.Net
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=dotnet&apiTitle=all&isClientSecReq=true)
+
+    * [Ruby
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ruby&apiTitle=all&isClientSecReq=true)
+
+    * [NodeJS
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=nodejs&apiTitle=all&isClientSecReq=true)
+
+    * [Go
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=go&apiTitle=all&isClientSecReq=true)
+
+    * [CLI Tool
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ccapi-cli&apiTitle=all&isClientSecReq=true)
+
+
+    Note: You must be logged in to download the SDKs.
+  version: 3.0.0
+  title: FI Payment Services
+security:
+  - clientCredentials: []
+servers:
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/paymentservices/v3
+    description: production gateway URL
+  - url: https://tts.apib2b.citi.com/citiconnect/sb/paymentservices/v3
+    description: sandbox URL
+paths:
+  /payments/stops:
+    post:
+      summary: Payment Cancellation
+      description: >-
+        This API specification document provides descriptions of the request and
+        response parameters for JSON content.<br><br> The FI cancellation API
+        lets you stop or recall payment requests against FI payments in payment
+        insight. It supports custom JSON & ISO XML (camt.056.001.09) format.
+        Initiating an FI Cancellation API using the CitiConnect API requires a
+        well-defined POST request where you can specify the endpoint URL to call
+        the API. Additionally, you need to specify the values for input
+        parameters in the body of your JSON/XML document. Finally, you will
+        encrypt the payload, place it in your request and send it via your
+        application.
+      operationId: FICancellationAPI
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for OAuth token
+            generation
+          type: string
+        - name: Content-type
+          in: header
+          description: Supports \"application/json\".
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          type: string
+        - name: request_type
+          description: Operation name. The possible value for this header is STOP_REQUEST.
+          in: header
+          required: true
+          type: string
+        - name: FICancellationRequest
+          in: body
+          description: Describes the request body.
+          required: true
+          schema:
+            $ref: '#/definitions/fi_cancellation_request'
+      responses:
+        '200':
+          description: OK > Success response
+          schema:
+            $ref: '#/definitions/fi_cancellation_response'
+          examples:
+            application/json:
+              transaction_status:
+                status: ACCP
+                type: >-
+                  Your request has been registered. We will notify you once the
+                  transaction is stopped/recalled.
+        '400':
+          description: BAD REQUEST
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/json:
+              status: FAILED
+              http_code: 400
+              errors:
+                - issue: uetr/citi_reference/instruction_id cannot be null or empty.
+                  action: >-
+                    Please provide valid value for either UETR or
+                    (citi_reference/instruction_id with
+                    interbank_settlement_date).
+        '401':
+          description: UNAUTHORIZED
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/json:
+              status: FAILED
+              http_code: 401
+              errors:
+                - issue: Authorization failed.
+                  action: Please try again with valid credentials.
+        '404':
+          description: NOT FOUND
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/json:
+              status: FAILED
+              http_code: 404
+              errors:
+                - issue: Not found
+                  action: Please check the URL and try again later.
+        '405':
+          description: METHOD NOT ALLOWED
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/json:
+              status: FAILED
+              http_code: 405
+              errors:
+                - issue: Method not allowed.
+                  action: Please use valid HTTP supported verb only.
+        '415':
+          description: FORBIDDEN
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/json:
+              status: FAILED
+              http_code: 415
+              errors:
+                - issue: Provided content-type of the request is not valid.
+                  action: Resend request in valid format.
+        '500':
+          description: INTERNAL SERVER ERROR
+          schema:
+            $ref: '#/definitions/error_response'
+          examples:
+            application/json:
+              status: FAILED
+              http_code: 500
+              errors:
+                - issue: Unable to process your request at this moment.
+                  action: Please try again after sometime.
+      security:
+        - clientCredentials: []
+definitions:
+  fi_cancellation_request:
+    type: object
+    properties:
+      uetr:
+        type: string
+        format: uuid
+        description: >-
+          Unique End-to-end Transaction Reference (UETR) relating to a payment
+          has been identified as being associated with a Request for
+          Cancellation. It should follow UUID version 4 format. UETR or
+          citi_reference with interbank_settlement_date or end_to_end_id /
+          instruction_id with interbank_settlement_date is mandatory.
+        minLength: 1
+        maxLength: 32
+      citi_reference:
+        type: string
+        description: >-
+          This parameter specifies the product processor reference number for
+          the transaction that needs to be cancelled or recalled. UETR or
+          citi_reference with interbank_settlement_date or end_to_end_id /
+          instruction_id with interbank_settlement_date is mandatory.
+        maxLength: 32
+      end_to_end_id:
+        type: string
+        description: >-
+          This is a unique end-to-end reference number that identifies a
+          transaction that needs to be cancelled. UETR or citi_reference with
+          interbank_settlement_date or end_to_end_id / instruction_id with
+          interbank_settlement_date is mandatory.
+        maxLength: 16
+      instruction_id:
+        type: string
+        description: >-
+          This is a unique end-to-end instruction id that identifies a
+          transaction that needs to be cancelled. UETR or citi_reference with
+          interbank_settlement_date or end_to_end_id / instruction_id with
+          interbank_settlement_date is mandatory.
+        maxLength: 16
+      interbank_settlement_date:
+        type: string
+        description: >-
+          This parameter specifies the value date (yyyy-MM-dd) of the original
+          transaction that needs to be cancelled or recalled (the date on which
+          funds were credited to the account).
+        format: date
+      reason:
+        type: string
+        description: >-
+          This is the four digits cancellation code (Example - DUPL) which is
+          specified by the customer to request to cancel the transaction.
+        maxLength: 4
+      reason_description:
+        type: string
+        description: >-
+          Further details on the request reason. Required for CUST and MS03
+          reason codes applicable to Stop services.
+        maxLength: 150
+    required:
+      - reason
+  fi_cancellation_response:
+    type: object
+    description: Describes the response body in custom JSON format.
+    properties:
+      transaction_status:
+        $ref: '#/definitions/transaction_status_detail'
+  transaction_status_detail:
+    type: object
+    properties:
+      status:
+        type: string
+        description: >-
+          This parameter indicates the status of the cancel/recall request with
+          set of values. for example - ACCP for Accepted or RJCT for Rejected.
+        maxLength: 4
+      type:
+        type: string
+        description: >-
+          This parameter provides additional information of the transaction when
+          it is rejected/accepted.
+        maxLength: 500
+  error_response:
+    type: object
+    description: Error response body.
+    properties:
+      status:
+        type: string
+        description: >-
+          This parameter indicates the status of the reconfirm/reject or
+          cancel/recall request with set of values. for example- FAILED.
+        maxLength: 6
+      http_code:
+        type: integer
+        description: Indicates http status code to specify http response. status
+        format: int32
+        pattern: ^[0-9]{3}$
+      errors:
+        type: array
+        description: >-
+          Indicates actual error details with issues and corresponding actions
+          to resolve the issue.
+        items:
+          $ref: '#/definitions/ErrorDetail'
+        xml:
+          wrapped: true
+  ErrorDetail:
+    type: object
+    properties:
+      issue:
+        type: string
+        description: More details about the issue.
+        maxLength: 200
+      action:
+        type: string
+        description: Corrective action to be taken to resolve above issue.
+        maxLength: 350
+    xml:
+      name: error
+components:
+  parameters:
+    client_id:
+      in: query
+      name: client_id
+      required: true
+      description: >-
+        This is your unique identifier shared during your CitiConnect API
+        onboarding. This is the same `client_id` used for oauth token generation
+      schema:
+        type: string
+    contentType:
+      in: header
+      name: Content-Type
+      description: Supports \"application/json\".
+      required: true
+      schema:
+        type: string
+    authorization:
+      in: header
+      name: Authorization
+      description: The OAuth Token prefixed with "Bearer" and space in between.
+      required: true
+      schema:
+        type: string
+securityDefinitions:
+  clientCredentials:
+    description: >+
+      All CitiConnect APIs use the oAuth2 authentication scheme, which requires
+      a bearer token to authenticate your API call. The Token URL includes the
+      version of authentication used by this API. See <a
+      href="../../authentication/authentication-api-reference/"
+      target="_blank">the Citi Authentication API reference</a> for information
+      on requesting a token.
+
+    type: oauth2
+    tokenUrl: >-
+      https://tts.sit.apib2b.citi.com/citiconnect/sit5/authenticationservices/v3/oauth/token
+    flow: application
+    scopes: null

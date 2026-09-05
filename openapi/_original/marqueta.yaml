@@ -1,0 +1,2529 @@
+swagger: '2.0'
+info:
+  description: >-
+    The Wallets API allows client to check the eligibility, request for
+    tokenization through manual and push-provisioning, OTP based step-up
+    authentication and webhook notifications.
+  version: ''
+  title: Grace Wallet Marqeta API
+servers:
+  - url: https://tts.apib2b.citi.com/tts/cards
+    description: production gateway URL
+  - url: https://tts.sandbox.apib2b.citi.com/tts/cards
+    description: sandbox URL
+tags:
+  - name: Provisioning
+    description: These are operations related to provisioning requests.
+  - name: Webhooks
+    description: Operation related to webhook requests.
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - clientCredentials: []
+paths:
+  /digitalwalletprovision/v1/initialeligibilitycheck:
+    post:
+      tags:
+        - Provisioning
+      summary: Check Eligibility
+      description: ''
+      operationId: initialEligibilityCheck
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          type: string
+        - name: Content-Type
+          in: header
+          description: Supports application/json.
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: >-
+            Request should contain OAuth Authorization header <br> **OAuth:**
+            <br> Request contains a header parameter in the form of
+            Authorization: Bearer (access_token), where access_token is
+            generated using the OAuth url<br>  `Example` : Bearer
+            AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4
+          required: true
+          type: string
+        - name: Accept
+          in: header
+          description: >-
+            Content-Types that are acceptable for the response. Always pass
+            application/json or don't pass this header.
+          required: false
+          type: string
+          default: application/json
+        - name: Accept-Language
+          in: header
+          description: List of acceptable human languages for response.
+          required: false
+          type: string
+        - name: Content-Type
+          in: header
+          description: >-
+            The MIME type of the body of the request (POST). Always pass
+            application/json.
+          required: true
+          type: string
+          default: application/json
+        - name: Req-Sys-Id
+          in: header
+          description: >-
+            Client unique ID to identify the particular request. <br> `Format`:
+            UUID <br>`Example`: 123d837e-958a-4e9f-bc97-4843ec948123
+          required: true
+          type: string
+        - name: Country
+          in: header
+          description: 'Country Code in alpha-2 format. <br>`Example`: US'
+          required: true
+          type: string
+        - name: Region
+          in: header
+          description: 'Country Region. <br> `Example`: NAM'
+          required: true
+          type: string
+        - in: body
+          name: Request-Body
+          description: Initial Eligibility Request Body
+          required: true
+          schema:
+            $ref: '#/definitions/InitialEligibilityCheckRequest'
+      responses:
+        '200':
+          description: Success Response after initial eligibility check.
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi commercial cards API tracking ID.
+          schema:
+            $ref: '#/definitions/InitialEligibilityCheckResponse'
+        '400':
+          description: >-
+            Missing or invalid request parameter <table><tr><td>Error
+            Code</td><td>Error Description</td></tr>
+            <tr><td>WIEM0001</td><td>primary_account_number is
+            mandatory</td></tr> <tr><td>WIEM0002</td><td>primary_account_number
+            length should contain a min of 12 character and a max of 19
+            digits</td></tr> <tr><td>WIEM0003</td><td>primary_account_number is
+            invalid and can only have numeric values</td></tr>
+            <tr><td>WIEM0004</td><td>pan_reference_id length should contain a
+            min of 1 character and a max of 255 characters</td></tr>
+            <tr><td>WIEM0005</td><td>token_reference_id is mandatory</td></tr>
+            <tr><td>WIEM0006</td><td>token_reference_id length should contain a
+            max of 255 characters</td></tr> <tr><td>WIEM0007</td><td>pan_source
+            is mandatory</td></tr> <tr><td>WIEM0008</td><td>pan_source is
+            invalid and can only have a value of KEY_ENTERED, ON_FILE, or
+            MOBILE_BANKING_APP</td></tr>
+            <tr><td>WIEM0009</td><td>token_requestor_id is mandatory</td></tr>
+            <tr><td>WIEM0010</td><td>token_requestor_id is invalid and can only
+            have a value of 40010075001, 40010030273, 50110030273 or
+            50120834693</td></tr> <tr><td>WIEA0013</td><td>We have encountered
+            an error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WIEA0014</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WIEA0015</td><td>Invalid Token Requestor
+            Id</td></tr><br><tr><td>GRC0002</td><td>Client ID is missing in the
+            request header</td></tr> <tr><td>GRC0003</td><td>Invalid JSON
+            Input</td></tr> <tr><td>GRC0004</td><td>Region ID is not available
+            in the request</td></tr> <tr><td>GRC0005</td><td>Client Tracking ID
+            is missing in the request header</td></tr>
+            <tr><td>GRC0007</td><td>Client requested MediaType is not
+            supported.</td></tr> <tr><td>GRC0008</td><td>Invalid request. Unable
+            to bind incoming request</td></tr> <tr><td>GRC0010</td><td>Client
+            Tracking ID length should contain a min of 1 character and a max of
+            36 characters</td></tr> <tr><td>GRC0016</td><td>Country code is not
+            available in the request</td></tr> <tr><td>WEIM0001</td><td>We have
+            encountered an error and couldn't receive your request. Please try
+            again, or contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0005</td><td>Encrypted data is
+            null/empty. Please try again, or contact Citi support if you have
+            any further questions or comments.</td></tr>
+            <tr><td>WEIC0001</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID.
+          schema:
+            $ref: '#/definitions/InvalidInitialEligibilityCheckResponse'
+        '401':
+          description: UnAuthorized request.
+          schema:
+            $ref: '#/definitions/UnAuthorizedResponse'
+        '405':
+          description: Method Not Allowed.
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID.
+          schema:
+            $ref: '#/definitions/MethodNotAllowedResponse'
+        '500':
+          description: >-
+            Internal server error. <table><tr><td>Error Code</td><td>Error
+            Description</td></tr> <tr><td>WIEA0011</td><td>We have encountered
+            an error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr><br><tr><td>GRC0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0009</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0014</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0015</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0003</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0004</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0005</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0006</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0021</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0004</td><td>We have encountered
+            error during Marqeta JWE Decryption. Please try again, or contact
+            Citi support if you have any further questions or comments</td></tr>
+            <tr><td>WEIC0002</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WEIC0003</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WEUL0002</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>ECSA0002</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>ECSA0007</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID.
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+  /digitalwalletprovision/v1/tokenactivationrequest:
+    post:
+      tags:
+        - Provisioning
+      summary: Token Activation Request
+      description: ''
+      operationId: tokenActivationRequest
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          type: string
+        - name: Content-Type
+          in: header
+          description: Supports application/json.
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: >-
+            Request should contain OAuth Authorization header <br> **OAuth:**
+            <br> Request contains a header parameter in the form of
+            Authorization: Bearer (access_token), where access_token is
+            generated using the OAuth url<br>  `Example` : Bearer
+            AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4
+          required: true
+          type: string
+        - name: Accept
+          in: header
+          description: >-
+            Content-Types that are acceptable for the response. Always pass
+            application/json.
+          required: true
+          type: string
+          default: application/json
+        - name: Accept-Language
+          in: header
+          description: List of acceptable human languages for response.
+          required: false
+          type: string
+        - name: Content-Type
+          in: header
+          description: >-
+            The MIME type of the body of the request (used with POST and PUT
+            requests). Always pass application/json.
+          required: false
+          type: string
+          default: application/json
+        - name: Req-Sys-Id
+          in: header
+          description: Client unique ID to identify the particular request
+          required: true
+          type: string
+        - name: Country
+          in: header
+          description: 'Country Code in alpha-2 format. Example: US'
+          required: true
+          type: string
+        - name: Region
+          in: header
+          description: 'Country Region. Example: NAM'
+          required: true
+          type: string
+        - in: body
+          name: TokenActivationRequest
+          description: TokenActivationRequest
+          required: true
+          schema:
+            $ref: '#/definitions/TokenActivationRequest'
+      responses:
+        '200':
+          description: >-
+            <table><tr><td>Code</td><td>Details</td></tr><tr><tr><td>TokenActivation</td><td>Success
+            Response after Token Activation decisioning</td></tr></table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID.
+          schema:
+            $ref: '#/definitions/TokenActivationResponse'
+        '400':
+          description: >-
+            System cannot process the request due to something that is perceived
+            to be a client error (`For example`: malformed request syntax,
+            invalid request message framing, or deceptive request routing)
+            <table><tr><td>Error Code</td><td>Error Description</td></tr>
+            <tr><td>WTAM0001</td><td>token is mandatory</td></tr>
+            <tr><td>WTAM0002</td><td>token length should contain a max of 36
+            characters</td></tr> <tr><td>WTAM0003</td><td>wallet account id is
+            mandatory</td></tr> <tr><td>WTAM0004</td><td>wallet account id
+            length should contain a max of 255 characters</td></tr>
+            <tr><td>WTAM0005</td><td>pan_source is mandatory and can only have a
+            value of KEY_ENTERED,ON_FILE,MOBILE_BANKING_APP</td></tr>
+            <tr><td>WTAM0006</td><td>primary_account_number is
+            mandatory</td></tr> <tr><td>WTAM0007</td><td>primary_account_number
+            length should contain a min of 12 character and a max of 19
+            digits</td></tr> <tr><td>WTAM0008</td><td>primary_account_number is
+            invalid and can only have numeric values</td></tr>
+            <tr><td>WTAM0009</td><td>expiry month is mandatory</td></tr>
+            <tr><td>WTAM0010</td><td>expiry month length should contain a min
+            and max of 2 characters</td></tr> <tr><td>WTAM0011</td><td>expiry
+            year is mandatory</td></tr> <tr><td>WTAM0012</td><td>expiry year
+            length should contain a min and max of 4 characters</td></tr>
+            <tr><td>WTAM0013</td><td>cvv2 is mandatory</td></tr>
+            <tr><td>WTAM0014</td><td>pan_reference_id is mandatory</td></tr>
+            <tr><td>WTAM0015</td><td>pan_reference_id length should contain a
+            max of 255 characters</td></tr>
+            <tr><td>WTAM0016</td><td>token_reference_id length should contain a
+            max of 255 characters</td></tr>
+            <tr><td>WTAM0017</td><td>correlation_id length should contain a max
+            of 14 characters</td></tr> <tr><td>WTAM0018</td><td>device_id is
+            mandatory</td></tr> <tr><td>WTAM0019</td><td>device_id length should
+            contain a max of 255 characters</td></tr>
+            <tr><td>WTAM0020</td><td>token_requestor_id is can only have a value
+            of 40010075001, 40010030273, 50110030273 or 50120834693</td></tr>
+            <tr><td>WTAM0021</td><td>token_requestor_id length should contain a
+            max of 50 characters</td></tr> <tr><td>WTAM0022</td><td>Token
+            Reference ID is mandatory for VISA Card Provisioning request for
+            Marqeta.</td></tr> <tr><td>WTAM0023</td><td>Correlation ID is
+            mandatory for Master Card Provisioning request for
+            Marqeta.</td></tr> <tr><td>WTAM0024</td><td>token_type is mandatory
+            and can only have a value of MERCHANT_CARD_ON_FILE,
+            DEVICE_SECURE_ELEMENT, DEVICE_CLOUD_BASED, ECOMMERCE_DIGITAL_WALLET
+            or PSEUDO_ACCOUNT</td></tr> <tr><td>WPRA0001</td><td>Invalid
+            Source</td></tr> <tr><td>WPRA0003</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WPRA0004</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WPRA0005</td><td>Provisioning type id is
+            invalid</td></tr> <tr><td>WPRA0006</td><td>Pan source is
+            invalid</td></tr> <tr><td>WPRA0007</td><td>Device id is
+            invalid</td></tr> <tr><td>WPRA0008</td><td>Token Requestor id is
+            invalid</td></tr> <tr><td>WPRA0009</td><td>Wallet Account id for
+            provisioning is invalid</td></tr> <tr><td>WPRA0010</td><td>Marqeta
+            DPAN Reference id for provisioning is invalid</td></tr>
+            <tr><td>WPRA0011</td><td>Network PAN Reference id for provisioning
+            is invalid</td></tr> <tr><td>WPRA0012</td><td>Token Type for
+            provisioning is invalid</td></tr> <tr><td>WPRA0013</td><td>PAN
+            Expiry month is invalid</td></tr> <tr><td>WPRA0014</td><td>PAN
+            Expiry year is invalid</td></tr> <tr><td>WPRA0015</td><td>PAN
+            Encrypted CVV for provisioning is invalid</td></tr>
+            <tr><td>WPRA0016</td><td>Network Token Reference id for provisioning
+            is invalid</td></tr> <tr><td>WPRA0017</td><td>Correlation id for
+            provisioning is invalid</td></tr> <tr><td>GRC0002</td><td>Client ID
+            is missing in the request header</td></tr>
+            <tr><td>GRC0003</td><td>Invalid JSON Input</td></tr>
+            <tr><td>GRC0004</td><td>Region ID is not available in the
+            request</td></tr> <tr><td>GRC0005</td><td>Client Tracking ID is
+            missing in the request header</td></tr>
+            <tr><td>GRC0007</td><td>Client requested MediaType is not
+            supported.</td></tr> <tr><td>GRC0008</td><td>Invalid request. Unable
+            to bind incoming request</td></tr> <tr><td>GRC0010</td><td>Client
+            Tracking ID length should contain a min of 1 character and a max of
+            36 characters</td></tr> <tr><td>GRC0016</td><td>Country code is not
+            available in the request</td></tr> <tr><td>WEIM0001</td><td>We have
+            encountered an error and couldn't receive your request. Please try
+            again, or contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0005</td><td>Encrypted data is
+            null/empty. Please try again, or contact Citi support if you have
+            any further questions or comments.</td></tr>
+            <tr><td>WEIC0001</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/InvalidTokenActivationResponse'
+        '401':
+          description: >-
+            <table><tr><td>UnAuthorizedResponse</td><td>UnAuthorized
+            request.</td></tr></table>
+          schema:
+            $ref: '#/definitions/UnAuthorizedResponse'
+        '405':
+          description: >-
+            <table><tr><td>MethodNotAllowedResponse</td><td>Method Not
+            Allowed.</td></tr></table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/MethodNotAllowedResponse'
+        '500':
+          description: >-
+            Internal server error. <table><tr><td>Error Code</td><td>Error
+            Description</td></tr> <tr><td>WPRA0002</td><td>We have encountered
+            an error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0009</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0014</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0015</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0003</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0004</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0005</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0006</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0021</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0004</td><td>We have encountered
+            error during Marqeta JWE Decryption. Please try again, or contact
+            Citi support if you have any further questions or comments</td></tr>
+            <tr><td>WEIC0002</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WEIC0003</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WEUL0002</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>ECSA0002</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>ECSA0007</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+  /digitalwalletwebhooks/v1/digitalwallettoken:
+    post:
+      tags:
+        - Webhooks
+      summary: Digital Wallet Token
+      description: ''
+      operationId: digitalWalletToken
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          type: string
+        - name: Content-Type
+          in: header
+          description: Supports application/json.
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: >-
+            Request should contain OAuth Authorization header <br> **OAuth:**
+            <br> Request contains a header parameter in the form of
+            Authorization: Bearer (access_token), where access_token is
+            generated using the OAuth url<br>  `Example` : Bearer
+            AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4
+          required: true
+          type: string
+        - name: Accept
+          in: header
+          description: >-
+            Content-Types that are acceptable for the response. Always pass
+            application/json or don't pass this header.
+          required: false
+          type: string
+          default: application/json
+        - name: Accept-Language
+          in: header
+          description: List of acceptable human languages for response.
+          required: false
+          type: string
+        - name: Content-Type
+          in: header
+          description: >-
+            The MIME type of the body of the request (POST). Always pass
+            application/json.
+          required: true
+          type: string
+          default: application/json
+        - name: Req-Sys-Id
+          in: header
+          description: >-
+            Client unique ID to identify the particular request. <br> `Format`:
+            UUID <br>`Example`: 123d837e-958a-4e9f-bc97-4843ec948123
+          required: true
+          type: string
+        - name: Country
+          in: header
+          description: 'Country Code in alpha-2 format. <br>`Example`: US'
+          required: true
+          type: string
+        - name: Region
+          in: header
+          description: 'Country Region. <br> `Example`: NAM'
+          required: true
+          type: string
+        - in: body
+          name: Request-Body
+          description: Webhook token event Request Body
+          required: true
+          schema:
+            $ref: '#/definitions/Webhook%5fDigitalWalletToken%5fArray%5fType'
+      responses:
+        '200':
+          description: Success Response after Webhook Token Event
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+        '400':
+          description: >-
+            Missing or invalid request parameter <table><tr><td>Error
+            Code</td><td>Error Description</td></tr>
+            <tr><td>WWAA0001</td><td>Marqeta FPAN ID is invalid</td></tr>
+            <tr><td>WWAA0003</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WWAA0004</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WWAA0005</td><td>Event Type is invalid</td></tr>
+            <tr><td>WWAA0006</td><td>Fulfilment status is invalid</td></tr>
+            <tr><td>WWAA0007</td><td>Marqeta DPAN Reference Id is
+            empty</td></tr> <tr><td>WWAA0008</td><td>Notification ID is
+            invalid</td></tr> <tr><td>WWAA0009</td><td>Marqeta DPAN Reference Id
+            is invalid</td></tr> <tr><td>WWAA0010</td><td>Number of notification
+            in array is invalid</td></tr> <tr><td>WWAA0011</td><td>DPAN number
+            is invalid</td></tr> <tr><td>WWAA0012</td><td>Token Requestor Id is
+            invalid</td></tr> <tr><td>WWAA0013</td><td>FPAN is
+            invalid</td></tr><br><tr><td>GRC0002</td><td>Client ID is missing in
+            the request header</td></tr> <tr><td>GRC0003</td><td>Invalid JSON
+            Input</td></tr> <tr><td>GRC0004</td><td>Region ID is not available
+            in the request</td></tr> <tr><td>GRC0005</td><td>Client Tracking ID
+            is missing in the request header</td></tr>
+            <tr><td>GRC0007</td><td>Client requested MediaType is not
+            supported.</td></tr> <tr><td>GRC0008</td><td>Invalid request. Unable
+            to bind incoming request</td></tr> <tr><td>GRC0010</td><td>Client
+            Tracking ID length should contain a min of 1 character and a max of
+            36 characters</td></tr> <tr><td>GRC0016</td><td>Country code is not
+            available in the request</td></tr> <tr><td>WEIM0001</td><td>We have
+            encountered an error and couldn't receive your request. Please try
+            again, or contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0005</td><td>Encrypted data is
+            null/empty. Please try again, or contact Citi support if you have
+            any further questions or comments.</td></tr>
+            <tr><td>WEIC0001</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/WebhookErrorResponse'
+        '401':
+          description: UnAuthorized request.
+          schema:
+            $ref: '#/definitions/UnAuthorizedResponse'
+        '405':
+          description: Method Not Allowed.
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/MethodNotAllowedResponse'
+        '500':
+          description: >-
+            Internal server error. <table><tr><td>Error Code</td><td>Error
+            Description</td></tr> <tr><td>WWAA0002</td><td>We have encountered
+            an error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WWAM0014</td><td>webhooks notification
+            should have min and max of 1 item in an
+            array</td></tr><br><tr><td>GRC0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0009</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0014</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0015</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0003</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0004</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0005</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0006</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0021</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0004</td><td>We have encountered
+            error during Marqeta JWE Decryption. Please try again, or contact
+            Citi support if you have any further questions or comments</td></tr>
+            <tr><td>WEIC0002</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WEIC0003</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WEUL0002</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>ECSA0002</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>ECSA0007</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+  /digitalwalletwebhooks/v1/digitalwallettokentransition:
+    post:
+      tags:
+        - Webhooks
+      summary: Digital Wallet Token Transition
+      description: ''
+      operationId: digitalWalletTokenTransition
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          type: string
+        - name: Content-Type
+          in: header
+          description: Supports application/json.
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: >-
+            Request should contain OAuth Authorization header <br> **OAuth:**
+            <br> Request contains a header parameter in the form of
+            Authorization: Bearer (access_token), where access_token is
+            generated using the OAuth url<br>  `Example` : Bearer
+            AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4
+          required: true
+          type: string
+        - name: Accept
+          in: header
+          description: >-
+            Content-Types that are acceptable for the response. Always pass
+            application/json or dont pass this header.
+          required: false
+          type: string
+          default: application/json
+        - name: Accept-Language
+          in: header
+          description: List of acceptable human languages for response.
+          required: false
+          type: string
+        - name: Content-Type
+          in: header
+          description: >-
+            The MIME type of the body of the request (POST). Always pass
+            application/json.
+          required: true
+          type: string
+          default: application/json
+        - name: Req-Sys-Id
+          in: header
+          description: >-
+            Client unique ID to identify the particular request. <br> `Format`:
+            UUID <br>`Example`: 123d837e-958a-4e9f-bc97-4843ec948123
+          required: true
+          type: string
+        - name: Country
+          in: header
+          description: 'Country Code in alpha-2 format. <br>`Example`: US'
+          required: true
+          type: string
+        - name: Region
+          in: header
+          description: 'Country Region. <br> `Example`: NAM'
+          required: true
+          type: string
+        - in: body
+          name: WebhooksTokenTransitionRequest
+          description: Webhook token event Request Body
+          required: true
+          schema:
+            $ref: >-
+              #/definitions/Webhook%5fDigitalWalletTokenTransition%5fArray%5fType
+      responses:
+        '200':
+          description: Success Response after Webhook Token Transition
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+        '400':
+          description: >-
+            Missing or invalid request parameter <table><tr><td>Error
+            Code</td><td>Error Description</td></tr>
+            <tr><td>WWTA0001</td><td>Event Type is invalid</td></tr>
+            <tr><td>WWTA0003</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WWTA0004</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WWTA0005</td><td>Fulfilment status is invalid</td></tr>
+            <tr><td>WWTA0006</td><td>Token state is invalid</td></tr>
+            <tr><td>WWTA0007</td><td>Notification ID is invalid</td></tr>
+            <tr><td>WWTA0008</td><td>Marqeta DPAN Reference Id is
+            invalid</td></tr> <tr><td>WWTA0009</td><td>Marqeta DPAN Reference Id
+            is empty</td></tr> <tr><td>WWTA0010</td><td>Transition channel is
+            invalid</td></tr> <tr><td>WWTA0011</td><td>Webhook creation
+            timestamp is invalid</td></tr> <tr><td>WWTA0012</td><td>Number of
+            notifications in array is invalid</td></tr>
+            <tr><td>WWTA0013</td><td>Token requestor Id is invalid</td></tr>
+            <tr><td>WWTA0014</td><td>FPAN is
+            invalid</td></tr><br><tr><td>GRC0002</td><td>Client ID is missing in
+            the request header</td></tr> <tr><td>GRC0003</td><td>Invalid JSON
+            Input</td></tr> <tr><td>GRC0004</td><td>Region ID is not available
+            in the request</td></tr> <tr><td>GRC0005</td><td>Client Tracking ID
+            is missing in the request header</td></tr>
+            <tr><td>GRC0007</td><td>Client requested MediaType is not
+            supported.</td></tr> <tr><td>GRC0008</td><td>Invalid request. Unable
+            to bind incoming request</td></tr> <tr><td>GRC0010</td><td>Client
+            Tracking ID length should contain a min of 1 character and a max of
+            36 characters</td></tr> <tr><td>GRC0016</td><td>Country code is not
+            available in the request</td></tr> <tr><td>WEIM0001</td><td>We have
+            encountered an error and couldn't receive your request. Please try
+            again, or contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIC0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/WebhookErrorResponse'
+        '401':
+          description: UnAuthorized request.
+          schema:
+            $ref: '#/definitions/UnAuthorizedResponse'
+        '405':
+          description: Method Not Allowed.
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/MethodNotAllowedResponse'
+        '500':
+          description: >-
+            Internal server error. <table><tr><td>Error Code</td><td>Error
+            Description</td></tr> <tr><td>WWTA0002</td><td>We have encountered
+            an error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WWTA0015</td><td>webhooks notification
+            should have min and max of 1 item in an
+            array</td></tr><br><tr><td>GRC0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0009</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0014</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0015</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0003</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0004</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0005</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0006</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0021</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIC0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIC0003</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEUL0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>ECSA0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>ECSA0007</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+  /digitalwalletprovision/v1/sendpasscode:
+    post:
+      tags:
+        - Provisioning
+      summary: Send Passcode
+      description: ''
+      operationId: sendPassCode
+      parameters:
+        - name: Authorization
+          in: header
+          description: >-
+            Request should contain OAuth Authorization header <br> **OAuth:**
+            <br> Request contains a header parameter in the form of
+            Authorization: Bearer (access_token), where access_token is
+            generated using the OAuth url<br>  `Example` : Bearer
+            AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4
+          required: true
+          type: string
+        - name: Accept
+          in: header
+          description: >-
+            Content-Types that are acceptable for the response. Always pass
+            application/json or dont pass this header.
+          required: false
+          type: string
+          default: application/json
+        - name: Accept-Language
+          in: header
+          description: List of acceptable human languages for response.
+          required: false
+          type: string
+        - name: Content-Type
+          in: header
+          description: >-
+            The MIME type of the body of the request (POST). Always pass
+            application/json.
+          required: true
+          type: string
+          default: application/json
+        - name: Req-Sys-Id
+          in: header
+          description: >-
+            Client unique ID to identify the particular request. <br> `Format`:
+            UUID <br>`Example`: 123d837e-958a-4e9f-bc97-4843ec948123
+          required: true
+          type: string
+        - name: Country
+          in: header
+          description: 'Country Code in alpha-2 format. <br>`Example`: US'
+          required: true
+          type: string
+        - name: Region
+          in: header
+          description: 'Country Region. <br> `Example`: NAM'
+          required: true
+          type: string
+        - in: body
+          name: Request-Body
+          description: Send Pass Code Request Body
+          required: true
+          schema:
+            $ref: '#/definitions/SendPassCodeMarqetaRequest'
+      responses:
+        '200':
+          description: Success Response after Send Pass Code
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+        '400':
+          description: >-
+            Missing or invalid request parameter <table><tr><td>Error
+            Code</td><td>Error Description</td></tr>
+            <tr><td>WSPM0001</td><td>otp_code is mandatory</td></tr>
+            <tr><td>WSPM0002</td><td>otp_code length should contain a min of 6
+            digits and a max of 50 digits</td></tr>
+            <tr><td>WSPM0003</td><td>card_token is mandatory</td></tr>
+            <tr><td>WSPM0004</td><td>card_token length should contain a min of 1
+            character and a max of 36 characters</td></tr>
+            <tr><td>WSPM0005</td><td>token_requestor_name is mandatory</td></tr>
+            <tr><td>WSPM0006</td><td>token_requestor_name is invalid and can
+            only have a value of APPLE_PAY or GOOGLE_PAY</td></tr>
+            <tr><td>WSPM0007</td><td>stepup_type is mandatory</td></tr>
+            <tr><td>WSPM0008</td><td>stepup_type is invalid and can only have a
+            value of OTP_SMS</td></tr> <tr><td>WSPM0009</td><td>stepup_value is
+            mandatory</td></tr> <tr><td>WSPM0010</td><td>stepup_value length
+            should contain a min of 1 digit and a max of 100 digits</td></tr>
+            <tr><td>WSPA0011</td><td>Marqeta FPAN ID is invalid</td></tr>
+            <tr><td>WSPA0013</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WSPA0014</td><td>We have encountered an error and couldn't
+            receive your request. Please try again, or contact Citi support if
+            you have any further questions or comments</td></tr>
+            <tr><td>WSPA0015</td><td>Token requestor name is invalid</td></tr>
+            <tr><td>WSPA0016</td><td>Step up type is invalid</td></tr>
+            <tr><td>WSPA0017</td><td>OTP is invalid</td></tr>
+            <tr><td>WSPA0018</td><td>Phone number is invalid</td></tr>
+            <tr><td>WSPA0019</td><td>Phone number is in Embargo</td></tr>
+            <tr><td>WSPA0020</td><td>Phone number is not available in
+            Database</td></tr> <tr><td>WSPA0021</td><td>Step up value is
+            invalid</td></tr> <tr><td>WSPA0021</td><td>Step up value is
+            invalid</td></tr> <tr><td>WSPA0022</td><td>OTP is  not
+            delivered</td></tr> <tr><td>GRC0003</td><td>Invalid JSON
+            Input</td></tr> <tr><td>GRC0004</td><td>Region ID is not available
+            in the request</td></tr> <tr><td>GRC0005</td><td>Client Tracking ID
+            is missing in the request header</td></tr>
+            <tr><td>GRC0007</td><td>Client requested MediaType is not
+            supported.</td></tr> <tr><td>GRC0008</td><td>Invalid request. Unable
+            to bind incoming request</td></tr> <tr><td>GRC0010</td><td>Client
+            Tracking ID length should contain a min of 1 character and a max of
+            36 characters</td></tr> <tr><td>GRC0016</td><td>Country code is not
+            available in the request</td></tr> <tr><td>WEIM0001</td><td>We have
+            encountered an error and couldn't receive your request. Please try
+            again, or contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIC0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/InvalidSendPassCodeResponse'
+        '401':
+          description: UnAuthorized request.
+          schema:
+            $ref: '#/definitions/UnAuthorizedResponse'
+        '405':
+          description: >-
+            <table><tr><td>MethodNotAllowedResponse</td><td>Method Not
+            Allowed.</td></tr></table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/MethodNotAllowedResponse'
+        '500':
+          description: >-
+            Internal server error. <table><tr><td>Error Code</td><td>Error
+            Description</td></tr> <tr><td>WSPA0012</td><td>We have encountered
+            an error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0009</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0014</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRC0015</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0001</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0003</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0004</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0005</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0006</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>GRVL0021</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIM0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIC0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEIC0003</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>WEUL0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>ECSA0002</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> <tr><td>ECSA0007</td><td>We have encountered an
+            error and couldn't receive your request. Please try again, or
+            contact Citi support if you have any further questions or
+            comments</td></tr> </table>
+          headers:
+            Api-Sys-Id:
+              type: string
+              description: Citi Commercial Cards API Tracking ID
+          schema:
+            $ref: '#/definitions/InternalServerErrorResponse'
+securityDefinitions:
+  clientCredentials:
+    description: >+
+      All CitiConnect APIs use the oAuth2 authentication scheme, which requires
+      a bearer token to authenticate your API call. The Token URL includes the
+      version of authentication used by this API. See <a
+      href="../../authentication/authentication-api-reference/"
+      target="_blank">the Citi Authentication API reference</a> for information
+      on requesting a token.
+
+    type: oauth2
+    tokenUrl: https://tts.apib2b.citi.com/tts/cards/api/v1/oauth2/token
+    flow: application
+    scopes: null
+definitions:
+  InitialEligibilityCheckRequest:
+    type: object
+    required:
+      - encrypted_data
+      - wallet_provider_profile
+    properties:
+      encrypted_data:
+        type: string
+        description: >-
+          Encrypted Card data for initial eligibility check (encrypted value
+          should align with card_token_service_provider_dtls schema)
+      card_service_provider_dtls:
+        $ref: '#/definitions/card%5ftoken%5fservice%5fprovider%5fdtls'
+      wallet_provider_profile:
+        $ref: '#/definitions/WalletProviderProfile'
+  WalletProviderProfile:
+    type: object
+    required:
+      - pan_source
+    properties:
+      pan_source:
+        type: string
+        example: MOBILE_BANKING_APP
+        description: >-
+          Possible values are
+          <br><br>KEY_ENTERED<br>ON_FILE<br>MOBILE_BANKING_APP
+    description: Wallet Provider profile data for initial eligibility check
+  card_token_service_provider_dtls:
+    type: object
+    required:
+      - card_data
+      - token_service_provider
+    properties:
+      card_data:
+        $ref: '#/definitions/CardData'
+      token_service_provider:
+        $ref: '#/definitions/TokenServiceProvider'
+    description: >-
+      card_token_service_provider_dtls is the schema for the encrypted payload.
+      This schema should not be part of the request payload in plain text.
+      `card_token_service_provider_dtls` schema describes the structure and the
+      parameters that should be part of the encrypted data.
+  CardData:
+    type: object
+    required:
+      - primary_account_number
+    properties:
+      primary_account_number:
+        type: string
+        example: '4255000075555000'
+        description: >-
+          Account number of the card that is being tokenized. Typically expected
+          to be 16 digits.
+        minLength: 12
+        maxLength: 19
+        pattern: \d+
+    description: Card data for initial eligibility check
+  TokenServiceProvider:
+    type: object
+    required:
+      - token_reference_id
+      - token_requestor_id
+    properties:
+      pan_reference_id:
+        type: string
+        example: V-123343434343434
+        description: >-
+          Network reference id for the PAN being tokenized. Note: For VISA,
+          pan_reference_id remains the same for multiple tokens created on a
+          single PAN. However for MASTERCARD, pan_reference_id remains the same
+          for multiple tokens created on a single PAN on the same wallet. Can be
+          used to verify existing tokens on the device through the wallet API.
+        minLength: 1
+        maxLength: 255
+      token_reference_id:
+        type: string
+        example: DNITHE343434343459
+        description: >-
+          ID to correlate the digital wallet token with the network. Primary
+          identifier for Visa. This value is not populated until token is active
+          for Mastercard.
+        minLength: 0
+        maxLength: 255
+      token_requestor_id:
+        type: string
+        example: '40010075001'
+        description: >-
+          Id associated with the token requestor. Differs by
+          network.<br><br>Possible values
+          are<br>40010075001<br>40010030273<br>50110030273<br>50120834693
+        minLength: 1
+        maxLength: 50
+      token_requestor_name:
+        type: string
+        example: APPLE_PAY
+        description: >-
+          Pseudo customer friendly name for the token requestor. For
+          programmatic purposes, use token requestor id which is not subject to
+          change.
+        minLength: 1
+        maxLength: 100
+    description: Token Service Provider details for initial eligibility check.
+  InternalServerErrorResponse:
+    type: object
+    required:
+      - errors
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ErrorMessage'
+        minItems: 1
+  UnAuthorizedResponse:
+    type: object
+    required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+    properties:
+      httpCode:
+        type: string
+        example: '401'
+        description: Error code to be sent to the client.
+        minLength: 1
+        maxLength: 10
+      httpMessage:
+        type: string
+        example: Unauthorized
+        description: Error message to be sent to the client.
+        minLength: 1
+        maxLength: 255
+      moreInformation:
+        type: string
+        example: Access Denied
+        description: More details related to the error to be sent to the client.
+        minLength: 1
+        maxLength: 255
+  MethodNotAllowedResponse:
+    type: object
+    required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+    properties:
+      httpCode:
+        type: string
+        example: '405'
+        description: Error code to be sent to the client.
+        minLength: 1
+        maxLength: 10
+      httpMessage:
+        type: string
+        example: Method Not Allowed
+        description: Error message to be sent to the client.
+        minLength: 1
+        maxLength: 255
+      moreInformation:
+        type: string
+        example: Requested HTTP operation is not supported
+        description: More details related to the error to be sent to the client.
+        minLength: 1
+        maxLength: 255
+  ErrorMessage:
+    type: object
+    required:
+      - errorCode
+      - errorDescription
+    properties:
+      errorCode:
+        type: string
+        description: Error code to be sent to the client,
+        minLength: 1
+        maxLength: 10
+      errorDescription:
+        type: string
+        description: Error description to be sent to the client.
+        minLength: 1
+        maxLength: 255
+    description: List of error code and description to be sent to the client.
+  InvalidInitialEligibilityCheckResponse:
+    type: object
+    required:
+      - errors
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ErrorMessage'
+        minItems: 1
+  InitialEligibilityCheckResponse:
+    type: object
+    required:
+      - issuer_decision_reason
+      - issuer_eligibility_decision
+    properties:
+      issuer_eligibility_decision:
+        type: string
+        description: The outcome of the decision for the provision request.
+        enum:
+          - APPROVE
+          - DECLINE
+      issuer_decision_reason:
+        type: string
+        description: The reason for the outcome of the decision for the provision request.
+        maxLength: 255
+        enum:
+          - APPROVED
+          - DECLINE_NOTELIGIBLE
+          - DECLINE_CARDEXPIRED
+          - DECLINE_INVALIDPAN
+          - DECLINE_INVALID_CVV2
+          - DECLINE_INVALID_EXPIRY_DATE
+          - DECLINE_ADDRESS_VERIFICATION_FAILED
+          - DECLINE_OTHER, DECLINE_GATEWAY_ERROR
+          - DECLINE_CONFIG
+      card_art_id:
+        type: string
+        example: Token Activation
+        description: >-
+          Optional card_art_id which will specify subsequent metadata to be used
+          during the request (T+C, card art, etc). Known as `profileID` by Visa.
+        maxLength: 255
+  TokenActivationRequest:
+    type: object
+    required:
+      - digital_wallet_token
+      - encrypted_data
+      - issuer_risk_assessment
+      - wallet_provider_profile
+    properties:
+      digital_wallet_token:
+        $ref: '#/definitions/digital%5fwallet%5ftoken%5fhash'
+      issuer_risk_assessment:
+        $ref: '#/definitions/issuer%5frisk%5fassessment'
+      wallet_provider_profile:
+        $ref: '#/definitions/wallet%5fprovider%5fprofile'
+      encrypted_data:
+        type: string
+        description: >-
+          Encrypted data for token activation (encrypted value should align with
+          card_details schema) using JWE/JWS algorithim.
+      card_details:
+        $ref: '#/definitions/card%5fdetails'
+  card_details:
+    type: object
+    properties:
+      card_data:
+        $ref: '#/definitions/tar%5fcard%5fdata'
+      token_service_provider:
+        $ref: '#/definitions/tar%5ftoken%5fservice%5fprovider'
+      device:
+        $ref: '#/definitions/tar%5fdevice'
+      address_verification:
+        $ref: '#/definitions/address%5fverification'
+    description: >-
+      card_details is the schema for the encrypted payload. This schema should
+      not be part of the request payload in plain text. card_details schema
+      describes the structure and the parameters that should be part of the
+      encrypted data.
+  tar_card_data:
+    type: object
+    required:
+      - expiration_date
+      - primary_account_number
+    properties:
+      primary_account_number:
+        type: string
+        example: '412333434343434'
+        description: >-
+          Account number of the card that is being tokenized. Typically expected
+          to be 16 digits.
+        minLength: 12
+        maxLength: 19
+        pattern: \d+
+      expiration_date:
+        $ref: '#/definitions/ExpiryDate'
+      cvv2:
+        type: string
+        example: '123'
+        description: >-
+          Card Verificiation Value (CVV2) as provided by end user. Not present
+          for all use cases. Either Cvv2 or encryptedCvv2 will be provided
+          depending on your configuration.
+        minLength: 0
+        maxLength: 4
+      encryptedCvv2:
+        $ref: '#/definitions/encrypted%5fcvv2'
+      encryptedCvv2_type:
+        type: string
+        description: >-
+          Denotes the encryption scheme used. For JWE, Encrypted CVV2 encrypted
+          using A256GCM and formatted in JWE direct encryption format as
+          described here:
+          https://connect2id.com/products/nimbus-jose-jwt/examples/jwe-with-shared-key.
+          For 3DES, the encrypted value is hex encoded. Only present if
+          encryptedCvv2 is also present
+  encrypted_cvv2:
+    type: object
+    required:
+      - cvv2
+    properties:
+      cvv2:
+        type: string
+        example: 22E28A8924923753
+        description: >-
+          Card Verificiation Value (CVV2) as provided by end user. Not present
+          for all use cases.  Either Cvv2 or encryptedCvv2 will be provided
+          depending on your configuration.
+        minLength: 0
+        maxLength: 4
+    description: >-
+      Encrypted CVV2 encrypted using A256GCM and formatted in JWE direct
+      encryption format as described here:
+      https://connect2id.com/products/nimbus-jose-jwt/examples/jwe-with-shared-key
+  tar_token_service_provider:
+    type: object
+    required:
+      - pan_reference_id
+      - token_requestor_id
+      - token_requestor_name
+      - token_type
+    properties:
+      pan_reference_id:
+        type: string
+        example: V-123343434343434
+        description: >-
+          Network reference id for the PAN being tokenized.  Note: For VISA,
+          pan_reference_id remains the same for multiple tokens created on a
+          single PAN. However for Mastercard, pan_reference_id remains the same
+          for multiple tokens created on a single PAN on the same wallet.  Can
+          be used to verify existing tokens on the device through the wallet
+          api. Value persists across pans if pan swap is used. Similar but not
+          identical to PAR.
+        minLength: 1
+        maxLength: 255
+      token_reference_id:
+        type: string
+        example: DNITHE343434343459
+        description: >-
+          Id to correlate the digital wallet token with the network.  Primary
+          identifier for Visa. This value is not populated until token is active
+          for Mastercard.
+        minLength: 0
+        maxLength: 255
+      correlation_id:
+        type: string
+        example: D454545432
+        description: >-
+          Id to correlate the digital wallet token with the network.  Primary
+          identifier for Mastercard.
+        minLength: 0
+        maxLength: 14
+      token_requestor_id:
+        type: string
+        example: '40010075001'
+        description: Id associated with the token requestor.  Differs by network
+        minLength: 1
+        maxLength: 50
+      token_requestor_name:
+        type: string
+        example: APPLE_PAY
+        description: >-
+          Pseudo customer friendly name for the token requestor. For
+          programmatic purposes, use token requestor id which is not subject to
+          change.
+        minLength: 1
+        maxLength: 100
+      token_type:
+        type: string
+        example: DEVICE_SECURE_ELEMENT
+        minLength: 1
+        maxLength: 255
+        enum:
+          - MERCHANT_CARD_ON_FILE
+          - DEVICE_SECURE_ELEMENT
+          - DEVICE_CLOUD_BASED
+          - ECOMMERCE_DIGITAL_WALLET
+          - PSEUDO_ACCOUNT
+      token_score:
+        type: string
+        example: '10'
+        description: >-
+          Token Score as set by the network. Its the network computed risk
+          score. Possible VISA values (0-99). Can be presented with or without
+          leading 0
+        minLength: 0
+        maxLength: 25
+      token_eligibility_decision:
+        type: string
+        description: >-
+          The token service provider's (typically the network's) recommendation
+          as to whether the digital wallet token should be provisioned. Visa
+          only and as 2021, Visa will auto decline based on rule decision are
+          decline
+        minLength: 0
+        maxLength: 50
+        enum:
+          - DECISION_RED
+          - DECISION_YELLOW
+          - DECISION_GREEN
+  tar_device:
+    type: object
+    required:
+      - type
+    properties:
+      type:
+        type: string
+        description: Type of device used for tokenization.
+        minLength: 1
+        maxLength: 255
+        enum:
+          - UNKNOWN
+          - MOBILE_PHONE
+          - TABLET
+          - WATCH
+          - MOBILE_PHONE_OR_TABLET
+          - PERSONAL_COMPUTER
+          - VEHICLE
+          - APPLIANCE
+          - LAPTOP
+          - GAMING_DEVICE
+          - UNRECOGNIZED
+      device_id:
+        type: string
+        example: 123B45a
+        description: >-
+          Id of the device. This is blank for non-device bound tokens like
+          e-commerce type.
+        maxLength: 255
+      phone_number:
+        type: string
+        example: '4489'
+        description: >-
+          Phone number of the device. Can be null. Note: Can be the full phone
+          number(including country code) or last 4 digits depending on the
+          wallet provider.
+        maxLength: 20
+      name:
+        type: string
+        example: >-
+          /U0001f32e/U0001f32e/U0001f32eJohn's
+          iPhone/U0001f973/U0001f973/U0001f973
+        description: >-
+          Device name. Can be in UTF-8 byte and contain special characters like
+          emojis
+        maxLength: 128
+      location:
+        type: string
+        example: +45.1/-23.1
+        description: >-
+          Location of the device at the time of the tokenization request. May
+          not always be present and accuracy may vary.
+        minLength: 0
+        maxLength: 25
+      ip_address:
+        type: string
+        example: 1.1.1.1
+        description: IPV4 address of the device at the time of provisioning.
+        minLength: 0
+        maxLength: 25
+      language_code:
+        type: string
+        example: eng
+        description: >-
+          Language code of the device as set by the user if provided by the
+          wallet service provider.
+        maxLength: 36
+  address_verification:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Cardholder name.
+        minLength: 0
+        maxLength: 255
+      street_address:
+        type: string
+        description: Street address used for address verification.
+        minLength: 0
+        maxLength: 255
+      postal_code:
+        type: string
+        description: Postal code used for address verification.
+        minLength: 0
+        maxLength: 50
+  ExpiryDate:
+    type: object
+    required:
+      - month
+      - year
+    properties:
+      month:
+        type: string
+        format: MM
+        example: '01'
+      year:
+        type: string
+        format: yyyy
+        example: '2024'
+  digital_wallet_token_hash:
+    type: object
+    required:
+      - token
+    properties:
+      token:
+        type: string
+        example: 3f21058b-6da2-408f-8bf1-41a0fe79f554
+        description: Marqeta identifier for the digital wallet token.
+        minLength: 1
+        maxLength: 36
+    description: Marqeta identifier for the digital wallet token.
+  issuer_risk_assessment:
+    type: object
+    required:
+      - issuer_decision
+    properties:
+      issuer_decision:
+        type: string
+        example: APPROVE
+        description: Token Provisioning request issuer risk assessment decision.
+        minLength: 1
+        maxLength: 255
+        enum:
+          - APPROVE
+          - REQUIRE_FURTHER_AUTHENTICATION
+          - DECLINE
+      reason:
+        type: string
+        example: RISK_RULES
+        description: >-
+          Token Provisioning request reason for issuer risk assessment decision.
+          Future values should be accepted without change.
+        minLength: 1
+        maxLength: 255
+        enum:
+          - RISK_RULES
+    description: Token Provisioning request issuer risk assessment.
+  wallet_provider_profile:
+    type: object
+    required:
+      - account
+      - pan_source
+    properties:
+      account:
+        $ref: '#/definitions/account'
+      risk_assessment:
+        $ref: '#/definitions/risk%5fassessment'
+      device_score:
+        type: string
+        example: '3'
+        description: >-
+          Wallet provider device score (possible values- 1-5), indicating the
+          confidence level of the device. 5 being the highest level of
+          confidence.
+      pan_source:
+        type: string
+        minLength: 1
+        maxLength: 50
+        enum:
+          - KEY_ENTERED
+          - ON_FILE
+          - MOBILE_BANKING_APP
+      reason_code:
+        type: string
+        example: >-
+          01, 02, 03, 04, 05, 06, 07, 08, 09, 0A, 0B, 0C, 0D, 0E, 0G, 0H, A1,
+          A2, A3, A4, A5, A6, A7, A8, A9, AA, AB, AC, AD, AE, AF, AG, AH, AI,
+          AL, AM, AN, AO
+        description: >-
+          Wallet provider reason codes, in a comma-separated format. The reason
+          for the wallet provider's provisioning decision. Note This list of
+          reason codes is  subject to change. <br> Apple Pay (Visa/Mastercard),
+          Google Pay/Samsung Pay  (Mastercard only). <br> * 01 - Cardholder's
+          wallet account is too new relative to launch. <br> * 02 - Cardholder's
+          wallet account is too new relative to provisioning request.<br> * 03 -
+          Cardholder's wallet account/card pair is newer than date
+          threshold.<br> * 04 - Changes made to account data within the account
+          threshold. <br> * 05 - Suspicious transactions linked to this account.
+          <br> * 06 - Account has not had activity in the last year. <br> * 07 -
+          Suspended cards in the secure element. <br> * 08 - Device was put in
+          lost mode in the last seven days for longer than the duration
+          threshold.<br> * 09 - The number of provisioning attempts on this
+          device in 24 hours exceeds threshold. <br> * 0A - There have been more
+          than the threshold number of different cards attempted at provisioning
+          to this phone in 24 hours.<br> * 0B - The card provisioning attempt
+          contains a distinct name in excess of the threshold. <br> * 0C - The
+          device score is less than 3. <br> * 0D - The account score is less
+          than 4. <br> * 0E - Device provisioning location outside of the
+          cardholder's wallet account home country.<br> * 0G - Suspected fraud.
+          <br> * 0H - The phone number score is less than <br> 3. Google
+          Pay/Samsung Pay (Visa only)<br> * A0 - Cardholder PAN associated with
+          account within threshold days. <br> * A1 - Wallet account holder name
+          on file does not match cardholder entered name.<br> * A2 - User's
+          account on device less than threshold days. <br> * A3 - User account
+          was created within threshold days. <br> * A4 - Wallet account created
+          within threshold days. <br> * A5 - Changes made to account data within
+          threshold days. <br> * A6 - The number of provisioning attempts across
+          all cards on this device in the last 24 hours exceeds the threshold.
+          <br> * A7 - The wallet account into which the card is being
+          provisioned contains distinct names greater than threshold. <br> * A8
+          - Device provisioning location outside of cardholder's wallet account
+          home country. <br> * A9 - Suspended cards in the wallet account is
+          greater than threshold. <br> * AA - This account has not had activity
+          within threshold period. <br> * AB - Number of days since device was
+          last reported lost is less than threshold days. <br> * AC - Number of
+          transactions in last 12 months less than threshold number. <br> * AD -
+          Number of active tokens greater than threshold<br> * AE - Number of
+          devices with Same UserID with token is greater than threshold. <br> *
+          AF - Number of active tokens on all devices is greater than threshold.
+          <br> * AG - Issuer deferred ID&V decision. <br> * AH - Issuer
+          encrypted payment instrument data expired. <br> * AI - User/device
+          receiving encrypted payment instrument data is different than the one
+          that is provisioning the token. <br> * AL - Encrypted payment
+          instrument data is pushed to a different device than the one that
+          issuer application authenticated. <br> * AM - Encrypted payment
+          instrument data is pushed to a different user than the cardholder.
+          <br> * AN - Encrypted Payment Instrument Data is being pushed by the
+          Issuer to the same device that the Issuer application authenticated,
+          but without any upfront authentication.<br> * AO - Encrypted Payment
+          Instrument Data is being pushed by the Issuer to the same device that
+          the Issuer application authenticated, but with successful upfront
+          authentication.
+        minLength: 0
+        maxLength: 100
+    description: Wallet provider profile
+  account:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        type: string
+        example: 134343434A3_B
+        description: >-
+          Client wallet account ID. This is a value assigned by a digital wallet
+          and typically represents the account but is otherwise is a random
+          value. An example is that using the same iCloud account on two devices
+          will result in the same value for this parameter.
+        minLength: 1
+        maxLength: 255
+      email_address:
+        type: string
+        example: 5400bbf75135b1d6fe773a94edad4d0d469d222f41eddedd21475f278243251c
+        description: >-
+          Hashed email Address. The exact hashing algorithm may vary by wallets
+          and networks. Can be used to validate that email associated with
+          digital wallet matches what is on file for the account. Data is
+          hexBinary encoded.
+      score:
+        type: string
+        example: '3'
+        description: >-
+          Wallet provider account score (possible values- 1-5), indicating the
+          confidence level of the account. Value definitions are not
+          standardized between wallets but 5 is highest confidence. Can be
+          presented with or without a leading 0.
+        minLength: 0
+        maxLength: 2
+    description: Wallet provider account details.
+  risk_assessment:
+    type: object
+    properties:
+      score:
+        type: string
+        description: Wallet provider risk score.
+        enum:
+          - DECISION_RED
+          - DECISION_YELLOW
+          - DECISION_GREEN
+      version:
+        type: string
+        example: 1, 2, 01, 0001.00, 0002.00
+        description: Wallet provider risk version
+    description: Wallet provider risk assessment details.
+  TokenActivationResponse:
+    type: object
+    required:
+      - avs_response
+      - card_token
+      - cvv2_response
+      - issuer_eligibility_decision
+    properties:
+      card_token:
+        type: string
+        example: 537d837e-958a-4e9f-bc97-4843ec9486ee
+        description: >-
+          Card identifier/token for correlation with Issuer. Used to minimize
+          the need to exchange card details during subsequent calls and/or
+          troubleshooting. Should be GUID or pseudo unique.
+        minLength: 1
+        maxLength: 36
+      issuer_eligibility_decision:
+        type: string
+        minLength: 1
+        maxLength: 255
+        enum:
+          - APPROVE
+          - REQUIRE_FURTHER_AUTHENTICATION
+          - DECLINE
+      issuer_decision_reason:
+        type: string
+        example: DECLINE_NOTELIGIBLE
+        maxLength: 255
+        enum:
+          - APPROVED
+          - DECLINE_NOTELIGIBLE
+          - DECLINE_CARDEXPIRED
+          - DECLINE_INVALIDPAN
+          - DECLINE_INVALID_CVV2
+          - DECLINE_INVALID_EXPIRY_DATE
+          - DECLINE_ADDRESS_VERIFICATION_FAILED
+          - DECLINE_OTHER
+          - DECLINE_GATEWAY_ERROR
+          - DECLINE_CONFIG
+      avs_response:
+        type: string
+        minLength: 1
+        maxLength: 255
+        enum:
+          - MATCH
+          - NO_MATCH
+          - NOT_EXECUTED
+      cvv2_response:
+        type: string
+        minLength: 1
+        maxLength: 255
+        enum:
+          - MATCH
+          - NO_MATCH
+          - NOT_EXECUTED
+      card_art_id:
+        type: string
+        example: CUSTOMERA_BLACK
+        description: >-
+          Optional c`art_art_id` that can be provided and is a pointer to a set
+          of card metadata previously setup. In this API, this parameter is only
+          used for Mastercard and is known as Product Config ID. Please be
+          advised that Mastercard sets certain limits on the values in this
+          parameter (length, etc).
+        minLength: 0
+        maxLength: 255
+      stepup_options:
+        type: array
+        description: >-
+          Options for a user to complete step-up authentication. Should provide
+          at least one option. Can skip providing any options if options are
+          already setup on Marqeta platform
+        items:
+          type: object
+          properties:
+            token:
+              type: string
+              example: 12514e5a-0072-43f5-bc52-9f79377f27cc
+              description: >-
+                Customer provided identifier for a specific step-up option. For
+                simplicity, the value can be the same as the stepup_type while
+                sending unique stepup_type(s) (like user has only one phone
+                number, one email-id etc).
+              minLength: 1
+              maxLength: 36
+            stepup_type:
+              type: string
+              description: Type of step-up options
+              minLength: 1
+              maxLength: 255
+              enum:
+                - INBOUND_CALL_CENTER
+                - OTP_SMS
+                - OTP_EMAIL
+                - IOS_APP
+                - ANDROID_APP
+            stepup_value:
+              type: string
+              example: +1-800-555-1212
+              description: >-
+                Specific value for the step-up option. Phone/email should be
+                masked if customer will be sending out SMS. For call center, an
+                example is +1-800-555-1212. For OTP_SMS an example is
+                +1******3175. For OTP_Email, m******e@marqeta.com, for IOS,
+                4RA9TRQ7CL.com.marqeta.dwdemo and for Android com.marqeta.dwdemo
+              minLength: 1
+              maxLength: 100
+          required:
+            - stepup_type
+            - stepup_value
+  InvalidTokenActivationResponse:
+    type: object
+    required:
+      - errors
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ErrorMessage'
+        minItems: 1
+  Webhook_DigitalWalletToken_Array_Type:
+    type: object
+    properties:
+      digitalwallettokens:
+        type: array
+        items:
+          $ref: '#/definitions/Webhook%5fDigitalWalletToken%5fObject%5fType'
+        maxItems: 1
+        minItems: 1
+  Webhook_DigitalWalletToken_Object_Type:
+    type: object
+    required:
+      - event_type
+      - token
+      - webhook_details
+    properties:
+      token:
+        type: string
+        example: 8c84fab9-889c-4cb7-a330-accac5799ea5
+        description: >-
+          Identifier for this particular webhook. This will typically be a GUID
+          but is typed as a string
+        minLength: 1
+        maxLength: 36
+      event_type:
+        type: string
+        example: digitalwallettoken.provisioningrequest
+        description: >-
+          Event type of the notification.<br><br>Possible values are
+          <br>digitalwallettoken.provisioningrequest<br>digitalwallettoken.activation<br>
+        minLength: 1
+        maxLength: 255
+      webhook_details:
+        $ref: '#/definitions/digital%5fwallet%5ftoken%5fwith%5fcard%5fdata'
+  digital_wallet_token_with_card_data:
+    required:
+      - card_token
+      - encrypted_data
+      - fulfillment_status
+      - state
+      - token
+    properties:
+      card_token:
+        type: string
+        example: 537d837e-958a-4e9f-bc97-4843ec9486ee
+        description: >-
+          Card Identifier/token for correlation with Issuer. Used to minimize
+          the need to exchange card details during subsequent calls and/or
+          troubleshooting. Should be GUID or pseudo unique
+        minLength: 1
+        maxLength: 36
+      created_time:
+        type: string
+        format: date-time
+        example: '2021-06-16T22:24:02Z'
+        description: date/time when the object/record was created. In UTC format
+      fulfillment_status:
+        type: string
+        example: DECISION_YELLOW
+        description: >-
+          The digital wallet token's provisioning status. <br><br>Possible
+          values are <br>DECISION_YELLOW,<br> DECISION_GREEN, <br>REJECTED,
+          <br>PROVISIONED
+        minLength: 1
+        maxLength: 255
+      issuer_eligibility_decision:
+        type: string
+        example: 0000 (Approved)
+        description: >-
+          The Marqeta platform's recommendation as to whether the digital wallet
+          token should be provisioned.<br>Example values: `0000` (Approved),
+          `invalid.cid`, `avs.decline`, `token.activation`.
+        maxLength: 255
+      last_modified_time:
+        type: string
+        format: date-time
+        example: '2021-06-16T22:24:02Z'
+        description: date/time when the object/record was last modified. In UTC format
+      state:
+        type: string
+        example: ACTIVE
+        description: The current state of the digital wallet token.
+        minLength: 1
+        maxLength: 255
+      state_reason:
+        type: string
+        example: Digital wallet token provisioned to digital wallet
+        description: >-
+          A descriptive reason for the current state of the digital wallet
+          token.
+        minLength: 0
+        maxLength: 255
+      token:
+        type: string
+        example: f2cc19de-a104-4077-bf00-212d86f9f850
+        description: The Marqeta unique identifier for the digital wallet token.
+        minLength: 1
+        maxLength: 36
+      wallet_provider_profile:
+        $ref: '#/definitions/DigitalWalletTokenWalletProviderModel'
+      encrypted_data:
+        type: string
+        description: >-
+          Encrypted Card data for webhook token event (encrypted value should
+          align with webhook_encrypted_data_with_card_details schema)
+      webhook_encrypted_data:
+        $ref: '#/definitions/webhook%5fencrypted%5fdata%5fwith%5fcard%5fdetails'
+  device:
+    type: object
+    required:
+      - type
+    properties:
+      type:
+        type: string
+        description: >-
+          Type of device used for tokenization<br><br>Possible values are
+          <br>UNKNOWN<br>MOBILE_PHONE<br>TABLET<br>WATCH<br>MOBILE_PHONE_OR_TABLET<br><br>PERSONAL_COMPUTER<br>VEHICLE<br>APPLIANCE<br>LAPTOP<br>GAMING_DEVICE<br>UNRECOGNIZED<br>
+        minLength: 1
+        maxLength: 255
+      device_id:
+        type: string
+        example: 123B45a
+        description: Id of the device
+        minLength: 0
+        maxLength: 255
+      phone_number:
+        type: string
+        example: '4498'
+        description: >-
+          Phone number of the device.  Can be null.  Note: Can be the full phone
+          number (including the country code) or last 4 digits depending on the
+          wallet provider.
+        minLength: 0
+        maxLength: 20
+      name:
+        type: string
+        example: John's iPhone
+        description: Device name
+        minLength: 0
+        maxLength: 128
+      location:
+        type: string
+        example: 37.74/-121.88
+        description: Location of the device at the time of the tokenization request
+        minLength: 0
+        maxLength: 25
+      ip_address:
+        type: string
+        example: 255.255.255.255
+        description: IP address in IPV4 format
+        minLength: 0
+        maxLength: 25
+      language_code:
+        type: string
+        example: en
+        minLength: 0
+        maxLength: 36
+  DigitalWalletTokenWalletProviderModel:
+    type: object
+    required:
+      - account
+      - pan_source
+    properties:
+      account:
+        $ref: '#/definitions/account'
+      risk_assessment:
+        $ref: '#/definitions/webhooks%5frisk%5fassessment'
+      device_score:
+        type: string
+        example: '3'
+        description: >-
+          Wallet provider device score (possible values- 1-5), indicating the
+          confidence level of the device. 5 being the highest level of
+          confidence.
+      pan_source:
+        type: string
+        description: >-
+          PAN source<br><br>Possible values are
+          <br>KEY_ENTERED<br>ON_FILE<br>MOBILE_BANKING_APP<br>
+        minLength: 1
+        maxLength: 50
+      reason_code:
+        type: string
+        example: >-
+          01, 02, 03, 04, 05, 06, 07, 08, 09, 0A, 0B, 0C, 0D, 0E, 0G, 0H, A1,
+          A2, A3, A4, A5, A6, A7, A8, A9, AA, AB, AC, AD, AE, AF, AG, AH, AI,
+          AL, AM, AN, AO
+        description: >-
+          Wallet provider reason codes, in a comma-separated format. The reason
+          for the wallet provider's provisioning decision. Note This list of
+          reason codes is  subject to change. <br> Apple Pay (Visa/Mastercard),
+          Google Pay/Samsung Pay  (Mastercard only). <br> * 01 - Cardholder's
+          wallet account is too new relative to launch. <br> * 02 - Cardholder's
+          wallet account is too new relative to provisioning request.<br> * 03 -
+          Cardholder's wallet account/card pair is newer than date
+          threshold.<br> * 04 - Changes made to account data within the account
+          threshold. <br> * 05 - Suspicious transactions linked to this account.
+          <br> * 06 - Account has not had activity in the last year. <br> * 07 -
+          Suspended cards in the secure element. <br> * 08 - Device was put in
+          lost mode in the last seven days for longer than the duration
+          threshold.<br> * 09 - The number of provisioning attempts on this
+          device in 24 hours exceeds threshold. <br> * 0A - There have been more
+          than the threshold number of different cards attempted at provisioning
+          to this phone in 24 hours.<br> * 0B - The card provisioning attempt
+          contains a distinct name in excess of the threshold. <br> * 0C - The
+          device score is less than 3. <br> * 0D - The account score is less
+          than 4. <br> * 0E - Device provisioning location outside of the
+          cardholder's wallet account home country.<br> * 0G - Suspected fraud.
+          <br> * 0H - The phone number score is less than <br> 3. Google
+          Pay/Samsung Pay (Visa only)<br> * A0 - Cardholder PAN associated with
+          account within threshold days. <br> * A1 - Wallet account holder name
+          on file does not match cardholder entered name.<br> * A2 - User's
+          account on device less than threshold days. <br> * A3 - User account
+          was created within threshold days. <br> * A4 - Wallet account created
+          within threshold days. <br> * A5 - Changes made to account data within
+          threshold days. <br> * A6 - The number of provisioning attempts across
+          all cards on this device in the last 24 hours exceeds the threshold.
+          <br> * A7 - The wallet account into which the card is being
+          provisioned contains distinct names greater than threshold. <br> * A8
+          - Device provisioning location outside of cardholder's wallet account
+          home country. <br> * A9 - Suspended cards in the wallet account is
+          greater than threshold. <br> * AA - This account has not had activity
+          within threshold period. <br> * AB - Number of days since device was
+          last reported lost is less than threshold days. <br> * AC - Number of
+          transactions in last 12 months less than threshold number. <br> * AD -
+          Number of active tokens greater than threshold<br> * AE - Number of
+          devices with Same UserID with token is greater than threshold. <br> *
+          AF - Number of active tokens on all devices is greater than threshold.
+          <br> * AG - Issuer deferred ID&V decision. <br> * AH - Issuer
+          encrypted payment instrument data expired. <br> * AI - User/device
+          receiving encrypted payment instrument data is different than the one
+          that is provisioning the token. <br> * AL - Encrypted payment
+          instrument data is pushed to a different device than the one that
+          issuer application authenticated. <br> * AM - Encrypted payment
+          instrument data is pushed to a different user than the cardholder.
+          <br> * AN - Encrypted Payment Instrument Data is being pushed by the
+          Issuer to the same device that the Issuer application authenticated,
+          but without any upfront authentication.<br> * AO - Encrypted Payment
+          Instrument Data is being pushed by the Issuer to the same device that
+          the Issuer application authenticated, but with successful upfront
+          authentication.
+        minLength: 0
+        maxLength: 100
+    description: Wallet provider profile
+  webhooks_risk_assessment:
+    type: object
+    properties:
+      score:
+        type: string
+        description: >-
+          Wallet provider risk score<br><br>Possible values are
+          <br>DECISION_RED<br>DECISION_YELLOW<br>DECISION_GREEN<br>
+      version:
+        type: string
+        example: 1, 2, 01, 0001.00, 0002.00
+        description: Wallet provider risk version
+    description: Wallet provider risk assessment details
+  WebhookErrorResponse:
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/WebhookErrorType'
+  WebhookErrorType:
+    type: object
+    required:
+      - error_message
+      - event_type
+      - token
+    properties:
+      token:
+        type: string
+        example: 8c84fab9-889c-4cb7-a330-accac5799ea5
+        description: >-
+          Identifier for this particular webhook. This will typically be a GUID
+          but is typed as a string
+        minLength: 1
+        maxLength: 36
+      event_type:
+        type: string
+        example: digitalwallettoken.provisioningrequest
+        description: >-
+          Event type of the notification.<br><br>Possible values are
+          <br>digitalwallettoken.provisioningrequest<br>digitalwallettoken.activation<br>
+        minLength: 1
+        maxLength: 255
+      error_code:
+        type: string
+        description: Error Code
+        minLength: 1
+        maxLength: 75
+      error_message:
+        type: string
+        description: Error Message
+        minLength: 1
+        maxLength: 255
+  webhook_encrypted_data_with_card_details:
+    type: object
+    required:
+      - address_verification
+      - card_data
+      - device
+      - token_service_provider
+    properties:
+      card_data:
+        $ref: '#/definitions/webhook%5fcard%5fdata%5fno%5fcvv'
+      token_service_provider:
+        $ref: '#/definitions/token%5fservice%5fprovider'
+      device:
+        $ref: '#/definitions/device'
+      address_verification:
+        $ref: '#/definitions/address%5fverification'
+    description: >-
+      webhook_encrypted_data_with_card_details is the schema for the encrypted
+      payload. This schema should not be part of the request payload in plain
+      text. webhook_encrypted_data_with_card_details schema describes the
+      structure and the parameters that should be part of the encrypted data.
+  webhook_card_data_no_cvv:
+    type: object
+    required:
+      - expiration_date
+      - primary_account_number
+    properties:
+      primary_account_number:
+        type: string
+        example: '412333434343434'
+        description: >-
+          Account number of the card that is being tokenized. Typically expected
+          to be 16 digits.
+        minLength: 12
+        maxLength: 19
+        pattern: \d+
+      expiration_date:
+        $ref: '#/definitions/ExpiryDate'
+  token_service_provider:
+    type: object
+    required:
+      - pan_reference_id
+      - token_requestor_id
+      - token_requestor_name
+      - token_type
+    properties:
+      pan_reference_id:
+        type: string
+        example: V-123343434343434
+        description: >-
+          Network reference ID for the PAN being tokenized. Note: For VISA,
+          pan_reference_id remains the same for multiple tokens created on a
+          single PAN. However for Mastercard, pan_reference_id remains the same
+          for multiple tokens created on a single PAN on the same wallet. Can be
+          used to verify existing tokens on the device through the wallet API.
+        minLength: 1
+        maxLength: 255
+      token_reference_id:
+        type: string
+        example: DNITHE343434343459
+        description: >-
+          Id to correlate the digital wallet token with the network.  Primary
+          identifier for Visa. This value is not populated until token is active
+          for Mastercard.
+        minLength: 0
+        maxLength: 255
+      correlation_id:
+        type: string
+        example: D454545432
+        description: >-
+          Id to correlate the digital wallet token with the network.  Primary
+          identifier for Mastercard.
+        minLength: 0
+        maxLength: 14
+      token_requestor_id:
+        type: string
+        example: '40010075001'
+        description: Id associated with the token requestor. Differs by network
+        minLength: 1
+        maxLength: 50
+      token_requestor_name:
+        type: string
+        example: APPLE_PAY
+        description: >-
+          Pseudo customer friendly name for the token requestor. For
+          programmatic purposes, use token requestor ID which is not subject to
+          change.
+        minLength: 1
+        maxLength: 100
+      token_type:
+        type: string
+        example: DEVICE_SECURE_ELEMENT
+        description: >-
+          Token type <br><br>Possible values are
+          <br>MERCHANT_CARD_ON_FILE<br>DEVICE_SECURE_ELEMENT<br>DEVICE_CLOUD_BASED<br>ECOMMERCE_DIGITAL_WALLET<br>PSEUDO_ACCOUNT<br>
+      token_assurance_level:
+        type: string
+        example: '10'
+        description: Assurance level of the token to PAN binding
+        maxLength: 2
+      token_pan:
+        type: string
+        example: 411111______1111
+        description: >-
+          DPAN of the digital wallet token if provisioned. Masked format.
+          /showtokenpan endpoint returns the token_pan in clear text.
+      token_expiration:
+        type: string
+        format: mmyy
+        example: '1225'
+        description: Expiration of the digital wallet token
+      token_score:
+        type: string
+        example: '10'
+        description: Token Score as set by the network
+        maxLength: 25
+      token_eligibility_decision:
+        type: string
+        description: >-
+          The token service provider's recommendation as to whether the digital
+          wallet token should be provisioned.
+        maxLength: 50
+  Webhook_DigitalWalletTokenTransition_Array_Type:
+    type: object
+    properties:
+      digitalwallettokentransitions:
+        type: array
+        items:
+          $ref: '#/definitions/Webhook%5fDigitalWalletTokenTransition%5fObject%5fType'
+        maxItems: 1
+        minItems: 1
+  Webhook_DigitalWalletTokenTransition_Object_Type:
+    type: object
+    required:
+      - event_type
+      - token
+      - webhook_details
+    properties:
+      token:
+        type: string
+        example: 8c84fab9-889c-4cb7-a330-accac5799ea5
+        description: >-
+          Identifier for this particular webhook. This will typically be a GUID
+          but is typed as a string.
+        minLength: 1
+        maxLength: 36
+      event_type:
+        type: string
+        example: digitalwallettokentransition.activated
+        description: >-
+          Event type of the notification.<br><br>Possible values are
+          <br>digitalwallettokentransition.activated<br>digitalwallettokentransition.requested<br>digitalwallettokentransition.request_declined<br>digitalwallettokentransition.suspended<br>digitalwallettokentransition.terminated<br>digitalwallettokentransition.cardswap<br>digitalwallettokentransition.reinstated<br>
+        minLength: 1
+        maxLength: 255
+      webhook_details:
+        $ref: '#/definitions/digital%5fwallet%5ftoken%5ftransition%5fresponse'
+  digital_wallet_token_transition_response:
+    type: object
+    required:
+      - channel
+      - created_time
+      - digital_wallet_token
+      - fulfillment_status
+      - reason_code
+      - state
+      - token
+      - type
+    properties:
+      token:
+        type: string
+        example: 626bcf7b-c001-47b8-acc5-95e6f8b858ca
+        description: Marqeta identifier for the digital wallet token transition.
+        minLength: 1
+        maxLength: 36
+      digital_wallet_token:
+        $ref: '#/definitions/digital%5fwallet%5ftoken%5fhash'
+      type:
+        type: string
+        example: state.activated
+        description: >-
+          Type of transition event, for instance state.activated.
+          <br><br>Possible values are
+          <br>fulfillment.requested<br>state.request_declined<br>state.activated<br>state.suspended<br>state.reinstated<br>state.terminated<br>card.swap<br>
+        minLength: 1
+        maxLength: 255
+      channel:
+        type: string
+        example: API
+        description: >-
+          Source of a change for instance whether the Marqeta system
+          automatically made a change (SYSTEM) or initiated by the issuer (API).
+          <br><br>Possible values are
+          <br>API<br>TOKEN_SERVICE_PROVIDER<br>DIGITAL_WALLET<br>IVR<br>FRAUD<br>ADMIN<br>SYSTEM<br>MARQETA_DASHBOARD
+        minLength: 0
+        maxLength: 255
+      state:
+        type: string
+        example: ACTIVE
+        description: >-
+          The current state of the digital wallet token. <br><br>Possible values
+          are <br>REQUESTED<br> ACTIVE <br>TERMINATED<br>REQUEST_DECLINED<br>
+        minLength: 1
+        maxLength: 255
+      fulfillment_status:
+        type: string
+        example: DECISION_RED
+        description: >-
+          The digital wallet token's provisioning status. <br><br>Possible
+          values are <br>DECISION_YELLOW<br>
+          DECISION_GREEN<br>REJECTED<br>PROVISIONED
+        minLength: 1
+        maxLength: 255
+      reason:
+        type: string
+        example: Initiated by a third party, often a digital wallet provider.
+        description: >-
+          A standard code describing the reason for the transition. This
+          elaborates on the code in reason_code
+        minLength: 0
+        maxLength: 255
+      reason_code:
+        type: string
+        example: '21'
+        description: >-
+          A code describing the reason for the transition. We do not validate
+          what is provided although Marqeta-sourced changes use standard codes.
+        minLength: 1
+        maxLength: 255
+      created_time:
+        type: string
+        format: date-time
+        example: '2021-06-16T22:24:02Z'
+        description: Date/time when the object/record was created. In UTC format.
+  SendPassCodeMarqetaRequest:
+    type: object
+    required:
+      - card_token
+      - otp_code
+      - selected_option
+      - token_requestor_name
+    properties:
+      otp_code:
+        type: string
+        example: '123456'
+        description: OTP Code to send to the user. Typically 6 digits in length.
+        minLength: 6
+        maxLength: 50
+      card_token:
+        type: string
+        example: 678d98a9-5ac3-49da-b488-251bc518d387
+        description: >-
+          Card Identifier/token for correlation with issuer. Used to minimize
+          the need to exchange card details during subsequent calls and/or
+          troubleshooting. Should be GUID or pseudo unique.
+        minLength: 1
+        maxLength: 36
+      token_requestor_name:
+        type: string
+        example: APPLE_PAY
+        description: >-
+          Pseudo customer friendly name for the token requestor. For
+          programmatic purposes, use token requestor ID which is not subject to
+          change.<br>Possible values are <br><br>APPLE_PAY<br>GOOGLE_PAY
+      selected_option:
+        $ref: '#/definitions/SelectedStepUpOption'
+  SelectedStepUpOption:
+    type: object
+    required:
+      - stepup_type
+      - stepup_value
+    properties:
+      token:
+        type: string
+        example: 12514e5a-0072-43f5-bc52-9f79377f27cc
+        description: >-
+          Customer provided identifier for a specific step-up option. For
+          simplicity, the value can be the same as the stepup_type while sending
+          unique stepup_type(s) (like user has only one phone number, one
+          email-id etc).
+        minLength: 1
+        maxLength: 36
+      stepup_type:
+        type: string
+        example: OTP_SMS
+        description: Type of step-up options. Possible values are <br><br>OTP_SMS.
+        minLength: 1
+        maxLength: 255
+      stepup_value:
+        type: string
+        example: 1-800-555-1212
+        description: >-
+          Specific value for the step-up option. Phone/email should be masked if
+          customer will be sending out SMS. For call center, an example is
+          +1-800-555-1212. For OTP_SMS an example is +1******3175. For
+          OTP_Email, m******e@marqeta.com, for IOS,
+          4RA9TRQ7CL.com.marqeta.dwdemo and for Android com.marqeta.dwdemo
+        minLength: 1
+        maxLength: 100
+  InvalidSendPassCodeResponse:
+    type: object
+    required:
+      - errors
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ErrorMessage'
+        minItems: 1

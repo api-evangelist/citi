@@ -1,0 +1,400 @@
+openapi: 3.1.0
+info:
+  title: ACES ETF SubmitPLF
+  version: '1.0'
+  description: >-
+    The Submit PLF API allows ACES application to process plf request for ETF
+    basket creation.
+  x-ibm-name: aces-basket-submitplf
+  contact:
+    name: ACES L2 Support Team
+    email: funds.l2productionsupport@imceu.eu.ssmb.com
+security:
+  - Authentication: []
+tags:
+  - name: submitPlf
+    description: Operations related to ETF basket processing
+servers:
+  - url: https://aces-basketapi-sit-uat.cloudgsl.nam.nsroot.net/tts
+    description: SIT Environment URL
+  - url: https://aces-basketapi-secure.apps.namicgswd38u.ecs.dyn.nsroot.net/tts
+    description: QA Environment URL
+  - url: https://aces-basketapi-secure.apps.namicgswd43u.ecs.dyn.nsroot.net/tts
+    description: UAT Environment URL
+  - url: https://aces-basketapi-secure.apps.namicgswd39u.ecs.dyn.nsroot.net/tts
+    description: CTE Environment URL
+paths:
+  /api/etf/v1/basket/submitPlf:
+    post:
+      tags:
+        - submitPlf
+      description: >-
+        Posts an action request - to process plf request for ETF basket
+        creation.
+      operationId: submitPlf
+      summary: Process plf request for ETF basket.
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports \"application/json\".
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          schema:
+            type: string
+        - name: client_id
+          in: header
+          required: true
+          description: >-
+            This is your unique identifier shared during your Citi API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          schema:
+            type: string
+      requestBody:
+        description: Basket Submit PLF Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/submitPlf'
+      responses:
+        '200':
+          description: OK.  Returns a successful confirmation of PLF creation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ackResponse'
+              example:
+                clientRefId: ABC1234
+                fundIdentifer: 01B99ZZZZ
+                fundTicker: XXXYYY
+                apiIdentifier: PLF_ClientName
+                responseDateTime: 2025-10-22 10:30:00EST
+                responseStatus: success
+                responseCode: 200
+                message: Data uploaded successfully.
+        '400':
+          description: Bad Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/nackResponse'
+              example:
+                clientRefId: ABC1234
+                fundIdentifer: 01B99ZZZZ
+                fundTicker: XXXYYY
+                apiIdentifier: PLF_ClientName
+                responseDateTime: 2025-10-22 10:30:00EST
+                responseStatus: failed
+                responseCode: 400
+                message:
+                  - errorAttribute: tradeDate
+                    errorMessage: Trade Date is neither TD nor TD+1
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ackResponse'
+              example:
+                clientRefId: ABC1234
+                fundIdentifer: 01B99ZZZZ
+                fundTicker: XXXYYY
+                apiIdentifier: PLF_ClientName
+                responseDateTime: 2025-10-22 10:30:00EST
+                responseStatus: failed
+                responseCode: 500
+                message: >-
+                  Unable to serve your request at this moment. Please try again
+                  later.
+components:
+  schemas:
+    submitPlf:
+      title: Submit PLF Request Object
+      required:
+        - clientRefId
+        - tradeDate
+        - fundIdentifier
+        - fundTicker
+        - apiIdentifier
+        - orderType
+        - unitSize
+        - specifiedRecipient
+        - requestTimestamp
+        - portfolioList
+      type: object
+      properties:
+        clientRefId:
+          title: Client Reference ID
+          description: Unique client assigned identifier for each api request and response.
+          type: string
+          example: ABC1234
+        tradeDate:
+          title: Trade Date
+          description: Trade Date of the PLF.
+          type: string
+          format: date
+        fundIdentifier:
+          title: Fund Identifier
+          description: Unique Identifier for the fund.
+          type: string
+          example: 01A994241
+        fundTicker:
+          title: Fund Ticker
+          description: Unique ticker of the Fund.
+          type: string
+          example: DFAECR
+        apiIdentifier:
+          title: Api Identifier
+          description: Unique identifier assigned for a client.
+          type: string
+          example: PLF_ClientName
+        orderType:
+          title: Order Type
+          description: Order type of the basket.
+          type: string
+          example: Custom
+        unitSize:
+          title: Unit Size
+          description: Unit size of the basket.
+          type: number
+          example: 99999.999999999
+        specifiedRecipient:
+          title: AP Code
+          description: Authorization Party Code
+          type: string
+          example: '0443'
+        requestTimestamp:
+          title: Request Timestamp
+          description: Timestamp of the request in EST Format yyyy-MM-dd HH:mm:ssEST.
+          type: string
+          example: 2025-07-26 10:30:00EST
+        portfolioList:
+          required:
+            - ticker
+            - cusip
+            - sedol
+            - isin
+            - securityName
+            - marketValue
+            - weight
+            - price
+            - currencyCode
+            - shares
+            - exchangeRate
+            - cil
+            - supplementalId
+          type: array
+          items:
+            type: object
+            properties:
+              ticker:
+                title: Ticker
+                type: string
+                description: Ticker of the security.
+                example: EFG
+              cusip:
+                title: Cusip
+                type: string
+                description: Cusip of the security.
+                example: 26252TAJ5
+              sedol:
+                title: Sedol
+                type: string
+                description: Sedol of the security.
+                example: BJVJNX2
+              isin:
+                title: Isin
+                type: string
+                description: ISIN of the security.
+                example: US26252TAJ51
+              securityName:
+                title: Security Name
+                type: string
+                description: Security name of the security.
+                example: WESTERN COPPER AND GOLD CORP
+              marketValue:
+                title: Market Value
+                type: number
+                description: Market value of the security.
+                example: 99999.999999999
+              weight:
+                title: Weight
+                type: number
+                description: Weight of the security.
+                example: 99999.999999999
+              price:
+                title: Price
+                type: number
+                description: Price of the security.
+                example: 99999.999999999
+              currencyCode:
+                title: Currency Code
+                type: string
+                description: Currency code of the security.
+                example: BRL
+              shares:
+                title: Shares
+                type: number
+                description: Shares of the security.
+                example: 1600
+              exchangeRate:
+                title: Exchange Rate
+                type: number
+                description: Exchange rate of the security.
+                example: 7.77777777
+              cil:
+                title: CIL
+                type: string
+                description: Cash In Lieu
+                example: 'Y'
+              supplementalId:
+                title: Supplemental Id
+                type: string
+                description: Supplemental Id of the security.
+                example: EP0000ZZZZ
+    ackResponse:
+      title: PLF Submit ACK Response Object
+      type: object
+      properties:
+        clientRefId:
+          title: Client Reference ID
+          type: string
+          description: Unique client assigned identifier for each api request and response.
+          example: ABC1234
+        tradeDate:
+          title: Trade Date
+          description: Trade Date of the PLF.
+          type: string
+          format: date
+        fundIdentifier:
+          title: Fund Identifier
+          type: string
+          description: Unique Identifier for the fund.
+          example: 01B99ZZZZ
+        fundTicker:
+          title: Fund Ticker
+          type: string
+          description: Unique ticker of the Fund.
+          example: XXXYYY
+        apiIdentifier:
+          title: API Identifier
+          type: string
+          description: Unique identifier assigned for a client.
+          example: PLF_ClientName
+        responseDateTime:
+          title: Response Date Time
+          type: string
+          description: Response date and timestamp.
+          example: 2025-10-22 10:30:00EST
+        responseStatus:
+          title: Response Status
+          type: string
+          description: Status of the request.
+          example: success
+        responseCode:
+          title: Response Code
+          type: integer
+          description: successful response Code.
+          example: 200
+        message:
+          title: Message
+          type: string
+          description: successful message of the request.
+          example: Data uploaded successfully.
+    nackResponse:
+      title: PLF Submit NACK Response Object
+      type: object
+      properties:
+        clientRefId:
+          title: Client Reference Id
+          description: Unique Client assigned identifier for each api request and response.
+          type: string
+          example: ABC1234
+        tradeDate:
+          title: Trade Date
+          description: Trade Date of the PLF exclue the timestamp MM/DD/YYYY
+          type: string
+          format: date
+        fundIdentifier:
+          title: Fund Identifier
+          description: Unique Identifier for the fund.
+          type: string
+          example: 01B99ZZZZ
+        fundTicker:
+          title: Fund Ticker
+          description: Unique ticker of the Fund.
+          type: string
+          example: XXXYYY
+        apiIdentifier:
+          title: API Identifier
+          description: Unique identifier assigned for a client.
+          type: string
+          example: PLF_ClientName
+        responseDateTime:
+          title: Response Date Time
+          description: Response date and timestamp.
+          type: string
+          example: 2025-10-22 10:30:00EST
+        responseStatus:
+          title: Response Status
+          description: Status of the request.
+          type: string
+          example: failed
+        responseCode:
+          title: Response Code
+          description: Failure response code.
+          type: integer
+          example: 400
+        message:
+          title: Messages
+          description: Failure Message object.
+          type: array
+          items:
+            type: object
+            properties:
+              errorAttribute:
+                title: Error Attribute
+                description: Error Attribute of the Message Object.
+                type: string
+                example: tradeDate
+              errorAttributeValue:
+                title: Error Attribute Value
+                description: Value of the Error Attribute.
+                type: string
+                example: 3/31/2025
+              errorMessage:
+                title: Error Message
+                description: Reason for the error.
+                type: string
+                example: Trade Date is neither TD nor TD+1
+  securitySchemes:
+    Authentication:
+      description: >
+        Client applications must supply an authentication token with every
+        request, and therefore must first authenticate before it can proceed. A
+        client can use the OAuth 2 client credential grant flow to obtain a time
+        limited access token. To get an access token send a HTTP Post request to
+        the token endpoint using basic authentication with the client key and
+        secret.<br><br>**Request**<br><br>```POST
+        {baseURL}/tts/api/v1/oauth2/token HTTPS/1.1 Authorization: Basic
+        base64(key:secret)  Content-Type:application/x-www-form-urlencoded {
+         scope=/api&grant_type=client_credentials
+        }```<br><br> **Response**<br><br>```
+          {
+            "token_type": "bearer", 
+            "access_token": <access token>, 
+            "expires_in": <seconds until expiry>, 
+            "consented_on":<timestamp>, 
+            "scope": "api"
+          }```    <br><br>The bearer token is valid for 1800 seconds (30 minutes) after which it will expire. At this point, you would need to re-authenticate.<br><br>
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /tts/api/v1/oauth2/token
+          scopes:
+            /api: Access to ETF PLF API

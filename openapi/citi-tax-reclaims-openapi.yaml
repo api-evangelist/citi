@@ -1,0 +1,3169 @@
+openapi: 3.0.1
+info:
+  title: Tax Reclaims API
+  description: >
+    The Tax Reclaims API provides comprehensive visibility into both open and
+    closed tax reclaim requests.  The Open Tax Reclaims endpoint delivers a
+    complete list of all outstanding reclaims that have been filed  but are yet
+    to be paid, enabling clients to track pending statuses and support
+    operational reconciliation.  The Closed Tax Reclaims endpoint returns all
+    tax reclaims that have been fully processed and paid, helping clients verify
+    completed disbursements, maintain accurate audit records, and reconcile
+    historical  transactions. <br><br>**Authentication**<br><br>Client
+    applications must supply an authentication token with every request, and
+    therefore must first authenticate before it can proceed. A client can use
+    the OAuth 2 client credential grant flow to obtain a time limited access
+    token. To get an access token send a HTTP Post request to the token endpoint
+    using basic authentication with the client key and secret (provided under
+    separate cover).<br><br>**Request**<br><br>```POST
+    {baseURL}/api/oauth2/token HTTPS/1.1 
+
+    Authorization: Basic base64(key:secret) 
+
+    Content-Type:application/x-www-form-urlencoded```<br><br>
+
+    **Response**<br><br>```
+      {
+          "token_type": "bearer", 
+          "access_token": <access token>, 
+          "expires_in": <seconds until expiry>, 
+          "consented_on":<timestamp>, 
+          "scope": "/dod"`
+      }```    <br><br>The bearer token is valid for 1800 seconds (30 minutes) after which it will expire. At this point, you would need to re-authenticate.
+  version: v1.0.0
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets/dod
+    description: Sandbox server (uses test data)
+  - url: https://api.citivelocity.com/markets/dod
+    description: Production server
+security:
+  - client-Credential-Oauth-Security-Schema: []
+components:
+  headers:
+    dod-request-id:
+      schema:
+        type: string
+      description: The UUID representing the unique identifier of the dod request
+    paging-page-number:
+      schema:
+        type: string
+      description: The current page number
+    paging-total-page-count:
+      schema:
+        type: string
+      description: The total count of pages available
+    paging-total-record-count:
+      schema:
+        type: string
+      description: The total count of records
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  examples:
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: path-param servicePortableId is mandatory and it cannot be empty
+            action: please provide valid parameter values
+            code: VC00010
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Resource that you are searching is not found
+            action: Please use valid resource details
+            code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Method not supported
+            action: please use valid http verb
+            code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+  schemas:
+    ba848120-2d1f-4ec0-9f5c-2aa51b5d1634-data-schema:
+      type: object
+      properties:
+        SK_ACCT_ID:
+          type: string
+          description: >-
+            The Safekeeping Account ID is an identifier for a Safekeeping
+            Account that is unique within a branch.
+          example: '0000123456'
+        COUNTRY:
+          type: string
+          description: Country is the reclaim market
+          example: GERMANY
+        CODE_RCLM_CURR:
+          type: string
+          description: >-
+            Reclaim Currency is the currency of the reclaim (currency in which
+            the claim is made)
+          example: EUR
+        RECLAIM_REF:
+          type: string
+          description: >-
+            Reclaim Reference is the unique identifying number for each reclaim
+            in Citi system
+          example: 600SE123456
+        BO_BATCH_NO:
+          type: string
+          description: >-
+            Batch Number is Citi's unique reference for the reclaims submitted
+            to the Tax authorities (submission may contains more than 1 reclaim
+          example: B910BE123456
+        BEN_OWNER_NAME:
+          type: string
+          description: >-
+            Beneficial Owner Name is the name of the Beneficiary Owner of the
+            reclaim
+          example: ABC Investments Ltd.
+        DEPOT_CODE:
+          type: string
+          description: >-
+            Depot Code is the internal Citi identifier for the local sub account
+            the securities are held on
+          example: NAY
+        DATE_SENT_TO_FTA:
+          type: string
+          format: date
+          description: >-
+            Date sent to FTA is the date when the reclaim was submitted to the
+            foreign tax authority
+          example: '2020-05-14'
+        DATE_SENT_TO_LTA:
+          type: string
+          format: date
+          description: >-
+            Date sent to LTA is the date when the reclaim was submitted to the
+            local tax authority
+          example: '2020-05-14'
+        GERMAN_FILE_NUMBER:
+          type: string
+          description: >-
+            E-Filing Serial (Reclaim) is the reference no. for electronically
+            filed reclaim submission
+          example: '1234567891'
+        EFILE_REF:
+          type: string
+          description: >-
+            E-File Reference is Citi's unique reference for each electronic
+            submission to Tax authorities (submission may contains more than 1
+            reclaim)
+          example: F500DE000345
+        ENTITLEMENT_REF:
+          type: string
+          description: >-
+            Entitlement Reference is the unique reference number generated from
+            Citi internal systems for each line of taxable income
+          example: '00365104513'
+        CODE_RATE_CURR:
+          type: string
+          description: Rate Currency is the currency of the dividend.
+          example: '54251700451'
+        DIVIDEND_RATE:
+          type: number
+          format: double
+          description: >-
+            The Dividend Rate is the total expected dividend payments for an
+            investment on an annualized basis.
+          example: 1.953100028
+        FX_RATE_EUR:
+          type: number
+          format: double
+          description: >-
+            FX Rate (EUR) is the FX rate used to convert the reclaim currency
+            into EUR.
+          example: 0.09401
+        GROSS_DIV_EUR:
+          type: number
+          format: double
+          description: >-
+            Gross Dividend (EUR) is the value of the Gross Dividend expressed in
+            Euro currency.
+          example: 1500.75
+        TAX_PAID_EUR:
+          type: number
+          format: double
+          description: >-
+            Local Tax (WHT Paid) (EUR) is the value of tax withheld expressed in
+            Euro currency.
+          example: 300.5
+        NET_DIV_EUR:
+          type: number
+          format: double
+          description: >-
+            Net Dividend (EUR) is the value of is the dividend net of
+            withholding tax expressed in Euro currency.
+          example: 1200.25
+        RECLM_VAL_EUR:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount (EUR) is the value of the amount being reclaimed
+            expressed in Euro currency.
+          example: 250
+        AMT_RECVED_EUR:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (EUR) is the value of the refund received
+            from the Tax Authority expressed in Euro currency
+          example: 240
+        FX_RATE_GBP:
+          type: number
+          format: double
+          description: >-
+            FX Rate (GBP) is the FX rate used to convert the reclaim currency
+            into GBP
+          example: 0.8126
+        GROSS_DIV_GBP:
+          type: number
+          format: double
+          description: >-
+            Gross Dividend (GBP) is the value of the Gross Dividend expressed in
+            British pound currency
+          example: 1300.4
+        TAX_PAID_GBP:
+          type: number
+          format: double
+          description: >-
+            Local Tax (WHT Paid) (GBP) is the value of tax withheld expressed in
+            British pound currency
+          example: 260.35
+        NET_DIV_GBP:
+          type: number
+          format: double
+          description: >-
+            Net Dividend (GBP) is the value of is the dividend net of
+            withholding tax expressed in British pound currency
+          example: 1040.05
+        RECLM_VAL_GBP:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount (GBP) is the value of the amount being reclaimed
+            expressed in British pound currency
+          example: 215
+        AMT_RECVED_GBP:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (GBP) is the value of the refund received
+            from the Tax Authority expressed in British pound currency
+          example: 210
+        EQUIVAL_RATE_CCY:
+          type: number
+          format: double
+          description: >-
+            Equivalent Rate is the dividend rate per share expressed in the
+            currency of the reclaim.
+          example: 1.15672
+        GROSS_DIV_CCY:
+          type: number
+          format: double
+          description: >-
+            Gross Dividend is the value of the Gross Dividend expressed in the
+            currency of the reclaim.
+          example: 2000
+        TAX_PAID_CCY:
+          type: number
+          format: double
+          description: >-
+            Local Tax (WHT Paid) is the value of tax withheld expressed in the
+            currency of the reclaim.
+          example: 400
+        NET_DIV_CCY:
+          type: number
+          format: double
+          description: >-
+            Net Dividend is the value of is the dividend net of withholding tax
+            expressed in the currency of the reclaim.
+          example: 1600
+        RECLM_VAL_RCY:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount is the value of the amount being reclaimed expressed
+            in the currency of the reclaim.
+          example: 320
+        AMT_RECVED_CCY:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received is the value of the refund received from the
+            Tax Authority excluding interest, expressed in the currency of the
+            reclaim.
+          example: 310
+        FX_RATE_USD:
+          type: number
+          format: double
+          description: >-
+            FX Rate (USD) is the FX rate used to convert the reclaim currency
+            into USD.
+          example: 1.08
+        GROSS_DIV_USD:
+          type: number
+          format: double
+          description: >-
+            Gross Dividend (USD) is the value of the Gross Dividend expressed in
+            US dollar currency.
+          example: 1650
+        TAX_PAID_USD:
+          type: number
+          format: double
+          description: >-
+            Local Tax (WHT Paid) (USD) is the value of tax withheld expressed in
+            US dollar currency
+          example: 330
+        NET_DIV_USD:
+          type: number
+          format: double
+          description: >-
+            Net Dividend (USD) is the value of is the dividend net of
+            withholding tax expressed in US dollar currency.
+          example: 1320
+        RECLM_VAL_USD:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount (USD) is the value of the amount being reclaimed
+            expressed in US dollar currency.
+          example: 275
+        AMT_RECVED_USD:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (USD) is the value of the refund received
+            from the Tax Authority expressed in US dollar currency.
+          example: 270
+        STATUS:
+          type: string
+          description: Reclaim Status is the current status of the reclaim.
+          example: Suspended
+        STATUS_CHANGE_DATE:
+          type: string
+          format: date
+          description: Status Date is the date on which the status was last changed.
+          example: '2023-06-05'
+        ISSUER_TAX_ID:
+          type: string
+          description: >-
+            Security Code is the SEDOL code (Stock Exchange Daily Official List
+            identifier) of the security
+          example: BW4NR74
+        ISIN:
+          type: string
+          description: >-
+            Alternate Security Code (ISIN) is the International Securities
+            Identification Number.
+          example: US0378331005
+        SEC_SHRTN:
+          type: string
+          description: Security Name is the stock name of the security.
+          example: BYSTRONIC
+        LOCAL_TAX_ID:
+          type: string
+          description: Tax ID is the Beneficial Owner local Tax ID.
+          example: A92145408
+        WITH_RATE:
+          type: number
+          format: double
+          description: >-
+            WHT Rate is the rate of withholding tax applied to the income
+            payment.
+          example: 15.286
+        CREATION_DATE:
+          type: string
+          format: date
+          description: >-
+            Input Date is the date when the reclaim was loaded to Citi's reclaim
+            system.
+          example: '2024-01-20'
+        ALLOCATED_HOLDING:
+          type: number
+          format: double
+          description: Holding Value is the number of reclaimable shares per reclaim.
+          example: 500
+        BO_DOMICILE:
+          type: string
+          description: BO Domicile (Fiscal Domicile) is the Domicile of beneficial owner
+          example: HUNGARY
+        ENTITY_TYPE:
+          type: string
+          description: >-
+            Entity Type (Fiscal Type) is the Beneficial Owner entity type (i.e.:
+            corporate, Pension Fund, etc.).
+          example: Individual
+        PAY_DATE:
+          type: string
+          format: date
+          description: Pay Date is the pay date of the dividend payment.
+          example: '2024-03-31'
+        PAYYEAR:
+          type: number
+          format: double
+          description: Pay Year is the pay year of the dividend.
+          example: 2024
+        PAYQUARTER:
+          type: string
+          description: Pay Quarter is the pay quarter of the dividend.
+          example: '1'
+        EX_DATE:
+          type: string
+          format: date
+          description: >-
+            Ex Date is the trading cut off date after which position changes
+            will no longer alter the eligibility to the corporate action.
+          example: '2025-02-14'
+        RECLAIM_RATE:
+          type: number
+          format: double
+          description: >-
+            Reclaim Rate is the percentage that the Ben Owner is entitled to
+            reclaim back from the Foreign Tax Authorities (i.e. WHT Rate % less
+            treaty rate).
+          example: 10.012
+        STATUTE_DTE:
+          type: string
+          format: date
+          description: Statute Date is the last day the reclaim is in statute.
+          example: '2025-12-31'
+        EVENT_REFERENCE:
+          type: string
+          description: Event Reference is the Corporate Action event ID (CAID).
+          example: '9304700792'
+        CLIENT_REF:
+          type: string
+          description: >-
+            Client Reference is a unique number assigned by the client, to the
+            transaction, for identification purposes within their organization..
+          example: '348888'
+        INCOME_ACCOUNT:
+          type: string
+          description: Cash Account is the cash account number the income was paid to.
+          example: '00000014168569'
+        FUND_NAME:
+          type: string
+          description: Portfolio Name is the name of the safekeeping account.
+          example: FUND 501
+        RECONCILIATION_DATE:
+          type: string
+          format: date
+          description: >-
+            Receipt Date is the date when the funds were credited into client's
+            cash account.
+          example: '2024-05-10'
+        HOLDING:
+          type: number
+          format: double
+          description: >-
+            Total Entitlement Holding Amount is the total number of shares at
+            entitlement level.
+          example: 1000
+        INT_AMT_CCY:
+          type: number
+          format: double
+          description: >-
+            Interest Amount Received is the amount of interest paid by the
+            Foreign Tax Authority in addition to the tax reclaim value expressed
+            in the currency of the reclaim
+          example: 45.75
+        INT_AMT_GBP:
+          type: number
+          format: double
+          description: >-
+            Interest Amount (GBP) is the amount of interest paid by the Foreign
+            Tax Authority in addition to the tax reclaim value expressed in
+            British pound currency
+          example: 37.1
+        INT_AMT_EUR:
+          type: number
+          format: double
+          description: >-
+            Interest Amount (EUR) is the amount of interest paid by the Foreign
+            Tax Authority in addition to the tax reclaim value expressed in Euro
+            currency
+          example: 42.5
+        INT_AMT_USD:
+          type: number
+          format: double
+          description: >-
+            Interest Amount (USD) is the amount of interest paid by the Foreign
+            Tax Authority in addition to the tax reclaim value expressed in US
+            dollar currency
+          example: 48.2
+        OVERRIDE_CNTRY_ID_TRS:
+          type: number
+          format: double
+          description: >-
+            Security Domicile (Stock Residency) is the country in which tax was
+            withheld and where tax will be reclaimed
+          example: 1
+        MARKET:
+          type: string
+          description: >-
+            Depot Domicile is the Depot domicile (Country where the sub-account
+            is held).
+          example: AUSTRALIA
+        TOTAL_AMT_RECVED_CCY:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received is the value of the refund received from the
+            Tax Authority including interest, expressed in the currency of the
+            reclaim.
+          example: 350
+        TOTAL_AMT_RECVED_EUR:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (EUR) is the value of the refund received
+            from the Tax Authority including interest, expressed in Euro
+            currency.
+          example: 325
+        TOTAL_AMT_RECVED_GBP:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (GBP) is the value of the refund received
+            from the Tax Authority including interest, expressed in British
+            pound currency.
+          example: 290
+        TOTAL_AMT_RECVED_USD:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (USD) is the value of the refund received
+            from the Tax Authority including interest, expressed in US dollar
+            currency.
+          example: 380
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: '133611'
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            Account Type Code indicates the type of the account. Values are: C
+            (Cash Account), S (Safekeeping Account).
+          example: C
+        ACCT_BUS_TYP_NME:
+          type: string
+          description: >-
+            Account Type Description indicates the type of the account. Values
+            are CASH (C), S/K (S).
+          example: CASH
+        ACCT_CLS_DT:
+          type: string
+          format: date
+          description: >-
+            Account Close Date is the date when the account was closed. It will
+            only have a value if the account is closed.
+          example: '2024-12-31'
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - US DCC Equity
+        ACCT_OPN_DT:
+          type: string
+          format: date
+          description: Account Open Date is the date when the account was opened.
+          example: '2020-01-15'
+        ACCT_STS_TYP:
+          type: string
+          description: >-
+            Account Status provides the current status of the Cash Account
+            and/or the Safekeeping Account. Values are: Open, Closed, Frozen
+          example: Open
+        ALTV_CUR_CD:
+          type: string
+          description: Account Base Currency Code is the ISO Currency Code for the account.
+          example: JPY
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account. For the
+            Cash Account the branch code is a numeric value and for the
+            Safekeeping Account it is the ISO Country code.
+          example: SG
+        BR_NME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: CITIBANK JAPAN LTD
+        CASH_TYPE:
+          type: number
+          format: double
+          description: >-
+            Cash Type Code pertains to US Direct Cash Accounts and indicates
+            whether the Cash Account has a split income and principal balance.
+          example: 1
+        GFC_ID:
+          type: string
+          description: >-
+            Client ID is an identifier that is available on a Cash Account
+            and/or a Safekeeping Account. This Client ID is referred to,
+            internally at Citi, as a GFCID.
+          example: '1000123456'
+        IBAN:
+          type: string
+          description: IBAN is the International Bank Account Number for the Cash Account.
+          nullable: true
+          example: 'null'
+        CMPNY_NME:
+          type: string
+          description: Company Name is the name of the company which issued the security.
+          example: ABC Capital Ltd.
+        SEC_DESC:
+          type: string
+          description: >-
+            Issue Description contains the name and other details of the
+            instrument.
+          example: SOPRA STERIA GROUP
+        SEC_SECURITY_CD:
+          type: string
+          description: >-
+            CITI Internal Security Code is the identifier of the CITI Internal
+            Security Identifier.
+          example: BVGH0K1
+        SEC_SHRT_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: NESTLE
+        SID_BLOOMBERG:
+          type: string
+          description: >-
+            Bloomberg ID is the value supplied by Bloomberg to identify the
+            security.
+          example: BBG00K60SBR4
+        SID_CUSIP:
+          type: string
+          description: >-
+            CUSIP (Committee on Uniform Securities Identification Procedures) It
+            is a nine-character alphanumeric code that identifies a North
+            American financial security for the purposes of facilitating
+            clearing and settlement of trades.
+          example: E00460233
+        SID_LOCAL:
+          type: string
+          description: >-
+            Local ID is the Local security identifier of the associated
+            security.
+          example: DNB
+        SID_TICKER_SYMB:
+          type: string
+          description: Ticker is the symbol used on the exchange to identify the security.
+          example: KINVB
+        ACRL_BASIS_CDE:
+          type: string
+          description: >-
+            Accrual Basis Code is a code linked to the Accrual Basis field which
+            indicates the basis on which interest accruals are calculated.
+            Values include: 00043 (360 / 365), 00011 (360 / 360), 00063 (30 /
+            360 Non-EOM), etc.
+          example: '00011'
+        ACRL_BASIS_NME:
+          type: string
+          description: >-
+            Accrual Basis Description is the basis on which interest accrual is
+            calculated, e.g. 30/360 meaning nominal 30 day months and a 360 day
+            year.
+          example: Actual/360
+        CURR_FCTR_RATE:
+          type: number
+          format: double
+          description: >-
+            Current Factor is the factor which applies to the current accrual
+            period to determine payments and balances for principal paying
+            securities.
+          example: 0.4515268
+        DLAY_DAYS:
+          type: string
+          description: >-
+            Delay Days is the number of days from the issuance of an MBS pool
+            (or from the beginning of the interest accrual period) until the
+            first payment is remitted/paid to the holders.
+          example: '13'
+        DNOMD_CUR_CD:
+          type: string
+          description: >-
+            Denomination Currency Code is the ISO currency code in which the
+            security is denominated, in the local market.
+          example: USD
+        DTED_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Dated Date/Time is the date that the interest begins to accrue on a
+            fixed-income security.
+          example: '2019-08-26 00:00:00'
+        FCTR_DTE:
+          type: string
+          format: date-time
+          description: >-
+            Factor Date is the date the current factor is applicable from for
+            principal paying securities.
+          example: '2023-12-10 00:00:00'
+        INCM_CUR_CD:
+          type: string
+          description: >-
+            Income Currency Code is the ISO currency code in which income
+            payments will be made for the security in the local market.
+          example: EUR
+        INCM_CUR_NME:
+          type: string
+          description: >-
+            Income Currency Name is the name of the currency in which income
+            payments will be made for the security in the local market.
+          example: Euro
+        INCM_PROJN_RATE:
+          type: number
+          format: double
+          description: Interest Rate is the coupon rate of the security.
+          example: 3.0946
+        ISS_CAT_NME:
+          type: string
+          description: >-
+            Issue Category is the description for the Issue Category Code.
+            Values include: Common Stock (CSTK), Derivatives (DERIV), Mortgage
+            Backed Securities (MBS), etc.
+          example: Derivatives
+        ISS_CATG_CD:
+          type: string
+          description: >-
+            Issue Category Code is a specific category for the security. Values
+            include: CSTK (Common Stock), DERIV (Derivatives), MBS (Mortgage
+            Backed Securities), etc.
+          example: DERIV
+        ISS_TMS:
+          type: string
+          format: date-time
+          description: Issue Date is the date of first issue of the security.
+          example: '2019-11-26 00:00:00'
+        ISSR_LOC_CD:
+          type: string
+          description: >-
+            Issuer Location Code is the ISO country code where the issuer of the
+            security is based. Values include: AR (Argentina), CA (Canada), IE
+            (Ireland), etc.
+          example: US
+        ISSR_LOC_NME:
+          type: string
+          description: >-
+            Issuer Location is the name of the country where the issuer of the
+            security is based. Values include: Argentina (AR), Canada (CA),
+            Ireland (IE), etc.
+          example: United States
+        MATY_DT:
+          type: string
+          format: date-time
+          description: >-
+            Maturity Date is the date of maturity or redemption for fixed income
+            securities.
+          example: '2041-10-10 00:00:00'
+        NXT_PAY_DT:
+          type: string
+          format: date
+          description: >-
+            Next Payable Date is the next date on which a dividend or interest
+            payment is scheduled to be paid.
+          example: '2026-07-15'
+        PFD_ID_CTXT_CD:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID field. Values include: CUSIP, ISIN, SEDOL,
+            LOCAL, etc.
+          example: ISIN
+        PFD_ISS_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: BFXCMX4
+        PMT_FREQY_DESC:
+          type: string
+          description: >-
+            Payment Frequency Description indicates how often interest is paid
+            on the security. Values include: Annual (00001), Sem-Annual (00002),
+            One Payment Per Year (00035), etc.
+          example: Sem-Annual
+        POOL_ID_CD:
+          type: string
+          description: >-
+            Pool ID is an alphanumeric code that identifies a particular
+            mortgage backed security.
+          example: AB1234
+        PREV_FCTR_RATE:
+          type: number
+          format: double
+          description: >-
+            Previous Factor is the factor which applies to the last accrual
+            period to determine payments and balances for principal paying
+            securities.
+          example: 0.9985
+        SEC_GROUP:
+          type: string
+          description: >-
+            Asset Type is a code representing the Asset Type of the security.
+            Values include: EQTY (Equity), FI (Fixed Income), etc.
+          example: EQTY
+        SEC_SUB_TYP_CD:
+          type: string
+          description: >-
+            Issue Type Code is a code linked to the Issue Type field which
+            describes the type of security instrument. Values include: 1 (ADR
+            Convertible), 12 (Bond), 19 (Bond Convertible), etc.
+          example: '12'
+        SEC_SUB_TYP_NME:
+          type: string
+          description: >-
+            Issue Type is a description of the type of the security instrument.
+            Values include: ADR Convertible (1), Bond (12) , Bond Convertible
+            (19), etc.
+          example: Bond
+        STRK_PRC_AMT:
+          type: number
+          format: double
+          description: >-
+            Strike Price is the specified price on an options contract at which
+            the contract may be exercised.
+          example: 150.09
+        US_SIC_CD:
+          type: string
+          description: >-
+            SIC is the Standard Industrial Classification four-digit numeric
+            code.
+          example: '7372'
+        PAYABLE_DATE:
+          type: string
+          format: date
+          description: >-
+            Payable Date is the date on which a dividend or interest payment is
+            scheduled to be paid.
+          example: '2026-08-28'
+    ba848120-2d1f-4ec0-9f5c-2aa51b5d1634-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/ba848120-2d1f-4ec0-9f5c-2aa51b5d1634-data-schema
+    ba848120-2d1f-4ec0-9f5c-2aa51b5d1634-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/ba848120-2d1f-4ec0-9f5c-2aa51b5d1634-data-schema
+      xml:
+        name: data
+    f631ab51-6333-4183-9ef7-144f5fadc9b5-data-schema:
+      type: object
+      properties:
+        SK_ACCT_ID:
+          type: string
+          description: >-
+            The Safekeeping Account ID is an identifier for a Safekeeping
+            Account that is unique within a branch.
+          example: '0000123456'
+        COUNTRY:
+          type: string
+          description: Country is the reclaim market.
+          example: GERMANY
+        CODE_RCLM_CURR:
+          type: string
+          description: >-
+            Reclaim Currency is the currency of the reclaim (currency in which
+            the claim is made).
+          example: EUR
+        RECLAIM_REF:
+          type: string
+          description: >-
+            Reclaim Reference is the unique identifying number for each reclaim
+            in Citi system.
+          example: 600SE123456
+        BO_BATCH_NO:
+          type: string
+          description: >-
+            Batch Number is Citi's unique reference for the reclaims submitted
+            to the Tax authorities (submission may contain more than one
+            reclaim).
+          example: B910BE123456
+        BEN_OWNER_NAME:
+          type: string
+          description: >-
+            Beneficial Owner Name is the name of the Beneficiary Owner of the
+            reclaim.
+          example: ABC Investments Ltd.
+        DEPOT_CODE:
+          type: string
+          description: >-
+            Depot Code is the internal Citi identifier for the local sub-account
+            the securities are held on.
+          example: NAY
+        DATE_SENT_TO_FTA:
+          type: string
+          format: date
+          description: >-
+            Date sent to FTA is the date when the reclaim was submitted to the
+            foreign tax authority.
+          example: '2020-05-14'
+        DATE_SENT_TO_LTA:
+          type: string
+          format: date
+          description: >-
+            Date sent to LTA is the date when the reclaim was submitted to the
+            local tax authority.
+          example: '2020-05-14'
+        GERMAN_FILE_NUMBER:
+          type: string
+          description: >-
+            E-Filing Serial (Reclaim) is the reference no. for electronically
+            filed reclaim submission.
+          example: '1234567891'
+        EFILE_REF:
+          type: string
+          description: >-
+            E-File Reference is Citi's unique reference for each electronic
+            submission to Tax authorities (submission may contain more than 1
+            reclaim).
+          example: F500DE000345
+        ENTITLEMENT_REF:
+          type: string
+          description: >-
+            Entitlement Reference is the unique reference number generated from
+            Citi internal systems for each line of taxable income.
+          example: '00365104513'
+        CODE_RATE_CURR:
+          type: string
+          description: Rate Currency is the currency of the dividend.
+          example: '54251700451'
+        DIVIDEND_RATE:
+          type: number
+          format: double
+          description: >-
+            The Dividend Rate is the total expected dividend payments for an
+            investment on an annualized basis.
+          example: 1.953100028
+        FX_RATE_EUR:
+          type: number
+          format: double
+          description: >-
+            FX Rate (EUR) is the FX rate used to convert the reclaim currency
+            into EUR.
+          example: 0.09401
+        GROSS_DIV_EUR:
+          type: number
+          format: double
+          description: >-
+            Gross Dividend (EUR) is the value of the Gross Dividend expressed in
+            Euro currency.
+          example: 1500.75
+        TAX_PAID_EUR:
+          type: number
+          format: double
+          description: >-
+            Local Tax (WHT Paid) (EUR) is the value of tax withheld expressed in
+            Euro currency.
+          example: 300.5
+        NET_DIV_EUR:
+          type: number
+          format: double
+          description: >-
+            Net Dividend (EUR) is the dividend net of withholding tax expressed
+            in Euro currency.
+          example: 1200.25
+        RECLM_VAL_EUR:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount (EUR) is the amount being reclaimed expressed in Euro
+            currency.
+          example: 250
+        AMT_RECVED_EUR:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (EUR) is the refund received from the Tax
+            Authority expressed in Euro currency.
+          example: 240
+        FX_RATE_GBP:
+          type: number
+          format: double
+          description: >-
+            FX Rate (GBP) is the FX rate used to convert the reclaim currency
+            into GBP.
+          example: 0.8126
+        GROSS_DIV_GBP:
+          type: number
+          format: double
+          description: >-
+            Gross Dividend (GBP) is the value of the Gross Dividend expressed in
+            British pound currency.
+          example: 1300.4
+        TAX_PAID_GBP:
+          type: number
+          format: double
+          description: >-
+            Local Tax (WHT Paid) (GBP) is the value of tax withheld expressed in
+            British pound currency.
+          example: 260.35
+        NET_DIV_GBP:
+          type: number
+          format: double
+          description: >-
+            Net Dividend (GBP) is the dividend net of withholding tax expressed
+            in British pound currency.
+          example: 1040.05
+        RECLM_VAL_GBP:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount (GBP) is the amount being reclaimed expressed in
+            British pound currency.
+          example: 215
+        AMT_RECVED_GBP:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (GBP) is the refund received from the Tax
+            Authority expressed in British pound currency.
+          example: 210
+        EQUIVAL_RATE_CCY:
+          type: number
+          format: double
+          description: >-
+            Equivalent Rate is the dividend rate per share expressed in the
+            currency of the reclaim.
+          example: 1.15672
+        GROSS_DIV_CCY:
+          type: number
+          format: double
+          description: Gross Dividend expressed in the currency of the reclaim.
+          example: 2000
+        TAX_PAID_CCY:
+          type: number
+          format: double
+          description: Local Tax (WHT Paid) expressed in the currency of the reclaim.
+          example: 400
+        NET_DIV_CCY:
+          type: number
+          format: double
+          description: Net Dividend expressed in the currency of the reclaim.
+          example: 1600
+        RECLM_VAL_RCY:
+          type: number
+          format: double
+          description: Reclaim Amount expressed in the currency of the reclaim.
+          example: 320
+        AMT_RECVED_CCY:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (excluding interest), expressed in the
+            currency of the reclaim.
+          example: 310
+        FX_RATE_USD:
+          type: number
+          format: double
+          description: >-
+            FX Rate (USD) is the FX rate used to convert the reclaim currency
+            into USD.
+          example: 1.08
+        GROSS_DIV_USD:
+          type: number
+          format: double
+          description: >-
+            Gross Dividend (USD) is the value of the Gross Dividend expressed in
+            US dollar currency.
+          example: 1650
+        TAX_PAID_USD:
+          type: number
+          format: double
+          description: Local Tax (WHT Paid) expressed in US dollar currency.
+          example: 330
+        NET_DIV_USD:
+          type: number
+          format: double
+          description: >-
+            Net Dividend (USD) is the dividend net of withholding tax expressed
+            in US dollar currency.
+          example: 1320
+        RECLM_VAL_USD:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount (USD) is the value of the amount being reclaimed
+            expressed in US dollar currency.
+          example: 275
+        AMT_RECVED_USD:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received (USD) is the refund received from the Tax
+            Authority expressed in US dollar currency.
+          example: 270
+        STATUS:
+          type: string
+          description: Reclaim Status is the current status of the reclaim.
+          example: Suspended
+        STATUS_CHANGE_DATE:
+          type: string
+          format: date
+          description: Status Date is the date on which the status was last changed.
+          example: '2023-06-05'
+        ISSUER_TAX_ID:
+          type: string
+          description: Security Code (SEDOL) of the security.
+          example: BW4NR74
+        ISIN:
+          type: string
+          description: International Securities Identification Number.
+          example: US0378331005
+        SEC_SHRTN:
+          type: string
+          description: Security Name is the stock name of the security.
+          example: BYSTRONIC
+        LOCAL_TAX_ID:
+          type: string
+          description: Tax ID is the Beneficial Owner local Tax ID.
+          example: A92145408
+        WITH_RATE:
+          type: number
+          format: double
+          description: >-
+            WHT Rate is the rate of withholding tax applied to the income
+            payment.
+          example: 15.286
+        CREATION_DATE:
+          type: string
+          format: date
+          description: >-
+            Input Date is the date when the reclaim was loaded to Citi's reclaim
+            system.
+          example: '2024-01-20'
+        ALLOCATED_HOLDING:
+          type: number
+          format: double
+          description: Holding Value is the number of reclaimable shares per reclaim.
+          example: 500
+        BO_DOMICILE:
+          type: string
+          description: >-
+            BO Domicile (Fiscal Domicile) is the domicile of the beneficial
+            owner.
+          example: HUNGARY
+        ENTITY_TYPE:
+          type: string
+          description: >-
+            Entity Type (Fiscal Type) is the Beneficial Owner entity type (e.g.,
+            corporate, Pension Fund, etc.).
+          example: Individual
+        PAY_DATE:
+          type: string
+          format: date
+          description: Pay Date is the pay date of the dividend payment.
+          example: '2024-03-31'
+        PAYYEAR:
+          type: number
+          format: double
+          description: Pay Year is the pay year of the dividend.
+          example: 2024
+        PAYQUARTER:
+          type: string
+          description: Pay Quarter is the pay quarter of the dividend.
+          example: '1'
+        EX_DATE:
+          type: string
+          format: date
+          description: >-
+            Ex Date is the trading cut‑off date after which position changes
+            will no longer alter eligibility for the corporate action.
+          example: '2025-02-14'
+        RECLAIM_RATE:
+          type: number
+          format: double
+          description: >-
+            Reclaim Rate is the percentage the Beneficial Owner is entitled to
+            reclaim from the Foreign Tax Authorities.
+          example: 10.012
+        STATUTE_DTE:
+          type: string
+          format: date
+          description: Statute Date is the last day the reclaim is in statute.
+          example: '2025-12-31'
+        EVENT_REFERENCE:
+          type: string
+          description: Event Reference is the Corporate Action event ID (CAID).
+          example: '9304700792'
+        CLIENT_REF:
+          type: string
+          description: >-
+            Client Reference is a unique number assigned by the client for
+            identifying the transaction internally.
+          example: '348888'
+        INCOME_ACCOUNT:
+          type: string
+          description: Cash Account is the cash account number the income was paid to.
+          example: '00000014168569'
+        FUND_NAME:
+          type: string
+          description: Portfolio Name is the name of the safekeeping account.
+          example: FUND 501
+        RECONCILIATION_DATE:
+          type: string
+          format: date
+          description: >-
+            Receipt Date is the date when the funds were credited into the
+            client's cash account.
+          example: '2024-05-10'
+        HOLDING:
+          type: number
+          format: double
+          description: >-
+            Total Entitlement Holding Amount is the total number of shares at
+            entitlement level.
+          example: 1000
+        INT_AMT_CCY:
+          type: number
+          format: double
+          description: Interest Amount Received expressed in the currency of the reclaim.
+          example: 45.75
+        INT_AMT_GBP:
+          type: number
+          format: double
+          description: Interest Amount (GBP) expressed in British pound currency.
+          example: 37.1
+        INT_AMT_EUR:
+          type: number
+          format: double
+          description: Interest Amount (EUR) expressed in Euro currency.
+          example: 42.5
+        INT_AMT_USD:
+          type: number
+          format: double
+          description: Interest Amount (USD) expressed in US dollar currency.
+          example: 48.2
+        OVERRIDE_CNTRY_ID_TRS:
+          type: number
+          format: double
+          description: >-
+            Security Domicile (Stock Residency) is the country in which tax was
+            withheld and where tax will be reclaimed.
+          example: 1
+        MARKET:
+          type: string
+          description: Depot Domicile is the country where the sub‑account is held.
+          example: AUSTRALIA
+        TOTAL_AMT_RECVED_CCY:
+          type: number
+          format: double
+          description: >-
+            Reclaim Amount Received including interest, expressed in the
+            currency of the reclaim.
+          example: 350
+        TOTAL_AMT_RECVED_EUR:
+          type: number
+          format: double
+          description: Reclaim Amount Received (EUR) including interest.
+          example: 325
+        TOTAL_AMT_RECVED_GBP:
+          type: number
+          format: double
+          description: Reclaim Amount Received (GBP) including interest.
+          example: 290
+        TOTAL_AMT_RECVED_USD:
+          type: number
+          format: double
+          description: Reclaim Amount Received (USD) including interest.
+          example: 380
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier associated
+            with a Safekeeping or Cash Account.
+          example: '133611'
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: 'Account Type Code: C (Cash Account), S (Safekeeping Account).'
+          example: C
+        ACCT_BUS_TYP_NME:
+          type: string
+          description: 'Account Type Description: CASH (C), S/K (S).'
+          example: CASH
+        ACCT_CLS_DT:
+          type: string
+          format: date
+          description: Account Close Date, populated only if the account is closed.
+          example: '2024-12-31'
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID uniquely identifies a Cash or Safekeeping Account within
+            a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: Account Name displayed for the Cash or Safekeeping Account.
+          example: Demo - SK - US DCC Equity
+        ACCT_OPN_DT:
+          type: string
+          format: date
+          description: Account Open Date is the date when the account was opened.
+          example: '2020-01-15'
+        ACCT_STS_TYP:
+          type: string
+          description: 'Account Status: Open, Closed, Frozen.'
+          example: Open
+        ALTV_CUR_CD:
+          type: string
+          description: Account Base Currency Code is the ISO Currency Code of the account.
+          example: JPY
+        BR_ID:
+          type: string
+          description: Branch Code identifying the branch of the account.
+          example: SG
+        BR_NME:
+          type: string
+          description: Branch Name associated with the account.
+          example: CITIBANK JAPAN LTD
+        CASH_TYPE:
+          type: number
+          format: double
+          description: >-
+            Cash Type Code for US Direct Cash Accounts indicating split balance
+            configuration.
+          example: 1
+        GFC_ID:
+          type: string
+          description: Client ID (GFCID) available on Cash or Safekeeping Accounts.
+          example: '1000123456'
+        IBAN:
+          type: string
+          description: IBAN of the Cash Account (nullable).
+          example: 'null'
+        CMPNY_NME:
+          type: string
+          description: Company Name of the security issuer.
+          example: ABC Capital Ltd.
+        SEC_DESC:
+          type: string
+          description: Issue Description of the instrument.
+          example: SOPRA STERIA GROUP
+        SEC_SECURITY_CD:
+          type: string
+          description: CITI Internal Security Identifier.
+          example: BVGH0K1
+        SEC_SHRT_NME:
+          type: string
+          description: Security short name.
+          example: NESTLE
+        SID_BLOOMBERG:
+          type: string
+          description: Bloomberg Security Identifier.
+          example: BBG00K60SBR4
+        SID_CUSIP:
+          type: string
+          description: CUSIP identifier for North American securities.
+          example: E00460233
+        SID_LOCAL:
+          type: string
+          description: Local Security Identifier.
+          example: DNB
+        SID_TICKER_SYMB:
+          type: string
+          description: Security ticker symbol.
+          example: KINVB
+        ACRL_BASIS_CDE:
+          type: string
+          description: Accrual Basis Code for interest accrual calculations.
+          example: '00011'
+        ACRL_BASIS_NME:
+          type: string
+          description: Accrual Basis Description.
+          example: Actual/360
+        CURR_FCTR_RATE:
+          type: number
+          format: double
+          description: Current Factor for principal paying securities.
+          example: 0.4515268
+        DLAY_DAYS:
+          type: string
+          description: Delay Days for mortgage‑backed securities.
+          example: '13'
+        DNOMD_CUR_CD:
+          type: string
+          description: Denomination Currency Code.
+          example: USD
+        DTED_TMS:
+          type: string
+          format: date-time
+          description: Dated Date/Time when interest begins to accrue.
+          example: '2019-08-26 00:00:00'
+        FCTR_DTE:
+          type: string
+          format: date-time
+          description: Factor Date for principal paying securities.
+          example: '2023-12-10 00:00:00'
+        INCM_CUR_CD:
+          type: string
+          description: Income Currency Code.
+          example: EUR
+        INCM_CUR_NME:
+          type: string
+          description: Income Currency Name.
+          example: Euro
+        INCM_PROJN_RATE:
+          type: number
+          format: double
+          description: Interest (Coupon) Rate.
+          example: 3.0946
+        ISS_CAT_NME:
+          type: string
+          description: Issue Category description.
+          example: Derivatives
+        ISS_CATG_CD:
+          type: string
+          description: Issue Category Code.
+          example: DERIV
+        ISS_TMS:
+          type: string
+          format: date-time
+          description: Issue Date of the security.
+          example: '2019-11-26 00:00:00'
+        ISSR_LOC_CD:
+          type: string
+          description: Issuer Location Code (ISO country code).
+          example: US
+        ISSR_LOC_NME:
+          type: string
+          description: Issuer Location Country Name.
+          example: United States
+        MATY_DT:
+          type: string
+          format: date-time
+          description: Maturity Date.
+          example: '2041-10-10 00:00:00'
+        NXT_PAY_DT:
+          type: string
+          format: date
+          description: Next Payable Date for dividend or coupon.
+          example: '2026-07-15'
+        PFD_ID_CTXT_CD:
+          type: string
+          description: Security ID Type (e.g., CUSIP, ISIN, SEDOL, LOCAL).
+          example: ISIN
+        PFD_ISS_ID:
+          type: string
+          description: Primary Security Identifier.
+          example: BFXCMX4
+        PMT_FREQY_DESC:
+          type: string
+          description: Payment Frequency description.
+          example: Sem-Annual
+        POOL_ID_CD:
+          type: string
+          description: Pool ID for mortgage‑backed securities.
+          example: AB1234
+        PREV_FCTR_RATE:
+          type: number
+          format: double
+          description: Previous Factor applied to last accrual period.
+          example: 0.9985
+        SEC_GROUP:
+          type: string
+          description: Asset Type code (EQTY, FI, etc.).
+          example: EQTY
+        SEC_SUB_TYP_CD:
+          type: string
+          description: Issue Type Code.
+          example: '12'
+        SEC_SUB_TYP_NME:
+          type: string
+          description: Issue Type description.
+          example: Bond
+        STRK_PRC_AMT:
+          type: number
+          format: double
+          description: Strike Price for options.
+          example: 150.09
+        US_SIC_CD:
+          type: string
+          description: Standard Industrial Classification code.
+          example: '7372'
+        PAYABLE_DATE:
+          type: string
+          format: date
+          description: Payable Date for dividend or coupon.
+          example: '2026-08-28'
+    f631ab51-6333-4183-9ef7-144f5fadc9b5-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/f631ab51-6333-4183-9ef7-144f5fadc9b5-data-schema
+    f631ab51-6333-4183-9ef7-144f5fadc9b5-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/f631ab51-6333-4183-9ef7-144f5fadc9b5-data-schema
+      xml:
+        name: data
+    ErrorResponse:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errorDetails:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      title: Error Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+  parameters:
+    client_id:
+      description: >-
+        Your unique ID. This is the same as the ID you used for OAuth token
+        generation. Citi shared this ID with you during your Data On Demand API
+        onboarding
+      name: client_id
+      in: header
+      required: true
+      schema:
+        type: string
+    skip:
+      name: skip
+      in: query
+      description: The number of records to skip before returning the results
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    take:
+      name: take
+      in: query
+      description: The maximum number of records to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 5000
+    select:
+      name: $select
+      in: query
+      description: >-
+        The $SELECT parameter in an API allows users to specify which data
+        fields (properties or columns) they want to receive in the API response.
+        This helps improve efficiency by reducing the amount of data transferred
+        and simplifying client-side processing.
+      required: false
+      schema:
+        type: string
+    parameter-29387:
+      name: SK_ACCT_ID
+      description: >-
+        The Safekeeping Account ID is an identifier for a Safekeeping Account
+        that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29368:
+      name: COUNTRY
+      description: Country is the reclaim market
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29367:
+      name: CODE_RCLM_CURR
+      description: >-
+        Reclaim Currency is the currency of the reclaim (currency in which the
+        claim is made)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29385:
+      name: RECLAIM_REF
+      description: >-
+        Reclaim Reference is the unique identifying number for each reclaim in
+        Citi system
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29363:
+      name: BO_BATCH_NO
+      description: >-
+        Batch Number is Citi's unique reference for the reclaims submitted to
+        the Tax authorities (submission may contains more than 1 reclaim)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29362:
+      name: BEN_OWNER_NAME
+      description: >-
+        Beneficial Owner Name is the name of the Beneficiary Owner of the
+        reclaim
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29371:
+      name: DEPOT_CODE
+      description: >-
+        Depot Code is the internal Citi identifier for the local sub account the
+        securities are held on
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29395:
+      name: DATE_SENT_TO_FTA
+      description: >-
+        Date sent to FTA is the date when the reclaim was submitted to the
+        foreign tax authority
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-29396:
+      name: DATE_SENT_TO_LTA
+      description: >-
+        Date sent to LTA is the date when the reclaim was submitted to the local
+        tax authority
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-29377:
+      name: GERMAN_FILE_NUMBER
+      description: >-
+        EFiling Serial# (Reclaim) is the reference no. for electronically filed
+        reclaim submission
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29373:
+      name: EFILE_REF
+      description: >-
+        E-File Reference is Citi's unique reference for each electronic
+        submission to Tax authorities (submission may contains more than 1
+        reclaim)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29374:
+      name: ENTITLEMENT_REF
+      description: >-
+        Entitlement Reference is the unique reference number generated from Citi
+        internal systems for each line of taxable income
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29366:
+      name: CODE_RATE_CURR
+      description: Rate Currency is the currency of the dividend
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29398:
+      name: DIVIDEND_RATE
+      description: >-
+        The Dividend Rate is the total expected dividend payments for an
+        investment on an annualized basis
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29410:
+      name: FX_RATE_EUR
+      description: >-
+        FX Rate (EUR) is the FX rate used to convert the reclaim currency into
+        EUR
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29407:
+      name: GROSS_DIV_EUR
+      description: >-
+        Gross Dividend (EUR) is the value of the Gross Dividend expressed in
+        Euro currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29415:
+      name: TAX_PAID_EUR
+      description: >-
+        Local Tax (WHT Paid) (EUR) is the value of tax withheld expressed in
+        Euro currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29434:
+      name: NET_DIV_EUR
+      description: >-
+        Net Dividend (EUR) is the value of is the dividend net of withholding
+        tax expressed in Euro currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29425:
+      name: RECLM_VAL_EUR
+      description: >-
+        Reclaim Amount (EUR) is the value of the amount being reclaimed
+        expressed in Euro currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29402:
+      name: AMT_RECVED_EUR
+      description: >-
+        Reclaim Amount Received (EUR) is the value of the refund received from
+        the Tax Authority expressed in Euro currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29411:
+      name: FX_RATE_GBP
+      description: >-
+        FX Rate (GBP) is the FX rate used to convert the reclaim currency into
+        GBP
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29408:
+      name: GROSS_DIV_GBP
+      description: >-
+        Gross Dividend (GBP) is the value of the Gross Dividend expressed in
+        British pound currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29416:
+      name: TAX_PAID_GBP
+      description: >-
+        Local Tax (WHT Paid) (GBP) is the value of tax withheld expressed in
+        British pound currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29435:
+      name: NET_DIV_GBP
+      description: >-
+        Net Dividend (GBP) is the value of is the dividend net of withholding
+        tax expressed in British pound currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29426:
+      name: RECLM_VAL_GBP
+      description: >-
+        Reclaim Amount (GBP) is the value of the amount being reclaimed
+        expressed in British pound currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29403:
+      name: AMT_RECVED_GBP
+      description: >-
+        Reclaim Amount Received (GBP) is the value of the refund received from
+        the Tax Authority expressed in British pound currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29413:
+      name: EQUIVAL_RATE_CCY
+      description: >-
+        Equivalent Rate is the dividend rate per share expressed in the currency
+        of the reclaim
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29406:
+      name: GROSS_DIV_CCY
+      description: >-
+        Gross Dividend is the value of the Gross Dividend expressed in the
+        currency of the reclaim
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29414:
+      name: TAX_PAID_CCY
+      description: >-
+        Local Tax (WHT Paid) is the value of tax withheld expressed in the
+        currency of the reclaim
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29433:
+      name: NET_DIV_CCY
+      description: >-
+        Net Dividend is the value of is the dividend net of withholding tax
+        expressed in the currency of the reclaim
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29427:
+      name: RECLM_VAL_RCY
+      description: >-
+        Reclaim Amount is the value of the amount being reclaimed expressed in
+        the currency of the reclaim
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29401:
+      name: AMT_RECVED_CCY
+      description: >-
+        Reclaim Amount Received is the value of the refund received from the Tax
+        Authority excluding interest, expressed in the currency of the reclaim
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29412:
+      name: FX_RATE_USD
+      description: >-
+        FX Rate (USD) is the FX rate used to convert the reclaim currency into
+        USD
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29409:
+      name: GROSS_DIV_USD
+      description: >-
+        Gross Dividend (USD) is the value of the Gross Dividend expressed in US
+        dollar  currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29417:
+      name: TAX_PAID_USD
+      description: >-
+        Local Tax (WHT Paid) (USD) is the value of tax withheld expressed in US
+        dollar  currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29436:
+      name: NET_DIV_USD
+      description: >-
+        Net Dividend (USD) is the value of is the dividend net of withholding
+        tax expressed in US dollar  currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29428:
+      name: RECLM_VAL_USD
+      description: >-
+        Reclaim Amount (USD) is the value of the amount being reclaimed
+        expressed in US dollar  currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29404:
+      name: AMT_RECVED_USD
+      description: >-
+        Reclaim Amount Received (USD) is the value of the refund received from
+        the Tax Authority expressed in US dollar  currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29388:
+      name: STATUS
+      description: Reclaim Status is the current status of the reclaim
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29392:
+      name: STATUS_CHANGE_DATE
+      description: Status Date is the date on which the status was last changed
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-29381:
+      name: ISSUER_TAX_ID
+      description: >-
+        Security Code is the SEDOL code (Stock Exchange Daily Official List
+        identifier) of the security
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29380:
+      name: ISIN
+      description: >-
+        Alternate Security Code (ISIN) is the International Securities
+        Identification Number.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29386:
+      name: SEC_SHRTN
+      description: Security Name is the stock name of the security
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29382:
+      name: LOCAL_TAX_ID
+      description: Tax ID is the Beneficial Owner local Tax ID
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29422:
+      name: WITH_RATE
+      description: WHT Rate is the rate of withholding tax applied to the income payment
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29397:
+      name: CREATION_DATE
+      description: >-
+        Input Date is the date when the reclaim was loaded to Citi's reclaim
+        system
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-29400:
+      name: ALLOCATED_HOLDING
+      description: Holding Value is the number of reclaimable shares per reclaim
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29364:
+      name: BO_DOMICILE
+      description: BO Domicile (Fiscal Domicile) is the Domicile of beneficial owner
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29375:
+      name: ENTITY_TYPE
+      description: >-
+        Entity Type (Fiscal Type) is the Beneficial Owner entity type (i.e.:
+        corporate, Pension Fund, etc.)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29390:
+      name: PAY_DATE
+      description: Pay Date is the pay date of the dividend payment
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-29423:
+      name: PAYYEAR
+      description: Pay Year is the pay year of the dividend
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29389:
+      name: PAYQUARTER
+      description: Pay Quarter is the pay quarter of the dividend
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29394:
+      name: EX_DATE
+      description: >-
+        Ex Date is the trading cut off date after which position changes will no
+        longer alter the eligibility to the corporate action.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-29424:
+      name: RECLAIM_RATE
+      description: >-
+        Reclaim Rate is the percentage that the Ben Owner is entitled to reclaim
+        back from the Foreign Tax Authorities (i.e. WHT Rate %  less treaty
+        rate)
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29393:
+      name: STATUTE_DTE
+      description: Statute Date is the last day the reclaim is in statute
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-29378:
+      name: EVENT_REFERENCE
+      description: Event Reference is the Corporate Action event ID (CAID)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29365:
+      name: CLIENT_REF
+      description: >-
+        Client Reference is a unique number assigned by the client, to the
+        transaction, for identification purposes within their organization.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29384:
+      name: INCOME_ACCOUNT
+      description: Cash Account is the cash account number the income was paid to
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29376:
+      name: FUND_NAME
+      description: Portfolio Name is the name of the safekeeping account
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29391:
+      name: RECONCILIATION_DATE
+      description: >-
+        Receipt Date is the date when the funds were credited into client's cash
+        account
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-29405:
+      name: HOLDING
+      description: >-
+        Total Entitlement Holding Amount is the total number of shares at
+        entitlement level.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29429:
+      name: INT_AMT_CCY
+      description: >-
+        Interest Amount Received is the amount of interest paid by the Foreign
+        Tax Authority in addition to the tax reclaim value expressed in the
+        currency of the reclaim
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29431:
+      name: INT_AMT_GBP
+      description: >-
+        Interest Amount (GBP) is the amount of interest paid by the Foreign Tax
+        Authority in addition to the tax reclaim value expressed in British
+        pound currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29430:
+      name: INT_AMT_EUR
+      description: >-
+        Interest Amount (EUR) is the amount of interest paid by the Foreign Tax
+        Authority in addition to the tax reclaim value expressed in Euro
+        currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29432:
+      name: INT_AMT_USD
+      description: >-
+        Interest Amount (USD) is the amount of interest paid by the Foreign Tax
+        Authority in addition to the tax reclaim value expressed in US dollar 
+        currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29438:
+      name: OVERRIDE_CNTRY_ID_TRS
+      description: >-
+        Security Domicile (Stock Residency) is the country in which tax was
+        withheld and where tax will be reclaimed
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29383:
+      name: MARKET
+      description: >-
+        Depot Domicile is the Depot domicile (Country where the sub-account is
+        held).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-29418:
+      name: TOTAL_AMT_RECVED_CCY
+      description: >-
+        Reclaim Amount Received is the value of the refund received from the Tax
+        Authority including interest, expressed in the currency of the reclaim
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29419:
+      name: TOTAL_AMT_RECVED_EUR
+      description: >-
+        Reclaim Amount Received (EUR) is the value of the refund received from
+        the Tax Authority including interest, expressed in Euro currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29420:
+      name: TOTAL_AMT_RECVED_GBP
+      description: >-
+        Reclaim Amount Received (GBP) is the value of the refund received from
+        the Tax Authority including interest, expressed in British pound
+        currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-29421:
+      name: TOTAL_AMT_RECVED_USD
+      description: >-
+        Reclaim Amount Received (USD) is the value of the refund received from
+        the Tax Authority including interest, expressed in US dollar  currency
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-14980:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal Citi client identifier that is
+        associated to a Safekeeping or Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14981:
+      name: ACCT_BUS_TYP_CD
+      description: >-
+        Account Type Code indicates the type of the account. Values are: C (Cash
+        Account), S (Safekeeping Account).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14982:
+      name: ACCT_BUS_TYP_NME
+      description: >-
+        Account Type Description indicates the type of the account. Values are
+        CASH (C), S/K (S)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14983:
+      name: ACCT_CLS_DT
+      description: >-
+        Account Close Date is the date when the account was closed. It will only
+        have a value if the account is closed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-14984:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14985:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14986:
+      name: ACCT_OPN_DT
+      description: Account Open Date is the date when the account was opened.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-14987:
+      name: ACCT_STS_TYP
+      description: >-
+        Account Status provides the current status of the Cash Account and/or
+        the Safekeeping Account.  Values are: Open, Closed, Frozen
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14988:
+      name: ALTV_CUR_CD
+      description: Account Base Currency Code is the ISO Currency Code for the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14758:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account.  For the
+        Cash Account the branch code is a numeric value and for the Safekeeping
+        Account it is the ISO Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14989:
+      name: BR_NME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14990:
+      name: CASH_TYPE
+      description: >-
+        Cash Type Code pertains to US Direct Cash Accounts and indicates whether
+        the Cash Account has a split income and principal balance.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-14991:
+      name: GFC_ID
+      description: >-
+        Client ID is an identifier that is available on a Cash Account and/or a
+        Safekeeping Account. This Client ID is referred to, internally at Citi,
+        as a GFCID.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14992:
+      name: IBAN
+      description: IBAN is the International Bank Account Number for the Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14996:
+      name: CMPNY_NME
+      description: Company Name is the name of the company which issued the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14997:
+      name: SEC_DESC
+      description: Issue Description contains the name and other details of the instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14998:
+      name: SEC_SECURITY_CD
+      description: >-
+        CITI Internal Security Code is the identifier of the CITI Internal
+        Security Identifier.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-14999:
+      name: SEC_SHRT_NME
+      description: Issue Name is the Security Name of the security instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15001:
+      name: SID_BLOOMBERG
+      description: >-
+        Bloomberg ID is the value supplied by Bloomberg to identify the
+        security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15002:
+      name: SID_CUSIP
+      description: >-
+        CUSIP (Committee on Uniform Securities Identification Procedures) It is
+        a nine-character alphanumeric code that identifies a North American
+        financial security for the purposes of facilitating clearing and
+        settlement of trades.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15004:
+      name: SID_LOCAL
+      description: Local ID is the Local security identifier of the associated security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15006:
+      name: SID_TICKER_SYMB
+      description: Ticker is the symbol used on the exchange to identify the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15007:
+      name: ACRL_BASIS_CDE
+      description: >-
+        Accrual Basis Code is a code linked to the Accrual Basis field which
+        indicates the basis on which interest accruals are calculated.  Values
+        include: 00043 (360 / 365), 00011 (360 / 360), 00063 (30 / 360 Non-EOM),
+        etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15008:
+      name: ACRL_BASIS_NME
+      description: >-
+        Accrual Basis Description is the basis on which interest accrual is
+        calculated, e.g. 30/360 meaning nominal 30 day months and a 360 day
+        year.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15009:
+      name: CURR_FCTR_RATE
+      description: >-
+        Current Factor is the factor which applies to the current accrual period
+        to determine payments and balances for principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-15010:
+      name: DLAY_DAYS
+      description: >-
+        Delay Days is the number of days from the issuance of an MBS pool (or
+        from the beginning of the interest accrual period) until the first
+        payment is remitted/paid to the holders.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15011:
+      name: DNOMD_CUR_CD
+      description: >-
+        Denomination Currency Code is the ISO currency code in which the
+        security is denominated, in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15012:
+      name: DTED_TMS
+      description: >-
+        Dated Date/Time is the date that the interest begins to accrue on a
+        fixed-income security.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-15013:
+      name: FCTR_DTE
+      description: >-
+        Factor Date is the date the current factor is applicable from for
+        principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-15014:
+      name: INCM_CUR_CD
+      description: >-
+        Income Currency Code is the ISO currency code in which income payments
+        will be made for the security in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15015:
+      name: INCM_CUR_NME
+      description: >-
+        Income Currency Name is the name of the currency in which income
+        payments will be made for the security in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15016:
+      name: INCM_PROJN_RATE
+      description: Interest Rate is the coupon rate of the security.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-15017:
+      name: ISS_CAT_NME
+      description: >-
+        Issue Category is the description for the Issue Category Code.  Values
+        include:  Common Stock (CSTK), Derivatives (DERIV), Mortgage Backed
+        Securities (MBS), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15018:
+      name: ISS_CATG_CD
+      description: >-
+        Issue Category Code is a specific category for the security.  Values
+        include: CSTK (Common Stock), DERIV (Derivatives), MBS (Mortgage Backed
+        Securities), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15019:
+      name: ISS_TMS
+      description: Issue Date is the date of first issue of the security.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-15020:
+      name: ISSR_LOC_CD
+      description: >-
+        Issuer Location Code is the ISO country code where the issuer of the
+        security is based.  Values include: AR (Argentina), CA (Canada), IE
+        (Ireland), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15021:
+      name: ISSR_LOC_NME
+      description: >-
+        Issuer Location is the name of the country where the issuer of the
+        security is based.  Values include: Argentina (AR), Canada (CA), Ireland
+        (IE), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15022:
+      name: MATY_DT
+      description: >-
+        Maturity Date is the date of maturity or redemption for fixed income
+        securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-15023:
+      name: NXT_PAY_DT
+      description: >-
+        Next Payable Date is the next date on which a dividend or interest
+        payment is scheduled to be paid.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-15024:
+      name: PFD_ID_CTXT_CD
+      description: >-
+        Security ID Type indicates the type of identifier of the corresponding
+        Security ID field. Values include: CUSIP, ISIN, SEDOL, LOCAL, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15025:
+      name: PFD_ISS_ID
+      description: >-
+        Security ID is the most commonly used identifier for the security in a
+        given market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15026:
+      name: PMT_FREQY_DESC
+      description: >-
+        Payment Frequency Description indicates how often interest is paid on
+        the security.  Values include: Annual (00001),  Sem-Annual (00002), One
+        Payment Per Year (00035), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15027:
+      name: POOL_ID_CD
+      description: >-
+        Pool ID is an alphanumeric code that identifies a particular mortgage
+        backed security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15028:
+      name: PREV_FCTR_RATE
+      description: >-
+        Previous Factor is the factor which applies to the last accrual period
+        to determine payments and balances for principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-15029:
+      name: SEC_GROUP
+      description: >-
+        Asset Type is a code representing the Asset Type of the security. 
+        Values include: EQTY (Equity), FI (Fixed Income), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15030:
+      name: SEC_SUB_TYP_CD
+      description: >-
+        Issue Type Code is a code linked to the Issue Type field which describes
+        the type of security instrument. Values include: 1 (ADR Convertible), 12
+        (Bond), 19 (Bond Convertible), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15031:
+      name: SEC_SUB_TYP_NME
+      description: >-
+        Issue Type is a description of the type of the security instrument. 
+        Values include: ADR Convertible (1), Bond (12) , Bond Convertible (19),
+        etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15032:
+      name: STRK_PRC_AMT
+      description: >-
+        Strike Price is the specified price on an options contract at which the
+        contract may be exercised.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-15033:
+      name: US_SIC_CD
+      description: SIC is the Standard Industrial Classification four-digit numeric code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-15088:
+      name: PAYABLE_DATE
+      description: >-
+        Payable Date is the date on which a dividend or interest payment is
+        scheduled to be paid.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-31457:
+      name: UID
+      description: >-
+        Indicates whether or not the record was inserted, updated or deleted in
+        Custody Reporting.
+      in: query
+      required: false
+      schema:
+        type: string
+  securitySchemes:
+    client-Credential-Oauth-Security-Schema:
+      type: oauth2
+      description: This API uses OAuth 2 with the client credentials flow
+      flows:
+        clientCredentials:
+          tokenUrl: /markets/api/oauth2/token
+          scopes:
+            /dod: Access to Cash Balances Information
+paths:
+  /api/services/ba848120-2d1f-4ec0-9f5c-2aa51b5d1634/filter:
+    get:
+      summary: Open Tax Reclaims
+      description: >-
+        Open Tax Reclaims provides the full list of tax reclaims which are yet
+        to be paid.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-29387'
+        - $ref: '#/components/parameters/parameter-29368'
+        - $ref: '#/components/parameters/parameter-29367'
+        - $ref: '#/components/parameters/parameter-29385'
+        - $ref: '#/components/parameters/parameter-29363'
+        - $ref: '#/components/parameters/parameter-29362'
+        - $ref: '#/components/parameters/parameter-29371'
+        - $ref: '#/components/parameters/parameter-29395'
+        - $ref: '#/components/parameters/parameter-29396'
+        - $ref: '#/components/parameters/parameter-29377'
+        - $ref: '#/components/parameters/parameter-29373'
+        - $ref: '#/components/parameters/parameter-29374'
+        - $ref: '#/components/parameters/parameter-29366'
+        - $ref: '#/components/parameters/parameter-29398'
+        - $ref: '#/components/parameters/parameter-29410'
+        - $ref: '#/components/parameters/parameter-29407'
+        - $ref: '#/components/parameters/parameter-29415'
+        - $ref: '#/components/parameters/parameter-29434'
+        - $ref: '#/components/parameters/parameter-29425'
+        - $ref: '#/components/parameters/parameter-29402'
+        - $ref: '#/components/parameters/parameter-29411'
+        - $ref: '#/components/parameters/parameter-29408'
+        - $ref: '#/components/parameters/parameter-29416'
+        - $ref: '#/components/parameters/parameter-29435'
+        - $ref: '#/components/parameters/parameter-29426'
+        - $ref: '#/components/parameters/parameter-29403'
+        - $ref: '#/components/parameters/parameter-29413'
+        - $ref: '#/components/parameters/parameter-29406'
+        - $ref: '#/components/parameters/parameter-29414'
+        - $ref: '#/components/parameters/parameter-29433'
+        - $ref: '#/components/parameters/parameter-29427'
+        - $ref: '#/components/parameters/parameter-29401'
+        - $ref: '#/components/parameters/parameter-29412'
+        - $ref: '#/components/parameters/parameter-29409'
+        - $ref: '#/components/parameters/parameter-29417'
+        - $ref: '#/components/parameters/parameter-29436'
+        - $ref: '#/components/parameters/parameter-29428'
+        - $ref: '#/components/parameters/parameter-29404'
+        - $ref: '#/components/parameters/parameter-29388'
+        - $ref: '#/components/parameters/parameter-29392'
+        - $ref: '#/components/parameters/parameter-29381'
+        - $ref: '#/components/parameters/parameter-29380'
+        - $ref: '#/components/parameters/parameter-29386'
+        - $ref: '#/components/parameters/parameter-29382'
+        - $ref: '#/components/parameters/parameter-29422'
+        - $ref: '#/components/parameters/parameter-29397'
+        - $ref: '#/components/parameters/parameter-29400'
+        - $ref: '#/components/parameters/parameter-29364'
+        - $ref: '#/components/parameters/parameter-29375'
+        - $ref: '#/components/parameters/parameter-29390'
+        - $ref: '#/components/parameters/parameter-29423'
+        - $ref: '#/components/parameters/parameter-29389'
+        - $ref: '#/components/parameters/parameter-29394'
+        - $ref: '#/components/parameters/parameter-29424'
+        - $ref: '#/components/parameters/parameter-29393'
+        - $ref: '#/components/parameters/parameter-29378'
+        - $ref: '#/components/parameters/parameter-29365'
+        - $ref: '#/components/parameters/parameter-29384'
+        - $ref: '#/components/parameters/parameter-29376'
+        - $ref: '#/components/parameters/parameter-29391'
+        - $ref: '#/components/parameters/parameter-29405'
+        - $ref: '#/components/parameters/parameter-29429'
+        - $ref: '#/components/parameters/parameter-29431'
+        - $ref: '#/components/parameters/parameter-29430'
+        - $ref: '#/components/parameters/parameter-29432'
+        - $ref: '#/components/parameters/parameter-29438'
+        - $ref: '#/components/parameters/parameter-29383'
+        - $ref: '#/components/parameters/parameter-29418'
+        - $ref: '#/components/parameters/parameter-29419'
+        - $ref: '#/components/parameters/parameter-29420'
+        - $ref: '#/components/parameters/parameter-29421'
+        - $ref: '#/components/parameters/parameter-14980'
+        - $ref: '#/components/parameters/parameter-14981'
+        - $ref: '#/components/parameters/parameter-14982'
+        - $ref: '#/components/parameters/parameter-14983'
+        - $ref: '#/components/parameters/parameter-14984'
+        - $ref: '#/components/parameters/parameter-14985'
+        - $ref: '#/components/parameters/parameter-14986'
+        - $ref: '#/components/parameters/parameter-14987'
+        - $ref: '#/components/parameters/parameter-14988'
+        - $ref: '#/components/parameters/parameter-14758'
+        - $ref: '#/components/parameters/parameter-14989'
+        - $ref: '#/components/parameters/parameter-14990'
+        - $ref: '#/components/parameters/parameter-14991'
+        - $ref: '#/components/parameters/parameter-14992'
+        - $ref: '#/components/parameters/parameter-14996'
+        - $ref: '#/components/parameters/parameter-14997'
+        - $ref: '#/components/parameters/parameter-14998'
+        - $ref: '#/components/parameters/parameter-14999'
+        - $ref: '#/components/parameters/parameter-15001'
+        - $ref: '#/components/parameters/parameter-15002'
+        - $ref: '#/components/parameters/parameter-15004'
+        - $ref: '#/components/parameters/parameter-15006'
+        - $ref: '#/components/parameters/parameter-15007'
+        - $ref: '#/components/parameters/parameter-15008'
+        - $ref: '#/components/parameters/parameter-15009'
+        - $ref: '#/components/parameters/parameter-15010'
+        - $ref: '#/components/parameters/parameter-15011'
+        - $ref: '#/components/parameters/parameter-15012'
+        - $ref: '#/components/parameters/parameter-15013'
+        - $ref: '#/components/parameters/parameter-15014'
+        - $ref: '#/components/parameters/parameter-15015'
+        - $ref: '#/components/parameters/parameter-15016'
+        - $ref: '#/components/parameters/parameter-15017'
+        - $ref: '#/components/parameters/parameter-15018'
+        - $ref: '#/components/parameters/parameter-15019'
+        - $ref: '#/components/parameters/parameter-15020'
+        - $ref: '#/components/parameters/parameter-15021'
+        - $ref: '#/components/parameters/parameter-15022'
+        - $ref: '#/components/parameters/parameter-15023'
+        - $ref: '#/components/parameters/parameter-15024'
+        - $ref: '#/components/parameters/parameter-15025'
+        - $ref: '#/components/parameters/parameter-15026'
+        - $ref: '#/components/parameters/parameter-15027'
+        - $ref: '#/components/parameters/parameter-15028'
+        - $ref: '#/components/parameters/parameter-15029'
+        - $ref: '#/components/parameters/parameter-15030'
+        - $ref: '#/components/parameters/parameter-15031'
+        - $ref: '#/components/parameters/parameter-15032'
+        - $ref: '#/components/parameters/parameter-15033'
+        - $ref: '#/components/parameters/parameter-15088'
+        - $ref: '#/components/parameters/parameter-31457'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ba848120-2d1f-4ec0-9f5c-2aa51b5d1634-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/ba848120-2d1f-4ec0-9f5c-2aa51b5d1634-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/f631ab51-6333-4183-9ef7-144f5fadc9b5/filter:
+    get:
+      summary: Closed Tax Reclaims
+      description: >-
+        Closed Tax Reclaims provides the full list of tax reclaims which have
+        been paid.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-29387'
+        - $ref: '#/components/parameters/parameter-29368'
+        - $ref: '#/components/parameters/parameter-29367'
+        - $ref: '#/components/parameters/parameter-29385'
+        - $ref: '#/components/parameters/parameter-29363'
+        - $ref: '#/components/parameters/parameter-29362'
+        - $ref: '#/components/parameters/parameter-29371'
+        - $ref: '#/components/parameters/parameter-29395'
+        - $ref: '#/components/parameters/parameter-29396'
+        - $ref: '#/components/parameters/parameter-29377'
+        - $ref: '#/components/parameters/parameter-29373'
+        - $ref: '#/components/parameters/parameter-29374'
+        - $ref: '#/components/parameters/parameter-29366'
+        - $ref: '#/components/parameters/parameter-29398'
+        - $ref: '#/components/parameters/parameter-29410'
+        - $ref: '#/components/parameters/parameter-29407'
+        - $ref: '#/components/parameters/parameter-29415'
+        - $ref: '#/components/parameters/parameter-29434'
+        - $ref: '#/components/parameters/parameter-29425'
+        - $ref: '#/components/parameters/parameter-29402'
+        - $ref: '#/components/parameters/parameter-29411'
+        - $ref: '#/components/parameters/parameter-29408'
+        - $ref: '#/components/parameters/parameter-29416'
+        - $ref: '#/components/parameters/parameter-29435'
+        - $ref: '#/components/parameters/parameter-29426'
+        - $ref: '#/components/parameters/parameter-29403'
+        - $ref: '#/components/parameters/parameter-29413'
+        - $ref: '#/components/parameters/parameter-29406'
+        - $ref: '#/components/parameters/parameter-29414'
+        - $ref: '#/components/parameters/parameter-29433'
+        - $ref: '#/components/parameters/parameter-29427'
+        - $ref: '#/components/parameters/parameter-29401'
+        - $ref: '#/components/parameters/parameter-29412'
+        - $ref: '#/components/parameters/parameter-29409'
+        - $ref: '#/components/parameters/parameter-29417'
+        - $ref: '#/components/parameters/parameter-29436'
+        - $ref: '#/components/parameters/parameter-29428'
+        - $ref: '#/components/parameters/parameter-29404'
+        - $ref: '#/components/parameters/parameter-29388'
+        - $ref: '#/components/parameters/parameter-29392'
+        - $ref: '#/components/parameters/parameter-29381'
+        - $ref: '#/components/parameters/parameter-29380'
+        - $ref: '#/components/parameters/parameter-29386'
+        - $ref: '#/components/parameters/parameter-29382'
+        - $ref: '#/components/parameters/parameter-29422'
+        - $ref: '#/components/parameters/parameter-29397'
+        - $ref: '#/components/parameters/parameter-29400'
+        - $ref: '#/components/parameters/parameter-29364'
+        - $ref: '#/components/parameters/parameter-29375'
+        - $ref: '#/components/parameters/parameter-29390'
+        - $ref: '#/components/parameters/parameter-29423'
+        - $ref: '#/components/parameters/parameter-29389'
+        - $ref: '#/components/parameters/parameter-29394'
+        - $ref: '#/components/parameters/parameter-29424'
+        - $ref: '#/components/parameters/parameter-29393'
+        - $ref: '#/components/parameters/parameter-29378'
+        - $ref: '#/components/parameters/parameter-29365'
+        - $ref: '#/components/parameters/parameter-29384'
+        - $ref: '#/components/parameters/parameter-29376'
+        - $ref: '#/components/parameters/parameter-29391'
+        - $ref: '#/components/parameters/parameter-29405'
+        - $ref: '#/components/parameters/parameter-29429'
+        - $ref: '#/components/parameters/parameter-29431'
+        - $ref: '#/components/parameters/parameter-29430'
+        - $ref: '#/components/parameters/parameter-29432'
+        - $ref: '#/components/parameters/parameter-29438'
+        - $ref: '#/components/parameters/parameter-29383'
+        - $ref: '#/components/parameters/parameter-29418'
+        - $ref: '#/components/parameters/parameter-29419'
+        - $ref: '#/components/parameters/parameter-29420'
+        - $ref: '#/components/parameters/parameter-29421'
+        - $ref: '#/components/parameters/parameter-14980'
+        - $ref: '#/components/parameters/parameter-14981'
+        - $ref: '#/components/parameters/parameter-14982'
+        - $ref: '#/components/parameters/parameter-14983'
+        - $ref: '#/components/parameters/parameter-14984'
+        - $ref: '#/components/parameters/parameter-14985'
+        - $ref: '#/components/parameters/parameter-14986'
+        - $ref: '#/components/parameters/parameter-14987'
+        - $ref: '#/components/parameters/parameter-14988'
+        - $ref: '#/components/parameters/parameter-14758'
+        - $ref: '#/components/parameters/parameter-14989'
+        - $ref: '#/components/parameters/parameter-14990'
+        - $ref: '#/components/parameters/parameter-14991'
+        - $ref: '#/components/parameters/parameter-14992'
+        - $ref: '#/components/parameters/parameter-14996'
+        - $ref: '#/components/parameters/parameter-14997'
+        - $ref: '#/components/parameters/parameter-14998'
+        - $ref: '#/components/parameters/parameter-14999'
+        - $ref: '#/components/parameters/parameter-15001'
+        - $ref: '#/components/parameters/parameter-15002'
+        - $ref: '#/components/parameters/parameter-15004'
+        - $ref: '#/components/parameters/parameter-15006'
+        - $ref: '#/components/parameters/parameter-15007'
+        - $ref: '#/components/parameters/parameter-15008'
+        - $ref: '#/components/parameters/parameter-15009'
+        - $ref: '#/components/parameters/parameter-15010'
+        - $ref: '#/components/parameters/parameter-15011'
+        - $ref: '#/components/parameters/parameter-15012'
+        - $ref: '#/components/parameters/parameter-15013'
+        - $ref: '#/components/parameters/parameter-15014'
+        - $ref: '#/components/parameters/parameter-15015'
+        - $ref: '#/components/parameters/parameter-15016'
+        - $ref: '#/components/parameters/parameter-15017'
+        - $ref: '#/components/parameters/parameter-15018'
+        - $ref: '#/components/parameters/parameter-15019'
+        - $ref: '#/components/parameters/parameter-15020'
+        - $ref: '#/components/parameters/parameter-15021'
+        - $ref: '#/components/parameters/parameter-15022'
+        - $ref: '#/components/parameters/parameter-15023'
+        - $ref: '#/components/parameters/parameter-15024'
+        - $ref: '#/components/parameters/parameter-15025'
+        - $ref: '#/components/parameters/parameter-15026'
+        - $ref: '#/components/parameters/parameter-15027'
+        - $ref: '#/components/parameters/parameter-15028'
+        - $ref: '#/components/parameters/parameter-15029'
+        - $ref: '#/components/parameters/parameter-15030'
+        - $ref: '#/components/parameters/parameter-15031'
+        - $ref: '#/components/parameters/parameter-15032'
+        - $ref: '#/components/parameters/parameter-15033'
+        - $ref: '#/components/parameters/parameter-15088'
+        - $ref: '#/components/parameters/parameter-31457'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/f631ab51-6333-4183-9ef7-144f5fadc9b5-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/f631ab51-6333-4183-9ef7-144f5fadc9b5-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'

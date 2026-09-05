@@ -1,0 +1,2590 @@
+openapi: 3.0.3
+info:
+  description: >-
+    This API supports the Mandate Initiation Request, Inquiry, Amendment,
+    Cancellation, Suspension/Release, and Recall <br><br>The Mandate Initiation
+    Request message is used to request the set-up of an instruction that allows
+    the debtor agent to accept instructions from the creditor, through the
+    creditor agent, to debit the account of the debtor (mandate).<br><br>A
+    Mandate Inquiry is used to check the details/status of the Mandate
+    Request.<br><br> A Mandate Amendment is a request from one party to another
+    party to amend certain information in an existing mandate bilateral/
+    unilateral.<br><br> A Mandate Cancellation is a request from one party to
+    another party to cancel an existing mandate <br><br>A Mandate Suspension is
+    a request from one party to another party to suspend an existing
+    Mandate<br><br> A Mandate Release is a request from one party to another
+    party release an existing Mandate <br><br> A Mandate recall is a request
+    that allows request to perform recall of an existing mandate by Initiator
+  version: 1.0.0
+  title: eMandate Service API
+security:
+  - clientCredentials: []
+tags:
+  - name: eMandate
+    description: >-
+      eMandate allows the Merchant to initiate the mandate creation and inquiry
+      process from Clients ERP to Citi's system in a secure manner.
+servers:
+  - url: https://tts.sit.apib2b.citi.com/citiconnect/sit5/recievablesservices
+    description: dev gateway url
+  - url: https://tts.sit.apib2b.citi.com/citiconnect/uat1/recievablesservices
+    description: uat gateway url
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/recievablesservices
+    description: production gateway url
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/recievablesservices
+    description: sandbox gateway url
+paths:
+  /v1/mandates:
+    post:
+      summary: Initiate and Create A Mandate
+      description: >-
+        This endpoint allows the merchant to initiate the mandate creation
+        process from client's ERP to Citi's system in a secure manner.
+      operationId: createMandate
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            Unique reference which was shared during CitiConnect API Onboarding
+            (`client_id` which is used during OAuth token generation).
+          required: true
+          schema:
+            type: string
+            example: 4683fd9f-03fe-4268-b5da-93bf8203fd91
+        - name: Idempotency-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+            example: a44cbb60123414bba3bb
+          description: >-
+            Your unique identification for a POST request for CitiConnect API to
+            perform idempotency check. Same `client_id` is to be maintained by
+            the client if client wants to retry request within 48 hours.
+      requestBody:
+        description: Mandate client details required
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MandateClientDetails'
+      callbacks:
+        asynchronous-mandatecreation-push-notification:
+          $ref: '#/components/callbacks/CreationPushNotification'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: VC00001
+                    issue: >-
+                      Invalid value provided for property
+                      `mandateDetails.paymentExecutionNotBeforeTime`
+                    action: >-
+                      Please provide valid value for property
+                      `mandateDetails.paymentExecutionNotBeforeTime`
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00007
+                    issue: Authorization failed
+                    action: Please try again with valid credentials.
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00001
+                    issue: Method not supported
+                    action: Please use valid HTTP verb.
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00002
+                    issue: Media type not supported
+                    action: >-
+                      Resend the request with content-type as application/JSON
+                      in header
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00004
+                    issue: Unable to serve your request at this moment
+                    action: >-
+                      Please try again later. If this error persists, please
+                      reach out to australia.citiservice@citi.com
+    get:
+      summary: Retrieve Mandate Response From Citi System
+      description: A Mandate inquiry is used to check the details/status of the mandates.
+      operationId: inquiryMandate
+      parameters:
+        - name: country
+          in: query
+          required: true
+          description: Country
+          schema:
+            type: string
+            pattern: ^[A-Z]{2,2}$
+            description: Country Is mandatory
+        - name: mandate_request_identification
+          in: query
+          required: false
+          description: mandate_request_identification
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 35
+            description: >-
+              mandate_request_identification is used to retrieve the status of a
+              mandate.<br>Populate value from unique value generated by Citi
+              Connect.
+        - name: mandate_identification
+          in: query
+          required: false
+          description: mandate_identification
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 35
+            description: >-
+              mandate_identification is used to retrieve the status of a
+              mandate.
+      callbacks:
+        asynchronous-mandateStatusInquiry-push-notification:
+          $ref: '#/components/callbacks/MandateStatusInquiryPushNotification'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InquiryMandateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: VC00001
+                    issue: Invalid value provided for property country
+                    action: Please provide valid value for property country
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00007
+                    issue: Authorization failed
+                    action: Please try again with valid credentials.
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00001
+                    issue: Method not supported
+                    action: Please use valid HTTP verb.
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00004
+                    issue: Unable to serve your request at this moment
+                    action: >-
+                      Please try again later. If this error persists, please
+                      reach out to australia.citiservice@citi.com
+  /v1/mandates/status:
+    patch:
+      summary: Change the Status of a Mandate
+      description: >-
+        This endpoint allows you to change the status of a mandate. A status
+        change should always be performed as a unilateral operation. The status
+        change can only be performed when the mandate is currently active or
+        suspended. Releasing a suspended mandate can only be performed by the
+        party that suspended the mandate.
+      operationId: updateMandateStatus
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            Unique reference which was shared during CitiConnect API Onboarding
+            (`client_id` which used during OAuth token generation).
+          required: true
+          schema:
+            type: string
+            example: 4683fd9f-03fe-4268-b5da-93bf8203fd91
+        - name: mandate_identification
+          in: query
+          description: >-
+            Specify unique identification, as assigned by the clearing scheme,
+            to identify the mandate.
+          required: true
+          schema:
+            type: string
+            example: CRED14243536457658
+      requestBody:
+        description: Update mandate client details required.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMandateDetails'
+      callbacks:
+        asynchronous-mandatestatuschange-push-notification:
+          $ref: '#/components/callbacks/UpdateStatusPushNotification'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: VC00001
+                    issue: >-
+                      Invalid value provided for property
+                      mandateDetails.paymentExecutionNotBeforeTime
+                    action: >-
+                      Please provide valid value for property
+                      mandateDetails.paymentExecutionNotBeforeTime
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00007
+                    issue: Authorization failed
+                    action: Please try again with valid credentials.
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00001
+                    issue: Method not supported
+                    action: Please use valid Http Verb.
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00002
+                    issue: Media type not supported
+                    action: >-
+                      Resend the request with content-type as application/JSON
+                      in header
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00004
+                    issue: Unable to serve your request at this moment
+                    action: >-
+                      Please try again later. If this error persists, please
+                      reach out to australia.citiservice@citi.com
+  /v1/mandates/amend:
+    patch:
+      summary: Amend Specific Information In An Existing Mandate
+      description: |-
+        This endpoint allows to perform amend an existing mandate by Initiator.
+
+         Mandates amended by initiator can be unilateral or bilateral. When applied unilaterally, then the amendment will be done immediately. When applied bilaterally, the amendment will remain pending until it is completed or declined by the counter party, or until it is recalled by the proposing party, or until it expires.
+      operationId: amendmandate
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            Unique reference which was shared during CitiConnect API Onboarding
+            (client_id which used during OAuth token generation)
+          required: true
+          schema:
+            type: string
+            example: 4683fd9f-03fe-4268-b5da-93bf8203fd91
+        - name: mandate_identification
+          in: query
+          description: >-
+            Specify Unique identification, as assigned by the clearing scheme,
+            to identify the mandate.
+          required: true
+          schema:
+            type: string
+            example: CRED9945461615156344324324354
+      requestBody:
+        description: Update Mandate client status details required
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmendMandateDetails'
+      callbacks:
+        asynchronous-mandateamendment-push-notification:
+          $ref: '#/components/callbacks/AmendmentPushNotification'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: VC00001
+                    issue: >-
+                      Invalid value provided for property
+                      mandateDetails.paymentExecutionNotBeforeTime
+                    action: >-
+                      Please provide valid value for property
+                      mandateDetails.paymentExecutionNotBeforeTime
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00007
+                    issue: Authorization failed
+                    action: Please try again with valid credentials.
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00001
+                    issue: Method not supported
+                    action: Please use valid Http Verb.
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00002
+                    issue: Media type not supported
+                    action: >-
+                      Resend the request with content-type as application/JSON
+                      in header
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00004
+                    issue: Unable to serve your request at this moment
+                    action: >-
+                      Please try again later. If this error persists, please
+                      reach out to australia.citiservice@citi.com
+  /v1/mandates/recall:
+    patch:
+      summary: Recall Existing Mandate by Initiator
+      description: >-
+        This endpoint allows the client to request the recall of an existing
+        mandate. Initiator client can recall the mandate if the mandate creation
+        or mandate amendment is not approved or declined by the payer customer
+        within the given stipulated time. Client can define business expiry time
+        up to 5 calender days and after which initiator client can recall the
+        mandate, if the payer customer did not approve or decline.
+      operationId: recallMandate
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            Unique reference which was shared during CitiConnect API onboarding
+            (client_id which used during OAuth token generation).
+          required: true
+          schema:
+            type: string
+            example: 4683fd9f-03fe-4268-b5da-93bf8203fd91
+        - name: mandate_identification
+          in: query
+          description: >-
+            Specify unique identification, as assigned by the clearing scheme,
+            to identify the mandate.
+          required: true
+          schema:
+            type: string
+            example: CRED9945461615156344324324354
+      requestBody:
+        description: Recall
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecallMandate'
+      callbacks:
+        asynchronous-mandaterecall-push-notification:
+          $ref: '#/components/callbacks/MandateRecallPushNotification'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: VC00001
+                    issue: >-
+                      Invalid value provided for property
+                      mandateDetails.paymentExecutionNotBeforeTime
+                    action: >-
+                      Please provide valid value for property
+                      mandateDetails.paymentExecutionNotBeforeTime
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00007
+                    issue: Authorization failed
+                    action: Please try again with valid credentials.
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00001
+                    issue: Method not supported
+                    action: Please use a valid HTTP verb.
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00002
+                    issue: Media type not supported
+                    action: >-
+                      Resend the request with content-type as application/JSON
+                      in the header.
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: CC00004
+                    issue: Unable to serve your request at this moment
+                    action: >-
+                      Please try again later. If this error persists, please
+                      reach out to australia.citiservice@citi.com
+components:
+  schemas:
+    MandateClientDetails:
+      title: MandateClientDetails
+      type: object
+      required:
+        - mandate_details
+      properties:
+        mandate_details:
+          $ref: '#/components/schemas/MandateDetails'
+        initiating_party:
+          $ref: '#/components/schemas/InitiatingParty'
+        debtor:
+          $ref: '#/components/schemas/Debtor'
+        creditor:
+          $ref: '#/components/schemas/Creditor'
+        ultimate:
+          $ref: '#/components/schemas/Ultimate'
+    RecallMandate:
+      title: RecallMandate
+      type: object
+      required:
+        - action_id
+        - country
+      properties:
+        action_id:
+          title: action_id
+          type: string
+          description: Specifies identifier for the action recall mandate
+          example: 76660ee1768511eb9138ca37071a0b1e
+          pattern: ^[a-f0-9]{12}1[a-f0-9]{3}[89ab][a-f0-9]{15}$
+        country:
+          title: country
+          type: string
+          pattern: ^[A-Z]{2}$
+          description: >-
+            Specify the country code where the mandate request
+            originated.<br>Australia = AU<br>Hongkong = HK<br>Argentina =
+            AR<br>SEPA = UK
+          example: AU
+    AmendMandateDetails:
+      title: AmendMandateDetails
+      type: object
+      required:
+        - amend_details
+        - amendment_mandate_details
+      properties:
+        amend_details:
+          $ref: '#/components/schemas/AmendDetails'
+        amendment_mandate_details:
+          $ref: '#/components/schemas/AmendmentMandateDetails'
+        amendment_initiating_party:
+          $ref: '#/components/schemas/AmendmentInitiatingParty'
+        amendment_creditor:
+          $ref: '#/components/schemas/AmendmentCreditor'
+        amendment_ultimate:
+          $ref: '#/components/schemas/AmendmentUltimate'
+    UpdateMandateDetails:
+      title: UpdateMandateDetails
+      type: object
+      required:
+        - status_request
+        - request_reason
+        - mandate_status_update
+      properties:
+        status_request:
+          $ref: '#/components/schemas/StatusRequest'
+        request_reason:
+          $ref: '#/components/schemas/RequestReason'
+        mandate_status_update:
+          $ref: '#/components/schemas/MandateStatusUpdate'
+    StatusRequest:
+      title: StatusRequest
+      type: object
+      required:
+        - change
+      properties:
+        change:
+          title: change
+          type: string
+          enum:
+            - CANC
+            - SUSP
+            - RELS
+          description: >-
+            Specify the status request type <br> - CANC = Cancelled (Cancel a
+            mandate) <br> - SUSP = Suspended (Suspend an active mandate) <br> -
+            RELS = Release (Release a suspended mandate)
+          example: CANC
+    RequestReason:
+      title: RequestReason
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          title: code
+          type: string
+          enum:
+            - MD16
+            - MD17
+            - MD18
+            - MD19
+            - MD20
+            - MD21
+            - MD22
+            - MS02
+            - MS03
+            - NARR
+            - CTAM
+            - CTCA
+            - CTEX
+            - MCFC
+            - MCOC
+            - MSUC
+          description: >-
+            Specification of request reason <br>MD16-Requested By Customer <br>
+            MD17-Requested By Initiating Party <br>MD18-Requested By Initiating
+            Party And Customer <br> MD19-Mandate Cancelled Due To Early
+            Settlement <br>MD20-Mandate Expired <br> MD21-Mandate Cancelled Due
+            To Fraud <br> MD22-Mandate Initiation Cancelled <br> MS02-Not
+            Specified Reason Customer <br> MS03-Not Specified Reason Agent
+            Generated <br> CTAM-Mandate suspended due to amendment of the
+            contract <br> CTCA-Mandate suspended due to cancellation of the
+            contract, requested by the debtor <br> CTEX-Mandate suspended due to
+            the contract that expired <br> MCFC-Mandate suspended as final
+            collection took place <br> MCOC-Mandate suspended as the once off
+            collection took place <br> MSUC-Mandate suspended after 7
+            consecutive unsuccessful collections <br> NARR- Reason is provided
+            as narrative information
+        additional_information:
+          title: additional_information
+          type: string
+          minLength: 1
+          maxLength: 105
+          description: If code is NARR, this parameter is mandatory
+          example: Requested by Customer
+    MandateStatusUpdate:
+      title: MandateStatusUpdate
+      type: object
+      required:
+        - country
+      properties:
+        country:
+          title: country
+          type: string
+          pattern: ^[A-Z]{2}$
+          description: >-
+            Specify the country code where the mandate request has been
+            originated.<br>Australia = AU<br>Hongkong = HK<br>Argentina =
+            AR<br>SEPA = UK
+          example: AU
+    AmendDetails:
+      title: AmendDetails
+      type: object
+      required:
+        - amend_reason
+      properties:
+        amend_reason:
+          title: amend_reason
+          type: string
+          enum:
+            - MD16
+            - MD17
+            - MD18
+            - MS02
+            - MS03
+            - NARR
+          description: >-
+            Specification of amendment reason <br> MD16-Requested By Customer
+            <br> MD17-Requested By Initiating Party<br> MD18-Requested By
+            Initiating Party And Customer<br>MS02-Not Specified Reason
+            Customer<br>MS03-Not Specified Reason Agent Generated <br>
+            MSUC-Mandate suspended after 7 consecutive unsuccessful collections
+            <br> NARR- Reason is provided as narrative information
+        amend_additional_information:
+          title: amend_additional_information
+          type: string
+          description: Specification of amendment additional information
+          example: Requested by Customer
+    MandateDetails:
+      title: MandateDetails
+      type: object
+      required:
+        - country
+        - sequence_type
+        - payment_frequency
+        - tracking_indicator
+        - mandate_start_date
+      properties:
+        becs_user_identification:
+          title: becs_user_identification
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            BECS user ID related to migrated DDR mandate. This parameter is
+            conditional to Australia if mandate_scheme is MGCR.
+          example: '123456'
+        country:
+          title: country
+          type: string
+          pattern: ^[A-Z]{2}$
+          description: >-
+            Specify the country code where the mandate request has been
+            originated.<br>Australia = AU<br>Hongkong = HK<br>Argentina =
+            AR<br>SEPA = UK
+          example: AU
+        mandate_description:
+          title: mandate_description
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: >-
+            Specify the description of the reason for mandate setup as narrative
+            text.<br> This parameter is specific to Australia. Both
+            mandate_description and mandate_additional_ information parameters
+            are expected to be sent by client for Australia. This parameter is
+            eligible to be amended unilaterally.
+          example: DESCRIPTION OF THE MANDATE
+        sequence_type:
+          title: sequence_type
+          type: string
+          enum:
+            - RCUR
+            - OOFF
+          description: >-
+            Specify the underlying transaction sequence as either recurring or
+            one-off.<br> Only RCUR applicable for AU.
+          example: RCUR
+        payment_frequency:
+          title: payment_frequency
+          type: string
+          enum:
+            - ADHO
+            - DAIL
+            - FRTN
+            - INDA
+            - MIAN
+            - MNTH
+            - QURT
+            - WEEK
+            - YEAR
+          description: >-
+            Specify the regularity of an event.<br>ADHO = Ad hoc (Event takes
+            place on request or as necessary)<br>DAIL = Daily (Event takes place
+            every day)<br>FRTN = Fortnightly (Event takes place every two
+            weeks)<br>INDA = Intraday (Event takes place several times a
+            day)<br>MIAN = Semiannual (Event takes place every six months or two
+            times a year)<br>MNTH = Monthly (Event takes place every
+            month)<br>QURT = Quarterly (Event takes place every three
+            months)<br>WEEK = Weekly (Event takes place once a week)<br>YEAR =
+            Annual (Event takes place every year or once a year)
+          example: MNTH
+        count_per_period:
+          title: count_per_period
+          type: string
+          pattern: ^(?=.{1,19}$)[0-9]{0,19}(?:\.[0-9]{0,18})?$
+          description: >-
+            Specify the frequency in terms of the number of instructions to be
+            created and processed during the specified period. count_per_period
+            (or) point_in_time is a mandatory parameter for Australia.
+          example: '124334143234.34232'
+        point_in_time:
+          title: point_in_time
+          type: string
+          pattern: ^[0-9]{2}$
+          description: >-
+            Specify the frequency in terms of an exact point in time or moment
+            within the specified period.
+          example: '02'
+        tracking_indicator:
+          title: tracking_indicator
+          type: boolean
+          description: >-
+            Specify the indicating value either True or False, whether the
+            direct debit instructions should be automatically re-submitted
+            periodically when bilaterally agreed.
+          example: false
+        mandate_additional_information:
+          title: mandate_additional_information
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: >-
+            Specify the additional information in free text form to complement
+            the mandate information. This parameter is specific to Australia.
+            Both mandate_description and mandate_additional_information
+            parameters are expected to be sent by client for Australia. This
+            parameter is eligible for amendment unilaterally.
+          example: Pay to creditor
+        payment_execution_not_before_time:
+          title: payment_execution_not_before_time
+          type: string
+          pattern: ^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.[0-9]{1,3})?(?:Z)|(-)$
+          description: >-
+            Indicates that each execution of the mandate payment should not
+            occur before a given time (hh:mm:ss.sssZ) of that execution day.
+            This parameter is specific to Australia.
+          example: 23:59:59.999Z
+        transfer_arrangement:
+          title: transfer_arrangement
+          type: string
+          description: >-
+            Indication of future transfer date, conditions of sale and
+            requirement to hold funds. This parameter is specific to Australia.
+          minLength: 1
+          maxLength: 140
+          example: Transfer Arrangement
+        resolution_requested_by:
+          title: resolution_requested_by
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: >-
+            Time used to indicate by when resolution of a bilateral action is
+            requested from the other party to the mandate. This parameter is
+            specific to Australia.
+          example: Resolution requested by
+        service_id:
+          title: service_id
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: >-
+            specify a pre-agreed service or level of service between the
+            parties. This parameter is mandatory for Australia.
+          example: bo Service id
+        instruction_priority:
+          title: instruction_priority
+          type: string
+          enum:
+            - NORM
+            - UNAT
+          description: ' Specifies the priority level of an event. This parameter is specific to Australia and it is mandatory for Australia. Instruction priority” parameter value will be ''UNAT'' or ''NORM''.'
+        mandate_start_date:
+          title: mandate_start_date
+          type: string
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          description: >-
+            Start date of the validity of the mandate. Calender year expressed
+            in the YYYY-MM-DD format.
+          example: '2021-05-21'
+        mandate_expiry_date:
+          title: mandate_expiry_date
+          type: string
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          description: >-
+            Specify the End date of the validity of the mandate. Calender year
+            expressed in the YYYY-MM-DD format.
+          example: '2030-01-15'
+        mandate_first_collection_date:
+          title: mandate_first_collection_date
+          type: string
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          description: >-
+            Specify the Date of the first collection of a direct debit as per
+            the mandate. Calender year expressed in the YYYY-MM-DD format.
+          example: '2023-01-15'
+        mandate_final_collection_date:
+          title: mandate_final_collection_date
+          type: string
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          description: >-
+            Specify the Date of the final collection of a direct debit as per
+            the mandate. Calender year expressed in the YYYY-MM-DD format.
+          example: '2030-01-15'
+        mandate_type:
+          title: mandate_type
+          type: string
+          enum:
+            - DDMC
+            - DDMP
+            - DDMU
+            - DDTP
+            - SOTP
+            - OTHR
+          description: >-
+            Specify the type of mandate.<br>DDMC-Direct Debit Confirmed
+            Electronic Mandate<br>DDMP-Direct Debit Paper Mandate With Paper
+            Authorization<br>DDMU-Direct Debit Unconfirmed Electronic
+            Mandate<br>DDTP-Mandate type relates to Direct Debit payment
+            instrument<br>SOTP-Mandate type relates to Standing Order payment
+            instrument<br>'OTHR' for Third party mandates
+          example: DDMC
+        mandate_scheme:
+          title: mandate_scheme
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the arrangement (unilateral or bilateral) and party that
+            established the mandate. This parameter is mandatory for Australia.
+          example: AUPM
+        mandate_purpose:
+          title: mandate_purpose
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the high-level purpose of the mandate. This parameter is
+            mandatory for Australia.
+          example: RETL, OTHR
+        payment_amount_type:
+          title: payment_amount_type
+          type: string
+          enum:
+            - FIXE
+            - USGB
+            - VARI
+            - BALN
+          description: >-
+            Specify the mandate payment arrangement.<br>FIXE -Fixed Direct debit
+            amount is fixed.<br>USGB -Usage Based Direct debit amount is based
+            on usage.<br>VARI -Variable Direct debit amount is variable<br>BALN-
+            Balloon Payment. This parameter is mandatory for Australia
+          example: FIXE
+        debtor_reference_number:
+          title: debtor_reference_number
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique and unambiguous identification as assigned by the
+            creditor to the referred document shared with the debtor for its own
+            reference.
+          example: SEAN
+        debtor_code:
+          title: debtor_code
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the Proprietary identification of the type of the remittance
+            document.
+          example: MUN2003A
+        creditor_reference_number:
+          title: creditor_reference_number
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique and unambiguous identification as assigned by the
+            debtor to the referred document shared with the creditor for its own
+            reference.
+          example: '313442344'
+        payment_reference_number:
+          title: payment_reference_number
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the proprietary identification of the type of the remittance
+            document. This parameter is not applicable for Australia.
+          example: '3345235242'
+        currency:
+          title: currency
+          type: string
+          pattern: ^[A-Z]{3}$
+          description: >-
+            Specify the collection account currency. This parameter is mandatory
+            for Australia
+          example: AUD
+        amount:
+          title: amount
+          type: number
+          description: >-
+            Specify the Fixed amount to be collected from the debtors account.
+            For Australia if payment_amount_type parameter is equal to FIXE then
+            this parameter is mandatory.
+          example: 1000000
+        maximum_amount:
+          title: maximum_amount
+          type: number
+          description: >-
+            Specify the Maximum amount that is collected from the debtors
+            account. For Australia if payment_amount_type parameter is not equal
+            to FIXE then this parameter is mandatory.
+          example: 1243.23
+        first_collection_amount:
+          title: first_collection_amount
+          type: number
+          description: >-
+            Specify the first collection amount to be collected from the debtors
+            account.
+          example: 123.34
+        final_collection_amount:
+          title: final_collection_amount
+          type: number
+          description: >-
+            Specify the final collection amount to be collected from the debtors
+            account.
+          example: 123.34
+        cummulative_amount:
+          title: cummulative_amount
+          type: number
+          description: >-
+            Specify the cumulative fixed amount to be collected from the debtors
+            account. This parameter is not applicable for Australia.
+          example: 123.34
+    AmendmentMandateDetails:
+      title: AmendmentMandateDetails
+      type: object
+      required:
+        - country
+        - instruction_priority
+      properties:
+        becs_user_identification:
+          title: becs_user_identification
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            BECS user ID related to migrated DDR mandate. For Australia this
+            parameter is not allowed to amend.
+          example: '123456'
+        country:
+          title: country
+          type: string
+          pattern: ^[A-Z]{2}$
+          description: >-
+            Specify the country code where the mandate request has been
+            originated.<br>Australia = AU<br>Hongkong = HK<br>Argentina =
+            AR<br>SEPA = UK
+          example: AU
+        mandate_description:
+          title: mandate_description
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: >-
+            Specify the description of the reason for mandate setup as narrative
+            text.<br> This parameter is specific to Australia. both
+            mandate_description and mandate_additional_ information parameters
+            are expected to be sent by client for Australia. For Australia, this
+            parameter is allowed to amend unilaterally.
+          example: DESCRIPTION OF THE MANDATE
+        sequence_type:
+          title: sequence_type
+          type: string
+          enum:
+            - RCUR
+            - OOFF
+          description: >-
+            Specify the underlying transaction sequence as either recurring or
+            one-off. For Australia this parameter is not allowed to amend.
+          example: RCUR
+        payment_frequency:
+          title: payment_frequency
+          type: string
+          enum:
+            - ADHO
+            - DAIL
+            - FRTN
+            - INDA
+            - MIAN
+            - MNTH
+            - QURT
+            - WEEK
+            - YEAR
+          description: >-
+            Specify the regularity of an event.<br>ADHO = Ad hoc (Event takes
+            place on request or as necessary)<br>DAIL = Daily (Event takes place
+            every day)<br>FRTN = Fortnightly (Event takes place every two
+            weeks)<br>INDA = Intraday (Event takes place several times a
+            day)<br>MIAN = Semiannual (Event takes place every six months or two
+            times a year)<br>MNTH = Monthly (Event takes place every
+            month)<br>QURT = Quarterly (Event takes place every three
+            months)<br>WEEK = Weekly (Event takes place once a week)<br>YEAR =
+            Annual (Event takes place every year or once a year) For Australia
+            this parameter is allowed to amend bilaterally
+          example: MNTH
+        count_per_period:
+          title: count_per_period
+          type: string
+          pattern: ^(?=.{1,19}$)[0-9]{0,19}(?:\.[0-9]{0,18})?$
+          description: >-
+            Specify the frequency in terms of the number of instructions to be
+            created and processed during the specified period. For Australia,
+            this parameter is allowed to amend bilaterally.
+          example: '124334143234.34232'
+        point_in_time:
+          title: point_in_time
+          type: string
+          pattern: ^[0-9]{2}$
+          description: >-
+            Specify the frequency in terms of an exact point in time or moment
+            within the specified period. For Australia, this parameter is
+            allowed to amend bilaterally.
+          example: '02'
+        tracking_indicator:
+          title: tracking_indicator
+          type: boolean
+          description: >-
+            Specify the indicating value either True or False, whether the
+            direct debit instructions should be automatically re-submitted
+            periodically when bilaterally agreed. For Australia, this parameter
+            is allowed to amend bilaterally.
+          example: false
+        mandate_additional_information:
+          title: mandate_additional_information
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: >-
+            Specify the additional information in free text form to complement
+            the mandate information. For Australia, this parameter is allowed to
+            amend unilaterally.
+          example: Pay to Creditor
+        payment_execution_not_before_time:
+          title: payment_execution_not_before_time
+          type: string
+          pattern: ^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.[0-9]{1,3})?(?:Z)|(-)$
+          description: >-
+            Indicates that each execution of the mandate payment should not
+            occur before a given time(hh:mm:ss.sssZ) of that execution day. This
+            parameter is specific to Australia. For Australia this parameter is
+            allowed to amend bilaterally.
+          example: 23:59:59.999Z
+        transfer_arrangement:
+          title: transfer_arrangement
+          type: string
+          description: >-
+            Indication of future transfer date, conditions of sale and
+            requirement to hold funds. This parameter is specific to Australia.
+            For Australia this parameter is allowed to amend bilaterally.
+          minLength: 1
+          maxLength: 140
+          example: Transfer Arrangement
+        resolution_requested_by:
+          title: resolution_requested_by
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: >-
+            Time used to indicate by when resolution of a bilateral action is
+            requested from the other party to the mandate. This parameter is
+            specific to Australia. For Australia, this parameter is not allowed
+            to amend.
+          example: Resolution requested by
+        service_id:
+          title: service_id
+          type: string
+          minLength: 1
+          maxLength: 30
+          description: >-
+            specify a pre-agreed service or level of service between the
+            parties. This parameter is mandatory for Australia. For Australia,
+            this parameter is not allowed to amend unilaterally.
+          example: bo Service id
+        instruction_priority:
+          title: instruction_priority
+          type: string
+          enum:
+            - NORM
+            - UNAT
+          description: ' Specifies the priority level of an event. For Australia This parameter is not allowed to amend.'
+        mandate_start_date:
+          title: mandate_start_date
+          type: string
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          description: >-
+            Start date of the validity of the mandate. Calender year expressed
+            in the YYYY-MM-DD format. For Australia, this parameter is not
+            allowed for amendment.
+          example: '2021-05-21'
+        mandate_expiry_date:
+          title: mandate_expiry_date
+          type: string
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          description: >-
+            Specify the End date of the validity of the mandate. Calender year
+            expressed in the YYYY-MM-DD format. For Australia this parameter is
+            allowed to amend bilaterally.
+          example: '2030-01-15'
+        mandate_first_collection_date:
+          title: mandate_first_collection_date
+          type: string
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          description: >-
+            Specify the Date of the first collection of a direct debit as per
+            the mandate. Calender year expressed in the YYYY-MM-DD format. For
+            Australia this parameter is allowed to amend bilaterally.
+          example: '2023-01-15'
+        mandate_final_collection_date:
+          title: mandate_final_collection_date
+          type: string
+          pattern: >-
+            ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+          description: >-
+            Specify the Date of the final collection of a direct debit as per
+            the mandate. Calender year expressed in the YYYY-MM-DD format. For
+            Australia this parameter is allowed to amend bilaterally.
+          example: '2030-01-15'
+        mandate_type:
+          title: mandate_type
+          type: string
+          enum:
+            - DDMC
+            - DDMP
+            - DDMU
+            - DDTP
+            - SOTP
+            - OTHR
+          description: >-
+            Specify the type of mandate. For Australia This parameter is not
+            allowed to amend.
+          example: DDMC
+        mandate_scheme:
+          title: mandate_scheme
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the arrangement (unilateral or bilateral) and the party that
+            established the mandate. For Australia This parameter is not allowed
+            to amend.
+          example: AUPM
+        mandate_purpose:
+          title: mandate_purpose
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the high-level purpose of the mandate. For Australia This
+            parameter is not allowed to amend.
+          example: RETL, OTHR
+        payment_amount_type:
+          title: payment_amount_type
+          type: string
+          enum:
+            - FIXE
+            - USGB
+            - VARI
+            - BALN
+          description: >-
+            Specify the mandate payment arrangement.<br>FIXE -Fixed Direct debit
+            amount is fixed.<br>USGB -Usage Based Direct debit amount is based
+            on usage.<br>VARI -Variable Direct debit amount is variable <br>
+            BALN- Balloon Payment. For Australia this parameter is allowed to
+            amend bilaterally.
+          example: FIXE
+        debtor_reference_number:
+          title: debtor_reference_number
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique and unambiguous identification as assigned by the
+            creditor to the referred document shared with the debtor for its own
+            reference. For Australia, this parameter is not allowed to amend.
+          example: SEAN
+        debtor_code:
+          title: debtor_code
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the Proprietary identification of the type of the remittance
+            document. For Australia, this parameter is not allowed to amend.
+          example: MUN2003A
+        creditor_reference_number:
+          title: creditor_reference_number
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique and unambiguous identification as assigned by the
+            debtor to the referred document shared with the creditor for its own
+            reference. For Australia, this parameter is allowed to amend
+            unilaterally.
+          example: '313442344'
+        payment_reference_number:
+          title: payment_reference_number
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the proprietary identification of the type of the remittance
+            document. This parameter is not applicable to Australia.
+          example: '3345235242'
+        currency:
+          title: currency
+          type: string
+          pattern: ^[A-Z]{3}$
+          description: >-
+            Specify the collection account currency. For Australia, this
+            parameter is not allowed to amend.
+          example: AUD
+        amount:
+          title: amount
+          type: number
+          description: >-
+            Specify the Fixed amount to be collected from the debtor’s account.
+            For Australia if payment_amount_type parameter is equal to FIXE then
+            this parameter is mandatory. For Australia, this parameter is
+            allowed to amend bilaterally.
+          example: 1000000
+        maximum_amount:
+          title: maximum_amount
+          type: number
+          description: >-
+            Specify the Maximum amount to be collected from the debtors account,
+            per instruction. For Australia, this parameter is allowed to amend
+            bilaterally.
+          example: 1243.23
+        first_collection_amount:
+          title: first_collection_amount
+          type: number
+          description: >-
+            Specify the first collection amount to be collected from the debtors
+            account. For Australia this parameter is allowed to amend
+            bilaterally.
+          example: 123.34
+        final_collection_amount:
+          title: final_collection_amount
+          type: number
+          description: >-
+            Specify the final collection amount to be collected from the debtors
+            account. For Australia this parameter is allowed to amend
+            bilaterally.
+          example: 123.34
+        cummulative_amount:
+          title: cummulative_amount
+          type: number
+          description: >-
+            Specify the cumulative fixed amount to be collected from the debtors
+            account. This parameter is not applicable to Australia.
+          example: 123.34
+    InitiatingParty:
+      title: InitiatingParty
+      type: object
+      properties:
+        name:
+          title: name
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: >-
+            Specify the name by which a party is known and which is used to
+            identify that party. This parameter is mandatory for Australia.
+          example: Citi Bank
+        account:
+          title: account
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique identification of an account, as assigned by the
+            account servicer, using an identification scheme. This parameter is
+            mandatory for Australia.
+          example: '12354354354546'
+        other_identification_category:
+          title: other_identification_category
+          type: string
+          enum:
+            - ORG
+            - PVT
+          description: >-
+            Specify the unique and unambiguous identification of a party. the
+            value will be organization/Private. This parameter is mandatory for
+            Australia.
+          example: ORG
+        other_identification_type:
+          title: other_identification_type
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique and unambiguous type to identify an
+            organization/private identification. This parameter is mandatory for
+            Australia.
+          example: AUBN
+        other_identification:
+          title: other_identification
+          type: string
+          description: >-
+            Specify the value of an organization/private identification type.
+            This parameter is mandatory for Australia.
+          example: JUNO1552212
+          minLength: 1
+          maxLength: 35
+        bank_routing_code:
+          title: bank_routing_code
+          type: string
+          minLength: 8
+          maxLength: 11
+          description: >-
+            Specify the unique identification of an organization, as assigned by
+            an institution, using an identification scheme. This parameter is
+            mandatory for Australia.
+          example: CITI4564464
+    AmendmentInitiatingParty:
+      title: AmendmentInitiatingParty
+      type: object
+      properties:
+        name:
+          title: name
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: >-
+            Specify the name by which a party is known and which is used to
+            identify that party. For Australia, this parameter is allowed to
+            amend unilaterally.
+          example: Citi Bank
+        account:
+          title: account
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique identification of an account, as assigned by the
+            account servicer, using an identification scheme. For Australia,
+            this parameter is allowed to amend unilaterally.
+          example: '12354354354546'
+        other_identification_category:
+          title: other_identification_category
+          type: string
+          enum:
+            - ORG
+            - PVT
+          description: >-
+            Specify the unique and unambiguous identification of a party. the
+            value will be organization/Private. For Australia this parameter is
+            not allowed to amend.
+          example: ORG
+        other_identification_type:
+          title: other_identification_type
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique and unambiguous type to identify an
+            organization/private identification. For Australia, this parameter
+            is allowed to amend unilaterally.
+          example: AUBN
+        other_identification:
+          title: other_identification
+          type: string
+          description: >-
+            Specify the value of an organization/private identification type.
+            For Australia this parameter is not allowed to amend.
+          example: JUNO1552212
+          minLength: 1
+          maxLength: 35
+        bank_routing_code:
+          title: bank_routing_code
+          type: string
+          minLength: 8
+          maxLength: 11
+          description: >-
+            Specify the unique identification of an organization, as assigned by
+            an institution, using an identification scheme. For Australia this
+            parameter is not allowed to amend. 
+          example: CITI4564464
+    Debtor:
+      title: Debtor
+      type: object
+      required:
+        - name
+        - bank_routing_code
+        - account type
+      properties:
+        name:
+          title: name
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: >-
+            Which a party is known and which is used to identify that party.
+            This parameter is mandatory for Australia.
+          example: Samiel
+        address_1:
+          title: address_1
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: >-
+            Specify the address of the party who involves in the payment flow.
+            This parameter is not applicable to Australia.
+          example: OlympusA
+        address_2:
+          title: address_2
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: >-
+            Specify the address of the party who involves in the payment flow.
+            This parameter is not applicable to Australia.
+          example: Rodas enclave
+        address_3:
+          title: address_3
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: >-
+            Specify the address of the party who involves in the payment flow.
+            This parameter is not applicable to Australia.
+          example: Ireland
+        country_code:
+          title: country_code
+          type: string
+          pattern: ^[A-Z]{2}$
+          description: >-
+            Specify the country code of the debtor address. This parameter is
+            not applicable to Australia.
+          example: AT
+        postal_code:
+          title: postal_code
+          type: string
+          minLength: 1
+          maxLength: 16
+          description: >-
+            Specify the postal code of the debtor address. This parameter is not
+            applicable to Australia.
+          example: '12345'
+        town_name:
+          title: town_name
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the town name of the debtor address. This parameter is not
+            applicable to Australia.
+          example: Linz
+        mobile_number:
+          title: mobile_number
+          type: string
+          pattern: ^\+[0-9]{1,3}-[0-9()+\\-]{1,30}$
+          description: >-
+            Specify the mobile number of the debtor address. This parameter is
+            not applicable to Australia.
+          example: +989-4198941
+        fax_number:
+          title: fax_number
+          type: string
+          pattern: ^\+[0-9]{1,3}-[0-9()+\\-]{1,30}$
+          description: >-
+            Specify the fax number of the debtor address. This parameter is not
+            applicable to Australia.
+          example: +989-4198941
+        email:
+          title: email
+          type: string
+          format: email
+          description: >-
+            Specify the Address for electronic mail (e-mail). This parameter is
+            not applicable to Australia.
+          example: sample@sample.com
+        other_identification_category:
+          title: other_identification_category
+          type: string
+          enum:
+            - ORG
+            - PVT
+          description: >-
+            Specify the unique and unambiguous identification of a party. either
+            the value will be ORG or PVT. This parameter is mandatory for
+            Australia.
+          example: ORG
+        other_identification_type:
+          title: other_identification_type
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            specify the unique and unambiguous type to identify an
+            organization/private identification. This parameter is mandatory for
+            Australia.
+          example: EMPL
+        other_identification:
+          title: other_identification
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the value of an organization/private identification type.
+            This parameter is mandatory for Australia.
+          example: JUNO1552212
+        iban:
+          title: iban
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            An identifier used internationally by financial institutions to
+            uniquely identify the account of a customer at a financial
+            institution, as described in the latest edition of the international
+            standard ISO 13616: 2007 - Banking and related financial services -
+            International Bank Account Number (IBAN). This parameter is not
+            applicable for Australia.
+          example: ABCD12345AA1234
+        bank_routing_code:
+          title: bank_routing_code
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the Code allocated to a financial institution by the ISO
+            9362 Registration Authority as described in ISO 9362 Banking -
+            Banking telecommunication messages - Business identifier code (BIC).
+          example: CITI4564464
+        bank_branch_code:
+          title: bank_branch_code
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the 6-digit BSB/9-digit account identification assigned by
+            the Entity. It’s a mandatory parameter for Australia if the account
+            type is = BBAN.
+          example: BSB123456
+        account:
+          title: account
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unambiguous identification of the account of the debtor
+            to which a debit entry will be posted as a result of the payment
+            transaction. It’s a Mandatory parameter for Australia if
+            account_type equal to BBAN.
+          example: '912345678910'
+        account_type:
+          title: account_type
+          type: string
+          enum:
+            - AIIN
+            - BBAN
+            - CUID
+            - UPIC
+            - ALIA
+          description: >-
+            Specify the name of the identification scheme, in a coded form as
+            published in an external list.<br>AIIN -Issuer Identification
+            Number<br>BBAN- BBAN Identifier<br>CUID -CHIPS Universal
+            Identifier<br>UPIC- UPIC Identifier<br>ALIA-Alias (proxy). This
+            parameter is mandatory parameter for Australia. ALIA vis not allowed
+            for Citi Creditor Customer.
+          example: AIIN
+        proxy_id:
+          title: proxy_id
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: >-
+            Specify the Identification used to indicate the account
+            identification under another specified name.
+          example: '9190000001253'
+        proxy_type:
+          title: proxy_type
+          type: string
+          enum:
+            - TELE
+            - EMAL
+            - DNAM
+            - CINC
+            - COTX
+            - COID
+            - CUST
+            - DRLC
+            - EIDN
+            - EWAL
+            - PVTX
+            - LEIC
+            - MBNO
+            - NIDN
+            - CCPT
+            - SHID
+            - SOSE
+            - TOKN
+            - UBIL
+            - VIPN
+            - BIID
+          description: >-
+            Specify the name of the identification scheme, in a coded form as
+            published in an external list. Specify the value only when the
+            mandate request is other than Payer (Debtor) Account 
+            Number:<br>TELE-TelephoneNumber<br>EMAL-EmailAddress<br>DNAM-DomainName<br>CINC-CertificateOfIncorporationNumber<br>COTX-CorporateTaxIdentification<br>COID-CountryAuthorityIdentification<br>CUST-CustomerIdentificationNumber<br>DRLC-DriverLicenseNumber<br>EIDN-ElectronicIdentification<br>EWAL-EWalletIdentification<br>PVTX-IndividualTaxIdentification<br>LEIC-LegalEntityIdentifierCode<br>MBNO-MobilePhoneNumber<br>NIDN-NationalIdentificationNumber<br>CCPT-PassportNumber<br>SHID-SchemeIdentificationNumber<br>SOSE-SocialSecurityNumber<br>TOKN-TokenIdentification<br>UBIL-UtilitiesSubscriptionIdentification<br>VIPN-VehicleIdentificationPlateNumber<br>BIID-BillerSubscriberIdentification
+          example: TELE
+    Creditor:
+      title: Creditor
+      type: object
+      properties:
+        name:
+          title: name
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: >-
+            Specify the name by which a party is known and which is used to
+            identify that party. This parameter is mandatory for Australia if
+            creditor `account_number` parameter value is present.
+          example: Samiel
+        address_1:
+          title: address_1
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: >-
+            Specify the address of the party who involves in the payment flow.
+            This parameter is not applicable to Australia.
+          example: OlympusA
+        address_2:
+          title: address_2
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: >-
+            Specify the address of the party who involves in the payment flow.
+            This parameter is not applicable to Australia.
+          example: Rodas enclave
+        address_3:
+          title: address_3
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: >-
+            Specify the address of the party who involves in the payment flow.
+            This parameter is not applicable to Australia.
+          example: Ireland
+        country_code:
+          title: country_code
+          type: string
+          pattern: ^[A-Z]{2}$
+          description: >-
+            Specify the country code of the creditor address. This parameter is
+            not applicable to Australia.
+          example: IR
+        postal_code:
+          title: postal_code
+          type: string
+          minLength: 1
+          maxLength: 16
+          description: >-
+            Specify the postal code of the creditor address. This parameter is
+            not applicable to Australia.
+          example: '12345'
+        town_name:
+          title: town_name
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the town name of the creditor address. This parameter is not
+            applicable to Australia.
+          example: Dublin
+        mobile_number:
+          title: mobile_number
+          type: string
+          pattern: ^\+[0-9]{1,3}-[0-9()+\\-]{1,30}$
+          description: >-
+            Specify the mobile number of the creditor address. This parameter is
+            not applicable to Australia.
+          example: +989-4198941
+        fax_number:
+          title: fax_number
+          type: string
+          pattern: ^\+[0-9]{1,3}-[0-9()+\\-]{1,30}$
+          description: >-
+            Specify the fax number of the creditor address. This parameter is
+            not applicable to Australia.
+          example: +989-4198941
+        email:
+          title: email
+          type: string
+          format: email
+          description: >-
+            Specify the Address for electronic mail (e-mail). This parameter is
+            not applicable to Australia.
+          example: abc@gmail.com
+        other_identification_category:
+          title: other_identification_category
+          type: string
+          enum:
+            - ORG
+            - PVT
+          description: >-
+            Specify the unique and unambiguous identification of a party. either
+            the value will be ORG or PVT. This is a mandatory parameter for
+            Australia, if the creditor section is present.
+          example: ORG
+        other_identification_type:
+          title: other_identification_type
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique and unambiguous way to identify an
+            organization/private identification. This is a mandatory parameter
+            for Australia if the `other_identification_category` parameter is
+            present.
+          example: BANK
+        other_identification:
+          title: other_identification
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the value of an organization/private identification. This is
+            a mandatory parameter for Australia if the
+            `other_identification_category` parameter is present.
+          example: JUNO1552212
+        iban:
+          title: iban
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            An identifier used internationally by financial institutions to
+            uniquely identify the account of a customer at a financial
+            institution, as described in the latest edition of the international
+            standard ISO 13616: 2007 - Banking and related financial services -
+            International Bank Account Number (IBAN). This parameter is not
+            applicable to Australia.
+          example: '1234567891'
+        bank_routing_code:
+          title: bank_routing_code
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the Code allocated to a financial institution by the ISO
+            9362 Registration Authority as described in ISO 9362 Banking -
+            Banking telecommunication messages - Business identifier code (BIC).
+            This is a mandatory parameter for Australia if the 'account'
+            parameter is present.
+          example: CITI4564464
+        bank_branch_code:
+          title: bank_branch_code
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the 6-digit BSB/9-digit account identification assigned by
+            the Entity. This is a mandatory parameter for Australia if the
+            `account` parameter is present.
+          example: Bank Branch Code
+        scheme_identification:
+          title: scheme_identification
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the originator Creditor Scheme Identifier. This parameter is
+            not applicable for Australia.
+          example: scheme identification
+        account:
+          title: account
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unambiguous identification of the account of the
+            creditor to which a debit entry will be posted as a result of the
+            payment transaction.
+          example: account
+        account_type:
+          title: account_type
+          type: string
+          enum:
+            - AIIN
+            - BBAN
+            - CUID
+            - UPIC
+            - ALIA
+          description: >-
+            Specify the name of the identification scheme, in a coded form as
+            published in an external list.<br>AIIN -Issuer Identification
+            Number<br>BBAN- BBAN Identifier<br>CUID -CHIPS Universal
+            Identifier<br>UPIC- UPIC Identifier<br>ALIA-Alias (proxy). This is a
+            conditional parameter for Australia if creditor section is present
+            and only BBAN is applicable for Australia and no proxy is allowed.
+            <br>This is a mandatory parameter for Australia if creditor section
+            is present. <br>For Australia, this parameter is allowed to amend
+            unilaterally.
+          example: AIIN
+        proxy_id:
+          title: proxy_id
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: >-
+            Specify the identification used to indicate the account
+            identification under another specified name. This parameter is not
+            applicable to Australia.
+          example: '9190000001253'
+        proxy_type:
+          title: proxy_type
+          type: string
+          enum:
+            - TELE
+            - EMAL
+            - DNAM
+            - CINC
+            - COTX
+            - COID
+            - CUST
+            - DRLC
+            - EIDN
+            - EWAL
+            - PVTX
+            - LEIC
+            - MBNO
+            - NIDN
+            - CCPT
+            - SHID
+            - SOSE
+            - TOKN
+            - UBIL
+            - VIPN
+            - BIID
+          description: >-
+            Specify the name of the identification scheme, in a coded form as
+            published in an external list. Specify the value only when the
+            mandate request is other than payer (debtor) account
+            number:<br>TELE-TelephoneNumber<br>EMAL-EmailAddress<br>DNAM-DomainName<br>CINC-CertificateOfIncorporationNumber<br>COTX-CorporateTaxIdentification<br>COID-CountryAuthorityIdentification<br>CUST-CustomerIdentificationNumber<br>DRLC-DriverLicenseNumber<br>EIDN-ElectronicIdentification<br>EWAL-EWalletIdentification<br>PVTX-IndividualTaxIdentification<br>LEIC-LegalEntityIdentifierCode<br>MBNO-MobilePhoneNumber<br>NIDN-NationalIdentificationNumber<br>CCPT-PassportNumber<br>SHID-SchemeIdentificationNumber<br>SOSE-SocialSecurityNumber<br>TOKN-TokenIdentification<br>UBIL-UtilitiesSubscriptionIdentification<br>VIPN-VehicleIdentificationPlateNumber<br>BIID-BillerSubscriberIdentification.
+            This parameter is not applicable for Australia.
+          example: TELE
+    AmendmentCreditor:
+      title: AmendmentCreditor
+      type: object
+      properties:
+        name:
+          title: name
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: >-
+            Specify the name by which a party is known and which is used to
+            identify that party. For Australia, this parameter is allowed to
+            amend unilaterally.
+          example: Samiel
+        address_1:
+          title: address_1
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: >-
+            Specify the address of the party who involves in the payment flow.
+            This parameter is not applicable to Australia.
+          example: OlympusA
+        address_2:
+          title: address_2
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: >-
+            Specify the address of the party who involves in the payment flow.
+            This parameter is not applicable to Australia.
+          example: Rodas enclave
+        address_3:
+          title: address_3
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: >-
+            Specify the address of the party who involves in the payment flow.
+            This parameter is not applicable to Australia.
+          example: Ireland
+        country_code:
+          title: country_code
+          type: string
+          pattern: ^[A-Z]{2}$
+          description: >-
+            Specify the country code of the creditor address. This parameter is
+            not applicable to Australia.
+          example: IR
+        postal_code:
+          title: postal_code
+          type: string
+          minLength: 1
+          maxLength: 16
+          description: >-
+            Specify the postal code of the creditor address. This parameter is
+            not applicable to Australia.
+          example: '12345'
+        town_name:
+          title: town_name
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the town name of the creditor address. This parameter is not
+            applicable to Australia.
+          example: Dublin
+        mobile_number:
+          title: mobile_number
+          type: string
+          pattern: ^\+[0-9]{1,3}-[0-9()+\\-]{1,30}$
+          description: >-
+            Specify the mobile number of the creditor address. This parameter is
+            not applicable to Australia.
+          example: +989-4198941
+        fax_number:
+          title: fax_number
+          type: string
+          pattern: ^\+[0-9]{1,3}-[0-9()+\\-]{1,30}$
+          description: >-
+            Specify the fax number of the creditor address. This parameter is
+            not applicable to Australia.
+          example: +989-4198941
+        email:
+          title: email
+          type: string
+          format: email
+          description: >-
+            Specify the Address for electronic mail (e-mail). This parameter is
+            not applicable to Australia.
+          example: abc@gmail.com
+        other_identification_category:
+          title: other_identification_category
+          type: string
+          enum:
+            - ORG
+            - PVT
+          description: >-
+            Specify the unique and unambiguous identification of a party. The
+            value will be either `ORG` or `PVT`. For Australia, this parameter
+            is allowed to amend unilaterally.
+          example: ORG
+        other_identification_type:
+          title: other_identification_type
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique and unambiguous way to identify an
+            organization/private identification. For Australia, this parameter
+            is allowed to amend unilaterally.
+          example: BANK
+        other_identification:
+          title: other_identification
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the value of an organization/private identification. For
+            Australia this parameter is allowed to amend unilaterally.
+          example: JUNO1552212
+        iban:
+          title: iban
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            An identifier used internationally by financial institutions to
+            uniquely identify the account of a customer at a financial
+            institution, as described in the latest edition of the international
+            standard ISO 13616: 2007 - Banking and related financial services -
+            International Bank Account Number (IBAN). This parameter is not
+            applicable to Australia.
+          example: '1234567891'
+        bank_routing_code:
+          title: bank_routing_code
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the Code allocated to a financial institution by the ISO
+            9362 Registration Authority as described in ISO 9362 Banking -
+            Banking telecommunication messages - Business identifier code (BIC).
+            For Australia this parameter is not allowed to amend.
+          example: CITI4564464
+        bank_branch_code:
+          title: bank_branch_code
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the 6-digit BSB/9-digit account identification assigned by
+            the Entity. For Australia this parameter is not allowed to amend.
+          example: Bank Branch Code
+        scheme_identification:
+          title: scheme_identification
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the  originator Creditor Scheme Identifier. This parameter
+            is not applicable for Australia.
+          example: scheme identification
+        account:
+          title: account
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unambiguous identification of the account of the
+            creditor to which a debit entry will be posted as a result of the
+            payment transaction. For Australia, this parameter is allowed to
+            amend unilaterally.
+          example: account
+        account_type:
+          title: account_type
+          type: string
+          enum:
+            - AIIN
+            - BBAN
+            - CUID
+            - UPIC
+            - ALIA
+          description: >-
+            Specify the name of the identification scheme, in a coded form as
+            published in an external list.<br>AIIN -Issuer Identification
+            Number<br>BBAN- BBAN Identifier<br>CUID -CHIPS Universal
+            Identifier<br>UPIC- UPIC Identifier<br>ALIA-Alias (proxy). For
+            Australia this parameter is allowed to amend unilaterally.
+          example: BBAN
+        proxy_id:
+          title: proxy_id
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: >-
+            Specify the Identification used to indicate the account
+            identification under another specified name. For Australia, this
+            parameter is allowed to amend unilaterally.
+          example: '9190000001253'
+        proxy_type:
+          title: proxy_type
+          type: string
+          enum:
+            - TELE
+            - EMAL
+            - DNAM
+            - CINC
+            - COTX
+            - COID
+            - CUST
+            - DRLC
+            - EIDN
+            - EWAL
+            - PVTX
+            - LEIC
+            - MBNO
+            - NIDN
+            - CCPT
+            - SHID
+            - SOSE
+            - TOKN
+            - UBIL
+            - VIPN
+            - BIID
+          description: >-
+            Specify the name of the identification scheme, in a coded form as
+            published in an external list. Specify the value only when the
+            mandate request is other than the payer (debtor) account
+            number:<br>TELE-TelephoneNumber<br>EMAL-EmailAddress<br>DNAM-DomainName<br>CINC-CertificateOfIncorporationNumber<br>COTX-CorporateTaxIdentification<br>COID-CountryAuthorityIdentification<br>CUST-CustomerIdentificationNumber<br>DRLC-DriverLicenseNumber<br>EIDN-ElectronicIdentification<br>EWAL-EWalletIdentification<br>PVTX-IndividualTaxIdentification<br>LEIC-LegalEntityIdentifierCode<br>MBNO-MobilePhoneNumber<br>NIDN-NationalIdentificationNumber<br>CCPT-PassportNumber<br>SHID-SchemeIdentificationNumber<br>SOSE-SocialSecurityNumber<br>TOKN-TokenIdentification<br>UBIL-UtilitiesSubscriptionIdentification<br>VIPN-VehicleIdentificationPlateNumber<br>BIID-BillerSubscriberIdentification.
+            For Australia, this parameter is allowed to amend unilaterally.
+          example: TELE
+    Ultimate:
+      title: Ultimate
+      type: object
+      properties:
+        ultimate_debtor_name:
+          title: ultimate_debtor_name
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the name by which the ultimate debtor is known and which is
+            used to identify that party. This parameter is mandatory for
+            Australia.
+          example: Debtor Name
+        ultimate_creditor_name:
+          title: ultimate_creditor_name
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the name by which the ultimate creditor is known and which
+            is used to identify that party. This parameter is mandatory for
+            Australia. For Australia, this parameter is allowed to amend
+            unilaterally.
+          example: Creditor Name
+    AmendmentUltimate:
+      title: AmendmentUltimate
+      type: object
+      properties:
+        ultimate_creditor_name:
+          title: ultimate_creditor_name
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the name by which the ultimate creditor is known and which
+            is used to identify that party. For Australia, this parameter is
+            allowed to amend unilaterally.
+          example: Creditor Name
+    MandateResponse:
+      title: MandateResponse
+      type: object
+      description: MandateResponse
+      required:
+        - mandate_request_identification
+        - status
+      properties:
+        mandate_acceptance:
+          title: mandate_response_mandate_acceptance
+          type: object
+          properties:
+            mandate_request_identification:
+              title: mandate_request_identification
+              type: string
+              description: >-
+                Specify Unique identification, as assigned by the clearing
+                scheme, to identify the mandate.
+              minLength: 1
+              maxLength: 35
+            status:
+              title: status
+              type: string
+              description: >-
+                Specifies the status of the mandate registration
+                requested.<br>PDNG=Pending<br>RJCT= Rejected<br>CRTD =
+                Created<br>ACTV = Active<br>SUSD = Suspended<br>CNCD = Cancelled
+              enum:
+                - PDNG
+                - RJCT
+                - CRTD
+                - ACTV
+                - SUSD
+                - CNCD
+    InquiryMandateResponse:
+      title: InquiryMandateResponse
+      type: object
+      description: InquiryMandateResponse
+      required:
+        - status
+      properties:
+        mandate_acceptance:
+          title: inquiry_mandate_response_mandate_acceptance
+          type: object
+          properties:
+            mandate_request_identification:
+              title: mandate_request_identification
+              type: string
+              description: >-
+                Specify Unique identification, as assigned by the clearing
+                scheme, to identify the mandate.
+              minLength: 1
+              maxLength: 35
+            mandate_identification:
+              title: mandate_identification
+              type: string
+              description: >-
+                Specify Unique identification, as assigned by the clearing
+                scheme, to identify the mandate.
+              minLength: 1
+              maxLength: 35
+            status:
+              title: status
+              type: string
+              description: >-
+                Specifies the status of the mandate registration
+                requested.<br>PDNG=Pending<br>RJCT= Rejected<br>CRTD =
+                Created<br>ACTV = Active<br>SUSD = Suspended<br>CNCD = Cancelled
+              enum:
+                - PDNG
+                - RJCT
+                - CRTD
+                - ACTV
+                - SUSD
+                - CNCD
+              example: RJCT
+        error_details:
+          title: error_details
+          type: array
+          items:
+            $ref: '#/components/schemas/InquiryErrorDetail'
+        mandate_details:
+          $ref: '#/components/schemas/MandateDetails'
+        initiating_party:
+          $ref: '#/components/schemas/InitiatingParty'
+        debtor:
+          $ref: '#/components/schemas/Debtor'
+        creditor:
+          $ref: '#/components/schemas/Creditor'
+        ultimate:
+          $ref: '#/components/schemas/Ultimate'
+    Errors:
+      title: Errors
+      type: object
+      properties:
+        ref_id:
+          title: ref_id
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+        error_detail:
+          title: error_detail
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+    ErrorDetails:
+      title: ErrorDetails
+      type: object
+      properties:
+        code:
+          title: code
+          type: string
+          maxLength: 35
+          description: Unique ID for the error code.
+        issue:
+          title: issue
+          type: string
+          description: more details about the issue.
+          maxLength: 300
+        action:
+          title: action
+          type: string
+          description: Corrective action to be taken to resolve the issue.
+          maxLength: 300
+    InquiryErrorDetail:
+      title: InquiryErrorDetail
+      type: object
+      properties:
+        code:
+          title: code
+          type: string
+          maxLength: 35
+          description: Unique ID for the error code.
+        issue:
+          title: issue
+          type: string
+          description: More details about the issue
+          maxLength: 35
+  callbacks:
+    CreationPushNotification:
+      /asynchronous-mandate-creation-push-notification:
+        post:
+          description: >-
+            This callback describes the asynchronous push notifications schema
+            definition and example for mandate creation push notifications.
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/InquiryMandateResponse'
+                examples:
+                  OKCreateMandateResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptancePushNotificationExample
+                  NotOKCreateMandateResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptanceErrorPushNotificationExample
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    AmendmentPushNotification:
+      /asynchronous-mandate-amendment-push-notification:
+        post:
+          description: >-
+            This callback describes the asynchronous push notifications schema
+            definition and example for mandate amendment push notifications.
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/InquiryMandateResponse'
+                examples:
+                  OKAmendMandateResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptancePushNotificationExample
+                  NotOKAmendMandateResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptanceErrorPushNotificationExample
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    UpdateStatusPushNotification:
+      /asynchronous-update-status-push-notification:
+        post:
+          description: >-
+            This callback describes the asynchronous push notifications schema
+            definition and example for update status push notifications.
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/InquiryMandateResponse'
+                examples:
+                  OKUpdateStatusResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptancePushNotificationExample
+                  NotOKUpdateStatusResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptanceErrorPushNotificationExample
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    MandateRecallPushNotification:
+      /asynchronous-recall-push-notification:
+        post:
+          description: >-
+            This callback describes the asynchronous push notifications schema
+            definition and example for recall push notifications.
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/InquiryMandateResponse'
+                examples:
+                  OKRecallMandateResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptancePushNotificationExample
+                  NotOKRecallMandateResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptanceErrorPushNotificationExample
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    MandateStatusInquiryPushNotification:
+      /asynchronous-Inquiry-push-notification:
+        post:
+          description: >-
+            This callback describes the asynchronous push notifications schema
+            definition and example for inquiry push notifications.
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/InquiryMandateResponse'
+                examples:
+                  OkMandateStatusInquiryResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptancePushNotificationExample
+                  NotOKMandateStatusInquiryResponseExample:
+                    $ref: >-
+                      #/components/examples/MandateAcceptanceErrorPushNotificationExample
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+  examples:
+    MandateAcceptancePushNotificationExample:
+      value:
+        mandate_acceptance:
+          mandate_request_identification: ee58e55e7c624ef9b064f33d166be65d
+          mandate_identification: MD1556165161544
+          status: ACTV
+          action_id: 123bwuefuwe
+          bilateral: false
+          mandate_request_status: SUCCESS
+    MandateAcceptanceErrorPushNotificationExample:
+      value:
+        mandate_acceptance:
+          mandate_request_identification: e3990292f90b4bc9b0b52c98682ca7d7
+          mandate_identification: MD1556165161544
+          request_status: RJCT
+        errorDetails:
+          - code: AC02
+            issue: incorrect account number
+          - code: NARR
+            issue: invalid details shared by the debtor agent
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            emandateservices: Grant read-only access to emandate initation service

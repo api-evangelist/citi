@@ -1,0 +1,385 @@
+swagger: '2.0'
+info:
+  description: >-
+    Returns the account balance for various account levels and returns an
+    indicator for whether sufficient funds are available in the account for a
+    specified transaction amount.
+  version: 1.0.0
+  title: Account Balance Inquiry
+servers:
+  - url: https://tts.apib2b.citi.com/tts/cards
+    description: production gateway URL
+  - url: https://tts.sandbox.apib2b.citi.com/tts/cards
+    description: sandbox URL
+schemes:
+  - https
+produces:
+  - application/json
+paths:
+  /accounts/v1/balanceInquiry:
+    post:
+      summary: Account Balance Inquiry
+      description: >-
+        Retrieves account balance information such as the credit or cash limit,
+        current balance, and total usage for various account levels(group,
+        relationship, financial account, or card). Optionally pass a transaction
+        amount in the request to check whether there is available credit for a
+        card transaction.
+      operationId: Account Balance Inquiry
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports application/json
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          type: string
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          type: string
+        - name: Region
+          in: header
+          description: region of the client(APAC/EMEA/NAM)
+          type: string
+          required: true
+        - name: Country
+          in: header
+          description: country of the client
+          type: string
+          required: true
+        - name: Req-Sys-Id
+          in: header
+          description: Client tracking ID
+          type: string
+          required: true
+        - name: key-id
+          in: header
+          description: Client certificate key ID to be provided by TPP
+          type: string
+          required: true
+        - name: BalInquiryRequest
+          in: body
+          description: BalInquiryRequest
+          required: true
+          schema:
+            $ref: '#/definitions/BalInquiryRequest'
+      responses:
+        '200':
+          description: >-
+            <table><tr><td>Code</td><td>Details</td></tr><tr><tr><td>BalInquiryResponse</td><td><table><tr><td>Code</td><td>Details</td></tr><tr><tr><td>BalInquiryResponse</td><td>Success</td></tr></table></td></tr></table>
+          schema:
+            $ref: '#/definitions/BalInquiryResponse'
+        '400':
+          description: >-
+            <table><tr><td>ResponseCodes400</td><td><table><tr><td>ResponseCode</td><td>Bad
+            Request</td></tr></table></td></tr></table>
+          schema:
+            $ref: '#/definitions/ResponseCodes400'
+        '500':
+          description: >-
+            <table><tr><td>ResponseCode500</td><td><table><tr><td>ResponseCodes</td><td>Internal
+            Server Error</td></tr></table></td></tr></table>
+          schema:
+            $ref: '#/definitions/ResponseCode500'
+definitions:
+  BalInquiryRequest:
+    properties:
+      accountNumber:
+        description: >-
+          Number of the account to which the balance inquiry relates. TPP
+          clients must send encrypted Account number field.
+        type: string
+        format: alphanumeric
+        example: '1234567890123450'
+        maxLength: 19
+        minLength: 16
+      accountLevel:
+        description: >-
+          Heirarchy level to which balance inquiry relates<br>Possible
+          Values<br>G - Corporate Group<br>R - Corporate Relationship<br>A -
+          Financial Account<br>C - Card
+        type: string
+        format: alphanumeric
+        example: C
+        maxLength: 1
+      transactionAmount:
+        description: >-
+          The amount of the planned transaction to be checked against the
+          available limit<br><br>Applicable only when transactionType =
+          C<br><br>Amount format must be passed with the appropriate amount of
+          decimal positions based on the currency per the ISO 4217
+          standard<br><br>If additonal digits are added to the right of the
+          decimal where not applicable for the given currency as per the ISO
+          4217 standard, the additional digits will be stripped from the end
+          from the value.<br>Max length: 14 digits to the left of the decimal
+          and 2 digits to the right of the decimal<br>or 13 digits to the left
+          of the decimal and 3 digits to the right of the decimal.
+        type: string
+        format: alphanumeric
+        example: '100.50'
+        maxLength: 17
+      transactionAmountCurrency:
+        description: >-
+          Required if transactionAmount is included in request. If not included
+          while Transaction Amount is present, transactionAmountCurrency will be
+          defaulted to the domestic currency<br><br>Applicable only when
+          transactionType = C<br><br>The currency of the planned transaction to
+          be checked against the available limit
+        type: string
+        format: alphanumeric
+        example: USD
+        maxLength: 3
+    required:
+      - accountNumber
+  BalInquiryResponse:
+    properties:
+      accountNumber:
+        description: Number of the account to which the balance inquiry relates
+        type: string
+        format: alphanumeric
+        example: '1234567890123450'
+        maxLength: 19
+      accountLevel:
+        description: >-
+          Heirarchy level to which balance inquiry relates<br>Possible
+          Values<br>G - Corporate Group<br>R - Corporate Relationship<br>A -
+          Financial Account<br>C - Card
+        type: string
+        format: alphanumeric
+        example: C
+        maxLength: 1
+      necessaryAmountAvailableRetail:
+        description: >-
+          Returned when Account Type = C  and transactionAmount and
+          transactionAmountCurrency are included in the request<br>Possible
+          Value<br>Y - Yes<br>N - No
+        type: string
+        format: alphanumeric
+        example: 'Y'
+        maxLength: 1
+      wtpTierPercentage:
+        description: Percentage value of wholesale travel product interchange tier
+        type: string
+        format: alphanumeric
+        example: '80'
+        maxLength: 6
+      accountBalanceInfo:
+        type: array
+        items:
+          $ref: '#/definitions/AccountBalanceInfo'
+      wtpTierCode:
+        description: Code of wholesale travel product interchange tier
+        type: string
+        format: alphanumeric
+        example: MBI
+        maxLength: 3
+    required:
+      - accountNumber
+      - accountLevel
+      - accountBalanceInfo
+  AccountBalanceInfo:
+    properties:
+      accountype:
+        description: >-
+          Indicates the account Level or account type the account balance info
+          is being returned for.<br>Possible values<br>Corporate
+          Group<br>Corporate Relationship<br>Financial
+          Account<br>Card<br>Cash<br>Foreign Currency Credit<br>Alternate
+          Currency Credit<br>Declining Balance
+        type: string
+        format: alphanumeric
+        maxLength: 1
+      limit:
+        description: >-
+          The maximum amount of credit that can be spent or the maximum amount
+          allowed for cash withdrawals
+        type: string
+        format: alphanumeric
+        example: '800000'
+        maxLength: 18
+      currentBalance:
+        description: Current balance of the account
+        type: string
+        format: alphanumeric
+        example: '24043.71'
+        maxLength: 18
+      outstandingBalance:
+        description: Balance of authorized transactions that are not yet posted on account
+        type: string
+        format: alphanumeric
+        example: '794.48'
+        maxLength: 18
+      totalUsage:
+        description: Total amount of credit limit spent including outstanding balance
+        type: string
+        format: alphanumeric
+        example: '24838.19'
+        maxLength: 18
+      totalUsagePercentage:
+        description: >-
+          Percentage of total amount of credit limit spent including outstanding
+          balance
+        type: string
+        format: alphanumeric
+        example: '3.1'
+        maxLength: 7
+      availableLimit:
+        description: >-
+          Remaining limit available to spend or remaining limit available for
+          cash withdrawal
+        type: string
+        format: alphanumeric
+        example: '775161.81'
+        maxLength: 18
+      availableLimitPercentage:
+        description: >-
+          The percent of the limit of that account which is allowed to be spent
+          or to be withdrawn
+        type: string
+        format: alphanumeric
+        example: '96.6'
+        maxLength: 7
+      currency:
+        description: The currency of the account
+        type: string
+        format: alphanumeric
+        example: GBP
+        maxLength: 3
+      temporaryLimitExpiry:
+        description: >-
+          Date when Temporary credit or cash Limit will cease to take effect.
+          Returned when temporary credit or cash limit is active
+        type: string
+        format: alphanumeric
+        example: MMDDYYYY
+        maxLength: 8
+      permanentLimit:
+        description: >-
+          Amount of permanent credit or cash limit, when temporary limit is
+          active. Returned when temporary credit or cash limit is active
+        type: string
+        format: alphanumeric
+        example: '1000000'
+        maxLength: 18
+      startDate:
+        description: Date when Foreign Currency Limit start to take effect
+        type: string
+        format: alphanumeric
+        example: MMDDYYYY
+        maxLength: 8
+      expiryDate:
+        description: Date when Foreign Currency Limit or Declining Balance expires
+        type: string
+        format: alphanumeric
+        example: MMDDYYYY
+        maxLength: 8
+    required:
+      - accountype
+  BalInquiryErrorResponse:
+    properties:
+      errorMessage:
+        type: array
+        items:
+          $ref: '#/definitions/ErrorResponseCode'
+  ErrorResponseCode:
+    properties:
+      code:
+        description: which indicates the error code
+        type: string
+        format: alphanumeric
+        enum:
+          - EVB1101
+          - EVB1102
+          - EVB1103
+          - EVB1104
+          - EVB1105
+          - EVB1106
+          - EVB1107
+          - EVB1108
+          - EVB1109
+          - EVB1111
+          - EVB1112
+          - EVB1113
+          - EVB1114
+          - EVB1115
+          - EVB1116
+          - EVB1130
+          - EVB1131
+          - EVB1132
+          - EVB1133
+          - GRC0002
+          - GRC0003
+          - GRC0004
+          - GRC0005
+          - GRC0007
+          - GRC0010
+          - GRC0014
+          - GRC0016
+      description:
+        description: "\" The error description that corresponds to error code when there is any<br>               error occurred while retrieving the trsansaction.<br>* `EVB1101`-accountNumber is required\t<br>* `EVB1102`-accountNumber value must be numeric<br>* `EVB1103`-accountNumber must be between 16 and 19 digits<br>* `EVB1105`-Invalid accountLevel value. accountLevel must be either G, R, A, or C\t<br>* `EVB1106`-accountLevel can have max of 1 character<br>* `EVB1107`-transactionAmount value must be numeric<br>* `EVB1108`-transactionAmount max character length is 17 digits with a max 3 digits to the right of the decimal<br>* `EVB1109`-transactionAmountCurrency can have a maximum of 3 characters\t<br>* `EVB1112`-accountNumber not found in the system<br>* `EVB1113`-transactionAmountCurrency not found in system<br>* `EVB1114`-Client Tracking ID has spaces<br>* `EVB1116`-Card account number does not belong to the group account number or relationship number that has been onboarded for this client ID.\t<br>* `EVB1130`-Certificate Key Id entered is not valid.<br>* `EVB1131`-Payload signing validation failed.<br>* `EVB1132`-Group account number has not been onboarded for this client ID and key ID.<br>* `EVB1133`-Certificate Key Id is mandatory<br>* `GRC0002`-Client ID is missing in the request header<br>* `GRC0003`-Invalid JSON Input \t<br>* `GRC0004`-Region ID is not available in the request<br>* `GRC0005`-Client Tracking ID is missing in the request header <br>* `GRC0007`-Client requested Content Type is not supported.<br>* `GRC0010`-Client Tracking ID length should contain a min of 1 character and a max of 36 characters<br>* `GRC0014`-We have encountered an error and couldnt receive your request. Please try again, or contact Citi support if you have any further questions or comments\t\t<br>* `GRC0016`-Country code is not available in the request"
+        type: string
+        format: alphanumeric
+    required:
+      - code
+  ResponseCodes400:
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ResponseCodes'
+  ResponseCodes:
+    properties:
+      errorCode:
+        description: which indicates the error code
+        type: string
+        format: alphanumeric
+        example: EVB1112
+        maxLength: 30
+      errorDescription:
+        description: which indicates the error description
+        type: string
+        format: alphanumeric
+        example: accountNumber not found in the system
+        maxLength: 300
+    required:
+      - errorCode
+      - errorDescription
+  ResponseCode500:
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/ResponseCode'
+  ResponseCode:
+    properties:
+      errorCode:
+        description: which indicates the error code
+        type: string
+        example: GRC0014
+      errorDescription:
+        description: which indicates the error description
+        type: string
+        example: >-
+          We have encountered an error and couldnot receive your request. Please
+          try again, or contact Citi support if you have any further questions
+          or comments
+consumes:
+  - application/json
+securityDefinitions:
+  clientCredentials:
+    type: oauth2
+    flow: application
+    description: ''
+    tokenUrl: https://tts.apib2b.citi.com/tts/cards/api/v1/oauth2/token
+    scopes: null
+security:
+  - clientCredentials: []
+responses: {}

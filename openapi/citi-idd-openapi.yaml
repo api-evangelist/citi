@@ -1,0 +1,1160 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: Instant Direct Debit
+  description: >-
+    This API allows a creditor or a creditor agent to request movement of funds
+    from the debtor account to a creditor. <br> Using details POST verb you can
+    initiate a Direct Debit transaction and receive RJCT (in case of schema
+    failure) / PNDG once the request is accepted for processing. <br> Using
+    details in GET verb you can inquire about the current status initiated
+    direct debit transaction.
+security:
+  - clientCredentials: []
+servers:
+  - url: https://tts.sit.apib2b.citi.com/citiconnect/sit5/receivablesservices
+    description: dev gateway url
+  - url: https://tts.sit.apib2b.citi.com/citiconnect/uat1/receivablesservices
+    description: uat gateway url
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/receivablesservices
+    description: production gateway url
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/receivablesservices
+    description: sandbox gateway url
+paths:
+  /v1/directdebits:
+    post:
+      summary: Initiate Direct Debit Transactions
+      description: This endpoint allows you to initiate a direct debit transaction.
+      operationId: initiationRequest
+      parameters:
+        - $ref: '#/components/parameters/Client-Id'
+        - $ref: '#/components/parameters/Idempotency-Id'
+      requestBody:
+        description: Request body for direct debit transaction.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Idd-Request'
+            example:
+              debtor:
+                name: Shan
+                account: '3459284'
+                account_type: AIIN
+                proxy_type: DNAM
+                proxy_id: '215264475588455744'
+                bank_branch_code: '3245245'
+                bank_routing_code: CHN0IN0D00A
+              creditor:
+                name: John
+                account: '473628234'
+                account_type: AIIN
+                proxy_type: DNAM
+                proxy_id: '215264475588455744'
+                bank_branch_code: '3245245'
+                bank_routing_code: MUM0IN0C00G
+              initiating_party:
+                name: Sean
+                account: '3213423'
+                bank_routing_code: VAS0IN0S00H
+                other_identification_type: AUBN
+                other_identification: AU1SACITIAU2XXXX
+              method:
+                country: AU
+                instructed_currency: AUD
+                payment_method: IP
+                payment_type: DD
+              transaction:
+                end_to_end_id: AUDIDD343D
+                uetr: 0c4fb98b-d77a-4468-96bb-0c88b3b8f75a
+                value_date: '2022-07-21T17:32:16.258Z'
+                instructed_amount: '3423.54'
+                purpose: MORT
+                bo_service_code: x2p1.01
+                additional_info: AU IDD request
+                instruction_priority: UNAT
+                unique_superannuation_code: 12345
+                unique_superannuation_identification: test one
+              mandate_details:
+                mandate_id: 3461fa9f03fe4268b5da93bf8203ad70
+              ultimate:
+                ultimate_creditor_name: creditor Australia
+                ultimate_debtor_name: debtor Australia
+      security:
+        - clientCredentials: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Idd-Response'
+              example:
+                debtor:
+                  name: Shan
+                  account: '3459284'
+                  account_type: AIIN
+                  proxy_type: DNAM
+                  proxy_id: '215264475588455744'
+                  bank_branch_code: '3245245'
+                  bank_routing_code: CHN0IN0D00A
+                creditor:
+                  name: John
+                  account: '473628234'
+                  account_type: AIIN
+                  proxy_type: DNAM
+                  proxy_id: '215264475588455744'
+                  bank_branch_code: '3245245'
+                  bank_routing_code: MUM0IN0C00G
+                initiating_party:
+                  name: Sean
+                  account: '3213423'
+                  bank_routing_code: VAS0IN0S00H
+                  other_identification_type: AUBN
+                  other_identification: AU1SACITIAU2XXXX
+                method:
+                  country: AU
+                  instructed_currency: AUD
+                  payment_method: IP
+                  payment_type: DD
+                transaction:
+                  end_to_end_id: AUDIDD343D
+                  uetr: e82540a1-bab9-41f3-b17a-f9b3ee27983f
+                  value_date: '2022-07-21T17:32:16.258Z'
+                  instructed_amount: '3423.54'
+                  purpose: MORT
+                  bo_service_code: x2p1.01
+                  additional_info: AU IDD request
+                  instruction_priority: UNAT
+                  unique_superannuation_code: 12345
+                  unique_superannuation_identification: test one
+                mandate_details:
+                  mandate_id: 3461fa9f03fe4268b5da93bf8203ad70
+                ultimate:
+                  ultimate_creditor_name: creditor Australia
+                  ultimate_debtor_name: debtor Australia
+                transaction_status:
+                  status: PDNG
+                  status_date_time: '2022-07-21T17:32:11.258Z'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Response'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: VC00010
+                    issue: property creditor.name is mandatory and it cannot be empty
+                    action: please provide valid value for property creditor.name
+                  - code: VC00001
+                    issue: >-
+                      invalid format provided for property
+                      creditor.bank_routing_code
+                    action: >-
+                      please provide valid value for property
+                      creditor.bank_routing_code, in format
+                      ^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3}){0,1}?$
+        '401':
+          $ref: '#/components/responses/Un-Authorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Idempotency-Duplication'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Too-Many-Request'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+    get:
+      summary: Inquire About the current statuses for direct debit transactions.
+      description: >-
+        This endpoint allows you to inquire the current status for the direct
+        debit transaction.
+      operationId: inquiryRequest
+      parameters:
+        - $ref: '#/components/parameters/Client-Id'
+        - $ref: '#/components/parameters/Country'
+        - $ref: '#/components/parameters/Uetr'
+        - $ref: '#/components/parameters/End-To-End-Id'
+      security:
+        - clientCredentials: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Idd-Inquire-Response'
+              example:
+                debtor:
+                  name: Shan
+                  account: '3459284'
+                  account_type: AIIN
+                  proxy_type: DNAM
+                  proxy_id: '215264475588455744'
+                  bank_branch_code: '3245245'
+                  bank_routing_code: CHN0IN0D00A
+                creditor:
+                  name: John
+                  account: '473628234'
+                  account_type: AIIN
+                  proxy_type: DNAM
+                  proxy_id: '215264475588455744'
+                  bank_branch_code: '3245245'
+                  bank_routing_code: MUM0IN0C00G
+                initiating_party:
+                  name: Sean
+                  account: '3213423'
+                  bank_routing_code: VAS0IN0S00H
+                  other_identification_type: AUBN
+                  other_identification: AU1SACITIAU2XXXX
+                method:
+                  country: AU
+                  instructed_currency: AUD
+                  payment_method: IP
+                  payment_type: DD
+                transaction:
+                  end_to_end_id: AUDIDD343D
+                  uetr: e82540a1-bab9-41f3-b17a-f9b3ee27983f
+                  value_date: '2022-07-21T17:32:16.258Z'
+                  instructed_amount: '3423.542'
+                  purpose: MORT
+                  bo_service_code: x2p1.01
+                  additional_info: AU IDD request
+                  instruction_priority: UNAT
+                  unique_superannuation_code: 12345
+                  unique_superannuation_identification: test one
+                mandate_details:
+                  mandate_id: 3461fa9f03fe4268b5da93bf8203ad70
+                ultimate:
+                  ultimate_creditor_name: creditor Australia
+                  ultimate_debtor_name: debtor Australia
+                transaction_status:
+                  status: RJCT
+                  status_date_time: '2022-07-21T18:10:22.258Z'
+                  reason:
+                    - code: NARR
+                      issue: Invalid key parameter
+                    - code: AM03
+                      issue: >-
+                        Specified message amount is an non processable currency
+                        outside of existing agreement
+                    - code: CH20
+                      issue: >-
+                        Number of decimal points not compatible with the
+                        currency
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Response'
+              example:
+                ref_id: ec689822-9864-4c4d-9d68-222467627902
+                error_details:
+                  - code: VC00005
+                    issue: uetr/endToEndId cannot be null or empty
+                    action: please send valid value for property uetr/endToEndId
+        '401':
+          $ref: '#/components/responses/Un-Authorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '429':
+          $ref: '#/components/responses/Too-Many-Request'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+components:
+  schemas:
+    Idd-Request:
+      title: IddRequest
+      type: object
+      required:
+        - debtor
+        - creditor
+        - method
+        - transaction
+      properties:
+        debtor:
+          $ref: '#/components/schemas/Debtor'
+        creditor:
+          $ref: '#/components/schemas/Creditor'
+        initiating_party:
+          $ref: '#/components/schemas/Initiating-Party'
+        method:
+          $ref: '#/components/schemas/Method'
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+        mandate_details:
+          $ref: '#/components/schemas/Mandate-Details'
+        ultimate:
+          $ref: '#/components/schemas/Ultimate'
+    Debtor:
+      title: Debtor
+      type: object
+      required:
+        - name
+        - account_type
+      properties:
+        name:
+          title: name
+          type: string
+          description: >-
+            Specify the name by which a party is known and which is usually used
+            to identify that party.
+          minLength: 1
+          maxLength: 140
+          example: Shan
+        account:
+          title: account
+          type: string
+          description: >-
+            Specify the identification of the account of the debtor to which a
+            debit entry will be posted as a result of the payment transaction.
+            For Australia its a conditional parameter if account_type value =
+            BBAN.
+          minLength: 1
+          maxLength: 35
+          example: '30471954'
+        account_type:
+          title: account_type
+          type: string
+          enum:
+            - AIIN
+            - BBAN
+            - CUID
+            - UPIC
+            - ALIA
+          description: >-
+            Specify the name of the identification scheme, in a coded form as
+            published in an external list. Possible values are:  <br>AIIN
+            -IssuerIdentificationNumber<br>BBAN - BBANIdentifier<br>CUID -
+            CHIPSUniversalIdentifier<br>UPIC - UPICIdentifier<br>ALIA - Alias
+            (proxy) <br> For Australia only below values are possible <br>
+            [BBAN, ALIA]
+        proxy_type:
+          title: proxy_type
+          type: string
+          enum:
+            - TELE
+            - EMAL
+            - DNAM
+            - CINC
+            - COTX
+            - COID
+            - CUST
+            - DRLC
+            - EIDN
+            - EWAL
+            - PVTX
+            - LEIC
+            - MBNO
+            - NIDN
+            - CCPT
+            - SHID
+            - SOSE
+            - TOKN
+            - UBIL
+            - VIPN
+            - BIID
+            - AUBN
+            - ORGN
+          description: >-
+            Specify the name of the identification scheme, in a coded form as
+            published in an external list. If account type is ALIA this
+            parameter is mandatory. Possible values are:<br>TELE -
+            TelephoneNumber<br>EMAL - EmailAddress<br>DNAM - DomainName<br>CINC
+            - CertificateOfIncorporationNumber<br>COTX -
+            CorporateTaxIdentification<br>COID -
+            CountryAuthorityIdentification<br>CUST -
+            CustomerIdentificationNumber<br>DRLC-DriverLicenseNumber<br>EIDN -
+            ElectronicIdentification<br>EWAL - EWalletIdentification<br>PVTX -
+            IndividualTaxIdentification<br>LEIC -
+            LegalEntityIdentifierCode<br>MBNO - MobilePhoneNumber<br>NIDN -
+            NationalIdentificationNumber<br>CCPT - PassportNumber<br>SHID -
+            SchemeIdentificationNumber<br>SOSE - SocialSecurityNumber<br>TOKN -
+            TokenIdentification<br>UBIL -
+            UtilitiesSubscriptionIdentification<br>VIPN -
+            VehicleIdentificationPlateNumber<br>BIID -
+            BillerSubscriberIdentification <br>AUBN - Australian business number
+            <br>ORGN - origination number <br> For Australia only below values
+            are possible <br> [AUBN, ORGN, TELE, EMAL]
+        proxy_id:
+          title: proxy_id
+          type: string
+          description: >-
+            Specify the Identification used to indicate the account
+            identification under another specified name. If account type is ALIA
+            this parameter is mandatory.
+          minLength: 1
+          maxLength: 2048
+          example: '215264475588455744'
+        bank_branch_code:
+          title: bank_branch_code
+          type: string
+          description: >-
+            Specify the 6-digit BSB or 9-digit account identification assigned
+            by the entity. <br> Required only when country = AU and account_type
+            = BBAN.
+          minLength: 1
+          maxLength: 35
+          example: '3456923'
+        bank_routing_code:
+          title: bank_routing_code
+          type: string
+          description: >-
+            Specify the Code allocated to a financial institution by the ISO
+            9362 Registration Authority as described in ISO 9362 Banking -
+            Banking telecommunication messages - Business identifier code (BIC)
+            <BR> Mandatory for Australia.
+          pattern: ^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3}){0,1}?$
+          example: CHN0IN0D00A
+    Creditor:
+      title: Creditor
+      type: object
+      required:
+        - account_type
+      properties:
+        name:
+          title: name
+          type: string
+          description: >-
+            Specify the name by which a party is known and which is usually used
+            to identify that party.
+          minLength: 1
+          maxLength: 140
+          example: Sean
+        account:
+          title: account
+          type: string
+          description: >-
+            Specify the identification of the account of the creditor to which a
+            debit entry will be posted as a result of the payment transaction.
+            For Australia its an conditional parameter if account_type value =
+            BBAN.
+          minLength: 1
+          maxLength: 35
+          example: '547589654'
+        account_type:
+          title: account_type
+          type: string
+          enum:
+            - AIIN
+            - BBAN
+            - CUID
+            - UPIC
+            - ALIA
+          description: >-
+            Specify the name of the identification scheme. Possible values are:
+            below  <br>AIIN -IssuerIdentificationNumber<br>BBAN-
+            BBANIdentifier<br>CUID -CHIPSUniversalIdentifier<br>UPIC-
+            UPICIdentifier<br>ALIA-Alias (proxy)<br> For Australia only below
+            values are possible <br> [BBAN]
+        proxy_type:
+          title: proxy_type
+          type: string
+          enum:
+            - TELE
+            - EMAL
+            - DNAM
+            - CINC
+            - COTX
+            - COID
+            - CUST
+            - DRLC
+            - EIDN
+            - EWAL
+            - PVTX
+            - LEIC
+            - MBNO
+            - NIDN
+            - CCPT
+            - SHID
+            - SOSE
+            - TOKN
+            - UBIL
+            - VIPN
+            - BIID
+          description: >-
+            Specify the name of the identification scheme. If account type is
+            ALIA this parameter is mandatory.  Possible values are below<br>TELE
+            - TelephoneNumber<br>EMAL -  EmailAddress<br>DNAM -
+            DomainName<br>CINC - CertificateOfIncorporationNumber<br>COTX -
+            CorporateTaxIdentification<br>COID -
+            CountryAuthorityIdentification<br>CUST -
+            CustomerIdentificationNumber<br>DRLC - DriverLicenseNumber<br>EIDN -
+            ElectronicIdentification<br>EWAL - EWalletIdentification<br>PVTX -
+            IndividualTaxIdentification<br>LEIC -
+            LegalEntityIdentifierCode<br>MBNO - MobilePhoneNumber<br>NIDN -
+            NationalIdentificationNumber<br>CCPT - PassportNumber<br>SHID -
+            SchemeIdentificationNumber<br>SOSE - SocialSecurityNumber<br>TOKN - 
+            TokenIdentification<br>UBIL -
+            UtilitiesSubscriptionIdentification<br>VIPN -
+            VehicleIdentificationPlateNumber<br>BIID -
+            BillerSubscriberIdentification
+        proxy_id:
+          title: proxy_id
+          type: string
+          description: >-
+            Specify the identification used to indicate the account
+            identification under another specified name. If account type is ALIA
+            this parameter is mandatory.
+          minLength: 1
+          maxLength: 2048
+          example: '215264475588455744'
+        bank_branch_code:
+          title: bank_branch_code
+          type: string
+          description: >-
+            Specify the 6-digit BSB/9 digit account identification assigned by
+            the Entity. <br> Conditinal Mandatory for Australia while
+            account_type = BBAN.
+          minLength: 1
+          maxLength: 35
+          example: '9584785425'
+        bank_routing_code:
+          title: bank_routing_code
+          type: string
+          description: >-
+            Specify the code allocated to a financial institution by the ISO
+            9362 Registration Authority as described in ISO 9362 Banking -
+            Banking telecommunication messages - Business identifier code (BIC)
+            <BR> Mandatory for Australia.
+          pattern: ^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3}){0,1}?$
+          example: MUM0IN0M00D
+    Initiating-Party:
+      title: InitiatingParty
+      type: object
+      properties:
+        name:
+          title: name
+          type: string
+          description: >-
+            Specify the name by which a party is known and which is usually used
+            to identify that party. <br> This parameter is mandatory for
+            Australia.
+          minLength: 1
+          maxLength: 140
+          example: XXDS DAS
+        account:
+          title: account
+          type: string
+          description: >-
+            Specify the unique identification of an account, as assigned by the
+            account servicer, using an identification scheme.<br> This parameter
+            is mandatory for Australia.
+          minLength: 1
+          maxLength: 35
+          example: '52324612'
+        bank_routing_code:
+          title: bank_routing_code
+          type: string
+          description: >-
+            Specify the Code allocated to a financial institution by the ISO
+            9362 Registration Authority as described in ISO 9362 Banking -
+            Banking telecommunication messages - Business identifier code
+            (BIC).<br> This parameter is mandatory for Australia and accepted
+            value = CITIAU2XMPS.
+          minLength: 1
+          maxLength: 35
+          example: AU00CN0P00P
+        other_identification_type:
+          title: other_identification_type
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the unique and unambiguous way to identify an
+            organization/private identification.<br> This parameter is mandatory
+            for Australia and accepted values = [AUBN, AUCN, CUST].
+          example: AUBN
+        other_identification:
+          title: other_identification
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the value of an organization/private identification. <br>
+            This parameter is mandatory for Australia.
+          example: AU1SACITIAU2XXXX
+    Method:
+      title: Method
+      type: object
+      required:
+        - country
+        - instructed_currency
+        - payment_method
+        - payment_type
+      properties:
+        country:
+          title: country
+          type: string
+          description: >-
+            Specify the country code where the collection request has been
+            originated.
+          pattern: ^[A-Z]{2}?$
+          example: AU
+        instructed_currency:
+          title: instructed_currency
+          type: string
+          description: >-
+            Specify the collection account currency. for Australia accepted
+            value = AUD.
+          pattern: ^[A-Z]{3}?$
+          example: AUD
+        payment_method:
+          title: payment_method
+          type: string
+          enum:
+            - IP
+          description: >-
+            Specifies the means of payment that will be used to move the amount
+            of money.<BR> IP - Instant Payment
+        payment_type:
+          title: payment_type
+          type: string
+          enum:
+            - DD
+          description: >-
+            Set of elements used to further specify the type of transaction.
+            <BR> DD - Direct Debit
+    Transaction:
+      title: Transaction
+      type: object
+      required:
+        - end_to_end_id
+        - value_date
+        - instructed_amount
+      properties:
+        end_to_end_id:
+          title: end_to_end_id
+          type: string
+          description: >-
+            Unique identification assigned by the initiating party to
+            unambiguously identify the transaction. This identification is
+            passed on, unchanged, throughout the entire end-to-end chain. Usage
+            - The end-to-end identification can be used for reconciliation or to
+            link tasks relating to the transaction. It can be included in
+            several messages related to the transaction.
+          pattern: ^[A-Z0-9]{1,35}?$
+          example: AUD001X8
+        uetr:
+          title: uetr
+          type: string
+          description: >-
+            Universal unique identifier to provide an end-to-end reference of a
+            payment transaction. Its Mandatory for Australia.
+          pattern: >-
+            ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          example: e82540a1-bab9-41f3-b17a-f9b3ee27983f
+        value_date:
+          title: value_date
+          type: string
+          description: >-
+            Specify the date and time on which the collection request processed
+            (YYYY-MM-DDTHH:MM:SS.SSSZ).
+          pattern: ^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3})Z$
+          example: '2022-07-21T17:32:23.258Z'
+        instructed_amount:
+          title: instructed_amount
+          type: string
+          description: >-
+            Specify the Fixed amount to be collected from the debtor's
+            account.<br> For Australia only two decimal number is allowed.
+          pattern: ^(?=.{1,19}$)[0-9]{0,18}(9|\d)(\.\d{1,5})?$
+          example: '15690.511'
+        purpose:
+          title: purpose
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the high level purpose of the collection based on a set of
+            predefined categories.<BR>This parameter is mandatory for Australia.
+            The possible values are: <br>MORT - Mortgage Payments<br>UTIL -
+            Utility Payments<br>LOAN - Loan Payments<br>DEPD - Dependent Support
+            Payments<br>GAMP - Gambling Payments<br>RETL - Retail
+            Payments<br>SALA - Salary Payments<br>PERS - Personal
+            Payment<br>GOVT - Government Payments<br>PENS - Pension
+            Payments<br>SUPP - Supplier Payment<br>TAXS - Tax Payments<br>OTHR -
+            Other Service Payments
+          example: DEPD
+        bo_service_code:
+          title: bo_service_code
+          type: string
+          description: >-
+            Specifies a pre-agreed service or level of service between the
+            parties.<BR>This parameter is mandatory for Australia. The possible
+            values are:<br>sct.01<br>x2p1.01<br>x2p1.02<br>x2p1.03<br>ifti.01
+          minLength: 1
+          maxLength: 35
+          example: x2p1.01
+        additional_info:
+          title: additional_info
+          type: string
+          description: >-
+            Specify the unique identification as assigned by the debtor to the
+            referred document shared with the creditor for its own reference.
+            for Australia if Purpose = SUPP then mention the e-invoice
+            paymentID.
+          minLength: 1
+          maxLength: 105
+          example: AU IDD request
+        instruction_priority:
+          title: instruction_priority
+          type: string
+          enum:
+            - UNAT
+            - NORM
+          description: >-
+            Specifies the priority level of an event.<BR>This parameter is
+            mandatory for Australia. Below are the possible
+            values,<br>UNAT<br>NORM<br>
+          example: NORM
+        unique_superannuation_code:
+          title: unique_superannuation_code
+          type: string
+          description: >-
+            Specifies a character string with a maximum length of 35 ASCII
+            printable characters.<BR>for Australia. If Purporse = PENS, then
+            `unique_superannuation_code` and
+            `unique_superannuation_identification` should be mandatory, else
+            both parameters or optional even the Purpose = PENS.
+          minLength: 1
+          maxLength: 35
+        unique_superannuation_identification:
+          title: unique_superannuation_identification
+          type: string
+          description: >-
+            Specifies a character string with a maximum length of 35 ASCII
+            printable characters.<BR>for Australia. If Purporse = PENS, then
+            `unique_superannuation_code` and
+            `unique_superannuation_identification` should be mandatory, else
+            both parameters or optional even the Purpose = PENS.
+          minLength: 1
+          maxLength: 35
+    Mandate-Details:
+      title: MandateDetails
+      type: object
+      properties:
+        mandate_id:
+          title: mandate_id
+          type: string
+          description: >-
+            Specify unique identification, as assigned by the clearing scheme,
+            to unambiguously identify the mandate.<BR> This parameter is
+            mandatory for Australia.
+          minLength: 1
+          maxLength: 35
+          example: ADDAES100C3
+    Ultimate:
+      title: Ultimate
+      type: object
+      properties:
+        ultimate_creditor_name:
+          title: ultimate_creditor_name
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the name by which the ultimate creditor is known and which
+            is usually used to identify that party.<BR> This parameter is
+            mandatory for Australia, If Purporse = PENS and
+            `unique_superannuation_code` and
+            `unique_superannuation_identification` parameters are present.
+          example: Australia
+        ultimate_debtor_name:
+          title: ultimate_debtor_name
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: >-
+            Specify the name by which the ultimate debtor is known and which is
+            usually used to identify that party.
+          example: Australia
+    Transaction-Status:
+      title: TransactionStatus
+      type: object
+      properties:
+        status:
+          title: status
+          type: string
+          maxLength: 4
+          description: >-
+            This parameter will have the current status of the iniated direct
+            debit transaction. Possible vaule ACCC, ACSC, ACSP, PDNG and RJCT
+        status_date_time:
+          title: status_date_time
+          type: string
+          description: >-
+            This parameter will have the date and time of the last updated
+            status (YYYY-MM-DDTHH:MM:SS.SSSZ).
+          pattern: ^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3})Z$
+        reason:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reason'
+    Reason:
+      title: Reason
+      type: object
+      properties:
+        code:
+          title: code
+          type: string
+          description: >-
+            This parameter will have the reason code for the RJCT transaction
+            status.
+        issue:
+          title: issue
+          type: string
+          description: This parameter will have description for the reason code.
+    Idd-Response:
+      title: IddResponse
+      type: object
+      properties:
+        debtor:
+          $ref: '#/components/schemas/Debtor'
+        creditor:
+          $ref: '#/components/schemas/Creditor'
+        initiating_party:
+          $ref: '#/components/schemas/Initiating-Party'
+        method:
+          $ref: '#/components/schemas/Method'
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+        mandate_details:
+          $ref: '#/components/schemas/Mandate-Details'
+        ultimate:
+          $ref: '#/components/schemas/Ultimate'
+        transaction_status:
+          title: IddResponseTransactionStatus
+          type: object
+          properties:
+            status:
+              title: status
+              type: string
+              maxLength: 4
+              description: >-
+                This parameter will have the current status of the iniated
+                direct debit transaction. Possible vaule ACCC, ACSC, ACSP, PDNG
+                and RJCT
+            status_date_time:
+              title: status_date_time
+              type: string
+              description: >-
+                This parameter will have the date and time of the last updated
+                status (YYYY-MM-DDTHH:MM:SS.SSSZ).
+              pattern: ^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3})Z$
+    Idd-Inquire-Response:
+      title: IddInquireResponse
+      type: object
+      properties:
+        debtor:
+          $ref: '#/components/schemas/Debtor'
+        creditor:
+          $ref: '#/components/schemas/Creditor'
+        initiating_party:
+          $ref: '#/components/schemas/Initiating-Party'
+        method:
+          $ref: '#/components/schemas/Method'
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+        mandate_details:
+          $ref: '#/components/schemas/Mandate-Details'
+        ultimate:
+          $ref: '#/components/schemas/Ultimate'
+        transaction_status:
+          $ref: '#/components/schemas/Transaction-Status'
+    Error-Response:
+      title: ErrorResponse
+      type: object
+      properties:
+        ref_id:
+          title: ref_id
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+        error_details:
+          title: error_details
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Error-Detail:
+      title: ErrorDetail
+      type: object
+      properties:
+        code:
+          title: code
+          type: string
+          maxLength: 7
+          description: Unique ID for the error code
+        issue:
+          title: issue
+          type: string
+          maxLength: 200
+          description: more details about the  issue
+        action:
+          title: action
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+    Apim-Error:
+      title: ApimError
+      type: object
+      properties:
+        httpCode:
+          title: httpCode
+          type: string
+          description: http staus code of this API
+        httpMessage:
+          title: httpMessage
+          type: string
+          description: short message about the issue
+        moreInformation:
+          title: moreInformation
+          type: string
+          description: more information about the issue
+      xml:
+        name: Errormessage
+    Apim-Json-Error:
+      title: ApimJsonError
+      type: object
+      properties:
+        status:
+          title: status
+          type: string
+          description: Http status code of this API response
+        message:
+          title: message
+          type: string
+          description: Short message about the issue
+  parameters:
+    Client-Id:
+      name: client_id
+      in: query
+      description: >-
+        Unique reference which was shared during CitiConnect API on-boarding
+        (`ClientId` which used during oauth token generation).
+      required: true
+      schema:
+        type: string
+        example: 4683fd9f-03fe-4268-b5da-93bf8203fd91
+    Idempotency-Id:
+      name: Idempotency-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+        example: a44cbb60123414bba3bb
+      description: >-
+        Your unique identification for a POST request for CitiConnect API to
+        perform idempotency check. Same `client_ID` is to be maintained by the
+        client, if client wants to retry request within 48 hours.
+    Country:
+      name: country
+      in: query
+      required: true
+      description: >-
+        This parameter specifies the country for which the direct debit
+        transaction is initiated
+      schema:
+        type: string
+        pattern: ^[A-Z]{2}?$
+        example: AU
+    Uetr:
+      name: uetr
+      in: query
+      required: true
+      description: >-
+        This parameter is to inquire the current status of initiated direct
+        debit transaction, which client receive as part of direct debit
+        initiation response. Either uetr or end_to_end_id should be passed.
+      schema:
+        type: string
+        pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+        example: e82540a1-bab9-41f3-b17a-f9b3ee27983f
+    End-To-End-Id:
+      name: end_to_end_id
+      in: query
+      required: true
+      description: >-
+        This parameter is to inquire the current status of the initiated direct
+        debit transaction,which client send as part of direct debit initiation
+        request. Either end_to_end_id or uetr should be passed.
+      schema:
+        type: string
+        pattern: ^[A-Z0-9]{1,35}?$
+        example: AUD001X8
+  responses:
+    Un-Authorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized:
+              $ref: '#/components/examples/Un-Authorized'
+            GatewayUnauthorized:
+              $ref: '#/components/examples/Gateway-Un-Authorized'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Forbidden:
+              $ref: '#/components/examples/Forbidden'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Apim-Error'
+          examples:
+            NotFound:
+              $ref: '#/components/examples/Not-Found'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            MethodNotAllowed:
+              $ref: '#/components/examples/Method-Not-Allowed'
+            GatewayMethodNotAllowed:
+              $ref: '#/components/examples/Gateway-Method-Not-Allowed'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Apim-Error'
+          examples:
+            UnsupportedMediaType:
+              $ref: '#/components/examples/Unsupported-Media-Type'
+    Too-Many-Request:
+      description: Too Many Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Apim-Json-Error'
+          examples:
+            TooManyRequest:
+              $ref: '#/components/examples/Too-Many-Request'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            InternalServerError:
+              $ref: '#/components/examples/Internal-Server-Error'
+            GatewayInternalServerError:
+              $ref: '#/components/examples/Gateway-Internal-Server-Error'
+    Idempotency-Duplication:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            IdempotencyDuplicationExample:
+              $ref: '#/components/examples/Idempotency-Duplication'
+  examples:
+    Un-Authorized:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        errors:
+          - code: CC00007
+            issue: User does not have authorization to access
+            action: Please use valid credentials to acccess this functionality
+    Gateway-Un-Authorized:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: Invalid client identification
+    Not-Found:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Forbidden:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - code: CC00008
+            issue: User does not have privilege to access this functionality
+            action: please reach out to support team to enable this feature
+    Method-Not-Allowed:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - code: CC00001
+            issue: Method not supported
+            action: please use valid http verb
+    Gateway-Method-Not-Allowed:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Unsupported-Media-Type:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - code: CC00002
+            issue: Media type not supported
+            action: please use valid content-type in header
+    Too-Many-Request:
+      value:
+        status: '429'
+        message: Requests are exceeding the allowed limit
+    Internal-Server-Error:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - code: CC00004
+            issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+    Gateway-Internal-Server-Error:
+      value:
+        status: '500'
+        message: Internal Server Error
+    Idempotency-Duplication:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        errors:
+          - code: VC00016
+            issue: Idempotency-Id provided is currently being used in another request
+            action: please do not repeat the same request again
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            directDebitService: Grant read-only access to emandate initation service

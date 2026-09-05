@@ -1,0 +1,1922 @@
+openapi: 3.0.2
+info:
+  title: Bank Service Initiation
+  version: 1.0.0
+  contact:
+    name: Citi API Support
+  description: >
+    Initiate payments, manage consents, retrieve payment status, and perform
+    secure open banking inquiries.
+servers:
+  - url: >-
+      https://b2b.tts.icgservices.citi.com/citiconnect/openbanking/ukr/paymentconsentservices/v1
+    description: production gateway url
+  - url: >-
+      https://sanbox.tts.icgservices.citi.com/citiconnect/openbanking/ukr/paymentconsentservices/v1
+    description: sbox url
+tags:
+  - name: PaymentOrderConsent
+    description: APIs to TPP for payment order consent creation and inquiry.
+  - name: Payments
+    description: APIs to TPP for payment initiation and inquiry.
+security:
+  - oAuth:
+      - authenticationservices/v1
+paths:
+  /payment-order-consent:
+    post:
+      tags:
+        - PaymentOrderConsent
+      summary: paymentOrderConsent
+      description: >-
+        Create a payment order consent by submitting participant, SCA, and
+        payment initiation details, then receive the generated consent
+        reference, status, and related authorization information for subsequent
+        payment processing.
+      servers:
+        - url: >-
+            https://b2b.tts.icgservices.citi.com/citiconnect/openbanking/ukr/paymentconsentservices/v1
+      operationId: paymentOrderConsent
+      parameters:
+        - $ref: '#/components/parameters/Request-ID'
+        - $ref: '#/components/parameters/Group-ID'
+        - $ref: '#/components/parameters/TPP-Code'
+        - $ref: '#/components/parameters/PSU-IP-Address'
+        - $ref: '#/components/parameters/Date'
+      requestBody:
+        description: Payment order consent request payload.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentOrderConsentRequestDTO'
+      responses:
+        '201':
+          description: Payment Order Consent Response
+          headers:
+            Request-ID:
+              $ref: '#/components/headers/Request-ID'
+            Group-ID:
+              $ref: '#/components/headers/Group-ID'
+            TPP-Code:
+              $ref: '#/components/headers/TPP-Code'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentOrderConsentDTO'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+        - oAuth:
+            - authenticationservices/v1
+  /payment-order-consent/{consent-Id}:
+    get:
+      tags:
+        - PaymentOrderConsent
+      summary: paymentOrderConsentInquiry
+      description: >-
+        Retrieve full payment order consent details using the consent
+        identifier, including participant and PSU context, current lifecycle
+        status, SCA attributes, timestamps, and payment initiation data required
+        for validation, audit, troubleshooting, and subsequent payment execution
+        decisions.
+      servers:
+        - url: >-
+            https://b2b.tts.icgservices.citi.com/citiconnect/openbanking/ukr/paymentconsentservices/v1
+      operationId: paymentOrderConsentInquiry
+      parameters:
+        - $ref: '#/components/parameters/Consent-Id-Path'
+        - $ref: '#/components/parameters/Request-ID'
+        - $ref: '#/components/parameters/Group-ID'
+        - $ref: '#/components/parameters/TPP-Code'
+        - $ref: '#/components/parameters/PSU-IP-Address'
+        - $ref: '#/components/parameters/Date'
+      responses:
+        '200':
+          description: Payment Order Consent Response
+          headers:
+            Request-ID:
+              $ref: '#/components/headers/Request-ID'
+            Group-ID:
+              $ref: '#/components/headers/Group-ID'
+            TPP-Code:
+              $ref: '#/components/headers/TPP-Code'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPaymentOrderConsentDTO'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+        - oAuth:
+            - authenticationservices/v1
+  /payments:
+    post:
+      tags:
+        - Payments
+      summary: Make a payment
+      description: >
+        Initiate payments, manage payment consents, retrieve payment status, and
+        perform secure open banking inquiries.
+      servers:
+        - url: >-
+            https://b2b.tts.icgservices.citi.com/citiconnect/openbanking/ukr/paymentconsentservices/v1
+      operationId: makePayment
+      parameters:
+        - $ref: '#/components/parameters/Consent-Id'
+        - $ref: '#/components/parameters/Request-ID'
+        - $ref: '#/components/parameters/PSU-IP-Address'
+        - $ref: '#/components/parameters/TPP-Code'
+        - $ref: '#/components/parameters/Date'
+      requestBody:
+        description: Payment instruction payload to initiate a payment.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentPostRequest'
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalPaymentIdResponse'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+        - oAuth:
+            - authenticationservices/v1
+  /payments/{payment-Id}:
+    get:
+      operationId: getPayment
+      tags:
+        - Payments
+      summary: Get a payment
+      description: >-
+        TPP can call this API from Financial Institutions to retrieve complete
+        details, latest processing state, and status history for a previously
+        submitted payment instruction using the unique payment identifier.
+      servers:
+        - url: >-
+            https://b2b.tts.icgservices.citi.com/citiconnect/openbanking/ukr/paymentconsentservices/v1
+      parameters:
+        - $ref: '#/components/parameters/Consent-Id'
+        - $ref: '#/components/parameters/Request-ID'
+        - $ref: '#/components/parameters/PSU-IP-Address'
+        - $ref: '#/components/parameters/TPP-Code'
+        - $ref: '#/components/parameters/Payment-Id'
+        - $ref: '#/components/parameters/Date'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalPaymentIdResponse'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+        - oAuth:
+            - authenticationservices/v1
+components:
+  parameters:
+    Request-ID:
+      in: header
+      name: Request-ID
+      required: true
+      schema:
+        type: string
+        title: Request-ID
+        minLength: 1
+        maxLength: 36
+      description: >-
+        The request identifier specific to the call determined by the PSP
+        initiating the request. This description is intentionally expanded to
+        clarify request usage, response expectations, validation behavior, and
+        integration context for PSD2-compliant API consumers.
+    Group-ID:
+      in: header
+      name: Group-ID
+      required: true
+      schema:
+        type: string
+        title: Group-ID
+        minLength: 1
+        maxLength: 36
+      description: >-
+        The request identifier specific to the transaction flow determined by
+        the PSP initiating the request. This description is intentionally
+        expanded to clarify request usage, response expectations, validation
+        behavior, and integration context for PSD2-compliant API consumers.
+    TPP-Code:
+      in: header
+      name: TPP-Code
+      required: true
+      schema:
+        type: string
+        title: TPP-Code
+        minLength: 4
+        maxLength: 4
+        pattern: '[0-9][0-9][0-9][0-9]'
+      description: >-
+        The code of the Authorized Payment Service Provider sending the request.
+        Required if the consent_id is used. This description is intentionally
+        expanded to clarify request usage, response expectations, validation
+        behavior, and integration context for PSD2-compliant API consumers.
+    PSU-IP-Address:
+      in: header
+      name: PSU-IP-Address
+      required: true
+      schema:
+        type: string
+        title: PSU-IP-Address
+        minLength: 1
+        maxLength: 15
+      description: >-
+        PSU-IP address of the payment service user (ipv4). Required if the
+        consent_id is used in the request.
+    Date:
+      in: header
+      name: Date
+      required: true
+      schema:
+        type: string
+        title: <day-name>, <day> <month> <year> <hour>:<minute>:<second> GMT
+        pattern: >-
+          (Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{1,2}
+          (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4}
+          \d{2}:\d{2}:\d{2} GMT$
+      description: >-
+        Date and time when the request is created/sent by the TPP. <br> <br> <b>
+        Format: </b> day-name, day month year hour:minute:second GMT <br> (for
+        example, Mon, 8 Jul 2026 14:25:30 GMT).
+    Payment-Id:
+      name: payment-Id
+      description: The identifier for a given payment instruction
+      in: path
+      required: true
+      schema:
+        type: string
+    Consent-Id-Path:
+      in: path
+      name: consent-Id
+      required: true
+      description: >-
+        Unique identifier of the account information consent resource used for
+        inquiry and deletion operations. This description is intentionally
+        expanded to clarify request usage, response expectations, validation
+        behavior, and integration context for PSD2-compliant API consumers.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+    Consent-Id:
+      in: query
+      name: consent_id
+      description: >-
+        Unique identifier for the consent resource. This field is required for
+        operations that act on an existing consent.
+      required: true
+      schema:
+        maxLength: 128
+        minLength: 1
+        type: string
+        title: Consent Id
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            title: BadRequestErrorResponse
+            anyOf:
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+              - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Bad-Request-Service-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Service-Error-Example'
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            title: UnauthorizedErrorResponse
+            anyOf:
+              - $ref: '#/components/schemas/Service-Error-Response'
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Service-Error-Example'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            title: InternalServerErrorResponse
+            anyOf:
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+              - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Internal-Server-Service-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Service-Error-Example'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            title: MethodNotAllowedErrorResponse
+            anyOf:
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+              - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            title: UnsupportedMediaTypeErrorResponse
+            anyOf:
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+              - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Un-Supported-Media-Type-Gateway-Error-Example:
+              $ref: >-
+                #/components/examples/Un-Supported-Media-Type-Gateway-Error-Example
+            Un-Supported-Media-Type-Service-Error-Example:
+              $ref: >-
+                #/components/examples/Un-Supported-Media-Type-Service-Error-Example
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Forbidden-Service-Example:
+              $ref: '#/components/examples/Forbidden-Service-Example'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+    Too-Many-Requests:
+      description: Too Many Requests - Rate limit exceeded. Retry after the specified time.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Too-Many-Requests-Gateway-Example:
+              $ref: '#/components/examples/Too-Many-Requests-Gateway-Example'
+    Service-Unavailable:
+      description: >-
+        Service Unavailable - The server is temporarily unable to  handle the
+        request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Service-Unavailable-Gateway-Example:
+              $ref: '#/components/examples/Service-Unavailable-Gateway-Example'
+    Gateway-Timeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Gateway-Timeout-Example:
+              $ref: '#/components/examples/Gateway-Timeout-Example'
+  schemas:
+    Gateway-Error-Response:
+      type: object
+      title: GatewayErrorResponse
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP status code
+          title: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+          example: Bad Request
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: moreInformation
+          example: please provide valid value for request
+    Service-Error-Response:
+      title: ServiceErrorResponse
+      type: object
+      required:
+        - ref_id
+        - error_details
+      properties:
+        ref_id:
+          type: string
+          maxLength: 120
+          description: Unique ID for the Transaction
+          title: ref_id
+          example: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+          type: array
+          description: List of error details
+          title: error_details
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Error-Detail:
+      type: object
+      title: ErrorDetail
+      properties:
+        issue:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: more details about the issue
+          title: issue
+          example: property emailAddress is mandatory and it cannot be empty
+        action:
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          title: action
+          example: please provide valid value for property emailAddress
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: unique code representing the issue
+          title: code
+          example: VC00010
+    PaymentPostRequest:
+      allOf:
+        - $ref: '#/components/schemas/GlobalPaymentPostRequest'
+      discriminator:
+        propertyName: paymentType
+        mapping:
+          global-payment: '#/components/schemas/GlobalPaymentPostRequest'
+    GlobalPaymentPostRequest:
+      title: GlobalPaymentPostRequest
+      description: >-
+        Submit this object to initiate a payment on behalf of a PSU, specifying
+        the consent reference, payment type, and full payment instruction that
+        Citi requires to process the transaction.
+      type: object
+      properties:
+        consentId:
+          $ref: '#/components/schemas/GlobalConsentId'
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        paymentRequest:
+          $ref: '#/components/schemas/PaymentRequest'
+      required:
+        - consentId
+        - paymentType
+        - paymentRequest
+      additionalProperties: false
+    PaymentRequest:
+      description: >-
+        Provide the core payment instruction details — including execution date,
+        amount, currency, and counterparty information — that Citi requires to
+        execute the payment on the PSU's behalf.
+      type: object
+      additionalProperties: false
+      required:
+        - requestedExecutionDate
+        - instruction
+        - personalIdentifiableInformation
+        - paymentPurposeCode
+        - paymentDetails
+        - creditorIndicators
+      properties:
+        requestedExecutionDate:
+          $ref: '#/components/schemas/GlobalRequestedExecutionDate'
+        instructionPriority:
+          description: >-
+            Indicator of the urgency or order of importance that the instructing
+            party would like the instructed party to apply to the processing of
+            the instruction.
+          type: string
+          enum:
+            - NORMAL
+            - URGENT
+        chargeBearer:
+          $ref: '#/components/schemas/GlobalChargeBearerType1Code'
+        instruction:
+          type: object
+          additionalProperties: false
+          required:
+            - amount
+          description: >-
+            The Initiation payload is sent by the initiating party to the LFI.
+            It is used to request movement of funds from the debtor account to a
+            creditor for a single payment.
+          properties:
+            amount:
+              description: The Currency and Amount relating to the Payment
+              type: object
+              required:
+                - amount
+                - currency
+              properties:
+                amount:
+                  $ref: '#/components/schemas/GlobalActiveOrHistoricAmount'
+                currency:
+                  $ref: '#/components/schemas/GlobalActiveOrHistoricCurrencyCode'
+        currencyRequest:
+          description: >-
+            The details of the non-local currency or FX request that has been
+            agreed between the User and the TPP. The requested ChargeBearer and
+            ExchangeRateInformation are included in this object may be
+            overwritten by the LFI in the returned Consent object.
+          type: object
+          additionalProperties: false
+          required:
+            - currencyOfTransfer
+          properties:
+            currencyOfTransfer:
+              description: >-
+                Specifies the currency to be transferred amount, which is
+                different from the currency of the debtor's account.
+              type: string
+              pattern: ^[A-Z]{3,3}$
+            destinationCountryCode:
+              description: >-
+                Country in which Credit Account is domiciled. Code to identify a
+                country, a dependency, or another area of particular
+                geopolitical interest, on the basis of country names obtained
+                from the United Nations (ISO 3166, Alpha-2 code).
+              type: string
+              pattern: '[A-Z]{2,2}'
+            exchangeRateInformation:
+              type: object
+              additionalProperties: false
+              required:
+                - unitCurrency
+                - rateType
+              description: Provides details on the currency exchange rate and contract.
+              properties:
+                unitCurrency:
+                  description: >-
+                    Currency in which the rate of exchange is expressed in a
+                    currency exchange. In the example 1GBP = xxxCUR, the unit
+                    currency is GBP.
+                  type: string
+                  pattern: ^[A-Z]{3,3}$
+                exchangeRate:
+                  description: >-
+                    The factor used for conversion of an amount from one
+                    currency to another. This reflects the price at which one
+                    currency was bought with another currency.
+                  type: number
+                rateType:
+                  description: Specifies the type used to complete the currency exchange.
+                  type: string
+                  enum:
+                    - ACTUAL
+                    - AGREED
+                    - INDICATIVE
+                contractIdentification:
+                  description: >-
+                    Unique and unambiguous reference to the foreign exchange
+                    contract agreed between the initiating party/creditor and
+                    the debtor agent.
+                  type: string
+                  minLength: 1
+                  maxLength: 256
+        fxQuoteId:
+          $ref: '#/components/schemas/FxQuoteId'
+        personalIdentifiableInformation:
+          description: >-
+            Personal Identifiable Information, represented in both encoded and
+            decoded form using a `anyOf`, to help implementers readily
+            understand both the structure and serialized form of the property.
+            Schema Objects are provided for both Domestic and International
+            payments.
+
+
+            **Implementations MUST reflect the GlobalJWEPaymentPII Schema Object
+            structure and the notes provided on** **implementing a JWS and
+            JWE.**
+
+
+            **The decoded form GlobalPaymentPII is for guidance on content
+            only.**
+          anyOf:
+            - $ref: >-
+                #/components/schemas/GlobalBankServiceInitiation.GlobalDomesticPaymentPIIProperties
+            - $ref: >-
+                #/components/schemas/GlobalBankServiceInitiation.GlobalInternationalPaymentPIIProperties
+        paymentPurposeCode:
+          $ref: '#/components/schemas/GlobalPaymentPurposeCode'
+        debtorReference:
+          $ref: '#/components/schemas/GlobalDebtorReference'
+        creditorReference:
+          $ref: '#/components/schemas/GlobalCreditorReference'
+        paymentDetails:
+          $ref: '#/components/schemas/PaymentDetails'
+        creditorIndicators:
+          $ref: '#/components/schemas/GlobalCreditorIndicators'
+    PaymentDetails:
+      title: PaymentDetails
+      type: string
+      description: >-
+        Include free-text payment narrative here so the PSU's remittance
+        information or payment reference is passed through to the beneficiary.
+      minLength: 1
+      maxLength: 280
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorAgentProperties:
+      title: GlobalCreditorAgentProperties
+      type: object
+      required:
+        - schemeName
+        - identification
+      properties:
+        schemeName:
+          type: string
+          description: >
+            The identification scheme for uniquely identifying the Agent.
+
+            * BICFI: The BIC/SWIFT Code
+
+            * Other: Identifier based on non-SWIFT payment system or local
+            market scheme.
+          enum:
+            - BICFI
+            - OTHER
+        identification:
+          description: >-
+            Identifier that can be the BIC/SWIFT code or target payment scheme
+            identifier.
+          type: string
+        name:
+          description: >-
+            Name by which an agent is known and which is usually used to
+            identify that agent.
+          type: string
+          minLength: 1
+          maxLength: 140
+        postalAddress:
+          $ref: '#/components/schemas/GlobalAddress'
+      description: >-
+        Specify the beneficiary's financial institution using its BIC/SWIFT code
+        or local scheme identifier so Citi can route the payment to the correct
+        receiving bank.
+      additionalProperties: false
+    GlobalAddress:
+      title: GlobalAddress
+      description: >-
+        Supply one or more postal addresses for a party involved in the payment,
+        enabling Citi to include address details required by compliance and
+        correspondent banking standards.
+      type: array
+      minItems: 1
+      items:
+        description: Address properties based on ISO 20022 `PostalAddress27` definition
+        type: object
+        required:
+          - addressType
+          - addressLine
+          - country
+        properties:
+          addressType:
+            description: The type of address.
+            type: string
+            enum:
+              - BILLING
+              - BUSINESS
+              - CORRESPONDENCE
+              - DELIVERYTO
+              - MAILTO
+              - POBOX
+              - POSTAL
+              - PERMANENT
+              - RESIDENTIAL
+              - STATEMENT
+              - OTHER
+          addressLine:
+            description: >-
+              Information that locates and identifies a specific address for a
+              transaction entry, that is presented in free format text.
+            type: array
+            minItems: 1
+            maxItems: 7
+            items:
+              type: string
+              minLength: 1
+              maxLength: 70
+          buildingNumber:
+            description: >-
+              The unit, apartment, or villa number within a building or
+              community
+            type: string
+            minLength: 1
+            maxLength: 16
+          buildingName:
+            description: Name of the building or house.
+            type: string
+            minLength: 1
+            maxLength: 140
+          floor:
+            description: Floor or storey within a building.
+            type: string
+            minLength: 1
+            maxLength: 70
+          streetName:
+            description: The name of the street or road where the property is located.
+            type: string
+            minLength: 1
+            maxLength: 140
+          districtName:
+            description: >-
+              The district, community, or neighbourhood where the property is
+              located.
+            type: string
+            minLength: 1
+            maxLength: 140
+          postBox:
+            description: The P.O. Box number assigned to the recipient for mail delivery.
+            type: string
+            minLength: 1
+            maxLength: 16
+          townName:
+            description: Name of a built-up area, such as a town or city.
+            type: string
+            minLength: 1
+            maxLength: 140
+          countrySubDivision:
+            description: >-
+              Country subdivision, such as state or province. For
+              country-specific implementations, this value can represent a local
+              administrative region.
+            type: string
+          country:
+            description: >-
+              The country associated with the address, represented using the ISO
+              3166-1 alpha-2 country code.
+            type: string
+            pattern: ^[A-Z]{2}$
+        additionalProperties: false
+    GlobalCreditorIndicators:
+      title: GlobalCreditorIndicators
+      type: object
+      description: >-
+        Include supplementary creditor identification details that support
+        regulatory compliance and risk checks performed by Citi during payment
+        processing.
+      required:
+        - additionalIdentifiers
+      properties:
+        additionalIdentifiers:
+          $ref: '#/components/schemas/GlobalAdditionalAccountHolderIdentifiers'
+    GlobalAdditionalAccountHolderIdentifiers:
+      title: GlobalAdditionalAccountHolderIdentifiers
+      type: array
+      items:
+        type: object
+        description: Provides the details to identify an account.
+        required:
+          - schemeName
+          - identification
+        properties:
+          schemeName:
+            $ref: '#/components/schemas/GlobalRiskExternalAccountIdentificationCode'
+          identification:
+            $ref: '#/components/schemas/GlobalIdentification'
+        additionalProperties: false
+    GlobalRiskExternalAccountIdentificationCode:
+      title: GlobalRiskExternalAccountIdentificationCode
+      description: >-
+        Select the identification scheme code that applies to the additional
+        creditor identifier you are submitting. Supported codes are — USRC -
+        Unified State Register Code, TRAN - Taxpayer Registration Account
+        Number, NA - Not Assigned, RNRCT - National Code, PSPT - Passport
+        Number, OTHER - Other Identification and UNKN - Unknown Identification.
+      type: string
+      enum:
+        - USRC
+        - TRAN
+        - NA
+        - RNRCT
+        - PSPT
+        - OTHER
+        - UNKN
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorExternalAccountIdentificationCode:
+      title: GlobalCreditorExternalAccountIdentificationCode
+      type: string
+      enum:
+        - IBAN
+        - ACCOUNT_NUMBER
+      description: >-
+        Choose IBAN for international payments or ACCOUNT_NUMBER when using a
+        local scheme to identify the creditor account, ensuring Citi applies the
+        correct routing and validation logic.
+    GlobalIdentification:
+      title: GlobalIdentification
+      description: >-
+        Provide the actual identifier value corresponding to the selected scheme
+        so Citi can verify the creditor's identity during payment processing.
+      type: string
+      minLength: 1
+    GlobalConsentId:
+      title: GlobalConsentId
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: >-
+        Supply the consent identifier you received during consent creation; Citi
+        uses this to confirm the PSU has authorized the requested payment before
+        processing.
+    GlobalRequestedExecutionDate:
+      title: GlobalRequestedExecutionDate
+      description: >
+        Specify the future date on which you want Citi to execute the payment on
+        the PSU's behalf.
+
+        The date must be in the future and cannot be the current day or a past
+        date.
+
+        You may schedule the payment up to one year from the date the PSU
+        granted consent to your TPP application.
+
+        All dates in the JSON payloads are represented in ISO 8601 date format.
+      type: string
+      format: date
+    GlobalCreditorReference:
+      title: GlobalCreditorReference
+      description: >-
+        Provide a creditor-side reference so the beneficiary and their bank can
+        reconcile the incoming payment against an invoice or outstanding
+        obligation.
+      type: string
+      minLength: 1
+      maxLength: 35
+    GlobalPaymentInstruction:
+      title: GlobalPaymentInstruction
+      type: object
+      additionalProperties: false
+      required:
+        - Amount
+      description: >-
+        Specify the currency and amount of the funds you are instructing Citi to
+        transfer from the PSU's debtor account to the creditor for this single
+        payment.
+      properties:
+        Amount:
+          $ref: '#/components/schemas/GlobalActiveCurrencyAmount'
+    PaymentType:
+      title: PaymentType
+      type: string
+      description: >
+        Specify the payment type you want Citi to process on behalf of the PSU.
+
+
+        Each Citi instance may support a different set of payment types
+        depending on the local standards and schemes enabled.
+
+
+        For example,
+
+          - global-payment (Single Instant Payment, Multi Payment - Fixed and Variable Recurring Payment, Future Dated Payment etc)
+    GlobalPaymentIdResponse:
+      title: GlobalPaymentIdResponse
+      description: >
+        Citi returns this response after you submit a payment initiation
+        request, providing the payment transaction identifier, current
+        processing status, and associated charges or FX details you need to
+        inform the PSU of the outcome.
+
+
+        The structure of this response aligns with standard payment initiation
+        response patterns.
+      type: object
+      additionalProperties: false
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          description: >-
+            Required fields are common for all the payments including file
+            payment. Apart from that, paymentTransactionId is required for all
+            payments except file payments
+          additionalProperties: false
+          required:
+            - paymentTransactionId
+            - status
+            - statusUpdateDateTime
+            - creationDateTime
+            - paymentPurposeCode
+          properties:
+            consentId:
+              description: >-
+                Unique identification assigned by the TPP to identify the
+                consent resource.
+              type: string
+            paymentTransactionId:
+              description: >
+                This is an end-to-end identifier that is generated by the
+                underlying payment rails when it is sent from an Originating LFI
+                to a Receiving LFI.
+
+                For IPP transactions, this is the IPP generated identifier.
+
+
+                This property is not the same as the `transactionId` in the Bank
+                Data Sharing Transactions API.
+
+
+                The `paymentTransactionId` must be populated if the payment is
+                processed by the LFI, and updated at the Consent Manager Payment
+                Log API using the `patch` operation.
+              type: string
+            status:
+              description: >
+                Specifies the status of the payment information group
+
+                * Pending: Payment initiation or individual transaction included
+                in the payment initiation is pending. Further checks and status
+                update will be performed.
+
+                * Rejected: The payment initiation has been rejected
+
+                * AcceptedSettlementCompleted: Settlement of the Debtor's
+                account has been completed
+
+                * AcceptedCreditSettlementCompleted: When the Creditor account
+                has been credited with the funds of the payment initiated via
+                the TPP
+
+                * AcceptedWithoutPosting:  When the Recipient Bank has accepted
+                the payment but has not applied the credit to the Creditor
+                account yet.
+              type: string
+              enum:
+                - PENDING
+                - ACCEPTED_SETTLEMENT_COMPLETED
+                - ACCEPTED_CREDIT_SETTLEMENT_COMPLETED
+                - ACCEPTED_WITHOUT_POSTING
+                - REJECTED
+                - RECEIVED
+            statusUpdateDateTime:
+              description: Date and time at which the resource status was updated.
+              type: string
+              format: date-time
+            rejectReasonCode:
+              items:
+                description: Rejection Reason
+                type: object
+                required:
+                  - code
+                  - message
+                additionalProperties: false
+                properties:
+                  code:
+                    description: >
+                      Rejected Reason Code is a namespaced rejection reason
+                      code. The first part of the code is the namespace, which
+                      is the name of the organisation or system (e.g., AANI)
+                      that is rejecting the payment, and the second part is the
+                      specific rejection reason code for the originating
+                      organisation or system.
+
+                      Payments that are rejected by AANI will have the AANI
+                      prefix, followed by the specific ANNI reason code.
+
+
+                      The Payment resouce is updated with the rejection reason
+                      code if a Rejected payment is initially created in a
+                      Pending state. 
+
+                      If the Payment resource is rejected, and no Payment
+                      resource is created - a 4xx HTTP status code is returned
+                      to the TPP with the appropriate Error Response.
+                    type: string
+                    pattern: ^[A-Za-z]+\.[A-Za-z0-9]+$
+                  message:
+                    description: Message
+                    type: string
+              type: array
+              minItems: 1
+            creationDateTime:
+              description: Date and time at which the message was created.
+              type: string
+              format: date-time
+            charges:
+              $ref: '#/components/schemas/GlobalCharges'
+            exchangeRate:
+              $ref: '#/components/schemas/GlobalExchangeRateInformation'
+            currencyRequest:
+              $ref: '#/components/schemas/GlobalCurrencyRequest'
+            instruction:
+              $ref: '#/components/schemas/GlobalPaymentInstruction'
+            paymentPurposeCode:
+              $ref: '#/components/schemas/GlobalPaymentPurposeCode'
+            debtorReference:
+              $ref: '#/components/schemas/GlobalDebtorReference'
+            instructionPriority:
+              description: >-
+                Indicator of the urgency or order of importance that the
+                instructing party would like the instructed party to apply to
+                the processing of the instruction.
+              type: string
+              enum:
+                - NORMAL
+                - URGENT
+            paymentDetails:
+              $ref: '#/components/schemas/PaymentDetails'
+            creditorIndicators:
+              $ref: '#/components/schemas/GlobalCreditorIndicators'
+    GlobalCharges:
+      title: GlobalCharges
+      description: >-
+        Review the itemized charges Citi will apply to this payment, enabling
+        you to display the full cost breakdown to the PSU prior to or following
+        execution.
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        description: >
+          Set of elements used to provide details of a charge for the payment
+          initiation.
+
+          * For Payments, these Charges are on the Debtor.
+        required:
+          - chargeBearer
+          - type
+          - amount
+        properties:
+          chargeBearer:
+            $ref: '#/components/schemas/GlobalChargeBearerType1Code'
+          type:
+            $ref: '#/components/schemas/GlobalExternalPaymentChargeTypeCode'
+          amount:
+            $ref: '#/components/schemas/GlobalActiveCurrencyAmount'
+    GlobalChargeBearerType1Code:
+      title: GlobalChargeBearerType1Code
+      description: >-
+        Specify which party bears the payment processing charges so Citi can
+        apply the correct fee allocation between the PSU (debtor) and the
+        beneficiary (creditor).
+      type: string
+      enum:
+        - BORNEBYCREDITOR
+        - BORNEBYDEBTOR
+        - SHARED
+    GlobalExternalPaymentChargeTypeCode:
+      title: GlobalExternalPaymentChargeTypeCode
+      description: >-
+        Identifies the category of charge applied to this payment (e.g., VAT or
+        fees), allowing you to present an itemized cost breakdown to the PSU.
+      type: string
+      enum:
+        - VAT
+        - FEES
+    GlobalActiveCurrencyAmount:
+      title: GlobalActiveCurrencyAmount
+      description: >-
+        Specify the ISO 4217 currency code and monetary amount for this payment
+        component, ensuring Citi processes the correct value in the intended
+        currency.
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          $ref: '#/components/schemas/GlobalActiveOrHistoricAmount'
+        currency:
+          $ref: '#/components/schemas/GlobalActiveOrHistoricCurrencyCode'
+    GlobalActiveOrHistoricAmount:
+      title: GlobalActiveOrHistoricAmount
+      description: >-
+        Provide the payment amount as a decimal number compliant with ISO 4217,
+        formatted to two decimal places, so Citi can validate and process the
+        exact instructed value.
+      type: string
+      pattern: ^\d{1,16}\.\d{2}$
+      example: '100.00'
+    GlobalActiveOrHistoricCurrencyCode:
+      title: GlobalActiveOrHistoricCurrencyCode
+      description: >-
+        Provide the ISO 4217 three-character alphabetic currency code for the
+        payment amount, ensuring Citi processes and settles the transaction in
+        the correct currency.
+      type: string
+      pattern: ^[A-Z]{3,3}$
+      example: AED
+    GlobalExchangeRateInformation:
+      title: GlobalExchangeRateInformation
+      type: object
+      additionalProperties: false
+      required:
+        - unitCurrency
+        - exchangeRate
+        - rateType
+      description: >-
+        Review the exchange rate details Citi applied to this payment, including
+        the unit currency, rate type, and contract reference, enabling you to
+        display the full FX conversion information to the PSU.
+      properties:
+        unitCurrency:
+          description: >-
+            Currency in which the rate of exchange is expressed in a currency
+            exchange. In the example 1GBP = xxxCUR, the unit currency is GBP.
+          type: string
+          pattern: ^[A-Z]{3,3}$
+        exchangeRate:
+          description: >-
+            The factor used for conversion of an amount from one currency to
+            another. This reflects the price at which one currency was bought
+            with another currency.
+          type: number
+        rateType:
+          description: Specifies the type used to complete the currency exchange.
+          type: string
+          enum:
+            - ACTUAL
+            - AGREED
+            - INDICATIVE
+        contractIdentification:
+          description: >-
+            Unique and unambiguous reference to the foreign exchange contract
+            agreed between the initiating party/creditor and the debtor agent.
+          type: string
+          minLength: 1
+          maxLength: 256
+        expirationDateTime:
+          description: >-
+            Specified date and time the exchange rate agreement will expire.All
+            dates in the JSON payloads are represented in ISO 8601 date-time
+            format. 
+
+            All date-time fields in responses must include the timezone. An
+            example is below:
+
+            2017-04-05T10:43:07+00:00
+          type: string
+          format: date-time
+    GlobalCurrencyRequest:
+      title: GlobalCurrencyRequest
+      description: >
+        Submit the FX or non-local currency details agreed between you and the
+        PSU so Citi can apply the correct exchange rate and currency conversion
+        when executing the payment.
+
+        Note that the ChargeBearer and ExchangeRateInformation you provide may
+        be overwritten by Citi in the returned Consent object.
+      type: object
+      additionalProperties: false
+      required:
+        - currencyOfTransfer
+      properties:
+        currencyOfTransfer:
+          description: >-
+            Specifies the currency of the to be transferred amount, which is
+            different from the currency of the debtor's account.
+          type: string
+          pattern: ^[A-Z]{3,3}$
+        destinationCountryCode:
+          description: >-
+            Country in which Credit Account is domiciled. Code to identify a
+            country, a dependency, or another area of particular geopolitical
+            interest, on the basis of country names obtained from the United
+            Nations (ISO 3166, Alpha-2 code).
+          type: string
+          pattern: '[A-Z]{2,2}'
+        exchangeRateInformation:
+          type: object
+          additionalProperties: false
+          required:
+            - unitCurrency
+            - rateType
+          description: Provides details on the currency exchange rate and contract.
+          properties:
+            unitCurrency:
+              description: >-
+                Currency in which the rate of exchange is expressed in a
+                currency exchange. In the example 1GBP = xxxCUR, the unit
+                currency is GBP.
+              type: string
+              pattern: ^[A-Z]{3,3}$
+            exchangeRate:
+              description: >-
+                The factor used for conversion of an amount from one currency to
+                another. This reflects the price at which one currency was
+                bought with another currency.
+              type: number
+            rateType:
+              description: Specifies the type used to complete the currency exchange.
+              type: string
+              enum:
+                - ACTUAL
+                - AGREED
+                - INDICATIVE
+            contractIdentification:
+              description: >-
+                Unique and unambiguous reference to the foreign exchange
+                contract agreed between the initiating party/creditor and the
+                debtor agent.
+              type: string
+              minLength: 1
+              maxLength: 256
+        fxQuoteId:
+          $ref: '#/components/schemas/FxQuoteId'
+    GlobalPaymentPurposeCode:
+      title: GlobalPaymentPurposeCode
+      description: >-
+        Submit a purpose code that classifies the nature of the payment (e.g.,
+        goods or services) using the published ISO 20022 error code list,
+        enabling Citi to meet regulatory reporting and compliance requirements.
+      type: string
+      minLength: 1
+      maxLength: 4
+      pattern: ^[A-Z]{3}$
+    GlobalDebtorReference:
+      title: GlobalDebtorReference
+      description: >-
+        Include a PSU-side reference note that will appear in the PSU's account
+        statement, supporting their own payment reconciliation and
+        record-keeping.
+      type: string
+      minLength: 1
+      maxLength: 35
+    FxServiceInitiation.FxQuoteIdType:
+      title: FxQuoteIdType
+      type: string
+      minLength: 1
+      maxLength: 128
+      format: uuid
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalName:
+      title: GlobalName
+      type: object
+      properties:
+        en:
+          type: string
+          maxLength: 70
+          description: English value of the string
+        ar:
+          type: string
+          maxLength: 70
+          description: Arabic value of the string
+      description: >-
+        Provide the account holder's name in English and/or Arabic so Citi can
+        perform payee validation and include the correct beneficiary name in
+        payment messages.
+      additionalProperties: false
+    FxQuoteId:
+      title: FxQuoteId
+      description: >-
+        Provide the FX quote identifier you received from a prior quote request
+        when your payment relates to a pre-agreed FX trade. For long-lived
+        consents, you must supply a new QuoteId with each individual payment
+        initiation request to link it to the correct agreed rate.
+      allOf:
+        - $ref: '#/components/schemas/FxServiceInitiation.FxQuoteIdType'
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorProperties:
+      title: GlobalCreditorProperties
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 140
+        postalAddress:
+          $ref: '#/components/schemas/GlobalAddress'
+      description: >-
+        Supply the beneficiary's legal name and optional postal address so Citi
+        can populate the payment message with the correct creditor details as
+        required by the payment scheme.
+      additionalProperties: false
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalIdentification:
+      title: GlobalIdentification
+      type: string
+      minLength: 1
+      description: >-
+        Provide the account identifier assigned by the financial institution for
+        the selected scheme (e.g., IBAN or account number), as known by the PSU
+        who owns the account.
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalTradingName:
+      title: GlobalTradingName
+      type: object
+      properties:
+        en:
+          type: string
+          maxLength: 70
+          description: English value of the string
+        ar:
+          type: string
+          maxLength: 70
+          description: Arabic value of the string
+      description: >-
+        Provide the creditor's trading or brand name in English and/or Arabic
+        when it differs from the registered legal name, enabling Citi to include
+        the correct commercial identity in payment notifications.
+      additionalProperties: false
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorAccountTypeCodes:
+      title: GlobalCreditorAccountTypeCodes
+      type: string
+      enum:
+        - INDIVIDUAL
+        - MERCHANT
+        - BUSINESS
+        - CHARITY
+        - GOVERNMENT_BODY
+        - OTHER
+      description: >-
+        Select the creditor type (e.g., individual, merchant, or business) from
+        the allowed list so Citi can present the correct payee category to the
+        PSU during the consent authorization journey.
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalDomesticCreditorAccountProperties:
+      title: GlobalDomesticCreditorAccountProperties
+      type: object
+      required:
+        - schemeName
+        - identification
+        - name
+      properties:
+        schemeName:
+          type: string
+          enum:
+            - IBAN
+            - ACCOUNT_NUMBER
+          description: Domestic payment scheme, restricted to `IBAN`
+        identification:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalIdentification
+        name:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalName
+        tradingName:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalTradingName
+        type:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorAccountTypeCodes
+      description: >-
+        Identify the domestic beneficiary account using IBAN or account number,
+        along with the holder's name, so Citi can verify the destination account
+        and apply a credit entry to the correct account.
+      additionalProperties: false
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalDomesticPaymentInitiation:
+      title: GlobalDomesticPaymentInitiation
+      type: object
+      required:
+        - debtorAccount
+        - creditorAccount
+        - creditorAgent
+        - creditor
+      properties:
+        debtorAccount:
+          $ref: '#/components/schemas/DebtorAccount'
+        creditorAgent:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorAgentProperties
+        creditor:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorProperties
+        creditorAccount:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalDomesticCreditorAccountProperties
+        confirmationOfPayeeResponse:
+          type: string
+          pattern: ^.+\..+\..+$
+          description: >-
+            Response from Confirmation of Payee operation, when executed for the
+            Creditor Account.
+
+
+            This is JSON Web Signature returned by the Payee Confirmation
+            operation at the Confirmation of Payee API.
+
+
+            The value must be the full JWS string, including the header and
+            signature, without decoding to an object.
+
+
+            If Confirmation of Payee is not performed this property can be
+            omitted
+      description: >-
+        Provide the complete set of debtor account, creditor account, creditor
+        agent, and creditor details needed for Citi to execute and route a
+        domestic payment on the PSU's behalf.
+      additionalProperties: false
+    DebtorAccount:
+      title: DebtorAccount
+      type: object
+      description: >-
+        Specify the PSU's source account — identified by IBAN or account number
+        — from which Citi will debit the payment amount upon successful PSU
+        authorization.
+      required:
+        - schemeName
+        - identification
+        - name
+      properties:
+        schemeName:
+          title: SchemeName
+          type: string
+          description: >-
+            Type of the account. Allowed values are IBAN, AccountNumber. Name of
+            the identification scheme, in a coded form as published in an
+            external list.
+          enum:
+            - ACCOUNT_NUMBER
+            - IBAN
+        identification:
+          title: Identification
+          type: string
+          description: Account, Iban of the debtor.
+          maxLength: 35
+          minLength: 1
+        name:
+          title: Name.
+          type: string
+          description: Debtor Name.
+          minLength: 1
+          maxLength: 35
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalInternationalCreditorAccountProperties:
+      title: GlobalInternationalCreditorAccountProperties
+      type: object
+      required:
+        - schemeName
+        - identification
+        - name
+      properties:
+        schemeName:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorExternalAccountIdentificationCode
+        identification:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalIdentification
+        name:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalName
+        tradingName:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalTradingName
+        type:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorAccountTypeCodes
+      description: >-
+        Identify the international beneficiary account using IBAN or account
+        number along with the holder's name, enabling Citi to route and credit
+        the cross-border payment to the correct destination account.
+      additionalProperties: false
+    GlobalBankServiceInitiationRichAuthorizationRequests.GlobalInternationalPaymentInitiation:
+      title: GlobalInternationalPaymentInitiation
+      type: object
+      required:
+        - debtorAccount
+        - creditorAccount
+        - creditorAgent
+        - creditor
+      properties:
+        debtorAccount:
+          $ref: '#/components/schemas/DebtorAccount'
+        creditorAgent:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorAgentProperties
+        creditor:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalCreditorProperties
+        creditorAccount:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalInternationalCreditorAccountProperties
+      description: >-
+        Provide the complete set of debtor account, creditor account, creditor
+        agent, and creditor details for Citi to execute a cross-border payment.
+        Note that Confirmation of Payee is not required for international
+        payments.
+      additionalProperties: false
+    GlobalBankServiceInitiation.GlobalDomesticPaymentPIIProperties:
+      title: Domestic Payment PII Schema Object
+      type: object
+      additionalProperties: false
+      description: >-
+        Submit the domestic payment PII — containing the debtor and creditor
+        account details — as a JWE-encrypted payload; Citi decrypts and
+        validates this data before processing the domestic payment instruction.
+      required:
+        - initiation
+      properties:
+        initiation:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalDomesticPaymentInitiation
+    GlobalBankServiceInitiation.GlobalInternationalPaymentPIIProperties:
+      title: International Payment PII Schema Object
+      type: object
+      required:
+        - initiation
+      properties:
+        initiation:
+          $ref: >-
+            #/components/schemas/GlobalBankServiceInitiationRichAuthorizationRequests.GlobalInternationalPaymentInitiation
+      additionalProperties: false
+    PaymentOrderConsentRequestDTO:
+      title: PaymentOrderConsentRequest
+      required:
+        - paymentRequest
+        - paymentType
+        - sca
+      type: object
+      properties:
+        sca:
+          $ref: '#/components/schemas/ScaDTO'
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        paymentRequest:
+          $ref: '#/components/schemas/PaymentRequest'
+      description: >-
+        Submit this consent request payload to obtain PSU authorization for a
+        payment; Citi returns a consent identifier and ASPSP redirect URL that
+        you use to direct the PSU through the SCA authorization journey.
+    PaymentOrderConsentDTO:
+      title: GetPaymentOrderConsent
+      required:
+        - consentInfo
+        - participantInfo
+        - paymentInitiation
+        - sca
+      type: object
+      properties:
+        consentInfo:
+          $ref: '#/components/schemas/ConsentInfoDTO'
+        sca:
+          $ref: '#/components/schemas/ScaResponseDTO'
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        paymentRequest:
+          $ref: '#/components/schemas/PaymentRequest'
+      description: >-
+        Citi returns this object after consent creation or inquiry, providing
+        you with the consent lifecycle status, SCA redirect details, and payment
+        parameters required to proceed once the PSU has authorized.
+    GetPaymentOrderConsentDTO:
+      title: GetPaymentOrderConsent
+      required:
+        - consentInfo
+        - participantInfo
+        - paymentInitiation
+        - sca
+      type: object
+      properties:
+        consentInfo:
+          $ref: '#/components/schemas/GetConsentInfoDTO'
+        sca:
+          $ref: '#/components/schemas/ScaResponseDTO'
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        paymentRequest:
+          $ref: '#/components/schemas/PaymentRequest'
+      description: >-
+        Citi returns this object after consent creation or inquiry, providing
+        you with the consent lifecycle status, SCA redirect details, and payment
+        parameters required to proceed once the PSU has authorized.
+    ScaDTO:
+      title: Sca
+      type: object
+      required:
+        - tppRedirectUrl
+      properties:
+        tppRedirectUrl:
+          type: string
+          description: Redirection Address
+          format: uri
+          example: https://example.com
+        notificationUrl:
+          type: string
+          description: Notification Address
+          format: uri
+          example: https://example.com
+        authCmpTime:
+          type: string
+          description: Authorization Completion Time
+          format: date-time
+      description: >-
+        Provide your TPP redirect and notification URLs so Citi can return the
+        PSU to your application after the PSU completes Strong Customer
+        Authentication at the ASPSP.
+    ScaResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/ScaDTO'
+        - title: Sca Response Details
+          description: Strong Customer Authentication details in response.
+      properties:
+        aspspRedAdr:
+          type: string
+          description: ASPSP Redirection Address
+          format: uri
+          example: https://example.com
+      description: >-
+        Citi returns the ASPSP redirect address alongside your submitted SCA
+        parameters; use the aspspRedAdr value to redirect the PSU to the ASPSP
+        for authorization.
+    ConsentInfoDTO:
+      title: ConsentInfo
+      required:
+        - consentId
+        - consentStatus
+        - creationTime
+      type: object
+      properties:
+        consentId:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: Consent No
+          example: 58af49355aee43e08c1b4e5aaca7d726
+        creationTime:
+          type: string
+          description: Creation Time
+          format: date-time
+        updateTime:
+          type: string
+          description: Update Time
+          format: date-time
+        consentStatus:
+          type: string
+          description: 'Description: Consent Status'
+          example: AWAIT_AUTHORIZATION
+          enum:
+            - AWAIT_AUTHORIZATION
+            - AUTHORIZED
+            - REJECTED
+            - REVOKED
+            - EXPIRED
+            - CONSUMED
+      description: >-
+        Citi returns this consent metadata — including the unique consent
+        identifier and current lifecycle status — enabling you to track
+        authorization progress and determine when the consent is ready for
+        payment initiation.
+    GetConsentInfoDTO:
+      allOf:
+        - $ref: '#/components/schemas/ConsentInfoDTO'
+        - title: Get Consent Info
+          description: Consent Info in response.
+          type: object
+          properties:
+            consentCancelDetailCode:
+              type: string
+              description: 'Description: Consent Cancellation Detail Code'
+              enum:
+                - REVOCATION_BY_ASPSP_UPON_USERS_REQUEST
+                - REVOCATION_BY_TPP_UPON_USERS_REQUEST
+                - TIMEOUT_PENDING_AUTHORIZATION
+                - TIMEOUT_AUTHORIZED
+                - TIMEOUT_AUTHORIZATION_NOT_TURNED_INTO_PAYMENT
+      description: >-
+        Citi returns this consent metadata — including the unique consent
+        identifier and current lifecycle status — enabling you to track
+        authorization progress and determine when the consent is ready for
+        payment initiation.
+  headers:
+    Request-ID:
+      description: >-
+        The request identifier specific to the call determined by the PSP
+        initiating the request. This description is intentionally expanded to
+        clarify request usage, response expectations, validation behavior, and
+        integration context for PSD2-compliant API consumers.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 36
+    Group-ID:
+      description: >-
+        The request identifier specific to the transaction flow determined by
+        the PSP initiating the request. This description is intentionally
+        expanded to clarify request usage, response expectations, validation
+        behavior, and integration context for PSD2-compliant API consumers.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 36
+    TPP-Code:
+      description: >-
+        The code of the Authorized Payment Service Provider sending the request.
+        Required if the consent_id is used. This description is intentionally
+        expanded to clarify request usage, response expectations, validation
+        behavior, and integration context for PSD2-compliant API consumers.
+      schema:
+        type: string
+        minLength: 4
+        maxLength: 4
+        pattern: '[0-9][0-9][0-9][0-9]'
+  examples:
+    Bad-Request-Gateway-Error-Example:
+      value:
+        httpCode: '400'
+        httpMessage: Bad Request
+        moreInformation: please provide valid value for request
+    Bad-Request-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+          - issue: record that you are searching is not found
+            action: resend the request with valid values
+            code: VC00003
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: The server could not verify that you are authorized to access the URL
+    Unauthorized-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Internal-Server-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: Internal Server Error
+    Not-Found-Gateway-Error-Example:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Method-Not-Allowed-Gateway-Error-Example:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Un-Supported-Media-Type-Gateway-Error-Example:
+      value:
+        httpCode: '415'
+        httpMessage: Unsupported Media Type
+        moreInformation: Unsupported Content-Type application/octet-stream
+    Un-Supported-Media-Type-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Forbidden-Service-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - code: CC00008
+            issue: User does not have privilege to access this functionality.
+            action: Please reach out to support team to enable this feature.
+    Idempotency-Id-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: Idempotency-Id provided is currently being used in another request
+            action: please do not repeat the same request again
+    Too-Many-Requests-Gateway-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: Rate Limit exceeded
+    Service-Unavailable-Gateway-Example:
+      value:
+        httpCode: '503'
+        httpMessage: Service is temporarily unavailable
+        moreInformation: Retry the request after some time
+    Gateway-Timeout-Example:
+      value:
+        httpCode: '504'
+        httpMessage: Gateway Timeout
+        moreInformation: 'Response took longer than timeout: PTxxS'
+  securitySchemes:
+    oAuth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            authenticationservices/v1: Access to Accounts, Balances, Transactions Information
+    auth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://secure.api-preprod.bkm.com.tr/oauth-provider/oauth2/token
+          scopes:
+            payment_order: Payment Order
+            account_information: Account Information

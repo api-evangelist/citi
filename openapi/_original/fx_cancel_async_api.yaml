@@ -1,0 +1,304 @@
+openapi: 3.0.3
+info:
+  version: ''
+  title: FX Order Cancel
+  description: >
+
+    The FX Order Cancel API allows you to cancel an order that you have placed.
+
+    ### Web Sockets
+
+    <b>The response to this endpoint will be sent via web socket connection.</b>
+    Refer to the [User Guide](user-guide) for more information on enabling a web
+    socket connection. This allows you to integrate the responses you receive
+    from Citi into your workflow for automated processing.
+
+    Ensure that you have an open web socket session before sending any requests
+    otherwise Citi will be unable to send a response. 
+     
+    ### Platform Operational Hours
+
+      The CitiFX Gateway is available during standard FX market trading hours. The platform is not available during weekend hours.
+      * Start of business is Monday 07:00 AM Auckland
+      * End of business is Friday 17:00 EST New York
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets
+    description: sandbox URL
+  - url: https://api.citivelocity.com/markets
+    description: production URL
+security:
+  - OAuth2:
+      - fxapi
+  - client_id: []
+paths:
+  /fxgateway/async/ordercancel/api/v1:
+    post:
+      summary: Order Cancellation Asynchronous Request
+      description: |
+        Use this endpoint to cancel an order you have placed. 
+
+        Note:
+         - FX Benchmark QUOTED orders cannot be cancelled through this cancel request
+         - FX Benchmark FIXING orders cannot be cancelled once they are rated
+         - FX Market orders cannot be cancelled once they are rated
+                  
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FXOrderCancel'
+        required: true
+      responses:
+        '200':
+          description: |
+            OK Acknowledged.
+            Note: Order response message will be sent via web socket. 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order_Cancel_Response'
+        '401':
+          description: >-
+            Unauthorized user/ Invalid_client (Not authorized to Oauth API)/ Not
+            registered to the plan
+        '429':
+          description: Too Many Requests
+        '500':
+          description: Internal Server Error
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >-
+        Citi Velocity APIs use the oAuth2 authentication scheme, which requires
+        a bearer token to authenticate your API call. See <a
+        href="../../fx/authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+      flows:
+        clientCredentials:
+          scopes:
+            fxapi: ''
+          tokenUrl: https://sandbox.api.citivelocity.com/markets/cv/api/fx/oauth2/token
+    client_id:
+      type: apiKey
+      in: query
+      name: client_id
+  schemas:
+    FXOrderCancel:
+      type: object
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - deals
+      properties:
+        action:
+          type: string
+          description: 'The service you are requesting. Allowed values: CANCEL.'
+        jsonReqId:
+          type: string
+          example: Req20181011776
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 60
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the message sender. This
+            was assigned to you during onboarding.
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. This was
+            assigned to you during onboarding.
+          example: Sub Entity
+        sendingTime:
+          type: string
+          description: >-
+            The time of the message transmission expressed in UTC (Universal
+            Time Coordinated, also known as "GMT"). Format:
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:29.125
+        deals:
+          type: array
+          description: >-
+            Order can be cancelled based on the given fields below. clOrdId is
+            required, and should be sent along with origClOrdID OR
+            origJsonReqId.
+          items:
+            required:
+              - clOrdId
+              - origClOrdID
+              - origJsonReqId
+            properties:
+              clOrdId:
+                type: string
+                description: >-
+                  The unique identifier that you assign to the order. A
+                  reference specific to this client/request combination. Market
+                  orders support max 15 characters. Benchmark orders support 45
+                  characters. Alphanumeric and special character hyphen (-)
+                  allowed.
+                example: TEST12345
+              origClOrdID:
+                type: string
+                description: >-
+                  ClOrdID of the previous non-rejected order (NOT the initial
+                  order of the day) when cancelling or replacing an order. This
+                  has to be given along with ClOrdId.
+                example: OR12345
+              origJsonReqId:
+                type: string
+                description: >-
+                  Unique identifier for the original JSON Request. ClOrdId must
+                  be populated along with this field.
+                example: Req20181011776
+      example:
+        action: CANCEL
+        senderCompId: TESTCLIENT0
+        onBehalfOfCompId: TCL0
+        jsonReqId: 27SepT30
+        sendingTime: 20180829-04:48:29.125
+        deals:
+          - clOrdId: CANCELTEST01
+            origClOrdId: TEST01
+    Order_Cancel_Response:
+      description: >-
+        The response for this endpoint will be sent via web socket. In the case
+        of multiple orders, multiple dealResponse JSON objects will be present
+        in the dealResponses JSON array. Response array can be of both Ack /
+        Nack.
+      required:
+        - action
+        - jsonReqId
+        - senderCompId
+        - onBehalfOfCompId
+        - sendingTime
+        - dealResponses
+        - deals
+      properties:
+        action:
+          type: string
+          example: order-response
+          description: 'Allowed value: cancel-response.'
+        jsonReqId:
+          type: string
+          example: Req20181011776
+          description: The unique identifier for the JSON request. Format is alphanumeric.
+          maxLength: 60
+        senderCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the firm sending the
+            message.
+          example: ClientName
+        onBehalfOfCompId:
+          type: string
+          description: >-
+            The Citi-assigned value used to identify the sub-entity. May contain
+            special characters ( ‘_’, ‘.’, ‘-‘).
+          example: Sub Entity
+        sendingTime:
+          type: string
+          description: >-
+            The time of message transmission. Always expressed in UTC (Universal
+            Time Coordinated, also known as 'GMT.' Format is
+            YYYYMMDD-HH:MM:SS.mmm.
+          example: 20180820-04:48:29.125
+        deals:
+          type: array
+          items:
+            required:
+              - clOrdId
+              - orderId
+              - transactTime
+              - execId
+              - orderStatus
+            properties:
+              account:
+                type: string
+                description: Your Citi-assigned client identifier.
+                example: 109430258
+              clOrdId:
+                type: string
+                description: >-
+                  The unique identifier you assign. Market order cancellations
+                  support max 15 characters. Benchmark order cancellations
+                  support max 45 characters.
+                example: TEST12345
+              side:
+                type: string
+                enum:
+                  - B
+                  - S
+                description: >-
+                  The Buy Or Sell Indicator from your perspective. B=Client buys
+                  dealt ccy, S=Client sells dealt ccy.
+                example: B
+              valueDate:
+                type: string
+                description: The value date of the deal placed.
+                example: 20240502
+              ccyPair:
+                type: string
+                description: The currency pair that you are dealing on. CCY1CCY2.
+                maxLength: 6
+                example: GBPUSD
+              dealtCcy:
+                type: string
+                description: The currency for which you supplied the dealt amount.
+                maxLength: 3
+                example: GBP
+              transactTime:
+                type: string
+                description: Time of the transaction represented by this single order.
+                example: Mon Apr 29 12:50:33 IST 2024
+              execId:
+                type: string
+                description: The unique identifier of execution message.
+                example: ABC123
+              avgPx:
+                type: number
+                description: Calculated average price of all fills on this order.
+                example: 0
+              orderId:
+                type: number
+                description: >-
+                  The Citi-assigned order ID. This is not populated for REJECTED
+                  deals.
+                example: 3714864
+              orderStatus:
+                type: string
+                description: >-
+                  Value = CANCELLED (if cancellation request is accepted by
+                  pricing system) Value = CANCELLATION_REJECTED (if cancellation
+                  request is rejected by pricing system).
+                example: CANCELLED or CANCELLATION_REJECTED
+              lastQty:
+                type: number
+                description: The dealt amount.
+                example: 1234.56
+              secondaryClOrdId:
+                type: string
+                description: Secondary order reference.
+                example: OR12345
+      example:
+        action: cancel-response
+        senderCompId: TESTCLIENT0
+        onBehalfOfCompId: TCL0
+        jsonReqId: 27SepT30
+        sendingTime: 20180829-04:49:25.125
+        dealResponses:
+          - clOrdId: CANCELTEST01
+            side: B
+            execId: 363747-1538036158154
+            avgPx: '0'
+            orderId: TCL0-TEST01
+            orderStatus: CANCELLED
+            cumQty: '0'
+            leavesQty: '0'
+            execType: '4'
+            ordRejReason: '99'
+            text: Quote TCL0-TEST01 processed in eDealer.

@@ -1,0 +1,3217 @@
+openapi: 3.0.1
+info:
+  title: The Safekeeping Transactions API
+  description: >
+    The Safekeeping Transactions API offers programmatic access to recent
+    securities transaction  activity across individual safekeeping accounts. It
+    delivers detailed End-of-Day and  Intraday transaction data, enabling
+    precise monitoring of securities movements. This API is crucial for
+    supporting downstream processes like real-time portfolio updates, 
+    reconciliation workflows, and audit or regulatory reporting. By providing
+    granular,  time-sensitive transaction information through a standardized
+    interface,  it enhances operational efficiency and compliance.
+    <br><br>**Authentication**<br><br>Client applications must supply an
+    authentication token with every request, and therefore must first
+    authenticate before it can proceed. A client can use the OAuth 2 client
+    credential grant flow to obtain a time limited access token. To get an
+    access token send a HTTP Post request to the token endpoint using basic
+    authentication with the client key and secret (provided under separate
+    cover).<br><br>**Request**<br><br>```POST {baseURL}/api/oauth2/token
+    HTTPS/1.1 
+
+    Authorization: Basic base64(key:secret) 
+
+    Content-Type:application/x-www-form-urlencoded```<br><br>
+
+    **Response**<br><br>```
+      {
+          "token_type": "bearer", 
+          "access_token": <access token>, 
+          "expires_in": <seconds until expiry>, 
+          "consented_on":<timestamp>, 
+          "scope": "/dod"`
+      }```    <br><br>The bearer token is valid for 1800 seconds (30 minutes) after which it will expire. At this point, you would need to re-authenticate.
+  version: 3.0.0
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets/dod
+    description: Sandbox server (uses test data)
+  - url: https://api.citivelocity.com/markets/dod
+    description: Production server
+security:
+  - client-Credential-Oauth-Security-Schema: []
+components:
+  headers:
+    dod-request-id:
+      schema:
+        type: string
+      description: The UUID representing the unique identifier of the dod request
+    paging-page-number:
+      schema:
+        type: string
+      description: The current page number
+    paging-total-page-count:
+      schema:
+        type: string
+      description: The total count of pages available
+    paging-total-record-count:
+      schema:
+        type: string
+      description: The total count of records
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  examples:
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: path-param servicePortableId is mandatory and it cannot be empty
+            action: please provide valid parameter values
+            code: VC00010
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Resource that you are searching is not found
+            action: Please use valid resource details
+            code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Method not supported
+            action: please use valid http verb
+            code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+  schemas:
+    27d18376-6358-40f1-9f63-23a72d40196f-data-schema:
+      type: object
+      properties:
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: 8-DEMOCSH53JPY
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - US DCC Equity
+        ACT_SETT_DT:
+          type: string
+          format: date
+          description: Actual Settlement Date is the date of final settlement of the trade.
+          example: '2025-08-26'
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account. For the
+            Cash Account the branch code is a numeric value and for the
+            Safekeeping Account it is the ISO Country code.
+          example: '484'
+        BR_NME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: NEW YORK SECURITIES CB
+        RELATED_REF:
+          type: string
+          description: >-
+            Related Reference is the value provided via RELA tag on the
+            underlying instruction.
+          example: RELA123456
+        CLIENT_REF:
+          type: string
+          description: >-
+            Client Reference is a unique number assigned by the client, to the
+            transaction, for identification purposes within their organization.
+          example: '123456'
+        BUYR_SELL_CD:
+          type: string
+          description: Buyer/Seller Code is the code associated to the Buyer/Seller.
+          example: '0050'
+        BUYR_SELL:
+          type: string
+          description: >-
+            Buyer/Seller is the name associated to the underlying instruction's
+            BUYR/SELL tag if provided.
+          example: TEST & CO INC
+        CONTR_SETT_DT:
+          type: string
+          format: date-time
+          description: >-
+            Contractual Settlement Date is the date when the clients cash
+            account should be credited with funds on a sale (and debited on a
+            purchase) on the due settlement date in place of when a trade
+            actually settles in the market.
+          example: '2025-06-17T00:00:00Z'
+        CNTRY_CD:
+          type: string
+          description: >-
+            The Country Code (location) of the security custodian. Not
+            applicable to the US domestic positions.
+          example: US
+        COMP_DESC:
+          type: string
+          description: >-
+            Company Description contains information regarding the company which
+            issued the security.
+          example: Microsoft Corporation
+        CONTR_SETT_FLG:
+          type: string
+          description: >-
+            Contractual Settlement Flag indicates whether the trade will settle
+            on the Contractual Settlement Date whether or not it actually
+            settles. Values are Y (settle on contractual settlement date) or N
+            (settle on actual settlement date).
+          example: 'Y'
+        CURR_FCTR_RATE:
+          type: number
+          format: double
+          description: >-
+            Current Factor is the factor which applies to the current accrual
+            period to determine payments and balances for principal paying
+            securities.
+          example: 0.975432
+        DEAL_REF_NBR:
+          type: string
+          description: >-
+            OTM Reference is the Order and Trade Manager Reference number that
+            has been assigned to the order instructions.
+          example: OTM987654321
+        HOLDING_TYPE:
+          type: string
+          description: >-
+            How Position is Held is a description of the status of the holding
+            affected by the trade, or where that holding is held.
+          example: Held At Depot
+        SEC_CCY:
+          type: string
+          description: >-
+            Denomination Currency Code is the ISO 4217 currency code in which
+            the security is denominated, in the local market.
+          example: USD
+        UPDATE_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Created Timestamp is the date and time of when an item was loaded to
+            the source system.
+          example: '2025-06-15T00:00:00Z'
+        FAIL_AGE:
+          type: integer
+          format: int32
+          description: >-
+            Fail Age is the number of days the transaction has not settled, past
+            the contractual settlement date.
+          example: 5
+        FAIL_DESC:
+          type: string
+          description: >-
+            Fail Description provides the reason why the trade has not or is not
+            expected to settle on the contractual settlement date.
+          example: Counterparty securities unavailable
+        FCTR_DTE:
+          type: string
+          format: date-time
+          description: >-
+            Factor Date is the date the current factor is applicable from for
+            principal paying securities.
+          example: '2025-05-01T00:00:00Z'
+        INST_DT:
+          type: string
+          format: date
+          description: Instruction Date is the date the trade was first received.
+          example: '2025-06-13'
+        ISS_TMS:
+          type: string
+          format: date-time
+          description: Issue Date is the date of first issue of the security.
+          example: '2020-01-15T00:00:00Z'
+        ISSR_LOC_CD:
+          type: string
+          description: >-
+            Issuer Location Code is the ISO country code where the issuer of the
+            security is based. Values include: AR (Argentina), CA (Canada), IE
+            (Ireland), etc.
+          example: US
+        ISSR_LOC_NME:
+          type: string
+          description: >-
+            Issuer Location is the name of the country where the issuer of the
+            security is based. Values include: Argentina (AR), Canada (CA),
+            Ireland (IE), etc.
+          example: United States
+        SETT_AMT:
+          type: number
+          format: double
+          description: >-
+            Settlement Amount is the cash value of the partial settlement in the
+            local currency.
+          example: 1250000.75
+        SETT_CCY_CD:
+          type: string
+          description: >-
+            Settlement Currency Code is the ISO 4217 currency code for the
+            Settlement Amount.
+          example: USD
+        SETT_CCY:
+          type: string
+          description: Settlement Currency is the currency name for the Settlement Amount.
+          example: US Dollar
+        LOAN_DT:
+          type: string
+          format: date
+          description: Loan Date is the date the loan originated.
+          example: '2025-04-01'
+        LOAN_PURPOSE_CD:
+          type: string
+          description: >-
+            Loan Purpose Code is a code that identifies the purpose of the loan
+            transaction if the position is on loan.
+          example: COLL
+        LOAN_PURPOSE_DESC:
+          type: string
+          description: >-
+            Loan Purpose is the description of the purpose of the loan
+            transaction if the position is on loan.
+          example: Collateral Management
+        LOAN_REF_ID:
+          type: string
+          description: >-
+            The Loan Reference Number is the number assigned to 3rd party
+            lending transactions. This is for US domestic
+          example: '100123456'
+        MATY_DT:
+          type: string
+          format: date-time
+          description: >-
+            Maturity Date is the date of maturity or redemption for fixed income
+            securities.
+          example: '2030-12-31T00:00:00Z'
+        PART_UNSETL_QTY:
+          type: number
+          format: double
+          description: >-
+            Unsettled Quantity shows the quantity that is still yet to settle
+            when there is a partial settlement of the trade.
+          example: 2500
+        PARTICIPANT_NO:
+          type: string
+          description: DTC Number is the participant or sub-account number at DTCC.
+          example: '0901'
+        SEC_ID_TYPE:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID field. Values include: CUSIP, ISIN, SEDOL,
+            LOCAL, etc.
+          example: ISIN
+        SEC_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: US5949181045
+        PLACE_OF_SETLMT:
+          type: string
+          description: >-
+            Place Of Settlement is the name of the settlement location for the
+            security, applicable to securities positions, transactions only.
+          example: TOKYO, JAPAN
+        PLDG_ABA_NAM:
+          type: string
+          description: >-
+            American Bankers Association Description is the name of the
+            institution identified by the ABA number.
+          example: CITI Bank
+        PLDG_ABA_NO:
+          type: string
+          description: >-
+            ABA Number is the American Bankers Association Transit Number - used
+            to identify a US institution.
+          example: '021000021'
+        PLDG_REF_NBR:
+          type: string
+          description: >-
+            Pledge Reference is the unique reference number for the pledge
+            transaction.
+          example: PLDG123456
+        PREV_FCTR_RATE:
+          type: number
+          format: double
+          description: >-
+            Previous Factor is the factor which applies to the last accrual
+            period to determine payments and balances for principal paying
+            securities.
+          example: 0.97891
+        CASH_ACCT_ID:
+          type: string
+          description: >-
+            Cash Account ID is the account id of the cash account which will be
+            credited or debited at settlement for the trade.
+          example: '156602418'
+        SEC_DESC:
+          type: string
+          description: >-
+            Issue Description contains the name and other details of the
+            instrument.
+          example: TEMPORARY SECURITY 003263100
+        ASSET_TYP:
+          type: string
+          description: >-
+            Asset Type is a code representing the Asset Type of the security.
+            Values include: EQTY (Equity), FI (Fixed Income), etc.
+          example: EQTY
+        SEC_LEND_FLG:
+          type: string
+          description: >-
+            Securities Lending Flag indicates that the trade is a securities
+            lending transaction.
+          example: 'Y'
+        QUANTITY:
+          type: number
+          format: double
+          description: >-
+            Quantity provides the number of units, par value or nominal value
+            (for fixed income instruments), amount of currency (for FX
+            transactions), or number of shares. Indicates the contract quantity
+            on the original transaction that was given up.
+          example: 10000
+        SEC_SHORT_IND:
+          type: string
+          description: >-
+            Short Flag indicates if the transaction can be processed or if it
+            cannot be processed due to a short position.
+          example: 'N'
+        ISSUE_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: Microsoft Corporation
+        ISSUE_TYP_CD:
+          type: string
+          description: >-
+            Issue Type Code is a code linked to the Issue Type field which
+            describes the type of security instrument. Values include: 1 (ADR
+            Convertible), 12 (Bond), 19 (Bond Convertible), etc.
+          example: '12'
+        ISSUE_TYP:
+          type: string
+          description: >-
+            Issue Type is a description of the type of the security instrument.
+            Values include: ADR Convertible (1), Bond (12), Bond Convertible
+            (19), etc.
+          example: Bond
+        SETT_QTY:
+          type: number
+          format: double
+          description: >-
+            Settled Quantity is the quantity that has settled or the quantity of
+            the security that is fully settled at the As Of date. For partial
+            settlements the settled quantity is the portion that has settled.
+          example: 7500
+        HOLDING_TYPE_CD:
+          type: string
+          description: >-
+            Location of Where Held is a code indicating the location of a
+            holding. Examples include HD - Held At Depot and LE - Securities
+            Lent.
+          example: HD
+        CUSIP:
+          type: string
+          description: >-
+            CUSIP (Committee on Uniform Securities Identification Procedures) It
+            is a nine-character alphanumeric code that identifies a North
+            American financial security for the purposes of facilitating
+            clearing and settlement of trades.
+          example: '594918104'
+        ISIN:
+          type: string
+          description: >-
+            ISIN (International Securities Identification Number) is a
+            12-character alpha-numerical code that does not contain information
+            characterizing financial instruments but serves for uniform
+            identification of a security at trading and settlement.
+          example: US5949181045
+        SEDOL:
+          type: string
+          description: >-
+            SEDOL (Stock Exchange Daily Official List) is a unique
+            identification code, consisting of seven alphanumeric characters,
+            that is assigned to all securities trading on the London Stock
+            Exchange.
+          example: '2588173'
+        TICKER:
+          type: string
+          description: Ticker is the symbol used on the exchange to identify the security.
+          example: MSFT
+        SWIFT_STATUS:
+          type: string
+          description: >-
+            SWIFT Status is the combined SWIFT 25D and 24B status codes as would
+            be shown in an MT537 message.
+          example: PEND-LACK
+        TRANS_TYP:
+          type: string
+          description: >-
+            Transaction Type indicates the direction of the trade. Values are
+            Receive Free, Receive Versus Payment, Deliver Free, Delivery Versus
+            Payment, etc.
+          example: Receive Versus Payment
+        TRANS_REF_NBR:
+          type: string
+          description: >-
+            Custodian Reference is the unique reference assigned by the
+            Custodian to the record. The reference number is unique within a
+            branch.
+          example: CUST987654321
+        REAG_DEAG_CD:
+          type: string
+          description: >-
+            Settlement Counterparty Code is the code associated to the
+            Settlement Counterparty.
+          example: CP001
+        REAG_DEAG:
+          type: string
+          description: >-
+            Settlement Counterparty is the name associated to the underlying
+            instruction's REAG/DEAG tag if provided.
+          example: Goldman Sachs
+        TRADE_DT:
+          type: string
+          format: date-time
+          description: Trade Date is the date a transaction is effected or executed.
+          example: '2025-06-13T10:15:00Z'
+        TRANS_TYP_CD:
+          type: string
+          description: >-
+            Transaction Type Code is the code associated to the Transaction
+            Type.
+          example: RVP
+        TRN_CL_CD:
+          type: string
+          description: >-
+            Transaction Class is the transaction type code for securities
+            transactions. Values include: ADJ (Adjustment), BIDS, BOE, BUY,
+            CAPD, CAPG, CAPGL, DF (Deliver Free), DIV (Dividend), DRAW, DRIP,
+            DVCA, etc.
+          example: BUY
+        TRANS_CLASS:
+          type: string
+          description: >-
+            Transaction Classification describes the category of trade. Values
+            include MARKET TRADES, SECURITIES LENDING TRANSACTIONS, etc.
+          example: MARKET TRADES
+        SIGNED_QTY:
+          type: number
+          format: double
+          description: >-
+            The signed quantity based on the type of a transaction. The value
+            would be positive in case of a receive, and it would be negative in
+            case of a deliver.
+          example: 10000
+        PLACE_OF_SETLMT_CD:
+          type: string
+          description: >-
+            Place Of Settlement code is the code associated with the Place of
+            Settlement or Depository Centre Code for the security.
+          example: DTC
+        VALUE_DT:
+          type: string
+          format: date
+          description: >-
+            Value Date is the date on which the cash posting corresponding to
+            this trade will have value.
+          example: '2025-06-17'
+        TRD_STATUS:
+          type: string
+          description: Transaction Status
+          example: SETTLED
+        FAIL_TEXT:
+          type: string
+          description: >-
+            Fail Text provides additional information to the Fail/Market Status
+            for failing trades.
+          example: Awaiting counterparty confirmation
+        PARTIAL_SETTLEMENT_FLAG:
+          type: string
+          description: >-
+            Partial Settlement Flag indicates if the trades data contains
+            partial settlements details.
+          example: 'Y'
+        TRADE_STATUS_VALUES:
+          type: string
+          description: It provides the logical value of the trade status.
+          example: Matched and Settled
+        COB_DATE:
+          type: string
+          format: date
+          description: Close of Business Date
+          example: '2025-06-15'
+        MITI_REF:
+          type: string
+          description: Market Infrastructure Transaction Identification Reference number
+          example: MITI987654321
+        MATCHING_REF:
+          type: string
+          description: >-
+            The Market Infrastructure reference under which transaction has
+            matched
+          example: MATCH123456
+        MARKET_REF:
+          type: string
+          description: Market Infrastructure reference
+          example: MKT654321
+        CRTD_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Created Timestamp (CR) is the date and time of when an item was
+            loaded to the Reporting database. Applicable to intraday information
+            only.
+          example: '2025-06-15T14:45:00Z'
+        TRAN_NOTES:
+          type: string
+          description: The transaction notes
+          example: Settlement completed without exception
+        DEPOT_ID:
+          type: string
+          description: >-
+            Depot code represents an account of Citi in local markets used for
+            settlement. It can be either 3rd party agent, local Citi branch or
+            CSD (Central Securities Depository).
+          example: DEP001
+        DTC_FED_IDENTIFIER:
+          type: string
+          description: >-
+            It describes indicator values of trades settled in DTC (Depository
+            Trust Company) or FED (Federal) location from market via SMI
+            (Securities Market Interface).
+          example: DTC
+    27d18376-6358-40f1-9f63-23a72d40196f-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/27d18376-6358-40f1-9f63-23a72d40196f-data-schema
+    27d18376-6358-40f1-9f63-23a72d40196f-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/27d18376-6358-40f1-9f63-23a72d40196f-data-schema
+      xml:
+        name: data
+    c5da44dd-2c3c-42cc-8125-711c2aadbe4f-data-schema:
+      type: object
+      properties:
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: 8-DEMOCSH53JPY
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - US DCC Equity
+        ACT_SETT_DT:
+          type: string
+          format: date
+          description: Actual Settlement Date is the date of final settlement of the trade.
+          example: '2024-06-15'
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account. For the
+            Cash Account the branch code is a numeric value and for the
+            Safekeeping Account it is the ISO Country code.
+          example: '484'
+        BR_NME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: NEW YORK SECURITIES CB
+        RELATED_REF:
+          type: string
+          description: >-
+            Related Reference is the value provided via RELA tag on the
+            underlying instruction.
+          example: RELA123456
+        CLIENT_REF:
+          type: string
+          description: >-
+            Client Reference is a unique number assigned by the client, to the
+            transaction, for identification purposes within their organization.
+          example: '12345678'
+        BUYR_SELL_CD:
+          type: string
+          description: Buyer/Seller Code is the code associated to the Buyer/Seller.
+          example: B
+        CLR_BRKR_NME:
+          type: string
+          description: >-
+            Clearing Broker Name is the name of the firm that guarantees the
+            obligations of the parties in an exchange traded security or
+            derivative transaction.
+          example: Goldman Sachs
+        CONTR_SETT_DT:
+          type: string
+          format: date-time
+          description: >-
+            Contractual Settlement Date is the date when the clients cash
+            account should be credited with funds on a sale (and debited on a
+            purchase) on the due settlement date in place of when a trade
+            actually settles in the market.
+          example: '2024-06-15T10:30:00Z'
+        CNTRY_CD:
+          type: string
+          description: >-
+            The Country Code (location) of the security custodian. Not
+            applicable to the US domestic positions.
+          example: US
+        COMP_DESC:
+          type: string
+          description: >-
+            Company Description contains information regarding the company which
+            issued the security.
+          example: Microsoft Corporation
+        CONTR_SETT_FLG:
+          type: string
+          description: >-
+            Contractual Settlement Flag indicates whether the trade will settle
+            on the Contractual Settlement Date whether or not it actually
+            settles. Values are Y (settle on contractual settlement date) or N
+            (settle on actual settlement date).
+          example: 'Y'
+        CURR_FCTR_RATE:
+          type: number
+          format: double
+          description: >-
+            Current Factor is the factor which applies to the current accrual
+            period to determine payments and balances for principal paying
+            securities.
+          example: 0.9875
+        DEAL_REF_NBR:
+          type: string
+          description: >-
+            OTM Reference is the Order and Trade Manager Reference number that
+            has been assigned to the order instructions.
+          example: OTM123456789
+        HOLDING_TYPE:
+          type: string
+          description: >-
+            How Position is Held is a description of the status of the holding
+            affected by the trade, or where that holding is held.
+          example: Held At Depot
+        SEC_CCY:
+          type: string
+          description: >-
+            Denomination Currency Code is the ISO 4217 currency code in which
+            the security is denominated, in the local market.
+          example: USD
+        FAIL_AGE:
+          type: integer
+          format: int32
+          description: >-
+            Fail Age is the number of days the transaction has not settled, past
+            the contractual settlement date.
+          example: 5
+        FAIL_DESC:
+          type: string
+          description: >-
+            Fail Description provides the reason why the trade has not or is not
+            expected to settle on the contractual settlement date.
+          example: Insufficient Securities
+        FAIL_TXT:
+          type: string
+          description: Fail Text provides additional information on the reason for failure.
+          example: Counterparty has not delivered securities.
+        FCTR_DTE:
+          type: string
+          format: date-time
+          description: >-
+            Factor Date is the date the current factor is applicable from for
+            principal paying securities.
+          example: '2024-06-01T00:00:00Z'
+        INST_DT:
+          type: string
+          format: date
+          description: Instruction Date is the date the trade was first received.
+          example: '2024-06-10'
+        ISS_TMS:
+          type: string
+          format: date-time
+          description: Issue Date is the date of first issue of the security.
+          example: '2020-01-01T00:00:00Z'
+        ISSR_LOC_CD:
+          type: string
+          description: >-
+            Issuer Location Code is the ISO country code where the issuer of the
+            security is based.  Values include: AR (Argentina), CA (Canada), IE
+            (Ireland), etc. 
+          example: US
+        ISSR_LOC_NME:
+          type: string
+          description: >-
+            Issuer Location is the name of the country where the issuer of the
+            security is based.  Values include: Argentina (AR), Canada (CA),
+            Ireland (IE), etc.  
+          example: United States
+        SETT_AMT:
+          type: number
+          format: double
+          description: >-
+            Settlement Amount is the cash value of the partial settlement in the
+            local currency.
+          example: 150000.25
+        LCL_CUR_CD:
+          type: string
+          description: >-
+            Settlement Currency Code is the ISO currency code of the local
+            currency of the Settlement Amount.
+          example: USD
+        SETT_CCY:
+          type: string
+          description: Settlement Currency is the currency name for the Settlement Amount.
+          example: US Dollar
+        LOAN_DT:
+          type: string
+          format: date
+          description: Loan Date is the date the loan originated.
+          example: '2024-01-15'
+        LOAN_PURPOSE_CD:
+          type: string
+          description: >-
+            Loan Purpose Code is a code that identifies the purpose of the loan
+            transaction if the position is on loan.
+          example: COLL
+        LOAN_PURPOSE_DESC:
+          type: string
+          description: >-
+            Loan Purpose is the description of the purpose of the loan
+            transaction if the position is on loan.
+          example: Collateral Management
+        LOAN_REF_ID:
+          type: string
+          description: >-
+            The Loan Reference Number is the number assigned to 3rd party
+            lending transactions. This is for US domestic only.
+          example: LN123456789
+        MATY_DT:
+          type: string
+          format: date-time
+          description: >-
+            Maturity Date is the date of maturity or redemption for fixed income
+            securities.
+          example: '2030-12-31T00:00:00Z'
+        PART_UNSETL_QTY:
+          type: number
+          format: double
+          description: >-
+            Unsettled Quantity shows the quantity that is still yet to settle
+            when there is a partial settlement of the trade.
+          example: 2500
+        PARTICIPANT_NO:
+          type: string
+          description: DTC Number is the participant or sub-account number at DTCC.
+          example: '0901'
+        SEC_ID_TYPE:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID field. Values include: CUSIP, ISIN, SEDOL,
+            LOCAL, etc.
+          example: ISIN
+        SEC_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: US0378331005
+        PLACE_OF_SETLMT:
+          type: string
+          description: >-
+            Place Of Settlement is the name of the settlement location for the
+            security, applicable to securities positions, transactions only.
+          example: TOKYO, JAPAN
+        PLDG_ABA_NAM:
+          type: string
+          description: >-
+            American Bankers Association Description is the name of the
+            institution identified by the ABA number.
+          example: Citibank N.A.
+        PLDG_ABA_NO:
+          type: string
+          description: >-
+            ABA Number is the American Bankers Association Transit Number used
+            to identify a US institution.
+          example: '021000089'
+        PLDG_REF_NBR:
+          type: string
+          description: >-
+            Pledge Reference is the unique reference number for the pledge
+            transaction.
+          example: PLG987654321
+        PREV_FCTR_RATE:
+          type: number
+          format: double
+          description: >-
+            Previous Factor is the factor which applies to the last accrual
+            period to determine payments and balances for principal paying
+            securities.
+          example: 0.985
+        CASH_ACCT_ID:
+          type: string
+          description: >-
+            Cash Account ID is the account id of the cash account which will be
+            credited or debited at settlement for the trade.
+          example: '156602418'
+        SEC_DESC:
+          type: string
+          description: >-
+            Issue Description contains the name and other details of the
+            instrument.
+          example: Apple Inc. Common Stock
+        ASSET_TYP:
+          type: string
+          description: >-
+            Asset Type is a code representing the Asset Type of the security.
+            Values include: EQTY (Equity), FI (Fixed Income), etc.
+          example: EQTY
+        SEC_LEND_FLG:
+          type: string
+          description: >-
+            Securities Lending Flag indicates that the trade is a securities
+            lending transaction.
+          example: 'Y'
+        QUANTITY:
+          type: number
+          format: double
+          description: >-
+            Quantity provides the number of units, par value or nominal value
+            (for fixed income instruments), amount of currency (for FX
+            transactions), or number of shares. Indicates the contract quantity
+            on the original transaction that was given up.
+          example: 10000
+        SEC_SHORT_IND:
+          type: string
+          description: >-
+            Short Flag indicates if the transaction can be processed or if it
+            cannot be processed due to a short position.
+          example: 'N'
+        ISSUE_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: Apple Inc.
+        ISSUE_TYP_CD:
+          type: string
+          description: >-
+            Issue Type Code is a code linked to the Issue Type field which
+            describes the type of security instrument. Values include: 1 (ADR
+            Convertible), 12 (Bond), 19 (Bond Convertible), etc. 
+          example: '12'
+        ISSUE_TYP:
+          type: string
+          description: >-
+            Issue Type is a description of the type of the security instrument. 
+            Values include: ADR Convertible (1), Bond (12) , Bond Convertible
+            (19), etc. 
+          example: Bond
+        SETT_QTY:
+          type: number
+          format: double
+          description: >-
+            Settled Quantity is the quantity that has settled or the quantity of
+            the security that is fully settled at the 'As Of' date.  For partial
+            settlements the settled quantity is the portion that has settled.
+          example: 7500
+        HOLDING_TYPE_CD:
+          type: string
+          description: >-
+            Location of Where Held is a code indicating the location of a
+            holding. Examples include HD - Held At Depot and LE - Securities
+            Lent.
+          example: HD
+        CUSIP:
+          type: string
+          description: >-
+            CUSIP (Committee on Uniform Securities Identification Procedures) It
+            is a nine-character alphanumeric code that identifies a North
+            American financial security for the purposes of facilitating
+            clearing and settlement of trades.
+          example: '037833100'
+        ISIN:
+          type: string
+          description: >-
+            ISIN (International Securities Identification Number) is a
+            12-character alpha-numerical code that does not contain information
+            characterizing financial instruments but serves for uniform
+            identification of a security at trading and settlement.
+          example: US0378331005
+        SEDOL:
+          type: string
+          description: >-
+            SEDOL (Stock Exchange Daily Official List) is a unique
+            identification code, consisting of seven alphanumeric characters,
+            that is assigned to all securities trading on the London Stock
+            Exchange.
+          example: '2046251'
+        TICKER:
+          type: string
+          description: Ticker is the symbol used on the exchange to identify the security.
+          example: AAPL
+        UPDATE_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Created Timestamp is the date and time of when an item was loaded to
+            the source system.
+          example: '2024-06-15T12:30:45Z'
+        SWIFT_STATUS:
+          type: string
+          description: >-
+            SWIFT Status is the combined SWIFT 25D and 24B status codes as would
+            be shown in an MT537 message.
+          example: MATCH
+        TRANS_TYP:
+          type: string
+          description: >-
+            Transaction Type indicates the direction of the trade. Values are
+            Receive Free, Receive Versus Payment, Deliver Free, Delivery Versus
+            Payment, etc.
+          example: Receive Versus Payment
+        TRANS_REF_NBR:
+          type: string
+          description: >-
+            Custodian Reference is the unique reference assigned by the
+            Custodian to the record. The reference number is unique within a
+            branch.
+          example: TRX20240615001
+        REAG_DEAG_CD:
+          type: string
+          description: >-
+            Settlement Counterparty Code is the code associated to the
+            Settlement Counterparty.
+          example: CP001
+        REAG_DEAG:
+          type: string
+          description: >-
+            Settlement Counterparty is the name associated to the underlying
+            instruction's REAG/DEAG tag if provided.
+          example: JP Morgan Chase
+        TRADE_DT:
+          type: string
+          format: date-time
+          description: Trade Date is the date a transaction is effected or executed.
+          example: '2024-06-12T14:30:00Z'
+        TRN_CD:
+          type: string
+          description: >-
+            Transaction Type reflects the code of the transaction type. Sample
+            Values returned:  SLS (Securities Lending System); CONV; ISWAP.
+          example: SLS
+        TRANS_CLASS_CD:
+          type: string
+          description: >-
+            Transaction Class is the transaction type code for securities
+            transactions.
+          example: BUY
+        TRANS_CLASS:
+          type: string
+          description: >-
+            Transaction Class is the transaction type code for securities
+            transactions.  Values include: ADJ (Adjustment), BIDS, BOE,  BUY,
+            CAPD, CAPG, CAPGL, DF (Deliver Free), DIV (Dividend), DRAW, DRIP,
+            DVCA, etc.
+          example: MARKET TRADES
+        SIGNED_QTY:
+          type: number
+          format: double
+          description: >-
+            The signed quantity based on the type of a transaction. The value
+            would be positive in case of a receive, and it would be negative in
+            case of a deliver.
+          example: 10000
+        PLACE_OF_SETLMT_CD:
+          type: string
+          description: >-
+            Place Of Settlement code is the code associated with the Place of
+            Settlement or Depository Centre Code for the security.
+          example: DTC
+        VALUE_DT:
+          type: string
+          format: date
+          description: >-
+            Value Date is the date on which the cash posting corresponding to
+            this trade will have value.
+          example: '2024-06-17'
+        TRD_STATUS:
+          type: string
+          description: Transaction Status.
+          example: SETTLED
+        PARTIAL_SETTLEMENT_FLAG:
+          type: string
+          description: >-
+            Partial Settlement Flag indicates if the trades data contains
+            partial settlements details.
+          example: 'Y'
+        TRADE_STATUS_VALUES:
+          type: string
+          description: It provides the logical value of the trade status.
+          example: Settled
+        LAST_CHANGE_TIMESTAMP:
+          type: string
+          format: date-time
+          description: Last Change Timestamp.
+          example: '2024-06-15T15:20:10Z'
+        MARKET_REF:
+          type: string
+          description: Market Reference.
+          example: MKT123456789
+        MITI_REF:
+          type: string
+          description: Market Infrastructure Transaction Identification Reference number.
+          example: MITI987654321
+        MATCHING_REF:
+          type: string
+          description: Matching reference.
+          example: MATCH123456
+        CRTD_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Created Timestamp (CR) is the date and time of when an item was
+            loaded to the Reporting database. Applicable to intraday information
+            only.
+          example: '2024-06-15T09:00:00Z'
+        TRAN_NOTES:
+          type: string
+          description: The transaction notes.
+          example: Partial settlement due to insufficient position.
+        DTC_FED_IDENTIFIER:
+          type: string
+          description: >-
+            It describes indicator values of trades settled in DTC (Depository
+            Trust Company) or FED (Federal) location from market via SMI
+            (Securities Market Interface).
+          example: DTC
+        SETD_CMB_QTY:
+          type: number
+          format: double
+          description: Settled Quantity.
+          example: 7500
+        CONSID_AMT_P:
+          type: number
+          format: double
+          description: >-
+            Settled Amount is the amount that has settled, corresponding to the
+            Settled Quantity. Settled Amount will be less than Instructed Amount
+            in partial settlements.
+          example: 250000.75
+    c5da44dd-2c3c-42cc-8125-711c2aadbe4f-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/c5da44dd-2c3c-42cc-8125-711c2aadbe4f-data-schema
+    c5da44dd-2c3c-42cc-8125-711c2aadbe4f-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/c5da44dd-2c3c-42cc-8125-711c2aadbe4f-data-schema
+      xml:
+        name: data
+    ErrorResponse:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errorDetails:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      title: Error Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+  parameters:
+    client_id:
+      description: >-
+        Your unique ID. This is the same as the ID you used for OAuth token
+        generation. Citi shared this ID with you during your Data On Demand API
+        onboarding
+      name: client_id
+      in: header
+      required: true
+      schema:
+        type: string
+    skip:
+      name: skip
+      in: query
+      description: The number of records to skip before returning the results
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    take:
+      name: take
+      in: query
+      description: The maximum number of records to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 5000
+    select:
+      name: $select
+      in: query
+      description: >-
+        The $SELECT parameter in an API allows users to specify which data
+        fields (properties or columns) they want to receive in the API response.
+        This helps improve efficiency by reducing the amount of data transferred
+        and simplifying client-side processing.
+      required: false
+      schema:
+        type: string
+    parameter-41553:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal Citi client identifier that is
+        associated to a Safekeeping or Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41554:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41555:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41556:
+      name: ACT_SETT_DT
+      description: Actual Settlement Date is the date of final settlement of the trade.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-41557:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account.  For the
+        Cash Account the branch code is a numeric value and for the Safekeeping
+        Account it is the ISO Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41558:
+      name: BR_NME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41559:
+      name: RELATED_REF
+      description: >-
+        Related Reference is the value provided via RELA tag on the underlying
+        instruction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41562:
+      name: CLIENT_REF
+      description: >-
+        Client Reference is a unique number assigned by the client, to the
+        transaction, for identification purposes within their organization.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41563:
+      name: BUYR_SELL_CD
+      description: Buyer/Seller Code is the code associated to the Buyer/Seller.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41564:
+      name: BUYR_SELL
+      description: >-
+        Buyer/Seller is the name associated to the underlying instruction's
+        BUYR/SELL tag if provided.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41565:
+      name: CONTR_SETT_DT
+      description: >-
+        Contractual Settlement Date is the date when the clients cash account
+        should be credited with funds on a sale (and debited on a purchase) on
+        the due settlement date in place of when a trade actually settles in the
+        market.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41566:
+      name: CNTRY_CD
+      description: >-
+        The Country Code (location) of the security custodian. Not applicable to
+        the US domestic positions.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41567:
+      name: COMP_DESC
+      description: >-
+        Company Description contains information regarding the company which
+        issued the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41568:
+      name: CONTR_SETT_FLG
+      description: >-
+        Contractual Settlement Flag indicates whether the trade will settle on
+        the Contractual Settlement Date whether or not it actually settles.
+        Values are Y (settle on contractual settlement date) or N (settle on
+        actual settlement date).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41569:
+      name: CURR_FCTR_RATE
+      description: >-
+        Current Factor is the factor which applies to the current accrual period
+        to determine payments and balances for principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41570:
+      name: DEAL_REF_NBR
+      description: >-
+        OTM Reference is the Order and Trade Manager Reference number that has
+        been assigned to the order instructions.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41571:
+      name: HOLDING_TYPE
+      description: >-
+        How Position is Held is a description of the status of the holding
+        affected by the trade, or where that holding is held.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41572:
+      name: SEC_CCY
+      description: >-
+        Denomination Currency Code is the ISO 4217 currency code in which the
+        security is denominated, in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41577:
+      name: UPDATE_TMS
+      description: >-
+        Created Timestamp is the date and time of when an item was loaded to the
+        source system.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41578:
+      name: FAIL_AGE
+      description: >-
+        Fail Age is the number of days the transaction has not settled, past the
+        contractual settlement date.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-41579:
+      name: FAIL_DESC
+      description: >-
+        Fail Description provides the reason why the trade has not or is not
+        expected to settle on the contractual settlement date.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41580:
+      name: FCTR_DTE
+      description: >-
+        Factor Date is the date the current factor is applicable from for
+        principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41581:
+      name: INST_DT
+      description: Instruction Date is the date the trade was first received.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-41582:
+      name: ISS_TMS
+      description: Issue Date is the date of first issue of the security.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41583:
+      name: ISSR_LOC_CD
+      description: >-
+        Issuer Location Code is the ISO country code where the issuer of the
+        security is based.  Values include: AR (Argentina), CA (Canada), IE
+        (Ireland), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41584:
+      name: ISSR_LOC_NME
+      description: >-
+        Issuer Location is the name of the country where the issuer of the
+        security is based.  Values include: Argentina (AR), Canada (CA), Ireland
+        (IE), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41585:
+      name: SETT_AMT
+      description: >-
+        Settlement Amount is the cash value of the partial settlement in the
+        local currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41586:
+      name: SETT_CCY_CD
+      description: >-
+        Settlement Currency Code is the ISO 4217 currency code for the
+        Settlement Amount.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41587:
+      name: SETT_CCY
+      description: Settlement Currency is the currency name for the Settlement Amount.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41588:
+      name: LOAN_DT
+      description: Loan Date is the date the loan originated.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-41589:
+      name: LOAN_PURPOSE_CD
+      description: >-
+        Loan Purpose Code is a code that identifies the purpose of the loan
+        transaction if the position is on loan.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41590:
+      name: LOAN_PURPOSE_DESC
+      description: >-
+        Loan Purpose is the description of the purpose of the loan transaction
+        if the position is on loan.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41591:
+      name: LOAN_REF_ID
+      description: >-
+        The Loan Reference Number is the number assigned to 3rd party lending
+        transactions.  This is for US domestic only.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41592:
+      name: MATY_DT
+      description: >-
+        Maturity Date is the date of maturity or redemption for fixed income
+        securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41593:
+      name: PART_UNSETL_QTY
+      description: >-
+        Unsettled Quantity shows the quantity that is still yet to settle when
+        there is a partial settlement of the trade.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41595:
+      name: PARTICIPANT_NO
+      description: DTC Number is the participant or sub-account number at DTCC.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41596:
+      name: SEC_ID_TYPE
+      description: >-
+        Security ID Type indicates the type of identifier of the corresponding
+        Security ID field. Values include: CUSIP, ISIN, SEDOL, LOCAL, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41597:
+      name: SEC_ID
+      description: >-
+        Security ID is the most commonly used identifier for the security in a
+        given market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41598:
+      name: PLACE_OF_SETLMT
+      description: >-
+        Place Of Settlement is the name of the settlement location for the
+        security, applicable to securities positions , transactions only.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41599:
+      name: PLDG_ABA_NAM
+      description: >-
+        American Bankers Association Description is the name of the institution
+        identified by the ABA number.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41600:
+      name: PLDG_ABA_NO
+      description: >-
+        ABA Number is the American Bankers Association Transit Number - used to
+        identify a US institution.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41601:
+      name: PLDG_REF_NBR
+      description: >-
+        Pledge Reference is the unique reference number for the pledge
+        transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41602:
+      name: PREV_FCTR_RATE
+      description: >-
+        Previous Factor is the factor which applies to the last accrual period
+        to determine payments and balances for principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41603:
+      name: CASH_ACCT_ID
+      description: >-
+        Cash Account ID is the account id of the cash account which will be
+        credited or debited at settlement for the trade.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41604:
+      name: SEC_DESC
+      description: Issue Description contains the name and other details of the instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41605:
+      name: ASSET_TYP
+      description: >-
+        Asset Type is a code representing the Asset Type of the security. 
+        Values include: EQTY (Equity), FI (Fixed Income), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41606:
+      name: SEC_LEND_FLG
+      description: >-
+        Securities Lending Flag indicates that the trade is a securities lending
+        transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41607:
+      name: QUANTITY
+      description: >-
+        Quantity provides the number of units, par value or nominal value (for
+        fixed income instruments), amount of currency (for FX transactions), or
+        number of shares. Indicates the contract quantity on the original
+        transaction that was given up.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41608:
+      name: SEC_SHORT_IND
+      description: >-
+        Short Flag indicates if the transaction can be processed or if it cannot
+        be processed due to a short position.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41609:
+      name: ISSUE_NME
+      description: Issue Name is the Security Name of the security instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41610:
+      name: ISSUE_TYP_CD
+      description: >-
+        Issue Type Code is a code linked to the Issue Type field which describes
+        the type of security instrument. Values include: 1 (ADR Convertible), 12
+        (Bond), 19 (Bond Convertible), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41611:
+      name: ISSUE_TYP
+      description: >-
+        Issue Type is a description of the type of the security instrument. 
+        Values include: ADR Convertible (1), Bond (12) , Bond Convertible (19),
+        etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41612:
+      name: SETT_QTY
+      description: >-
+        Settled Quantity is the quantity that has settled or the quantity of the
+        security that is fully settled at the "As Of" date.  For partial
+        settlements the settled quantity is the portion that has settled.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41613:
+      name: HOLDING_TYPE_CD
+      description: >-
+        Location of Where Held is a code indicating the location of a holding.
+        Examples include HD - Held At Depot and LE - Securities Lent.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41614:
+      name: CUSIP
+      description: >-
+        CUSIP (Committee on Uniform Securities Identification Procedures) It is
+        a nine-character alphanumeric code that identifies a North American
+        financial security for the purposes of facilitating clearing and
+        settlement of trades.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41615:
+      name: ISIN
+      description: >-
+        ISIN (International Securities Identification Number) is a 12-character
+        alpha-numerical code that does not contain information characterizing
+        financial instruments but serves for uniform identification of a
+        security at trading and settlement.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41616:
+      name: SEDOL
+      description: >-
+        SEDOL (Stock Exchange Daily Official List) is a unique identification
+        code, consisting of seven alphanumeric characters, that is assigned to
+        all securities trading on the London Stock Exchange.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41617:
+      name: TICKER
+      description: Ticker is the symbol used on the exchange to identify the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41618:
+      name: SWIFT_STATUS
+      description: >-
+        SWIFT Status is the combined SWIFT 25D and 24B status codes as would be
+        shown in an MT537 message.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41619:
+      name: TRANS_TYP
+      description: >-
+        Transaction Type indicates the direction of the trade. Values are
+        Receive Free, Receive Versus Payment, Deliver Free, Delivery Versus
+        Payment, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41620:
+      name: TRANS_REF_NBR
+      description: >-
+        Custodian Reference is the unique reference assigned by the Custodian to
+        the record. The reference number is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41621:
+      name: REAG_DEAG_CD
+      description: >-
+        Settlement Counterparty Code is the code associated to the Settlement
+        Counterparty.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41622:
+      name: REAG_DEAG
+      description: >-
+        Settlement Counterparty is the name associated to the underlying
+        instruction's REAG/DEAG tag if provided.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41623:
+      name: TRADE_DT
+      description: Trade Date is the date a transaction is effected or executed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41624:
+      name: TRANS_TYP_CD
+      description: Transaction Type Code is the code associated to the Transaction Type.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41625:
+      name: TRN_CL_CD
+      description: >-
+        Transaction Class is the transaction type code for securities
+        transactions.  Values include: ADJ (Adjustment), BIDS, BOE,  BUY, CAPD,
+        CAPG, CAPGL, DF (Deliver Free), DIV (Dividend), DRAW, DRIP, DVCA, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41626:
+      name: TRANS_CLASS
+      description: >-
+        Transaction Classification describes the category of trade. Values
+        include MARKET TRADES, SECURITIES LENDING TRANSACTIONS, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41627:
+      name: SIGNED_QTY
+      description: >-
+        The signed quantity based on the type of a transaction. The value would
+        be positive in case of a receive, and it would be negative in case of a
+        deliver.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41628:
+      name: PLACE_OF_SETLMT_CD
+      description: >-
+        Place Of Settlement code is the code associated with the Place of
+        Settlement or Depository Centre Code for the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41629:
+      name: VALUE_DT
+      description: >-
+        Value Date is the date on which the cash posting corresponding to this
+        trade will have value.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-41561:
+      name: TRD_STATUS
+      description: Transaction Status
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41560:
+      name: FAIL_TEXT
+      description: >-
+        Fail Text provides additional information to the Fail/Market Status for
+        failing trades.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41594:
+      name: PARTIAL_SETTLEMENT_FLAG
+      description: >-
+        Partial Settlement Flag indicates if the trades data contains partial
+        settlements details.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-42176:
+      name: TRADE_STATUS_VALUES
+      description: It provides the logical value of the trade status.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-42372:
+      name: COB_DATE
+      description: Close of Business Date
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-49549:
+      name: MITI_REF
+      description: Market Infrastructure Transaction Identification Reference number
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-49550:
+      name: MATCHING_REF
+      description: The Market Infrastructure reference under which transaction has matched
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-49548:
+      name: MARKET_REF
+      description: Market Infrastructure reference
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-49559:
+      name: CRTD_TMS
+      description: >-
+        Created Timestamp (CR) is the date and time of when an item was loaded
+        to the Reporting database. Applicable to intraday information only.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-49560:
+      name: TRAN_NOTES
+      description: The transaction notes
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-55003:
+      name: DEPOT_ID
+      description: >-
+        Depot code represents an account of Citi in local markets used for
+        settlement. It can be either 3rd party agent, local Citi branch or CSD
+        (Central Securities Depository).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-55291:
+      name: DTC_FED_IDENTIFIER
+      description: >-
+        It describes indicator values of trades settled in DTC (Depository Trust
+        Company) or FED (Federal) location from market via SMI (Securities
+        Market Interface).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41729:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal Citi client identifier that is
+        associated to a Safekeeping or Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41679:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41731:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41680:
+      name: ACT_SETT_DT
+      description: Actual Settlement Date is the date of final settlement of the trade.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-41732:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account.  For the
+        Cash Account the branch code is a numeric value and for the Safekeeping
+        Account it is the ISO Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41733:
+      name: BR_NME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41681:
+      name: RELATED_REF
+      description: >-
+        Related Reference is the value provided via RELA tag on the underlying
+        instruction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41683:
+      name: CLIENT_REF
+      description: >-
+        Client Reference is a unique number assigned by the client, to the
+        transaction, for identification purposes within their organization.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41685:
+      name: BUYR_SELL_CD
+      description: Buyer/Seller Code is the code associated to the Buyer/Seller.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41686:
+      name: CLR_BRKR_NME
+      description: >-
+        Clearing Broker Name is the name of the firm that guarantees the
+        obligations of the parties in an exchange traded security or derivative
+        transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41687:
+      name: CONTR_SETT_DT
+      description: >-
+        Contractual Settlement Date is the date when the clients cash account
+        should be credited with funds on a sale (and debited on a purchase) on
+        the due settlement date in place of when a trade actually settles in the
+        market.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41735:
+      name: CNTRY_CD
+      description: >-
+        The Country Code (location) of the security custodian. Not applicable to
+        the US domestic positions.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41688:
+      name: COMP_DESC
+      description: >-
+        Company Description contains information regarding the company which
+        issued the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41689:
+      name: CONTR_SETT_FLG
+      description: >-
+        Contractual Settlement Flag indicates whether the trade will settle on
+        the Contractual Settlement Date whether or not it actually settles.
+        Values are Y (settle on contractual settlement date) or N (settle on
+        actual settlement date).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41736:
+      name: CURR_FCTR_RATE
+      description: >-
+        Current Factor is the factor which applies to the current accrual period
+        to determine payments and balances for principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41690:
+      name: DEAL_REF_NBR
+      description: >-
+        OTM Reference is the Order and Trade Manager Reference number that has
+        been assigned to the order instructions.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41691:
+      name: HOLDING_TYPE
+      description: >-
+        How Position is Held is a description of the status of the holding
+        affected by the trade, or where that holding is held.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41737:
+      name: SEC_CCY
+      description: >-
+        Denomination Currency Code is the ISO 4217 currency code in which the
+        security is denominated, in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41692:
+      name: FAIL_AGE
+      description: >-
+        Fail Age is the number of days the transaction has not settled, past the
+        contractual settlement date.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-41693:
+      name: FAIL_DESC
+      description: >-
+        Fail Description provides the reason why the trade has not or is not
+        expected to settle on the contractual settlement date.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41694:
+      name: FAIL_TXT
+      description: Fail Text provides additional information on the reason for failure.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41738:
+      name: FCTR_DTE
+      description: >-
+        Factor Date is the date the current factor is applicable from for
+        principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41695:
+      name: INST_DT
+      description: Instruction Date is the date the trade was first received.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-41739:
+      name: ISS_TMS
+      description: Issue Date is the date of first issue of the security.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41740:
+      name: ISSR_LOC_CD
+      description: >-
+        Issuer Location Code is the ISO country code where the issuer of the
+        security is based.  Values include: AR (Argentina), CA (Canada), IE
+        (Ireland), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41741:
+      name: ISSR_LOC_NME
+      description: >-
+        Issuer Location is the name of the country where the issuer of the
+        security is based.  Values include: Argentina (AR), Canada (CA), Ireland
+        (IE), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41697:
+      name: SETT_AMT
+      description: >-
+        Settlement Amount is the cash value of the partial settlement in the
+        local currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41698:
+      name: LCL_CUR_CD
+      description: >-
+        Settlement Currency Code is the ISO currency code of the local currency
+        of the Settlement Amount.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41699:
+      name: SETT_CCY
+      description: Settlement Currency is the currency name for the Settlement Amount.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41700:
+      name: LOAN_DT
+      description: Loan Date is the date the loan originated.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-41701:
+      name: LOAN_PURPOSE_CD
+      description: >-
+        Loan Purpose Code is a code that identifies the purpose of the loan
+        transaction if the position is on loan.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41702:
+      name: LOAN_PURPOSE_DESC
+      description: >-
+        Loan Purpose is the description of the purpose of the loan transaction
+        if the position is on loan.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41703:
+      name: LOAN_REF_ID
+      description: >-
+        The Loan Reference Number is the number assigned to 3rd party lending
+        transactions.  This is for US domestic only.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41742:
+      name: MATY_DT
+      description: >-
+        Maturity Date is the date of maturity or redemption for fixed income
+        securities.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41704:
+      name: PART_UNSETL_QTY
+      description: >-
+        Unsettled Quantity shows the quantity that is still yet to settle when
+        there is a partial settlement of the trade.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41734:
+      name: PARTICIPANT_NO
+      description: DTC Number is the participant or sub-account number at DTCC.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41743:
+      name: SEC_ID_TYPE
+      description: >-
+        Security ID Type indicates the type of identifier of the corresponding
+        Security ID field. Values include: CUSIP, ISIN, SEDOL, LOCAL, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41744:
+      name: SEC_ID
+      description: >-
+        Security ID is the most commonly used identifier for the security in a
+        given market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41706:
+      name: PLACE_OF_SETLMT
+      description: >-
+        Place Of Settlement is the name of the settlement location for the
+        security, applicable to securities positions , transactions only.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41707:
+      name: PLDG_ABA_NAM
+      description: >-
+        American Bankers Association Description is the name of the institution
+        identified by the ABA number.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41708:
+      name: PLDG_ABA_NO
+      description: >-
+        ABA Number is the American Bankers Association Transit Number - used to
+        identify a US institution.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41709:
+      name: PLDG_REF_NBR
+      description: >-
+        Pledge Reference is the unique reference number for the pledge
+        transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41745:
+      name: PREV_FCTR_RATE
+      description: >-
+        Previous Factor is the factor which applies to the last accrual period
+        to determine payments and balances for principal paying securities.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41710:
+      name: CASH_ACCT_ID
+      description: >-
+        Cash Account ID is the account id of the cash account which will be
+        credited or debited at settlement for the trade.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41746:
+      name: SEC_DESC
+      description: Issue Description contains the name and other details of the instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41747:
+      name: ASSET_TYP
+      description: >-
+        Asset Type is a code representing the Asset Type of the security. 
+        Values include: EQTY (Equity), FI (Fixed Income), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41711:
+      name: SEC_LEND_FLG
+      description: >-
+        Securities Lending Flag indicates that the trade is a securities lending
+        transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41712:
+      name: QUANTITY
+      description: >-
+        Quantity provides the number of units, par value or nominal value (for
+        fixed income instruments), amount of currency (for FX transactions), or
+        number of shares. Indicates the contract quantity on the original
+        transaction that was given up.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41713:
+      name: SEC_SHORT_IND
+      description: >-
+        Short Flag indicates if the transaction can be processed or if it cannot
+        be processed due to a short position.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41748:
+      name: ISSUE_NME
+      description: Issue Name is the Security Name of the security instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41749:
+      name: ISSUE_TYP_CD
+      description: >-
+        Issue Type Code is a code linked to the Issue Type field which describes
+        the type of security instrument. Values include: 1 (ADR Convertible), 12
+        (Bond), 19 (Bond Convertible), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41750:
+      name: ISSUE_TYP
+      description: >-
+        Issue Type is a description of the type of the security instrument. 
+        Values include: ADR Convertible (1), Bond (12) , Bond Convertible (19),
+        etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41714:
+      name: SETT_QTY
+      description: >-
+        Settled Quantity is the quantity that has settled or the quantity of the
+        security that is fully settled at the "As Of" date.  For partial
+        settlements the settled quantity is the portion that has settled.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41715:
+      name: HOLDING_TYPE_CD
+      description: >-
+        Location of Where Held is a code indicating the location of a holding.
+        Examples include HD - Held At Depot and LE - Securities Lent.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41751:
+      name: CUSIP
+      description: >-
+        CUSIP (Committee on Uniform Securities Identification Procedures) It is
+        a nine-character alphanumeric code that identifies a North American
+        financial security for the purposes of facilitating clearing and
+        settlement of trades.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41752:
+      name: ISIN
+      description: >-
+        ISIN (International Securities Identification Number) is a 12-character
+        alpha-numerical code that does not contain information characterizing
+        financial instruments but serves for uniform identification of a
+        security at trading and settlement.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41753:
+      name: SEDOL
+      description: >-
+        SEDOL (Stock Exchange Daily Official List) is a unique identification
+        code, consisting of seven alphanumeric characters, that is assigned to
+        all securities trading on the London Stock Exchange.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41754:
+      name: TICKER
+      description: Ticker is the symbol used on the exchange to identify the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41716:
+      name: UPDATE_TMS
+      description: >-
+        Created Timestamp is the date and time of when an item was loaded to the
+        source system.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41717:
+      name: SWIFT_STATUS
+      description: >-
+        SWIFT Status is the combined SWIFT 25D and 24B status codes as would be
+        shown in an MT537 message.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41718:
+      name: TRANS_TYP
+      description: >-
+        Transaction Type indicates the direction of the trade. Values are
+        Receive Free, Receive Versus Payment, Deliver Free, Delivery Versus
+        Payment, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41719:
+      name: TRANS_REF_NBR
+      description: >-
+        Custodian Reference is the unique reference assigned by the Custodian to
+        the record. The reference number is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41720:
+      name: REAG_DEAG_CD
+      description: >-
+        Settlement Counterparty Code is the code associated to the Settlement
+        Counterparty.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41721:
+      name: REAG_DEAG
+      description: >-
+        Settlement Counterparty is the name associated to the underlying
+        instruction's REAG/DEAG tag if provided.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41722:
+      name: TRADE_DT
+      description: Trade Date is the date a transaction is effected or executed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-41723:
+      name: TRN_CD
+      description: >-
+        Transaction Type reflects the code of the transaction type. Sample
+        Values returned:  SLS (Securities Lending System); CONV; ISWAP.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41724:
+      name: TRANS_CLASS_CD
+      description: >-
+        Transaction Class is the transaction type code for securities
+        transactions.  Values include: ADJ (Adjustment), BIDS, BOE,  BUY, CAPD,
+        CAPG, CAPGL, DF (Deliver Free), DIV (Dividend), DRAW, DRIP, DVCA, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41725:
+      name: TRANS_CLASS
+      description: >-
+        Transaction Classification describes the category of trade. Values
+        include MARKET TRADES, SECURITIES LENDING TRANSACTIONS, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41726:
+      name: SIGNED_QTY
+      description: >-
+        The signed quantity based on the type of a transaction. The value would
+        be positive in case of a receive, and it would be negative in case of a
+        deliver.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-41727:
+      name: PLACE_OF_SETLMT_CD
+      description: >-
+        Place Of Settlement code is the code associated with the Place of
+        Settlement or Depository Centre Code for the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41728:
+      name: VALUE_DT
+      description: >-
+        Value Date is the date on which the cash posting corresponding to this
+        trade will have value.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-41682:
+      name: TRD_STATUS
+      description: Transaction Status
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-41705:
+      name: PARTIAL_SETTLEMENT_FLAG
+      description: >-
+        Partial Settlement Flag indicates if the trades data contains partial
+        settlements details.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-42167:
+      name: TRADE_STATUS_VALUES
+      description: It provides the logical value of the trade status.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-42371:
+      name: LAST_CHANGE_TIMESTAMP
+      description: Last Change Timestamp
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-49542:
+      name: MARKET_REF
+      description: Market Reference
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-49543:
+      name: MITI_REF
+      description: Market Infrastructure Transaction Identification Reference number
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-49544:
+      name: MATCHING_REF
+      description: Matching reference
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-49563:
+      name: CRTD_TMS
+      description: >-
+        Created Timestamp (CR) is the date and time of when an item was loaded
+        to the Reporting database. Applicable to intraday information only.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-49564:
+      name: TRAN_NOTES
+      description: The transaction notes
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-55295:
+      name: DTC_FED_IDENTIFIER
+      description: >-
+        It describes indicator values of trades settled in DTC (Depository Trust
+        Company) or FED (Federal) location from market via SMI (Securities
+        Market Interface).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-55414:
+      name: SETD_CMB_QTY
+      description: Settled Quantity.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-55415:
+      name: CONSID_AMT_P
+      description: >-
+        Settled Amount is the amount that has settled, corresponding to the
+        Settled Quantity. Settled Amount will be less than Instructed Amount in
+        partial settlements.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+  securitySchemes:
+    client-Credential-Oauth-Security-Schema:
+      type: oauth2
+      description: This API uses OAuth 2 with the client credentials flow
+      flows:
+        clientCredentials:
+          tokenUrl: /markets/api/oauth2/token
+          scopes:
+            /dod: Access to Account and Transactions Information
+paths:
+  /api/services/27d18376-6358-40f1-9f63-23a72d40196f/filter:
+    get:
+      summary: EOD Security Transactions Expanded Dataset
+      description: >-
+        Provides Custody Security transactional details and  current status for
+        a particular date and safekeeping account with an extended volume of
+        data.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-41553'
+        - $ref: '#/components/parameters/parameter-41554'
+        - $ref: '#/components/parameters/parameter-41555'
+        - $ref: '#/components/parameters/parameter-41556'
+        - $ref: '#/components/parameters/parameter-41557'
+        - $ref: '#/components/parameters/parameter-41558'
+        - $ref: '#/components/parameters/parameter-41559'
+        - $ref: '#/components/parameters/parameter-41562'
+        - $ref: '#/components/parameters/parameter-41563'
+        - $ref: '#/components/parameters/parameter-41564'
+        - $ref: '#/components/parameters/parameter-41565'
+        - $ref: '#/components/parameters/parameter-41566'
+        - $ref: '#/components/parameters/parameter-41567'
+        - $ref: '#/components/parameters/parameter-41568'
+        - $ref: '#/components/parameters/parameter-41569'
+        - $ref: '#/components/parameters/parameter-41570'
+        - $ref: '#/components/parameters/parameter-41571'
+        - $ref: '#/components/parameters/parameter-41572'
+        - $ref: '#/components/parameters/parameter-41577'
+        - $ref: '#/components/parameters/parameter-41578'
+        - $ref: '#/components/parameters/parameter-41579'
+        - $ref: '#/components/parameters/parameter-41580'
+        - $ref: '#/components/parameters/parameter-41581'
+        - $ref: '#/components/parameters/parameter-41582'
+        - $ref: '#/components/parameters/parameter-41583'
+        - $ref: '#/components/parameters/parameter-41584'
+        - $ref: '#/components/parameters/parameter-41585'
+        - $ref: '#/components/parameters/parameter-41586'
+        - $ref: '#/components/parameters/parameter-41587'
+        - $ref: '#/components/parameters/parameter-41588'
+        - $ref: '#/components/parameters/parameter-41589'
+        - $ref: '#/components/parameters/parameter-41590'
+        - $ref: '#/components/parameters/parameter-41591'
+        - $ref: '#/components/parameters/parameter-41592'
+        - $ref: '#/components/parameters/parameter-41593'
+        - $ref: '#/components/parameters/parameter-41595'
+        - $ref: '#/components/parameters/parameter-41596'
+        - $ref: '#/components/parameters/parameter-41597'
+        - $ref: '#/components/parameters/parameter-41598'
+        - $ref: '#/components/parameters/parameter-41599'
+        - $ref: '#/components/parameters/parameter-41600'
+        - $ref: '#/components/parameters/parameter-41601'
+        - $ref: '#/components/parameters/parameter-41602'
+        - $ref: '#/components/parameters/parameter-41603'
+        - $ref: '#/components/parameters/parameter-41604'
+        - $ref: '#/components/parameters/parameter-41605'
+        - $ref: '#/components/parameters/parameter-41606'
+        - $ref: '#/components/parameters/parameter-41607'
+        - $ref: '#/components/parameters/parameter-41608'
+        - $ref: '#/components/parameters/parameter-41609'
+        - $ref: '#/components/parameters/parameter-41610'
+        - $ref: '#/components/parameters/parameter-41611'
+        - $ref: '#/components/parameters/parameter-41612'
+        - $ref: '#/components/parameters/parameter-41613'
+        - $ref: '#/components/parameters/parameter-41614'
+        - $ref: '#/components/parameters/parameter-41615'
+        - $ref: '#/components/parameters/parameter-41616'
+        - $ref: '#/components/parameters/parameter-41617'
+        - $ref: '#/components/parameters/parameter-41618'
+        - $ref: '#/components/parameters/parameter-41619'
+        - $ref: '#/components/parameters/parameter-41620'
+        - $ref: '#/components/parameters/parameter-41621'
+        - $ref: '#/components/parameters/parameter-41622'
+        - $ref: '#/components/parameters/parameter-41623'
+        - $ref: '#/components/parameters/parameter-41624'
+        - $ref: '#/components/parameters/parameter-41625'
+        - $ref: '#/components/parameters/parameter-41626'
+        - $ref: '#/components/parameters/parameter-41627'
+        - $ref: '#/components/parameters/parameter-41628'
+        - $ref: '#/components/parameters/parameter-41629'
+        - $ref: '#/components/parameters/parameter-41561'
+        - $ref: '#/components/parameters/parameter-41560'
+        - $ref: '#/components/parameters/parameter-41594'
+        - $ref: '#/components/parameters/parameter-42176'
+        - $ref: '#/components/parameters/parameter-42372'
+        - $ref: '#/components/parameters/parameter-49549'
+        - $ref: '#/components/parameters/parameter-49550'
+        - $ref: '#/components/parameters/parameter-49548'
+        - $ref: '#/components/parameters/parameter-49559'
+        - $ref: '#/components/parameters/parameter-49560'
+        - $ref: '#/components/parameters/parameter-55003'
+        - $ref: '#/components/parameters/parameter-55291'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/27d18376-6358-40f1-9f63-23a72d40196f-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/27d18376-6358-40f1-9f63-23a72d40196f-xml-response-schema
+              example: >-
+                <?xml version="1.0" encoding="UTF-8"?> <data> <row>
+                <ACCT_BASE_NBR>8-DEMOCSH53JPY</ACCT_BASE_NBR>
+                <ACCT_ID>DEMOSK02US</ACCT_ID> <ACCT_NME>Demo - SK - US DCC
+                Equity</ACCT_NME> <ACT_SETT_DT>2025-08-26</ACT_SETT_DT>
+                <BR_ID>484</BR_ID> <BR_NME>NEW YORK SECURITIES CB</BR_NME>
+                <RELATED_REF>RELA123456</RELATED_REF>
+                <CLIENT_REF>123456</CLIENT_REF>
+                <BUYR_SELL_CD>0050</BUYR_SELL_CD> <BUYR_SELL>TEST &amp; CO
+                INC</BUYR_SELL>
+                <CONTR_SETT_DT>2025-06-17T00:00:00Z</CONTR_SETT_DT>
+                <CNTRY_CD>US</CNTRY_CD> <COMP_DESC>Microsoft
+                Corporation</COMP_DESC> <CONTR_SETT_FLG>Y</CONTR_SETT_FLG>
+                <CURR_FCTR_RATE>0.975432</CURR_FCTR_RATE>
+                <DEAL_REF_NBR>OTM987654321</DEAL_REF_NBR> <HOLDING_TYPE>Held At
+                Depot</HOLDING_TYPE> <SEC_CCY>USD</SEC_CCY>
+                <UPDATE_TMS>2025-06-15T00:00:00Z</UPDATE_TMS>
+                <FAIL_AGE>5</FAIL_AGE> <FAIL_DESC>Counterparty securities
+                unavailable</FAIL_DESC>
+                <FCTR_DTE>2025-05-01T00:00:00Z</FCTR_DTE>
+                <INST_DT>2025-06-13</INST_DT>
+                <ISS_TMS>2020-01-15T00:00:00Z</ISS_TMS>
+                <ISSR_LOC_CD>US</ISSR_LOC_CD> <ISSR_LOC_NME>United
+                States</ISSR_LOC_NME> <SETT_AMT>1250000.75</SETT_AMT>
+                <SETT_CCY_CD>USD</SETT_CCY_CD> <SETT_CCY>US Dollar</SETT_CCY>
+                <LOAN_DT>2025-04-01</LOAN_DT>
+                <LOAN_PURPOSE_CD>COLL</LOAN_PURPOSE_CD>
+                <LOAN_PURPOSE_DESC>Collateral Management</LOAN_PURPOSE_DESC>
+                <LOAN_REF_ID>100123456</LOAN_REF_ID>
+                <MATY_DT>2030-12-31T00:00:00Z</MATY_DT>
+                <PART_UNSETL_QTY>2500.00</PART_UNSETL_QTY>
+                <PARTICIPANT_NO>0901</PARTICIPANT_NO>
+                <SEC_ID_TYPE>ISIN</SEC_ID_TYPE> <SEC_ID>US5949181045</SEC_ID>
+                <PLACE_OF_SETLMT>TOKYO, JAPAN</PLACE_OF_SETLMT>
+                <PLDG_ABA_NAM>CITI Bank</PLDG_ABA_NAM>
+                <PLDG_ABA_NO>021000021</PLDG_ABA_NO>
+                <PLDG_REF_NBR>PLDG123456</PLDG_REF_NBR>
+                <PREV_FCTR_RATE>0.978910</PREV_FCTR_RATE>
+                <CASH_ACCT_ID>156602418</CASH_ACCT_ID> <SEC_DESC>TEMPORARY
+                SECURITY 003263100</SEC_DESC> <ASSET_TYP>EQTY</ASSET_TYP>
+                <SEC_LEND_FLG>Y</SEC_LEND_FLG> <QUANTITY>10000.00</QUANTITY>
+                <SEC_SHORT_IND>N</SEC_SHORT_IND> <ISSUE_NME>Microsoft
+                Corporation</ISSUE_NME> <ISSUE_TYP_CD>12</ISSUE_TYP_CD>
+                <ISSUE_TYP>Bond</ISSUE_TYP> <SETT_QTY>7500.00</SETT_QTY>
+                <HOLDING_TYPE_CD>HD</HOLDING_TYPE_CD> <CUSIP>594918104</CUSIP>
+                <ISIN>US5949181045</ISIN> <SEDOL>2588173</SEDOL>
+                <TICKER>MSFT</TICKER> <SWIFT_STATUS>PEND-LACK</SWIFT_STATUS>
+                <TRANS_TYP>Receive Versus Payment</TRANS_TYP>
+                <TRANS_REF_NBR>CUST987654321</TRANS_REF_NBR>
+                <REAG_DEAG_CD>CP001</REAG_DEAG_CD> <REAG_DEAG>Goldman
+                Sachs</REAG_DEAG> <TRADE_DT>2025-06-13T10:15:00Z</TRADE_DT>
+                <TRANS_TYP_CD>RVP</TRANS_TYP_CD> <TRN_CL_CD>BUY</TRN_CL_CD>
+                <TRANS_CLASS>MARKET TRADES</TRANS_CLASS>
+                <SIGNED_QTY>10000.00</SIGNED_QTY>
+                <PLACE_OF_SETLMT_CD>DTC</PLACE_OF_SETLMT_CD>
+                <VALUE_DT>2025-06-17</VALUE_DT> <TRD_STATUS>SETTLED</TRD_STATUS>
+                <FAIL_TEXT>Awaiting counterparty confirmation</FAIL_TEXT>
+                <PARTIAL_SETTLEMENT_FLAG>Y</PARTIAL_SETTLEMENT_FLAG>
+                <TRADE_STATUS_VALUES>Matched and Settled</TRADE_STATUS_VALUES>
+                <COB_DATE>2025-06-15</COB_DATE>
+                <MITI_REF>MITI987654321</MITI_REF>
+                <MATCHING_REF>MATCH123456</MATCHING_REF>
+                <MARKET_REF>MKT654321</MARKET_REF>
+                <CRTD_TMS>2025-06-15T14:45:00Z</CRTD_TMS> <TRAN_NOTES>Settlement
+                completed without exception</TRAN_NOTES>
+                <DEPOT_ID>DEP001</DEPOT_ID>
+                <DTC_FED_IDENTIFIER>DTC</DTC_FED_IDENTIFIER> </row> </data>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/c5da44dd-2c3c-42cc-8125-711c2aadbe4f/filter:
+    get:
+      summary: Current Security Transactions Expanded Dataset
+      description: >-
+        Current Securities Transactions provides recent transactional activity
+        for each safekeeping account with an extended volume of data.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-41729'
+        - $ref: '#/components/parameters/parameter-41679'
+        - $ref: '#/components/parameters/parameter-41731'
+        - $ref: '#/components/parameters/parameter-41680'
+        - $ref: '#/components/parameters/parameter-41732'
+        - $ref: '#/components/parameters/parameter-41733'
+        - $ref: '#/components/parameters/parameter-41681'
+        - $ref: '#/components/parameters/parameter-41683'
+        - $ref: '#/components/parameters/parameter-41685'
+        - $ref: '#/components/parameters/parameter-41686'
+        - $ref: '#/components/parameters/parameter-41687'
+        - $ref: '#/components/parameters/parameter-41735'
+        - $ref: '#/components/parameters/parameter-41688'
+        - $ref: '#/components/parameters/parameter-41689'
+        - $ref: '#/components/parameters/parameter-41736'
+        - $ref: '#/components/parameters/parameter-41690'
+        - $ref: '#/components/parameters/parameter-41691'
+        - $ref: '#/components/parameters/parameter-41737'
+        - $ref: '#/components/parameters/parameter-41692'
+        - $ref: '#/components/parameters/parameter-41693'
+        - $ref: '#/components/parameters/parameter-41694'
+        - $ref: '#/components/parameters/parameter-41738'
+        - $ref: '#/components/parameters/parameter-41695'
+        - $ref: '#/components/parameters/parameter-41739'
+        - $ref: '#/components/parameters/parameter-41740'
+        - $ref: '#/components/parameters/parameter-41741'
+        - $ref: '#/components/parameters/parameter-41697'
+        - $ref: '#/components/parameters/parameter-41698'
+        - $ref: '#/components/parameters/parameter-41699'
+        - $ref: '#/components/parameters/parameter-41700'
+        - $ref: '#/components/parameters/parameter-41701'
+        - $ref: '#/components/parameters/parameter-41702'
+        - $ref: '#/components/parameters/parameter-41703'
+        - $ref: '#/components/parameters/parameter-41742'
+        - $ref: '#/components/parameters/parameter-41704'
+        - $ref: '#/components/parameters/parameter-41734'
+        - $ref: '#/components/parameters/parameter-41743'
+        - $ref: '#/components/parameters/parameter-41744'
+        - $ref: '#/components/parameters/parameter-41706'
+        - $ref: '#/components/parameters/parameter-41707'
+        - $ref: '#/components/parameters/parameter-41708'
+        - $ref: '#/components/parameters/parameter-41709'
+        - $ref: '#/components/parameters/parameter-41745'
+        - $ref: '#/components/parameters/parameter-41710'
+        - $ref: '#/components/parameters/parameter-41746'
+        - $ref: '#/components/parameters/parameter-41747'
+        - $ref: '#/components/parameters/parameter-41711'
+        - $ref: '#/components/parameters/parameter-41712'
+        - $ref: '#/components/parameters/parameter-41713'
+        - $ref: '#/components/parameters/parameter-41748'
+        - $ref: '#/components/parameters/parameter-41749'
+        - $ref: '#/components/parameters/parameter-41750'
+        - $ref: '#/components/parameters/parameter-41714'
+        - $ref: '#/components/parameters/parameter-41715'
+        - $ref: '#/components/parameters/parameter-41751'
+        - $ref: '#/components/parameters/parameter-41752'
+        - $ref: '#/components/parameters/parameter-41753'
+        - $ref: '#/components/parameters/parameter-41754'
+        - $ref: '#/components/parameters/parameter-41716'
+        - $ref: '#/components/parameters/parameter-41717'
+        - $ref: '#/components/parameters/parameter-41718'
+        - $ref: '#/components/parameters/parameter-41719'
+        - $ref: '#/components/parameters/parameter-41720'
+        - $ref: '#/components/parameters/parameter-41721'
+        - $ref: '#/components/parameters/parameter-41722'
+        - $ref: '#/components/parameters/parameter-41723'
+        - $ref: '#/components/parameters/parameter-41724'
+        - $ref: '#/components/parameters/parameter-41725'
+        - $ref: '#/components/parameters/parameter-41726'
+        - $ref: '#/components/parameters/parameter-41727'
+        - $ref: '#/components/parameters/parameter-41728'
+        - $ref: '#/components/parameters/parameter-41682'
+        - $ref: '#/components/parameters/parameter-41705'
+        - $ref: '#/components/parameters/parameter-42167'
+        - $ref: '#/components/parameters/parameter-42371'
+        - $ref: '#/components/parameters/parameter-49542'
+        - $ref: '#/components/parameters/parameter-49543'
+        - $ref: '#/components/parameters/parameter-49544'
+        - $ref: '#/components/parameters/parameter-49563'
+        - $ref: '#/components/parameters/parameter-49564'
+        - $ref: '#/components/parameters/parameter-55295'
+        - $ref: '#/components/parameters/parameter-55414'
+        - $ref: '#/components/parameters/parameter-55415'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/c5da44dd-2c3c-42cc-8125-711c2aadbe4f-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/c5da44dd-2c3c-42cc-8125-711c2aadbe4f-xml-response-schema
+              example: >-
+                <?xml version="1.0" encoding="UTF-8"?> <data> <row>
+                <ACCT_BASE_NBR>8-DEMOCSH53JPY</ACCT_BASE_NBR>
+                <ACCT_ID>DEMOSK02US</ACCT_ID> <ACCT_NME>Demo - SK - US DCC
+                Equity</ACCT_NME> <ACT_SETT_DT>2024-06-15</ACT_SETT_DT>
+                <BR_ID>484</BR_ID> <BR_NME>NEW YORK SECURITIES CB</BR_NME>
+                <RELATED_REF>RELA123456</RELATED_REF>
+                <CLIENT_REF>12345678</CLIENT_REF> <BUYR_SELL_CD>B</BUYR_SELL_CD>
+                <CLR_BRKR_NME>Goldman Sachs</CLR_BRKR_NME>
+                <CONTR_SETT_DT>2024-06-15T10:30:00Z</CONTR_SETT_DT>
+                <CNTRY_CD>US</CNTRY_CD> <COMP_DESC>Microsoft
+                Corporation</COMP_DESC> <CONTR_SETT_FLG>Y</CONTR_SETT_FLG>
+                <CURR_FCTR_RATE>0.9875</CURR_FCTR_RATE>
+                <DEAL_REF_NBR>OTM123456789</DEAL_REF_NBR> <HOLDING_TYPE>Held At
+                Depot</HOLDING_TYPE> <SEC_CCY>USD</SEC_CCY>
+                <FAIL_AGE>5</FAIL_AGE> <FAIL_DESC>Insufficient
+                Securities</FAIL_DESC> <FAIL_TXT>Counterparty has not delivered
+                securities.</FAIL_TXT> <FCTR_DTE>2024-06-01T00:00:00Z</FCTR_DTE>
+                <INST_DT>2024-06-10</INST_DT>
+                <ISS_TMS>2020-01-01T00:00:00Z</ISS_TMS>
+                <ISSR_LOC_CD>US</ISSR_LOC_CD> <ISSR_LOC_NME>United
+                States</ISSR_LOC_NME> <SETT_AMT>150000.25</SETT_AMT>
+                <LCL_CUR_CD>USD</LCL_CUR_CD> <SETT_CCY>US Dollar</SETT_CCY>
+                <LOAN_DT>2024-01-15</LOAN_DT>
+                <LOAN_PURPOSE_CD>COLL</LOAN_PURPOSE_CD>
+                <LOAN_PURPOSE_DESC>Collateral Management</LOAN_PURPOSE_DESC>
+                <LOAN_REF_ID>LN123456789</LOAN_REF_ID>
+                <MATY_DT>2030-12-31T00:00:00Z</MATY_DT>
+                <PART_UNSETL_QTY>2500</PART_UNSETL_QTY>
+                <PARTICIPANT_NO>0901</PARTICIPANT_NO>
+                <SEC_ID_TYPE>ISIN</SEC_ID_TYPE> <SEC_ID>US0378331005</SEC_ID>
+                <PLACE_OF_SETLMT>TOKYO, JAPAN</PLACE_OF_SETLMT>
+                <PLDG_ABA_NAM>Citibank N.A.</PLDG_ABA_NAM>
+                <PLDG_ABA_NO>021000089</PLDG_ABA_NO>
+                <PLDG_REF_NBR>PLG987654321</PLDG_REF_NBR>
+                <PREV_FCTR_RATE>0.9850</PREV_FCTR_RATE>
+                <CASH_ACCT_ID>156602418</CASH_ACCT_ID> <SEC_DESC>Apple Inc.
+                Common Stock</SEC_DESC> <ASSET_TYP>EQTY</ASSET_TYP>
+                <SEC_LEND_FLG>Y</SEC_LEND_FLG> <QUANTITY>10000</QUANTITY>
+                <SEC_SHORT_IND>N</SEC_SHORT_IND> <ISSUE_NME>Apple
+                Inc.</ISSUE_NME> <ISSUE_TYP_CD>12</ISSUE_TYP_CD>
+                <ISSUE_TYP>Bond</ISSUE_TYP> <SETT_QTY>7500</SETT_QTY>
+                <HOLDING_TYPE_CD>HD</HOLDING_TYPE_CD> <CUSIP>037833100</CUSIP>
+                <ISIN>US0378331005</ISIN> <SEDOL>2046251</SEDOL>
+                <TICKER>AAPL</TICKER>
+                <UPDATE_TMS>2024-06-15T12:30:45Z</UPDATE_TMS>
+                <SWIFT_STATUS>MATCH</SWIFT_STATUS> <TRANS_TYP>Receive Versus
+                Payment</TRANS_TYP>
+                <TRANS_REF_NBR>TRX20240615001</TRANS_REF_NBR>
+                <REAG_DEAG_CD>CP001</REAG_DEAG_CD> <REAG_DEAG>JP Morgan
+                Chase</REAG_DEAG> <TRADE_DT>2024-06-12T14:30:00Z</TRADE_DT>
+                <TRN_CD>SLS</TRN_CD> <TRANS_CLASS_CD>BUY</TRANS_CLASS_CD>
+                <TRANS_CLASS>MARKET TRADES</TRANS_CLASS>
+                <SIGNED_QTY>10000</SIGNED_QTY>
+                <PLACE_OF_SETLMT_CD>DTC</PLACE_OF_SETLMT_CD>
+                <VALUE_DT>2024-06-17</VALUE_DT> <TRD_STATUS>SETTLED</TRD_STATUS>
+                <PARTIAL_SETTLEMENT_FLAG>Y</PARTIAL_SETTLEMENT_FLAG>
+                <TRADE_STATUS_VALUES>Settled</TRADE_STATUS_VALUES>
+                <LAST_CHANGE_TIMESTAMP>2024-06-15T15:20:10Z</LAST_CHANGE_TIMESTAMP>
+                <MARKET_REF>MKT123456789</MARKET_REF>
+                <MITI_REF>MITI987654321</MITI_REF>
+                <MATCHING_REF>MATCH123456</MATCHING_REF>
+                <CRTD_TMS>2024-06-15T09:00:00Z</CRTD_TMS> <TRAN_NOTES>Partial
+                settlement due to insufficient position.</TRAN_NOTES>
+                <DTC_FED_IDENTIFIER>DTC</DTC_FED_IDENTIFIER>
+                <SETD_CMB_QTY>7500</SETD_CMB_QTY>
+                <CONSID_AMT_P>250000.75</CONSID_AMT_P> </row> </data>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'

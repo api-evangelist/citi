@@ -1,0 +1,604 @@
+openapi: 3.1.0
+info:
+  title: FX Rate
+  description: >-
+    The FX Rate API is designed to provide foreign exchange rates for frequent
+    client inquiries. The API supports retrieving unit rates for a specified
+    source currency and an optional target currency via a GET request.
+    Content-Type supports both 'application/XML' and 'application/JSON' with
+    OAuth Bearer token prefixed in the Authorization header. This API returns
+    comprehensive FX rate information including deal details, funding limits,
+    payment limits, and booking information.
+  version: 1.0.0
+servers:
+  - url: https://tts.apib2b.citi.com/citiconnect/prod
+    description: Production Gateway URL
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+    description: Sandbox URL
+tags:
+  - name: FxRateInquiry
+    description: API services to support FX Rate Inquiry
+security:
+  - oAuth2:
+      - authenticationservices/v1
+paths:
+  /payout/v1/fxrates:
+    get:
+      tags:
+        - FxRateInquiry
+      summary: Get FX Rates
+      description: >-
+        The FX Rates API is designed to provide foreign exchange rates for
+        frequent client inquiries. Retrieving unit rates for a specified source
+        currency and an optional target currency via a GET request. Supports
+        'application/XML' and 'application/JSON'. <br> The OAuth Token prefixed
+        with 'Bearer' and space in between.
+      operationId: getFxRates
+      servers:
+        - url: https://tts.apib2b.citi.com/citiconnect/prod
+      parameters:
+        - name: wl_client_id
+          in: header
+          description: >-
+            Your unique identification created for WorldLink as a combination of
+            WorldLink Client Number and Branch Number.
+          required: false
+          schema:
+            type: string
+            maxLength: 9
+            example: '123451234'
+        - name: type
+          in: query
+          description: >-
+            Type of FX Inquiry. For Indicative rates, provide value as
+            'indicative'.
+          required: true
+          schema:
+            type: string
+            maxLength: 10
+            example: indicative
+        - name: source_currency
+          in: query
+          description: Source Currency SWIFT code.
+          required: true
+          schema:
+            type: string
+            maxLength: 3
+            pattern: ^[A-Z]{3}$
+            example: EUR
+        - name: target_currency
+          in: query
+          description: >-
+            Target Currency SWIFT code. If not provided, the API returns rates
+            for all target currencies configured for the client.
+          required: false
+          schema:
+            type: string
+            maxLength: 3
+            pattern: ^[A-Z]{3}$
+            example: USD
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fx-Rate-Response'
+              examples:
+                Fx-Rate-Success-Response-Source-Currency:
+                  $ref: >-
+                    #/components/examples/Fx-Rate-Response-Source-Currency-Example
+                Fx-Rate-Success-Response-Source-Target-Currency:
+                  $ref: >-
+                    #/components/examples/Fx-Rate-Response-Source-Target-Currency-Example
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Fx-Rate-Response'
+              examples:
+                Fx-Rate-Success-Response-Source-Currency:
+                  $ref: >-
+                    #/components/examples/Fx-Rate-Response-Source-Currency-Example
+                Fx-Rate-Success-Response-Source-Target-Currency:
+                  $ref: >-
+                    #/components/examples/Fx-Rate-Response-Source-Target-Currency-Example
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '429':
+          $ref: '#/components/responses/Exceeding-Rate-Limit'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+components:
+  schemas:
+    Fx-Rate-Response:
+      type: object
+      title: Fx-Rate-Response
+      xml:
+        name: FxRateResponse
+      properties:
+        wl_client_id:
+          type: string
+          title: wl_client_id
+          description: >-
+            Your unique identification created for WorldLink as a combination of
+            WorldLink Client Number and Branch Number.
+          maxLength: 9
+          example: '123451234'
+          xml:
+            name: WlClientId
+        rate_term:
+          type: string
+          description: Client Rate term maintained in Client profile
+          maxLength: 8
+          example: Multiply
+          title: rate_term
+          xml:
+            name: RateTerm
+        source_currency:
+          type: string
+          description: >-
+            Client Source currency must be populated. This will be populated as
+            received in the Request.
+          maxLength: 3
+          example: GBP
+          title: source_currency
+          xml:
+            name: SourceCurrency
+        disclaimer:
+          type: string
+          description: This is a disclaimer for the rate returned.
+          maxLength: 716
+          example: >-
+            FX Rates are indicative only and do not represent firm quotes as to
+            either price or size. Indicative FX Rates are subject to change
+            without prior notice. No liability is accepted by Citi for any loss
+            (whether direct, indirect, or consequential) that may arise from any
+            reliance or use of these FX Rates contained in or derived from this
+            communication. Please refer to the WorldLink Management Guide or
+            (subject to its applicability to you) the WorldLink User Guide,
+            available through CitiDirect, for additional currency disclosures.
+            These FX Rates (or excerpts thereof) are Citi's Confidential
+            Information and may not be transmitted or otherwise redistributed to
+            any third party, unless explicitly permitted by Citi.
+          title: disclaimer
+          xml:
+            name: Disclaimer
+        rates:
+          items:
+            $ref: '#/components/schemas/Fx-Rate'
+          type: array
+          title: rates
+          xml:
+            name: Rates
+            wrapped: true
+    Fx-Rate:
+      type: object
+      title: Fx-Rate
+      xml:
+        name: FxRate
+      properties:
+        target_currency:
+          type: string
+          description: >-
+            Client target currency (Optional). This will be populated as
+            received in the Request. If not provided, list all the
+            target_currency as per Client subscription. To be populated for
+            successful scenarios. To be populated for failure scenario only if
+            target_currency received in the request.
+          maxLength: 3
+          example: GBP
+          title: target_currency
+          xml:
+            name: TargetCurrency
+        rate:
+          type: number
+          description: >-
+            This will be populated as (Multiply/Divide). To be populated for
+            successful scenarios.
+          maxLength: 17
+          example: 100.1010101
+          title: rate
+          xml:
+            name: Rate
+        value_date:
+          type: string
+          description: >-
+            FX Contract Value Date. To be populated for successful scenarios.
+            Format: YYYY-MM-DD
+          maxLength: 10
+          example: '2020-04-26'
+          title: value_date
+          xml:
+            name: ValueDate
+    Gateway-Error-Response:
+      type: object
+      required:
+        - httpCode
+        - httpMessage
+        - moreInformation
+      title: Gateway-Error-Response
+      description: >-
+        This refers to an issue encountered by an API Gateway handling the
+        request.
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: httpCode
+          xml:
+            name: httpCode
+          examples:
+            - '400'
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+          xml:
+            name: httpMessage
+          examples:
+            - Bad Request
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: Additional information with HTTP error message
+          title: moreInformation
+          xml:
+            name: moreInformation
+          examples:
+            - please provide valid value for request
+    Service-Error-Response:
+      title: Service-Error-Response
+      description: >-
+        This refers to an issue encountered within the backend application
+        service handling the request.
+      xml:
+        name: ErrorMessage
+      type: object
+      required:
+        - ref_id
+        - error_details
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          xml:
+            name: RefId
+          title: ref_id
+          examples:
+            - 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+          xml:
+            name: ErrorDetails
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+          title: error_details
+    Error-Detail:
+      type: object
+      title: ErrorDetail
+      properties:
+        code:
+          type: string
+          maxLength: 8
+          description: unique code representing the issue
+          xml:
+            name: Code
+          title: code
+          examples:
+            - VC00010
+        issue:
+          type: string
+          maxLength: 200
+          description: more details about the issue
+          xml:
+            name: Issue
+          title: issue
+          examples:
+            - wl_client_id is mandatory and it cannot be empty
+        action:
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          xml:
+            name: Action
+          title: action
+          examples:
+            - please provide valid value for wl_client_id
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+              - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+            Bad-Request-Service-Error-Example-ClientId-Missing:
+              $ref: '#/components/examples/Bad-Request-Example-ClientId-Missing-JSON'
+            Bad-Request-Service-Error-Example-Source-Currency-Missing:
+              $ref: >-
+                #/components/examples/Bad-Request-Example-Source-Currency-Missing-JSON
+        application/xml:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+              - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+            Bad-Request-Service-Error-Example-ClientId-Missing:
+              $ref: '#/components/examples/Bad-Request-Example-ClientId-Missing-XML'
+            Bad-Request-Service-Error-Example-Source-Currency-Missing:
+              $ref: >-
+                #/components/examples/Bad-Request-Example-Source-Currency-Missing-XML
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Service-Error-Response'
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Service-Error-Example-JSON'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+        application/xml:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Service-Error-Response'
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Service-Error-Example-XML'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example-JSON'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example-XML'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: >-
+                #/components/examples/Method-Not-Allowed-Gateway-Error-Example-JSON
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: >-
+                #/components/examples/Method-Not-Allowed-Gateway-Error-Example-XML
+    Exceeding-Rate-Limit:
+      description: Exceeding-Rate-Limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Rate-Limit-Gateway-Error-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+              - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Internal-Server-Service-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Service-Error-Example-JSON'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+        application/xml:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Gateway-Error-Response'
+              - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Internal-Server-Service-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Service-Error-Example-XML'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+    Gateway-Timeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Gateway-Timeout-Error-Example'
+  examples:
+    Fx-Rate-Response-Source-Currency-Example:
+      value:
+        wl_client_id: '123451234'
+        rate_term: Multiply
+        source_currency: GBP
+        disclaimer: >-
+          FX Rates are indicative only and do not represent firm quotes as to
+          either price or size. Indicative FX Rates are subject to change
+          without prior notice. No liability is accepted by Citi for any loss
+          (whether direct, indirect, or consequential) that may arise from any
+          reliance or use of these FX Rates contained in or derived from this
+          communication. Please refer to the WorldLink Management Guide or
+          (subject to its applicability to you) the WorldLink User Guide,
+          available through CitiDirect, for additional currency disclosures.
+          These FX Rates (or excerpts thereof) are Citi's Confidential
+          Information and may not be transmitted or otherwise redistributed to
+          any third party, unless explicitly permitted by Citi.
+        rates:
+          - target_currency: USD
+            rate: 0.711134
+            value_date: '2025-04-26'
+          - target_currency: INR
+            rate: 0.12735342
+            value_date: '2025-05-26'
+          - target_currency: PKR
+            rate: 0.8421322
+            value_date: '2025-04-28'
+          - target_currency: EUR
+            rate: 0.52453245
+            value_date: '2025-04-20'
+    Fx-Rate-Response-Source-Target-Currency-Example:
+      value:
+        wl_client_id: '123451234'
+        rate_term: Multiply
+        source_currency: GBP
+        disclaimer: >-
+          FX Rates are indicative only and do not represent firm quotes as to
+          either price or size. Indicative FX Rates are subject to change
+          without prior notice. No liability is accepted by Citi for any loss
+          (whether direct, indirect, or consequential) that may arise from any
+          reliance or use of these FX Rates contained in or derived from this
+          communication. Please refer to the WorldLink Management Guide or
+          (subject to its applicability to you) the WorldLink User Guide,
+          available through CitiDirect, for additional currency disclosures.
+          These FX Rates (or excerpts thereof) are Citi's Confidential
+          Information and may not be transmitted or otherwise redistributed to
+          any third party, unless explicitly permitted by Citi.
+        rates:
+          - target_currency: USD
+            rate: 0.711134
+            value_date: '2025-04-26'
+    Bad-Request-Gateway-Error-Example:
+      value:
+        httpCode: '400'
+        httpMessage: Bad Request
+        moreInformation: please provide valid value for request
+    Bad-Request-Example-ClientId-Missing-JSON:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+          - issue: wl_client_id is mandatory and it cannot be empty
+            action: please provide valid value for wl_client_id
+            code: VC00010
+    Bad-Request-Example-Source-Currency-Missing-JSON:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+          - issue: source_currency is mandatory and it cannot be empty
+            action: please provide valid value for source_currency
+            code: VC00010
+    Bad-Request-Example-ClientId-Missing-XML:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+          - issue: wl_client_id is mandatory and it cannot be empty
+            action: please provide valid value for wl_client_id
+            code: VC00010
+    Bad-Request-Example-Source-Currency-Missing-XML:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+          - issue: source_currency is mandatory and it cannot be empty
+            action: please provide valid value for source_currency
+            code: VC00010
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: The server could not verify that you are authorized to access the URL
+    Unauthorized-Service-Error-Example-JSON:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Unauthorized-Service-Error-Example-XML:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Gateway-Error-Example-JSON:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: Resource that you are searching is not found
+    Not-Found-Gateway-Error-Example-XML:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: Resource that you are searching is not found
+    Method-Not-Allowed-Gateway-Error-Example-JSON:
+      value:
+        httpCode: '405'
+        httpMessage: Method not supported
+        moreInformation: please use valid http verb
+    Method-Not-Allowed-Gateway-Error-Example-XML:
+      value:
+        httpCode: '405'
+        httpMessage: Method not supported
+        moreInformation: please use valid http verb
+    Rate-Limit-Gateway-Error-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: please wait before trying again.
+    Gateway-Timeout-Error-Example:
+      value:
+        httpCode: '504'
+        httpMessage: Gateway Timeout
+        moreInformation: The server did not respond in time. Please try again later.
+    Internal-Server-Service-Error-Example-JSON:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+    Internal-Server-Service-Error-Example-XML:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: unable to serve your request at this moment
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            authenticationservices/v1: Grant read-only access to FX service

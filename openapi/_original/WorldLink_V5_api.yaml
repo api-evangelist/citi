@@ -1,0 +1,1362 @@
+openapi: 3.0.2
+info:
+  description: >-
+    WorldLink is a complete cross-border payment and Foreign-Exchange (FX)
+    service that allows you to perform payments in 135 currencies without having
+    the need to maintain local currency accounts for each of them. CitiConnect
+    API now offers you WorldLink services of FX rate enquiry, FX deal booking,
+    cross-border payment initiation with 24X7 availability.
+  version: 5.0.0
+  title: WorldLink Payment
+servers:
+  - url: https:/tts.apib2b.citi.com/citiconnect/prod
+    description: production gateway url
+  - url: https:/tts.sandbox.apib2b.citi.com/citiconnect/sb
+    description: 'sandbox url '
+security:
+  - clientCredentials: []
+paths:
+  /worldlinkservices/v5/fx/bookfx:
+    post:
+      summary: WorldLink FX Booking
+      description: >-
+        WorldLink Book FX allows you to book the FX deal as per the rate quote
+        received through FX Rate Inquiry end-point for a given currency pair.
+        You can book the FX deal by referring the Rate Quote ID before the rate
+        auto expires. Upon successful booking of the FX contract, you will be
+        notified with the Deal ID and Exchange Rate which you may then use in
+        the Payment initiation request. <br><br><b>Content-Type</b>: Supports
+        “application/XML” and “application/JSON”. <br><b>Authorization</b>: The
+        OAuth Token prefixed with “Bearer“ and space in between.
+      operationId: bookFx
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Currently supports “application/xml” and “application/json”
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: the OAuth Token prefixed with “Bearer” and space in between
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Fx-Request-API-BookFX'
+            examples:
+              BookFX_request:
+                $ref: '#/components/examples/Fx-Request-API-BookFX-Example'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Fx-Request-API-BookFX'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fx-Request-API-BookFX-Response'
+              examples:
+                BookFX_response:
+                  $ref: '#/components/examples/Fx-Request-API-BookFX-Response-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Fx-Request-API-BookFX-Response'
+              examples:
+                BookFX_response:
+                  $ref: '#/components/examples/Fx-Request-API-BookFX-Response-Example'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Bad-Request:
+                  $ref: '#/components/examples/Bad-Request-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Bad-Request:
+                  $ref: '#/components/examples/Bad-Request-Example'
+        '401':
+          description: >-
+            The request is Unauthorized. Please try again with valid
+            credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Unauthorized-Example:
+                  $ref: '#/components/examples/Unauthorized-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Unauthorized-Example:
+                  $ref: '#/components/examples/Unauthorized-Example'
+        '403':
+          description: The request is Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Request-Forbidden-Example:
+                  $ref: '#/components/examples/Request-Forbidden-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Request-Forbidden-Example:
+                  $ref: '#/components/examples/Request-Forbidden-Example'
+        '404':
+          description: Not Found. Please check your URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Not-Found-Example:
+                  $ref: '#/components/examples/Not-Found-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Not-Found-Example:
+                  $ref: '#/components/examples/Not-Found-Example'
+        '500':
+          description: Unable to serve your request at this moment. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Internal-Server-Example:
+                  $ref: '#/components/examples/Internal-Server-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Internal-Server-Example:
+                  $ref: '#/components/examples/Internal-Server-Example'
+  /worldlinkservices/v5/fx/raterequest:
+    post:
+      summary: WorldLink FX Rate Inquiry
+      description: >-
+        Initiate the payment using the FX rate received from a preceding FX Rate
+        Inquiry call. After obtaining the convenient FX Rate and Rate Quote Id
+        through WorldLink FX Rate Inquiry endpoint, you can initiate a new
+        payment through WorldLink Payment Initiation endpoint. This API takes
+        the necessary data required to initiate a payment along with the Rate
+        Quote Id. Data required for the payment initiation is dependent on the
+        type of payment method invoked. If the rate has not expired and if the
+        payment passes all validations, WorldLink would process both the booking
+        of the FX and the processing of the payment.<br><br><font
+        size='2'><b>Content-Type</b> : Supports “application/xml” and
+        “application/json”. <br><b>Authorization</b> : The OAuth Token prefixed
+        with “Bearer“ and space in between.
+      operationId: processRateRequest
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports "application/xml" and "application/json"
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Fx-Request-API-Inquiry'
+            examples:
+              RateInq_request:
+                $ref: '#/components/examples/Fx-Request-API-Inquiry-Example'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Fx-Request-API-Inquiry'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fx-Request-API-Inquiry-Response'
+              examples:
+                RateInq_response:
+                  $ref: null
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Fx-Request-API-Inquiry-Response'
+              examples:
+                RateInq_response:
+                  $ref: null
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Bad-Request:
+                  $ref: '#/components/examples/Bad-Request-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Bad-Request:
+                  $ref: '#/components/examples/Bad-Request-Example'
+        '401':
+          description: >-
+            The request is Unauthorized. Please try again with valid
+            credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Unauthorized-Example:
+                  $ref: '#/components/examples/Unauthorized-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Unauthorized-Example:
+                  $ref: '#/components/examples/Unauthorized-Example'
+        '403':
+          description: The request is Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Request-Forbidden-Example:
+                  $ref: '#/components/examples/Request-Forbidden-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Request-Forbidden-Example:
+                  $ref: '#/components/examples/Request-Forbidden-Example'
+        '404':
+          description: Not Found. Please check your URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Not-Found-Example:
+                  $ref: '#/components/examples/Not-Found-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Not-Found-Example:
+                  $ref: '#/components/examples/Not-Found-Example'
+        '500':
+          description: Unable to serve your request at this moment. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Internal-Server-Example:
+                  $ref: '#/components/examples/Internal-Server-Example'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Detail'
+              examples:
+                Internal-Server-Example:
+                  $ref: '#/components/examples/Internal-Server-Example'
+components:
+  schemas:
+    Fx-Request-API-BookFX:
+      title: Fx-Request-API-BookFX
+      properties:
+        FxRequestAPIOperation:
+          $ref: '#/components/schemas/Fx-Request-API-Operation-BookFX'
+    Fx-Request-API-Operation-BookFX:
+      type: object
+      title: Fx-Request-API-Operation-BookFX
+      properties:
+        FXP588Operation:
+          $ref: '#/components/schemas/FXP588-Operation-BookFX'
+    FXP588-Operation-BookFX:
+      type: object
+      title: FXP588-Operation-BookFX
+      required:
+        - FxRequest
+      properties:
+        FxRequest:
+          $ref: '#/components/schemas/Fx-Request-BookFX'
+    Fx-Request-BookFX:
+      type: object
+      title: Fx-Request-BookFX
+      properties:
+        Source:
+          type: string
+          description: >-
+            Requesting Channel short name Constant value -  "APIM" - for the
+            external clients. "GPSP" - for GPPSP application "GPP"  - For GPP
+            application
+          maxLength: 4
+          example: APIM
+          title: Source
+        ReqType:
+          type: string
+          description: >-
+            Type of FX Request: Constant value: "FXBOOKREQ"   - Used for the
+            interactive deal booking requests. i.e., Rate Inquiry request
+            followed by corresponding Deal booking request. "FXAUTOBKREQ" - Used
+            for Committed deal booking requests. No Rate inquiry involved.
+          maxLength: 11
+          example: FXAUTOBKREQ
+          title: ReqType
+        ClntNo:
+          type: string
+          description: Client Number.
+          maxLength: 5
+          example: '01010'
+          title: ClntNo
+        BrNo:
+          type: string
+          description: Branch Number.
+          maxLength: 4
+          example: '0101'
+          title: BrNo
+        PrefRateType:
+          type: string
+          description: >-
+            Preferred rate indicator: Used for pricing. Pricing sub-division
+            within Client and Branch.  Allowed values: A-Z, 0-9 Typically,
+            default to N unless specifically agreed with the FX trading. Value
+            must be ‘W’ for Alipay Wallet payments and ‘E’ for UPI Cards
+            payment.
+          maxLength: 1
+          example: 'N'
+          title: PrefRateType
+        TrnRefNo:
+          type: string
+          description: >-
+            Customer Generated transaction reference number. The corresponding
+            response message will contain the same TRN for source matching. **
+            Note: Below mentioned special characters should not be used. &
+            (ampersand), < (less than) , > (greater than) and (single or double
+            quote)
+          pattern: ^[^&<>,"]*$
+          maxLength: 16
+          example: 1234567890ABCDEF
+          title: TrnRefNo
+        UserId:
+          type: string
+          description: >-
+            This parameter needs to be provided only for the Interactive deal
+            booking request type - "FXBOOKREQ". i.e., Rate Inquiry request
+            followed by its corresponding Deal booking request. This is a unique
+            User ID created by WorldLink and returned in its successful FX
+            Inquiry response. The same User ID needs to be used in the
+            corresponding deal booking request since it will be used as a key to
+            correlate the FX inquiry requests and the corresponding FX Deal
+            booking requests (accepts). For Committed deal book request type -
+            "FXAUTOBKREQ", ignore this parameter. 
+          maxLength: 8
+          example: ABCD1234
+          title: UserId
+        CcyPairCnt:
+          type: string
+          description: >-
+            Number of Currency pair requests.  Constant value: "01". Only one
+            Currency pair FX request should be made per API call.
+          maxLength: 2
+          example: '01'
+          title: CcyPairCnt
+        ReqTime:
+          type: string
+          description: >-
+            Date and Time when the FX Request is placed. Format:
+            "YYYY-MM-DD-HH:MM:SS EST Hours."
+          pattern: >-
+            ^(?:19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])-(0\d|1\d|2[0-3]):([0-5]\d):([0-5]\d)$
+          example: 2024-07-07-07:07:07
+          title: ReqTime
+        RequestDetails:
+          items:
+            $ref: '#/components/schemas/Request-Details-BookFX'
+          type: array
+          title: RequestDetails
+          maxItems: 1
+      required:
+        - Source
+        - ReqType
+        - ClntNo
+        - TrnRefNo
+        - CcyPairCnt
+        - ReqTime
+        - RequestDetails
+    Fx-Request-API-BookFX-Response:
+      type: object
+      title: Fx-Request-API-BookFX-Response
+      properties:
+        FxRequestAPIOperationResponse:
+          $ref: '#/components/schemas/Fx-Request-API-Operation-BookFX-Response'
+    Fx-Request-API-Operation-BookFX-Response:
+      type: object
+      title: Fx-Request-API-Operation-BookFX-Response
+      properties:
+        FXP588Operation:
+          $ref: '#/components/schemas/FXP588-Operation-BookFX-Response'
+    FXP588-Operation-BookFX-Response:
+      type: object
+      title: FXP588-Operation-BookFX-Response
+      required:
+        - FxResponse
+      properties:
+        FxResponse:
+          $ref: '#/components/schemas/Fx-Request-BookFX-Response'
+    Fx-Request-BookFX-Response:
+      type: object
+      title: Fx-Request-BookFX-Response
+      properties:
+        Source:
+          type: string
+          description: >-
+            Requesting Channel short name. Same source name will be populated as
+            received in the request. Constant value -  "APIM" - for the external
+            clients. "GPSP" - for GPPSP application "GPP"  - For GPP application
+          maxLength: 4
+          example: APIM
+          title: Source
+        ResType:
+          type: string
+          description:
+            Type of FX Request: >-
+              Transaction Type defined by WorldLink Constant Value: 
+              "FXBOOKRSP"   - When request type  FXBOOKREQ is used in the deal
+              book request. Interactive deal booking case. "FXAUTOBKRSP" - When
+              request type  FXAUTOBKREQ is used in the deal book request.
+              Committed deal booking case.
+          maxLength: 11
+          example: FXAUTOBKRSP
+          title: ResType
+        ClntNo:
+          type: string
+          description: Client Number. This will be populated as received in the Request.
+          maxLength: 5
+          example: '01010'
+          title: ClntNo
+        BrNo:
+          type: string
+          description: Branch Number. This will be populated as received in the Request.
+          maxLength: 4
+          example: '0101'
+          title: BrNo
+        TrnRefNo:
+          type: string
+          description: >-
+            Customer Generated transaction reference number. The response will
+            contain the same TRN for source matching
+          maxLength: 16
+          example: 1234567890ABCDEF
+          title: TrnRefNo
+        ResTime:
+          type: string
+          description: >-
+            Date and Time when the FX Request is placed. Format:
+            "YYYY-MM-DD-HH:MM:SS"
+          maxLength: 19
+          example: 2024-07-07-07:07:07
+          title: ResTime
+        UserId:
+          type: string
+          description: >-
+            Unique User ID created by WorldLink and returned in response only
+            when the request is processed successfully. For Interactive Deal
+            request - Request type "FXBOOKREQ" : Same UserID will be populated
+            which was received in the Deal request. For Committed Deal request -
+            Request type "FXAUTOBKREQ": A unique User ID will be created 
+          maxLength: 8
+          example: ABCD1234
+          title: UserId
+        CcyPairCnt:
+          type: string
+          description: >-
+            Number of Currency pair requests.  Constant value: "01". Only one
+            Currency pair FX request should be made per API call.
+          maxLength: 2
+          example: '01'
+          title: CcyPairCnt
+        CtrlErrCode:
+          type: string
+          description: >-
+            This parameter will be mandatorily given in WorldLink response as
+            per the below scenarios -  1. Successful execution of all CCY pairs
+            (Happy path) - "000" 2. Any Control/Message header level error - xxx
+            (applicable WorldLink error code)  3. Any repeating level error -
+            "000" ** Note: Source system should not hard code the error codes
+            while handling the error codes. Other than the code "000" for
+            "CtrlErrCode" (OR) "StatusCode" should be treated as a "failed"
+            response. <additional data>
+          maxLength: 3
+          example: '000'
+          title: CtrlErrCode
+        CtrlErrMsg:
+          type: string
+          description: >-
+            This parameter will be mandatorily given in WorldLink response along
+            with ErrCode.
+          maxLength: 255
+          example: Request Successful
+          title: CtrlErrMsg
+        ResponseDetails:
+          items:
+            $ref: '#/components/schemas/Response-Details-BookFX'
+          type: array
+          title: ResponseDetails_BookFX
+          maxItems: 1
+      required:
+        - Source
+        - ResType
+        - ClntNo
+        - TrnRefNo
+        - ResTime
+        - CcyPairCnt
+        - CtrlErrCode
+        - CtrlErrMsg
+        - ResponseDetails
+    Request-Details-BookFX:
+      type: object
+      properties:
+        PymtCcy:
+          type: string
+          description: Payment Currency.
+          maxLength: 3
+          example: GBP
+          title: PymtCcy
+        PymtCcyAmt:
+          type: string
+          description: >-
+            Payment Currency amount with no leading zeros Conditional: Payment
+            Amount required if no funding currency amount is given in the
+            request.
+          pattern: ^\d{1,13}(\.\d{1,3})?$
+          maxLength: 17
+          example: '1234567891234.000'
+          title: PymtCcyAmt
+        FundCcy:
+          type: string
+          description: Funding Currency.
+          maxLength: 3
+          example: USD
+          title: FundCcy
+        FundCcyAmt:
+          type: string
+          description: >-
+            Funding Currency amount with no leading zeros Conditional: Funding
+            Amount, required if no payment currency amount is given 
+          pattern: ^\d{1,13}(\.\d{1,3})?$
+          maxLength: 17
+          example: '1234567891234.000'
+          title: FundCcyAmt
+        QuoteType:
+          type: string
+          description: >-
+            Quote Type: Confirms if a client is a Daily Guaranteed Rate (GR) or
+            Sport rate customer. If a client is not configured for Daily GR,
+            then WorldLink will check for the Spot configuration & provide the
+            rates accordingly. It is Mandatory for Committed deal book request
+            type - "FXAUTOBKREQ" It is Optional for Interactive Deal request -
+            Request type "FXBOOKREQ"  Constant value: "S" - Spot Rate "D" -
+            Daily Rate Default to use "D". It will be determined as per the
+            client level setup. Note : Weekend rate will be provided to client
+            irrespective of the Quote type if client is enabled for weekend FX
+            pricing.
+          maxLength: 1
+          example: D
+          title: QuoteType
+        RateTerm:
+          type: string
+          description: >-
+            Rate Term: Customer generated. It is Mandatory for Committed deal
+            book request type - "FXAUTOBKREQ" It is Optional for Interactive
+            Deal request - Request type "FXBOOKREQ"  Constant value: “M” -
+            Multiple “D” - Divide “E” - Interbank "I" - interbank (future use)
+          maxLength: 1
+          example: M
+          title: RateTerm
+        ValueDate:
+          type: string
+          description: 'FX Contract Value Date Format: YYYYMMDD'
+          pattern: ^(?:19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$
+          maxLength: 8
+          example: '20200426'
+          title: ValueDate
+        Tenor:
+          type: string
+          description: >-
+            Tenor value. SP, TN, SD & BA. Value in Tenor parameter is required
+            if no value date is given  Constant value: “SP” - for Spot "TN" -
+            for Tomorrow Next "SD" - for Same Day "BA" - for Best Available
+            Value "BA" is preferred to get the Best Available tenor.  If Value
+            date is provided along with the BA tenor, WorldLink will look for
+            the given value date first. If not available, then next available
+            tenor (BA-Best Available) will be considered.
+          maxLength: 2
+          example: SP
+          title: Tenor
+        PmtRoutingId:
+          type: integer
+          description: >-
+            Payment routing id for MBR pricing. To get a pricing for a  specific
+            Outbound payment channel. Example, Digital Wallet, Cards, UPI
+            payment etc.
+          maximum: 99999
+          example: 13773
+          title: PmtRoutingId
+      required:
+        - PymtCcy
+        - FundCcy
+        - Tenor
+    Response-Details-BookFX:
+      type: object
+      properties:
+        PymtCcy:
+          type: string
+          description: Payment Currency.
+          maxLength: 3
+          example: GBP
+          title: PymtCcy
+        PymtCcyAmt:
+          type: string
+          description: >-
+            Payment Currency amount with no leading zeros Conditional: Payment
+            Amount required if no funding currency amount is given in the
+            request.
+          maxLength: 17
+          example: '1234567891234.000'
+          title: PymtCcyAmt
+        FundCcy:
+          type: string
+          description: Funding Currency.
+          maxLength: 3
+          example: USD
+          title: FundCcy
+        FundCcyAmt:
+          type: string
+          description: >-
+            Funding Currency amount with no leading zeros Conditional: Funding
+            Amount, required if no payment currency amount is given 
+          maxLength: 17
+          example: '1234567891234.000'
+          title: FundCcyAmt
+        Rate:
+          type: number
+          description: >-
+            FX rate for client deal booking. No Rate will be returned in case of
+            non-zero StatusCode.
+          maxLength: 17
+          example: 100.1010101
+          title: Rate
+        QuoteType:
+          type: string
+          description: >-
+            WorldLink derived quote type will be populated. “S” – Spot, “D” –
+            Daily. Note : Weekend rate will be provided to client irrespective
+            of the Quote type if client is enabled for weekend FX pricing.
+          maxLength: 1
+          example: D
+          title: QuoteType
+        RateTerm:
+          type: string
+          description: >-
+            Rate Term: Customer generated. It is Mandatory for Committed deal
+            book request type - "FXAUTOBKREQ" It is Optional for Interactive
+            Deal request - Request type "FXBOOKREQ"  Constant value: “M” -
+            Multiple “D” - Divide “E” - Interbank
+          maxLength: 1
+          example: M
+          title: RateTerm
+        ValueDate:
+          type: string
+          description: 'FX Contract Value Date Format: YYYYMMDD'
+          maxLength: 8
+          example: '20200426'
+          title: ValueDate
+        Tenor:
+          type: string
+          description: >-
+            Tenor value. SP, TN, SD. “SP” - for Spot "TN" - for Tomorrow Next
+            "SD" - for Same Day
+          maxLength: 2
+          example: SP
+          title: Tenor
+        StatusCode:
+          type: string
+          description: >-
+            This parameter will be mandatorily given in WorldLink response as
+            per the below scenarios -  1. Successful execution of all CCY pairs
+            (Happy path) - "000"  2. Any Control/Message header level error - NA
+            as no repeating records will be returned in response   3. Any
+            repeating level error - "xxx" (applicable WorldLink error code) **
+            Note: Source system should not hard code the error codes while
+            handling the error codes. Other than the code "000" for
+            "CtrlErrCode" (OR) "StatusCode" should be treated as a "failed"
+            response.
+          maxLength: 3
+          example: '000'
+          title: StatusCode
+        StatusMsg:
+          type: string
+          description: >-
+            This parameter will be mandatorily given in WorldLink response along
+            with StatusCode.
+          maxLength: 255
+          example: '000: Request Processed Successfully'
+          title: StatusMsg
+        ContractRefId:
+          type: string
+          description: This parameter will contain Unique contract ID created by WorldLink.
+          maxLength: 15
+          example: AA0161013856997
+          title: ContractRefId
+        UnwindTime:
+          type: string
+          description: >-
+            Map only if the Expiry time config setup for client on WFX and
+            Source is APIM. Deal will be auto unwinded if payment is not
+            received within this expiry time if client is onboarded for auto
+            unwind functionality. Format: "YYYY-MM-DD-HH:MM:SS"
+          maxLength: 19
+          example: 2024-07-07-07:07:07
+          title: UnwindTime
+      required:
+        - PymtCcy
+        - FundCcy
+        - QuoteType
+        - ValueDate
+        - StatusCode
+        - StatusMsg
+    Fx-Request-API-Inquiry:
+      type: object
+      title: Fx-Request-API-Inquiry
+      properties:
+        FxRequestAPIOperation:
+          $ref: '#/components/schemas/Fx-Request-API-Operation-Inquiry'
+    Fx-Request-API-Operation-Inquiry:
+      type: object
+      title: Fx-Request-API-Operation-Inquiry
+      properties:
+        FXP588Operation:
+          $ref: '#/components/schemas/FXP588-Operation-Inquiry'
+    FXP588-Operation-Inquiry:
+      type: object
+      title: FXP588-Operation-Inquiry
+      required:
+        - FxRequest
+      properties:
+        FxRequest:
+          $ref: '#/components/schemas/Fx-Request-Inquiry'
+    Fx-Request-Inquiry:
+      type: object
+      title: Fx-Request-Inquiry
+      properties:
+        Source:
+          type: string
+          description: >-
+            Requesting Channel short name Constant value -  "APIM" - for the
+            external clients. "GPSP" - for GPPSP application "GPP"  - For GPP
+            application
+          maxLength: 4
+          example: APIM
+          title: Source
+        ReqType:
+          type: string
+          description: 'Type of FX Request: Constant value: FXINQRYREQ. '
+          maxLength: 11
+          example: FXINQRYREQ
+          title: ReqType
+        ClntNo:
+          type: string
+          description: Client Number.
+          maxLength: 5
+          example: '01010'
+          title: ClntNo
+        BrNo:
+          type: string
+          description: Branch Number.
+          maxLength: 4
+          example: '0101'
+          title: BrNo
+        PrefRateType:
+          type: string
+          description: >-
+            Preferred rate indicator: Used for pricing. Pricing sub-division
+            within Client and Branch.  Allowed values: A-Z, 0-9 Typically,
+            default to N unless specifically agreed with the FX trading. Value
+            must be ‘W’ for Alipay Wallet payments and ‘E’ for UPI Cards
+            payment.
+          maxLength: 1
+          example: 'N'
+          title: PrefRateType
+        TrnRefNo:
+          type: string
+          description: >-
+            Customer Generated transaction reference number. The corresponding
+            response message will contain the same TRN for source matching. **
+            Note: Below mentioned special characters should not be used. &
+            (ampersand), < (less than) , > (greater than) and (single or double
+            quote) 
+          pattern: ^[^&<>,"]*$
+          maxLength: 16
+          example: 1234567890ABCDEF
+          title: TrnRefNo
+        CcyPairCnt:
+          type: string
+          description: >-
+            Number of Currency pair requests.  Constant value: "01". Only one
+            Currency pair FX request should be made per API call. 
+          maxLength: 2
+          example: '01'
+          title: CcyPairCnt
+        ReqTime:
+          type: string
+          description: >-
+            Date and Time when the FX Request is placed. TBC post discussion.
+            Format: "YYYY-MM-DD-HH:MM:SS EST Hours." pattern: >-
+            ^(?:19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])-(0\d|1\d|2[0-3]):([0-5]\d):([0-5]\d)$
+          maxLength: 19
+          example: 2024-07-07-07:07:07
+          title: ReqTime
+        RequestDetails:
+          items:
+            $ref: '#/components/schemas/Request-Details-Inquiry'
+          type: array
+          title: RequestDetails
+          maxItems: 1
+      required:
+        - Source
+        - ReqType
+        - ClntNo
+        - TrnRefNo
+        - CcyPairCnt
+        - ReqTime
+        - RequestDetails
+    Fx-Request-API-Inquiry-Response:
+      type: object
+      title: Fx-Request-API-Inquiry-Response
+      properties:
+        FxRequestAPIOperationResponse:
+          $ref: '#/components/schemas/Fx-Request-API-Operation-Inquiry-Response'
+    Fx-Request-API-Operation-Inquiry-Response:
+      type: object
+      title: Fx-Request-API-Operation-Inquiry-Response
+      properties:
+        FXP588Operation:
+          $ref: '#/components/schemas/FXP588-Operation-Inquiry-Response'
+    FXP588-Operation-Inquiry-Response:
+      type: object
+      title: FXP588-Operation-Inquiry-Response
+      required:
+        - FxResponse
+      properties:
+        FxResponse:
+          $ref: '#/components/schemas/Fx-Request-Inquiry-Response'
+    Fx-Request-Inquiry-Response:
+      type: object
+      title: Fx-Request-Inquiry-Response
+      properties:
+        Source:
+          type: string
+          description: >-
+            Requesting Channel short name. Same source name will be populated as
+            received in the request. Constant value -  "APIM" - for the external
+            clients. "GPSP" - for GPPSP application "GPP"  - For GPP application
+          maxLength: 4
+          example: APIM
+          title: Source
+        ResType:
+          type: string
+          description:
+            Type of FX Request: Transaction Type defined by WorldLink Constant
+            Value: FXINQRYRSP
+          maxLength: 11
+          example: FXINQRYRSP
+          title: ResType
+        ClntNo:
+          type: string
+          description: Client Number. This will be populated as received in the Request.
+          maxLength: 5
+          example: '01010'
+          title: ClntNo
+        BrNo:
+          type: string
+          description: Branch Number. This will be populated as received in the Request.
+          maxLength: 4
+          example: '0101'
+          title: BrNo
+        TrnRefNo:
+          type: string
+          description: >-
+            Customer Generated transaction reference number. The response will
+            contain the same TRN for source matching
+          maxLength: 16
+          example: 1234567890ABCDEF
+          title: TrnRefNo
+        ResTime:
+          type: string
+          description: >-
+            Date and Time when the FX Request is placed.  Format:
+            "YYYY-MM-DD-HH:MM:SS"
+          maxLength: 19
+          example: 2024-07-07-07:07:07
+          title: ResTime
+        UserId:
+          type: string
+          description: >-
+            Unique User ID created by WorldLink and returned in response only
+            when the request is processed successfully. For Interactive Deal
+            request - Request type "FXBOOKREQ" : Same UserID will be populated
+            which was received in the Deal request. For Committed Deal request -
+            Request type "FXAUTOBKREQ": A unique User ID will be created 
+          maxLength: 8
+          example: ABCD1234
+          title: UserId
+        CcyPairCnt:
+          type: string
+          description: >-
+            Number of Currency pair requests.  Constant value: "01". Only one
+            Currency pair FX request should be made per API call. 
+          maxLength: 2
+          example: '01'
+          title: CcyPairCnt
+        CtrlErrCode:
+          type: string
+          description: >-
+            This parameter will be mandatorily given in WorldLink response as
+            per the below scenarios -  1. Successful execution of all CCY pairs
+            (Happy path) - "000" 2. Any Control/Message header level error - xxx
+            (applicable WorldLink error code)  3. Any repeating level error -
+            "000" ** Note: Source system should not hard code the error codes
+            while handling the error codes. Other than the code "000" for
+            "CtrlErrCode" (OR) "StatusCode" should be treated as a "failed"
+            response. <additional data>
+          maxLength: 3
+          example: '000'
+          title: CtrlErrCode
+        CtrlErrMsg:
+          type: string
+          description: >-
+            This parameter will be mandatorily given in WorldLink response along
+            with ErrCode.
+          maxLength: 255
+          example: Request Successful
+          title: CtrlErrMsg
+        ResponseDetails:
+          items:
+            $ref: '#/components/schemas/Response-Details-Inquiry'
+          type: array
+          title: ResponseDetails_Inquiry
+          maxItems: 1
+      required:
+        - Source
+        - ResType
+        - ClntNo
+        - TrnRefNo
+        - ResTime
+        - CcyPairCnt
+        - CtrlErrCode
+        - CtrlErrMsg
+        - ResponseDetails
+    Request-Details-Inquiry:
+      type: object
+      properties:
+        PymtCcy:
+          type: string
+          description: Payment Currency.
+          maxLength: 3
+          example: GBP
+          title: PymtCcy
+        PymtCcyAmt:
+          type: string
+          description: >-
+            Payment Currency amount with no leading zeros. Conditional: Payment
+            Amount required if no funding currency amount is given in the
+            request.
+          pattern: ^\d{1,13}(\.\d{1,3})?$
+          maxLength: 17
+          example: '1234567891234.000'
+          title: PymtCcyAmt
+        FundCcy:
+          type: string
+          description: Funding Currency.
+          maxLength: 3
+          example: USD
+          title: FundCcy
+        FundCcyAmt:
+          type: string
+          description: >-
+            Funding Currency amount with no leading zeros Conditional: Funding
+            Amount, required if no payment currency amount is given pattern:
+            ^\d{1,13}(\.\d{1,3})?$
+          maxLength: 17
+          example: '1234567891234.000'
+          title: FundCcyAmt
+        QuoteType:
+          type: string
+          description: >-
+            Quote Type: Confirms if a client is a Daily Guaranteed Rate (GR) or
+            Sport rate customer. If a client is not configured for Daily GR,
+            then WorldLink will check for the Spot configuration & provide the
+            rates accordingly. Constant value: "S" - Spot Rate "D" - Daily Rate
+            Default to use "D". WorldLink will determine as per the client level
+            setup. Note : Weekend rate will be provided to client irrespective
+            of the Quote type if client is enabled for weekend FX pricing.
+          maxLength: 1
+          example: D
+          title: QuoteType
+        RateTerm:
+          type: string
+          description: >-
+            Rate Term: Customer generated. Constant value: “M” - Multiple “D” -
+            Divide “E” - Interbank "I" - interbank (future use)
+          maxLength: 1
+          example: M
+          title: RateTerm
+        ValueDate:
+          type: string
+          description: 'FX Contract Value Date Format: YYYYMMDD'
+          pattern: ^(?:19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$
+          maxLength: 8
+          example: '20200426'
+          title: ValueDate
+        Tenor:
+          type: string
+          description: >-
+            Tenor value. SP, TN, SD & BA. Value in Tenor parameter is required
+            if no value date is given  Constant value: “SP” - for Spot "TN" -
+            for Tomorrow Next "SD" - for Same Day "BA" - for Best Available
+            Value "BA" is preferred to get the Best Available tenor.  If Value
+            date is provided along with the BA tenor, WorldLink will look for
+            the given value date first. If not available, then next available
+            tenor (BA-Best Available) will be considered.
+          maxLength: 2
+          example: SP
+          title: Tenor
+        PmtRoutingId:
+          type: integer
+          description: >-
+            Payment routing id for MBR pricing. To get a pricing for a  specific
+            Outbound payment channel. Example, Digital Wallet, Cards, UPI
+            payment etc.
+          maximum: 99999
+          example: 13773
+          title: PmtRoutingId
+      required:
+        - PymtCcy
+        - FundCcy
+        - QuoteType
+        - RateTerm
+        - Tenor
+    Response-Details-Inquiry:
+      type: object
+      properties:
+        PymtCcy:
+          type: string
+          description: Payment Currency.
+          maxLength: 3
+          example: GBP
+          title: PymtCcy
+        PymtCcyAmt:
+          type: string
+          description: >-
+            Payment Currency amount with no leading zeros Conditional: Payment
+            Amount required if no funding currency amount is given in the
+            request.
+          maxLength: 17
+          example: '1234567891234.000'
+          title: PymtCcyAmt
+        FundCcy:
+          type: string
+          description: Funding Currency.
+          maxLength: 3
+          example: USD
+          title: FundCcy
+        FundCcyAmt:
+          type: string
+          description: >-
+            Funding Currency amount with no leading zeros Conditional: Funding
+            Amount, required if no payment currency amount is given 
+          maxLength: 17
+          example: '1234567891234.000'
+          title: FundCcyAmt
+        Rate:
+          type: number
+          description: >-
+            FX rate for client deal booking. No Rate will be returned in case of
+            non-zero StatusCode.
+          maximum: 99999999.99999999
+          example: 100.1010101
+          title: Rate
+        QuoteType:
+          type: string
+          description: >-
+            WorldLink derived quote type will be populated. “S” – Spot, “D” –
+            Daily. Note : Weekend rate will be provided to client irrespective
+            of the Quote type if client is enabled for weekend FX pricing.
+          maxLength: 1
+          example: D
+          title: QuoteType
+        RateTerm:
+          type: string
+          description: >-
+            Rate Term: Customer generated. It is Mandatory for Committed deal
+            book request type - "FXAUTOBKREQ" It is Optional for Interactive
+            Deal request - Request type "FXBOOKREQ"  Constant value: “M” -
+            Multiple “D” - Divide “E” - Interbank
+          maxLength: 1
+          example: M
+          title: RateTerm
+        ValueDate:
+          type: string
+          description: 'FX Contract Value Date Format: YYYYMMDD.'
+          maxLength: 8
+          example: '20200426'
+          title: ValueDate
+        Tenor:
+          type: string
+          description: >-
+            Tenor value. SP, TN, SD. “SP” - for Spot "TN" - for Tomorrow Next
+            "SD" - for Same Day
+          maxLength: 2
+          example: SP
+          title: Tenor
+        StatusCode:
+          type: string
+          description: >-
+            This parameter will be mandatorily given in WorldLink response as
+            per the below scenarios -  1. Successful execution of all CCY pairs
+            (Happy path) - "000"  2. Any Control/Message header level error - NA
+            as no repeating records will be returned in response   3. Any
+            repeating level error - "xxx" (applicable WorldLink error code) **
+            Note: Source system should not hard code the error codes while
+            handling the error codes. Other than the code "000" for
+            "CtrlErrCode" (OR) "StatusCode" should be treated as a "failed"
+            response.
+          maxLength: 3
+          example: '000'
+          title: StatusCode
+        StatusMsg:
+          type: string
+          description: >-
+            This parameter will be mandatorily given in WorldLink response along
+            with StatusCode.
+          maxLength: 255
+          example: '000: Request Processed Successfully'
+          title: StatusMsg
+        ExpDate:
+          type: string
+          description: 'Expiry time of the returned rate. Format: "YYYY-MM-DD-HH:MM:SS"'
+          maxLength: 19
+          example: 2024-07-07-07:07:07
+          title: ExpDate
+        PmtRoutingId:
+          type: integer
+          description: Payment routing id for MBR pricing, Optional parameter.
+          maximum: 99999
+          example: 13773
+          title: PmtRoutingId
+      required:
+        - PymtCcy
+        - FundCcy
+        - QuoteType
+        - RateTerm
+        - ValueDate
+        - StatusCode
+        - StatusMsg
+        - ExpDate
+    Error-Detail:
+      type: object
+      title: Error-Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        status:
+          type: string
+          title: status
+          description: Error status that provides more details on issue.
+        message:
+          type: string
+          title: message
+          description: More information about the issue.
+        correlationId:
+          type: string
+          title: correlationId
+          description: Unique identifier for the request.
+  examples:
+    Fx-Request-API-Inquiry-Example:
+      value:
+        FxRequestAPIOperation:
+          FXP588Operation:
+            FxRequest:
+              Source: APIM
+              ReqType: FXINQRYREQ
+              ClntNo: '01010'
+              BrNo: '0101'
+              PrefRateType: 'N'
+              TrnRefNo: 1234567890ABCDEF
+              CcyPairCnt: '01'
+              ReqTime: 2024-07-07-07:07:07
+              RequestDetails:
+                - PymtCcy: GBP
+                  PymtCcyAmt: '1234567891234.001'
+                  FundCcy: USD
+                  FundCcyAmt: '1234567891234.001'
+                  QuoteType: D
+                  RateTerm: M
+                  ValueDate: '20200426'
+                  Tenor: SP
+                  PmtRoutingId: 13773
+    Fx-Request-API-BookFX-Example:
+      value:
+        FxRequestAPIOperation:
+          FXP588Operation:
+            FxRequest:
+              Source: APIM
+              ReqType: FXAUTOBKREQ
+              ClntNo: '01010'
+              BrNo: '0101'
+              PrefRateType: 'N'
+              TrnRefNo: 1234567890ABCDEF
+              UserId: ABCD1234
+              CcyPairCnt: '01'
+              ReqTime: 2024-07-07-07:07:07
+              RequestDetails:
+                - PymtCcy: GBP
+                  PymtCcyAmt: '1234567891234.001'
+                  FundCcy: USD
+                  FundCcyAmt: '1234567891234.001'
+                  QuoteType: D
+                  RateTerm: M
+                  ValueDate: '20200426'
+                  Tenor: SP
+                  PmtRoutingId: 13773
+    Fx-Request-API-BookFX-Response-Example:
+      value:
+        FxRequestAPIOperationResponse:
+          FXP588Operation:
+            FxResponse:
+              Source: APIM
+              ResType: FXAUTOBKRSP
+              ClntNo: '01010'
+              BrNo: '0101'
+              TrnRefNo: 1234567890ABCDEF
+              ResTime: 2024-07-07-07:07:07
+              UserId: ABCD1234
+              CcyPairCnt: '01'
+              CtrlErrCode: '000'
+              CtrlErrMsg: Request Successful
+              ResponseDetails:
+                - PymtCcy: GBP
+                  PymtCcyAmt: '1234567891234.001'
+                  FundCcy: USD
+                  FundCcyAmt: '1234567891234.001'
+                  Rate: 100.1010101
+                  QuoteType: D
+                  RateTerm: M
+                  ValueDate: '20200426'
+                  Tenor: SP
+                  StatusCode: '000'
+                  StatusMsg: '000: Request Processed Successfully'
+                  ContractRefId: AA0161013856997
+                  UnwindTime: 2024-07-07-07:07:07
+    Fx-Request-API-Inquiry-Response-Example:
+      value:
+        FxRequestAPIOperationResponse:
+          FXP588Operation:
+            FxResponse:
+              Source: APIM
+              ResType: FXINQRYRSP
+              ClntNo: '01010'
+              BrNo: '0101'
+              TrnRefNo: 1234567890ABCDEF
+              ResTime: 2024-07-07-07:07:07
+              UserId: ABCD1234
+              CcyPairCnt: '01'
+              CtrlErrCode: '000'
+              CtrlErrMsg: Request Successful
+              ResponseDetails:
+                - PymtCcy: GBP
+                  PymtCcyAmt: '1234567891234.001'
+                  FundCcy: USD
+                  FundCcyAmt: '1234567891234.001'
+                  Rate: 100.1010101
+                  QuoteType: D
+                  RateTerm: M
+                  ValueDate: '20200426'
+                  Tenor: SP
+                  StatusCode: '000'
+                  StatusMsg: '000: Request Processed Successfully'
+                  ExpDate: 2024-07-07-07:07:07
+                  PmtRoutingId: 13773
+    Bad-Request-Example:
+      value:
+        status: '400'
+        message: >-
+          Invalid value provided for request. Please provide valid value for
+          request.
+        correlationId: testFx-400
+    Unauthorized-Example:
+      value:
+        status: '401'
+        message: >-
+          User does not have authorization to access this functionality. Please
+          use valid credentials to access this functionality.
+        correlationId: testFx-401
+    Request-Forbidden-Example:
+      value:
+        status: '403'
+        message: >-
+          User does not have sufficient privileges to access this functionality.
+          Please reach out to the support team to enable this feature.
+        correlationId: testFx-403
+    Not-Found-Example:
+      value:
+        status: '404'
+        message: >-
+          Resources that you are searching for are not found. Please use valid
+          resource details.
+        correlationId: testFx-404
+    Internal-Server-Example:
+      value:
+        status: '500'
+        message: Unable to serve your request at this time. Please try again later.
+        correlationId: testFx-500
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: >-
+            https://tts.sandbox.apib2b.citi.com/citiconnect/sb/authenticationservices/v1/oauth/token
+          scopes: {}

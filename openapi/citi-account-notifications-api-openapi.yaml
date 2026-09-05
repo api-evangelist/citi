@@ -1,0 +1,409 @@
+openapi: 3.0.0
+info:
+  description: >-
+    Account Notifications (webhooks) allow you to subscribe to proactive push
+    notifications for select accounts, eliminating the need to regularly post
+    update requests. 
+
+
+    Once your subscription has been confirmed, notifications will be sent to the
+    endpoint you chose in your subscription request. This allows you to
+    integrate the notifications you receive from Citi into your automated
+    workflow for automated processing. 
+
+
+    You can choose to receive notifications in either XML or JSON format, and in
+    near-real time when updates are available or on a regular schedule.
+
+
+    Download our SDKs:
+
+
+    * [Python
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=python&apiTitle=all&isClientSecReq=true)
+
+    * [Java
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=java&apiTitle=all&isClientSecReq=true)
+
+    * [.Net
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=dotnet&apiTitle=all&isClientSecReq=true)
+
+    * [Ruby
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ruby&apiTitle=all&isClientSecReq=true)
+
+    * [NodeJS
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=nodejs&apiTitle=all&isClientSecReq=true)
+
+    * [Go
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=go&apiTitle=all&isClientSecReq=true)
+
+    * [CLI Tool
+    SDK](https://developer.citi.com/sandboxApi/admin/v1/downloadZipFile?language=ccapi-cli&apiTitle=all&isClientSecReq=true)
+
+
+    NOTE: You must be logged in to download our SDKs.
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+  title: Account Notifications
+servers:
+  - url: https://tts.apib2b.citi.com/citiconnect/prod/accountstatementservices
+    description: Production gateway URL
+  - url: >-
+      https://tts.sandbox.apib2b.citi.com/citiconnect/sb/accountstatementservices
+    description: Sandbox URL
+security:
+  - clientCredentials: []
+tags:
+  - name: Account Notification
+paths:
+  /v1/crdr/subscription:
+    post:
+      tags:
+        - Account Notification
+      summary: Account Notification Subscription Request
+      operationId: AccountNotificationSubscriptionRequest
+      security:
+        - clientCredentials: []
+      description: >-
+        Using this endpoint you can create, modify, or delete a subscription
+        request and set parameters such as frequency and number of
+        notifications.
+      parameters:
+        - in: header
+          name: Content-Type
+          description: Supports \"application/xml\" and \"application/json\".
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Authorization
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: client_id
+          required: true
+          description: >-
+            Your unique client identifier, assigned as part of your onboarding
+            with your Citi representative.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionReqType'
+            example:
+              '@xmlns': >-
+                http://com.citi.citiconnect/services/types/creditdebit/subscription
+              requestType: CREATE
+              format: XML
+              creditDebitIndicator: BOTH
+              accountIdentification: '2826628017'
+              branchIdentification: '032'
+              fromAmount: '1'
+              toAmount: '999999999'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/SubscriptionReqType'
+            example: >-
+              <?xml version="1.0" encoding="UTF-8"?><SubcriptionRequest
+              xmlns="http://com.citi.citiconnect/services/types/creditdebit/subscription"><ReqTp>CREATE</ReqTp><Fmt>XML</Fmt><CdtDbtInd>CRDT</CdtDbtInd><AcctId>0821946026</AcctId><BrnchId>032</BrnchId><FrAmt>0</FrAmt><ToAmt>99999999999</ToAmt></SubcriptionRequest>
+        required: true
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+              example:
+                SubscriptionResponse:
+                  Info: >-
+                    Request successfully submitted; please wait for the final
+                    confirmation
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+              example: >-
+                <SubscriptionResponse><Info>Request successfully submitted;
+                please wait for the final
+                confirmation</Info></SubscriptionResponse>
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                correlationId: q2te~bd8e9b8f-d8e5-4a48-ad13-5d1ec8bb32e815587
+                message: >-
+                  Details mentioned on the request is incorrect :
+                  accountIdentification field has invalid data
+                status: '400'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: >-
+                <Response><correlationId>q2te~bd8e9b8f-d8e5-4a48-ad13-5d1ec8bb32e815587</correlationId><message>Details
+                mentioned on the request is incorrect : accountIdentification
+                field has invalid
+                data</message><status>CITI_CONNECT_SERVICES</status></Response>
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                httpCode: '401'
+                httpMessage: Unauthorized
+                moreInformation: >-
+                  This server could not verify that you are authorized to access
+                  the URL
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: >-
+                <errormessage><httpCode>401</httpCode><httpMessage>Invalid OAuth
+                Token</httpMessage><moreInformation>Please use valid OAuth
+                Token</moreInformation></errormessage>
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                httpMessage: Not Found
+                httpCode: 404
+                moreInformation: No resources match requested URI
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: >-
+                <errormessage><httpMessage>Not
+                Found</httpMessage><httpCode>404</httpCode><moreInformation>No
+                resources match requested URI</moreInformation></errormessage>
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                httpMessage: Method Not Allowed
+                httpCode: 405
+                moreInformation: The method is not allowed for the requested URI
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: >-
+                <errormessage><httpMessage>Method Not
+                Allowed</httpMessage><httpCode>405</httpCode><moreInformation>The
+                method is not allowed for the requested
+                URL</moreInformation></errormessage>
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                httpMessage: UNSUPPORTED MEDIA TYPE
+                httpCode: 415
+                moreInformation: Unsupported Content-Type
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: >-
+                <errormessage><httpMessage>Unsupported Media
+                Type</httpMessage><httpCode>415</httpCode><moreInformation>Unsupported
+                Content-Type</moreInformation></errormessage>
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                httpMessage: Invalid
+                httpCode: 422
+                moreInformation: >-
+                  Provided request is invalid, please resend the request with
+                  valid schema.
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: >-
+                <Response><httpMessage>Invalid</httpMessage><httpCode>422</httpCode><moreInformation>Provided
+                request is invalid, please resend the request with valid
+                schema.</moreInformation></Response>
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                httpMessage: Internal Server Error
+                httpCode: 500
+                moreInformation: Internal Server Error
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example: >-
+                <root><httpMessage>Internal Server
+                Error</httpMessage><httpCode>500</httpCode><moreInformation>Internal
+                Server Error</moreInformation></root>
+components:
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes: {}
+  schemas:
+    ErrorMessage:
+      properties:
+        httpCode:
+          format: int32
+          type: integer
+        httpMessage:
+          type: string
+        moreInformation:
+          type: string
+      required:
+        - httpCode
+      xml:
+        name: errormessage
+    Error:
+      properties:
+        status:
+          type: string
+          description: It will have category code of error
+        message:
+          type: string
+          description: More information about the error
+        correlationId:
+          type: string
+          description: Unique identifier which can be used to track the request
+      xml:
+        name: response
+    SubscriptionReqType:
+      required:
+        - accountIdentification
+        - branchIdentification
+        - creditDebitIndicator
+        - format
+        - requestType
+      properties:
+        requestType:
+          type: string
+          description: >-
+            Specifies the action to perform on the specified subscription. You
+            can create, modify, or delete subscriptions, based on the request
+            type.
+          enum:
+            - CREATE
+            - MODIFY
+            - DELETE
+          example: CREATE
+          xml:
+            name: ReqTp
+            namespace: >-
+              http://com.citi.citiconnect/services/types/creditdebit/subscription
+        format:
+          type: string
+          description: Specifies the format to use for notifications - XML or JSON.
+          enum:
+            - XML
+            - JSON
+          example: JSON
+          xml:
+            name: Fmt
+            namespace: >-
+              http://com.citi.citiconnect/services/types/creditdebit/subscription
+        creditDebitIndicator:
+          type: string
+          description: |-
+            The type of transaction for which you want notifications:
+
+            * Credit 
+            * Debit 
+            * Both
+          enum:
+            - DBIT
+            - CRDT
+            - BOTH
+          example: BOTH
+          xml:
+            name: CdtDbtInd
+            namespace: >-
+              http://com.citi.citiconnect/services/types/creditdebit/subscription
+        accountIdentification:
+          minLength: 1
+          maxLength: 34
+          description: The account number associated with the subscription.
+          xml:
+            name: AcctId
+            namespace: >-
+              http://com.citi.citiconnect/services/types/creditdebit/subscription
+          example: '1730173616'
+        branchIdentification:
+          type: string
+          description: Citi branch ID associated with the account.
+          minLength: 1
+          maxLength: 35
+          xml:
+            name: BrnchId
+            namespace: >-
+              http://com.citi.citiconnect/services/types/creditdebit/subscription
+          example: '713'
+        fromAmount:
+          type: string
+          description: >-
+            The minimum amount of a transaction to trigger a notification.
+            Notifications will not be sent for transaction amounts below this
+            threshold.
+          xml:
+            name: FrAmt
+            namespace: >-
+              http://com.citi.citiconnect/services/types/creditdebit/subscription
+          example: '0'
+        toAmount:
+          type: string
+          description: >-
+            The maximium amount of a transaction to trigger a notification.
+            Notifications will not be sent for transaction amounts above this
+            limit.
+          xml:
+            name: ToAmt
+            namespace: >-
+              http://com.citi.citiconnect/services/types/creditdebit/subscription
+          example: '99999999999'
+    SubscriptionResponse:
+      properties:
+        Info:
+          type: string
+          description: Information for your request
+          xml:
+            name: Info
+            namespace: >-
+              http://com.citi.citiconnect/services/types/creditdebit/subscription
+          example: >-
+            Request successfully submitted; please wait for the final
+            confirmation

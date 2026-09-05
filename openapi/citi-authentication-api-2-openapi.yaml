@@ -1,0 +1,196 @@
+openapi: 3.0.1
+info:
+  title: Authentication Services
+  description: >-
+    Citi uses access tokens to maintain stateless sessions for API requests that
+    are authenticated using your client ID & secret key. Use the Authentication
+    API to generate your access tokens. 
+
+
+    Once a successful server Authentication handshake is established over mTLS
+    and your API credentials are validated, the OAuth token will be generated
+    and returned to you in the response. This version of the Authentication
+    endpoint only supports XML. 
+
+
+    **NOTE:** The access token is provided through the HTTP Authorization header
+    `Authorization: Bearer {access token}` and is valid for 1800 seconds. When
+    the access token has expired, your application will need to generate another
+    access token. Any CitiConnect API call using an expired access token will
+    return the HTTP status code 401 Unauthorized.
+servers:
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+    description: 'CTE/Sandbox url '
+  - url: https://tts.apib2b.citi.com/citiconnect/prod
+    description: Production gateway url
+paths:
+  /authenticationservices/v2/oauth/token:
+    post:
+      summary: Request v2 Access Token
+      description: >-
+        The OAuth v2 token request authenticates your API message sent in the
+        XML format and responds with an access token.
+      operationId: oAuthV2UsingPOST
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Supports only \"application/xml\".
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: >
+            The authorization will include "Basic" followed by a single space,
+            followed by the Base64 encoded value of the APIm `client_id` &
+            `secret key`. 
+
+
+            In the above example, the `client_id` is
+            *1234a5b6-cde7-8f90-12gh-345ij6789012* & secret key is
+            *abcdefghijklmnop*.  
+
+
+            The Base64 value after appending by adding “:” in between will be
+            “MTIzNGE1YjYtY2RlNy04ZjkwLTEyZ2gtMzQ1aWo2Nzg5MDEyOmFiY2RlZmdoaWprbG1ub3A=”. 
+          required: true
+          example: >-
+            Basic
+            MTIzNGE1YjYtY2RlNy04ZjkwLTEyZ2gtMzQ1aWo2Nzg5MDEyOmFiY2RlZmdoaWprbG1ub3A=
+          schema:
+            type: string
+      requestBody:
+        description: >-
+          The following is the request body to retrieve an OAuth token using the
+          V2 endpoint.
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/oAuthToken'
+            example: >-
+              <?xml version="1.0" encoding="UTF-8"?><oAuthToken
+              xmlns="http://com.citi.citiconnect/services/types/oauthtoken/v1"><grantType>client_credentials</grantType><scope>/authenticationservices/v1</scope></oAuthToken>
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/token'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><token><token_type>Bearer</token_type><access_token>O0n8J+fXQr32nrmBI5let6iDqg5F1iMlocBhqwokdtU3d0C/gNKVPYnmxJYheps4YdnuIijt9E3LKYMEab+lP5M34yGNumBLQUUE8myVo40y3Tyo4d2j1cYYF9RGfpOVzAtb9VrhoMdJORJaIcIvTlRpcqCI/c0kV5t5mk0wmL7blWiTF0NW+w6Y57p4iikn0H+zMQ4zMmZiYI06t0VIH4yQrFw6N4tsoN1GD2A3/XKVVi5CO+I71aq0CaDlR/qEUfyZ6psyqqg94W54Eaq5m5Wp1uq5aQXK+A1II8zHNcARV/Iot3ZUGVYcPfvNEYZaANRbJcXhGepOwkDrRu/jYBguWm+/Vmvr3cIFaQ1bvhpCHxTAW7uJerWJzBE11RE0wv8HGsznQRUsbSq0woOa69Pe0Oym5qzeo9Ar139DIpp0hmeU5Ee8qWZBTalW5QdDIEhWdizlxK/1gvrOU8TK+AR/fI/2h3ApPUf+pT67gqh+EhWlEr0U2jM3EcJmL7aMVjZu9dswX79aGK7ss+JB3iEoC9tD/2cBRbHuitrqiRqp1Bd2L6w9bKx6tUQk+l9/KOX6h/5kOxlFc2z6CXpc1MVXlBQOSdJdj/2ILJ7UPCdmlzBG3q9WtJi1MaeNefUaQlNQUGpP017zLKxNIW5OtSJCneGeOjAxsdtZunO0LUS+2Z6OiiRxsYIZJMzmQ5dh4vGLzMFTH9bG74se1EuPHw==</access_token><expires_in>1800</expires_in><scope>/authenticationservices/v1</scope></token>
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+      security:
+        - Basic Authentication: []
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    oAuthToken:
+      title: oAuthTokenRequest
+      description: >-
+        The request body for the V2 authentication service to retrieve an OAuth
+        token.
+      properties:
+        grantType:
+          type: string
+          description: >-
+            You must always pass 'client_credentials' in this field because Citi
+            only provides credentials-based authentication for API users.
+        merchantId:
+          type: string
+        scope:
+          type: string
+          description: >-
+            This is the version scope of the authentication call. Note that this
+            value will be the same for ALL versions of the Authentication API
+            and should be `/authenticationservices/v1` (even for versions 2, 3,
+            and 4).
+        sourceApplication:
+          type: string
+          description: >-
+            This represents the route of the authentication call within
+            CitiConnect API.
+          enum:
+            - CCF
+        userDetails:
+          $ref: '#/components/schemas/UserDetailsType'
+      required:
+        - grantType
+        - scope
+      example:
+        grantType: client_credentials
+        scope: /authenticationservices/v1
+      xml:
+        namespace: http://com.citi.citiconnect/services/types/oauthtoken/v1
+    UserDetailsType:
+      title: UserDetailsType
+      type: object
+      properties:
+        userId:
+          type: string
+          xml:
+            name: userId
+            attribute: false
+            wrapped: false
+        userIdType:
+          type: string
+          xml:
+            name: userIdType
+            attribute: false
+            wrapped: false
+          enum:
+            - SAFEWORD
+      xml:
+        name: userDetailsType
+        attribute: false
+        wrapped: false
+    token:
+      title: oAuthTokenResponse
+      description: >-
+        The response body for the V2 authentication service to retrieve an OAuth
+        token.
+      properties:
+        token_type:
+          type: string
+          description: The default value will be “Bearer”.
+        access_token:
+          type: string
+          description: >-
+            Contains the OAuth Token that will be used for authenticating
+            successive API calls.
+        expires_in:
+          type: string
+          description: The expiry time limit of the OAuth Token in seconds.
+        scope:
+          type: string
+          description: >-
+            The version scope of the authentication call. The value will be the
+            same for all the API versions.
+  securitySchemes:
+    Basic Authentication:
+      type: http
+      description: >-
+        Username is the application's client_id and password is the
+        client_secret.
+      scheme: basic
+    clientIdHeader:
+      type: apiKey
+      name: X-IBM-Client-Id
+      in: header
+    clientSecretHeader:
+      type: apiKey
+      name: X-IBM-Client-Secret
+      in: header

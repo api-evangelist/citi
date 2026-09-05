@@ -1,0 +1,1370 @@
+swagger: '2.0'
+info:
+  description: >-
+    Beneficiary validation API is used to search/validate the Account details of
+    the beneficiary with the use of  Credit Account Number or Proxy Details.
+  title: Self Services
+  version: 3.0.0
+  x-ibm-name: selfservices
+host: $(catalog.host)
+basePath: /selfservices/v3
+schemes:
+  - https
+security:
+  - clientCredentials: []
+paths:
+  /payment/beneficiarysearch:
+    get:
+      produces:
+        - application/json
+        - application/xml
+      parameters:
+        - description: >-
+            Unique reference which was shared during CitiConnect API
+            on-boarding(client_id which used during oauth token generation)
+          in: query
+          name: client_id
+          required: true
+          type: string
+        - description: >-
+            Country where the request is initiated for beneficiary account
+            search/validation in ISO 3166-1 alpha-2 format
+          in: query
+          name: country_code
+          required: true
+          pattern: ^[A-Z]{2}$
+          type: string
+        - description: >-
+            Account name of the creditor intended for search/validation whose
+            payment amount will be credited. For early warning system (EWS), if
+            the verification_type = (BANKOWN or BASICVR) either
+            creditor_firstname & creditor_lastname or creditor_name (Business
+            Name) should be passed. Business name maximum allowed length 87
+            characters.
+          in: query
+          maxLength: 140
+          minLength: 3
+          name: creditor_name
+          type: string
+        - description: >-
+            Creditor account bank identification code of the creditor whose
+            payment amount will be credited. - For early warning system (EWS), 9
+            digit beneficiary bank routing number.
+          in: query
+          name: creditor_bank_code
+          maxLength: 11
+          minLength: 1
+          type: string
+        - description: >-
+            Creditor Branch identification of the creditor whose payment amount
+            will be credited. ##### Field exclusively applicable for below
+            conditions - country_code = AR (Argentina), BR (Brazil), UY
+            (Uruguay), PE (Peru), MX (Mexico), CO (Colombia)
+          in: query
+          maxLength: 3
+          name: creditor_branch_id
+          type: string
+        - description: >-
+            Account alias name of the creditor intended for search/validation
+            whose payment amount will be credited. ##### Field exclusively
+            applicable for below conditions - country_code = AR (Argentina), BR
+            (Brazil), UY (Uruguay), PE (Peru), MX (Mexico), CO (Colombia)
+          in: query
+          maxLength: 140
+          minLength: 3
+          name: creditor_alias
+          type: string
+        - description: Account name of the debtor whose payment amount will be deducted.
+          in: query
+          maxLength: 140
+          minLength: 3
+          name: debtor_name
+          type: string
+        - description: >-
+            Requested execution date post alias resolution when the payment
+            needs to be processed for settlement, format would be YYYYMMDD #####
+            Field exclusively applicable for below countries - country_code = BR
+            (Brazil) _Note_ * _If not provided present date will be populated
+            when alias api is invoked_ * _Only Present and Future date will be
+            acceptable and not past date_
+          in: query
+          maxLength: 8
+          name: value_date
+          type: string
+        - description: >
+            Account & Proxy details intended for search/validation of
+            Beneficiary details
+              _Condition : It should be encrypted JSON combination of **creditor_account** or **creditor_proxy_type & creditor_proxy_value** should be passed along with **debtor_account**_
+              - **debtor_account** 
+                 - account number of the debtor whose payment amount will be deducted
+                 - max length is 35
+                 - mandatory
+              - **creditor_account**
+                 - account number of the creditor whose payment amount will be credited & which requires validation
+                 - max length is 35
+                 - conditional
+
+              - **creditor_proxy_type**
+                 - type of the proxy value to be used for validation/search
+                 - max length is 35
+                 - conditional 
+                    - *Supported Types*
+
+                      * PHONE
+                        - Used as an identifier for providing Mobile/Phone Number in **creditor_proxy_value**
+                      * EMAIL
+                        - Used as an identifier for providing Email ID in **creditor_proxy_value**
+                      * TAXID
+                        - Used as an identifier for providing Tax Identification No in **creditor_proxy_value**
+                        - *Applicable only for country_code = BR (Brazil)*
+                      * EVP
+                        - Used as an identifier for providing EVP in **creditor_proxy_value**
+                        - *Applicable only for country_code = BR (Brazil)*
+                      * NIDN
+                        - Used as an identifier for providing NRIC Number in **creditor_proxy_value**
+                      * COID
+                        - Used as an identifier for providing Unique Entity Number in **creditor_proxy_value**
+                      * MOBN
+                        - Used as an identifier for providing Mobile number       
+              - **creditor_proxy_value**
+                 - value of proxy type to be used for validation/search
+                 - max length is 70
+                 - conditional
+               - **document_type**
+                 - Originating Customer's Document Type. The values are:
+             1:LE 
+            2:DNI 
+
+            3:LM 
+
+            4:Pasaporte 
+
+            5:Carné de Extranjería 
+
+            6:RUC.           
+             - **document_number**
+                 - Originating Customer Document Number.In case the  Originating Client's account is joint, the document number must be 99999999
+                 - max length is 12 
+             - **creditor_document_number**
+                 - Creditor document number of credit account (both creditor document number and creditor tax id are same). It is mandatory for Brazil and Colombia and not  applicable for other countries.
+                 - It is a Request header with string data type.
+                 - max length is 14
+                  - example: "11111111111111" 
+              - **creditor_account_type**
+                 - Creditor Account Type of Credit Account. It is mandatory for Brazil and Colombia and not applicable for other countries.
+                  - BR  - The account type must be populated with following list of dominion:SAVINGS, CHECKING, PAYMENTS,  EASY, PUBLIC_ENTITY. However validation is not required at CCAPI, whatever received by CCAPI will be   routed to downstream and downstream will do the validation
+                  - CO - The account type must  be populated with following list of dominion:CUENTA_DE_AHORRO and CUENTA_CORRIENTE. However validation  is not required at CCAPI, whatever received by CCAPI will be routed to downstream and downstream will do the validation 
+                   - It is a Request header with string data type.
+                    - maxLength: 15
+             
+             - **creditor_document_type**
+                  - Creditor Document Type of Credit Account.It is Optional for  Brazil and Mandatory for Colombia and not applicable for other countries.
+                   - CO - The  account type must be populated with following list of dominion:CC, CD, CE, NIT, TI, PAS, IEPN, IEPJ, FD, RC It is a Request header with string data type.
+                   - maxLength: 5
+                   - example: "11111"
+             
+             - **extra_information** 
+                 - Creditor Document Type of Credit Account. This field is  optional for Colombia and it is not applicable for other countries.
+                 - It is a Request header  with string data type.
+                 - maxLength: 30
+                   - example: "qwertyuiopasdfgjklzxcvbnm1234" 
+              * JSON combination :  
+
+                 * With Creditor Account  
+
+                   {"debtor_account":"123123","creditor_account":"234324234"}.  
+
+                 * with Proxy detials  
+
+                   {"debtor_account":"123123","creditor_proxy_type":"EMAIL","creditor_proxy_value":"John@citi.com"}  
+                   
+              *Note - Usage of both **creditor_account** + **creditor_proxy_type & creditor_proxy_value** will result in error response* 
+              
+              **Example for encrypted-params:**
+               eyJhbGciOiJSU0EtT0FFUC0yNTYiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0.cM5nUBLy-Nt4bmoS3YyKpMKVgc1zG2bhX1SLFLPmfOtmuv4vMYDPrFJSStlBK6KQqnNpeia6Er-Mvtoiy6d-x_cE_wZnkZdY-s7-mPKTWdB-1mQ9ev7sripvDcrvdV46aA8yIdat7j3C1guyIrQ3pixJLAWuWwYh-Mu9oQ5Y4fbt8hSyWUcrv50BVVHDTNhl1JfC9aMedo9RSZP4uVQrkuc64cSDs65F5CPrALSINWc1kWvtBdE00rFs8VPboFlOjzh8SWKUwhEWRGziRcBo0s0Rvjr1aS6xlXFK2xduWa2Yhww_i8x4LZPl4wuG0lYUxNfYfW-i1zPgbffpxEEoTg.56JMOGxrFjQNqUnaTrDnWw._UYD1vvZk6zcPpVX0WbxpVSCv_kbZjMbMfY9zbrAeQkEwd5-6l2LJ2X0rOnQrt6bvfMdxuT8_v5A4rpOX2BlOtKOOxkt1rxO1422HJcimejh2QCG9SK65_Gq202ZHUpertZsxP1So4NXD4E5yHPCMHkhgQCxEiZYAOweVmmAGR28J7P2faMUY0_y_PEOK6L8R-MuI7MJvO95vhdQcXsn1YirgkvWYWiO9AJX9UY-ES-VnBXu5ZtH3VtEcvYsydVFjssP83vObZehaRoz-vObYFRkm8oHEXmcEGNchXgUQ-w5UtpIk4EKX-rqOG-TYPPfJTU-z-QH5s0Z9fVVUKcYpyys6-5LSgpR_LMYxkTg3nTbTvN4RoDVglgzi_pLz2fHBC8tQXLk2FpXB8l9dQPOFdfaxVyS7eq14kmEPHdkh0lRxhCKS1hFgMxIo1YRGrJoeRfrb0E7im1lviZcXm_T0ZLZTFtmLOxaRhB69ggTH38OZLHP_NFFJHSwcP3EIwQ7LS_2PC1yOBj8ctCWbd4Ig2ZjT2K7KECHaam8ugAPo1PbGrt0okk1P5fFfCwd4YPr92tnyVugI-ngSL2VpIUz3w.Sa9VUUM13fNAFvovk7L-Hg
+          in: header
+          name: encrypted-params
+          required: true
+          type: string
+      responses:
+        '200':
+          description: >
+            **Complete Creditor account details will be part of response**
+
+
+            **1. Generic Response:**
+
+            ```json
+
+            {
+              "debtor": {
+                "name": "XXXYXXX",
+                "account_id": "0054400063"
+              },
+              "creditor": {
+                "name": "ABCDEEFGH",
+                "alias": "ABCDEEFGH",
+                "resolved_name": "ABCDEEFGH",
+                "owner_type": "LEGAL_PERSON",
+                "tax_id": "12345678",
+                "country_code": "BR",
+                "bank_code": "ABCD123456",
+                "branch_id": "076",
+                "account_id": "1234567890",
+                "proxy_type": "PHONE",
+                "proxy_value": "5555141910097",
+                "account_currency": "USD,UYU",
+                "account_type": "SAVINGS",
+                "account_opening_date": "20221203",
+                "trade_name": "XYZ",
+                "document_type": "RUC",
+                "document_number": "91991923"
+              },
+              "additional_information": {
+                "end_to_end_id": "XYXYX001",
+                "value_date": "20220102",
+                "proxy_status": "ACTIVE",
+                "banelco_flag": "Y",
+                "clearing_system_id": "3233423"
+              },
+              "lookup_status_information": {
+                "lookup_reference": "ModifyAlias29122",
+                "lookup_response_status": "Success",
+                "status_code": "200",
+                "status_message": "Success"
+              }
+            } 
+
+            ```
+
+
+            **2. Argentina Response (country_code = AR):**
+             ```json
+            {
+              "creditor": {
+                "alias": "ABCDEEFGH",
+                "resolved_name": "ABCDEEFGH",
+                "tax_id": "12345678",
+                "branch_id": "076",
+                "account_id": "1234567890",
+                "account_type": "SAVINGS"
+              },
+              "additional_information": {
+                "banelco_flag": "Y",
+                "clearing_system_id": "3233423"
+              },
+              "lookup_status_information": {
+                "lookup_response_status": "Success",
+                "status_code": "200",
+                "status_message": "Success"
+              }
+            }
+
+            ```
+
+            **3. US Response (country_code = US):**
+
+            ```json
+
+            {
+              "creditor": {
+                "resolved_name": "ABCDEEFGH",
+                "proxy_value": "5555141910097"
+              },
+              "additional_information": {
+                "proxy_status": "ACTIVE"
+              },
+              "lookup_status_information": {
+                "status_code": "200",
+                "status_message": "Success"
+              }
+            }
+
+            ```
+
+            **4. Korea Response (country_code = KR):**
+
+            ```json
+
+            {
+              "creditor": {
+                "resolved_name": "ABCDEEFGH"
+              },
+              "lookup_status_information": {
+                "lookup_reference": "ModifyAlias29122",
+                "lookup_response_status": "Success",
+                "status_code": "200",
+                "status_message": "Success"
+              }
+            }
+
+            ```
+
+            **5. India Response (country_code = IN):**
+
+            ```json
+
+            {
+              "creditor": {
+                "name": "ABCDEEFGH",
+                "resolved_name": "ABCDEEFGH",
+                "account_id": "1234567890"
+              },
+              "lookup_status_information": {
+                "lookup_reference": "ModifyAlias29122",
+                "lookup_response_status": "Success",
+                "status_code": "200",
+                "status_message": "Success"
+              }
+            }
+
+            ```
+             **6. Indonesia Response (country_code = ID):**
+            ```json
+
+            {
+              "creditor": {
+                "name": "ABCDEEFGH",
+                "resolved_name": "ABCDEEFGH",
+                "account_id": "1234567890"
+              },
+              "lookup_status_information": {
+                "lookup_reference": "ModifyAlias29122",
+                "lookup_response_status": "Success",
+                "status_code": "200",
+                "status_message": "Success"
+              }
+            }
+
+            ```
+             **7. Singapore Response (country_code = SG):**
+            ```json
+
+            {
+              "creditor": {
+                "resolved_name": "ABCDEEFGH",
+                "proxy_value": "5555141910097"
+              },
+              "additional_information": {
+                "proxy_status": "ACTIVE"
+              },
+              "lookup_status_information": {
+                "status_code": "200",
+                "status_message": "Success"
+              }
+            }
+
+            ```
+             **8. Brazil Alias Resolution (country_code = BR):**
+            ```json
+
+            {
+              "creditor": {
+                "resolved_name": "ABCDEEFGH",
+                "owner_type": "LEGAL_PERSON",
+                "tax_id": "12345678",
+                "bank_code": "ABCD123456",
+                "branch_id": "076",
+                "account_id": "1234567890",
+                "proxy_type": "PHONE",
+                "proxy_value": "5555141910097",
+                "account_type": "SAVINGS",
+                "account_opening_date": "20221203",
+                "trade_name": "XYZ"
+              },
+              "additional_information": {
+                "end_to_end_id": "XYXYX001",
+                "value_date": "20220102",
+                "proxy_status": "ACTIVE"
+              }
+            }
+
+            ```
+
+            **9. LATAM Countries| Beneficiary Search (country_code = [ MX or PA
+            or PE or UY or BR or CO ] ):**
+
+            ```json
+
+            {
+              "debtor": {
+                "account_id": "0054400063"
+              },
+              "creditor": {
+                "resolved_name": "ABCDEEFGH",
+                "country_code": "MX",
+                "bank_code": "ABCD123456",
+                "account_id": "1234567890",
+                "account_currency": "USD,UYU",
+                "account_type": "SAVINGS",
+                "document_type": "RUC",
+                "document_number": "91991923"
+              },
+              "lookup_status_information": {
+                "lookup_response_status": "Success",
+                "status_code": "200",
+                "status_message": "Success"
+              }
+            }
+
+            ```
+
+            **10. US_EWS Response (country_code = US_EWS):**
+
+            ```json
+
+            {
+              "creditor": {
+                "account_verification_status": "Passed",
+                "account_verification_description": "Account sucessfully verfied in EWS",
+                "account_type": "Saving",
+                "account_owner_status": "Passed",
+                "account_owner_description": "Account owner sucessfully verfied in EWS",
+                "owner_type": "OWN",
+                "firstname": "FMATCH",
+                "lastname": "PMATCH",
+                "dob": "NAVAIL",
+                "address_line1": "PMATCH",
+                "address_line2": "PMATCH",
+                "city": "FMATCH",
+                "state": "FMATCH",
+                "zip": "FMATCH",
+                "home_phone": "FMATCH",
+                "work_phone": "FMATCH",
+                "tax_id": "PMATCH",
+                "id_type": "FMATCH",
+                "id_no": "FMATCH",
+                "id_issuance_place": "NMATCH",
+                "additional_information": "TESTING EWS RESPONSE",
+                "creditor_name": "FMATCH"
+              }
+            }
+
+            ```
+          examples:
+            application/json:
+              debtor:
+                name: XXXYXXX
+                account_id: '0054400063'
+              creditor:
+                name: ABCDEEFGH
+                alias: ABCDEEFGH
+                resolved_name: ABCDEEFGH
+                owner_type: LEGAL_PERSON
+                tax_id: '12345678'
+                country_code: BR
+                bank_code: ABCD123456
+                branch_id: '076'
+                account_id: '1234567890'
+                proxy_type: PHONE
+                proxy_value: '5555141910097'
+                account_currency: USD,UYU
+                account_type: SAVINGS
+                account_opening_date: '20221203'
+                trade_name: XYZ
+                document_type: RUC
+                document_number: '91991923'
+              additional_information:
+                end_to_end_id: XYXYX001
+                value_date: '20220102'
+                proxy_status: ACTIVE
+                banelco_flag: 'Y'
+                clearing_system_id: '3233423'
+              lookup_status_information:
+                lookup_reference: ModifyAlias29122
+                lookup_response_status: Success
+                status_code: '200'
+                status_message: Success
+            application/xml:
+              debtor:
+                name: XXXYXXX
+                account_id: '0054400063'
+              creditor:
+                name: ABCDEEFGH
+                alias: ABCDEEFGH
+                resolved_name: ABCDEEFGH
+                owner_type: LEGAL_PERSON
+                tax_id: '12345678'
+                country_code: BR
+                bank_code: ABCD123456
+                branch_id: '076'
+                account_id: '1234567890'
+                proxy_type: PHONE
+                proxy_value: '5555141910097'
+                account_currency: USD,UYU
+                account_type: SAVINGS
+                account_opening_date: '20221203'
+                trade_name: XYZ
+                document_type: RUC
+                document_number: '91991923'
+              additional_information:
+                end_to_end_id: XYXYX001
+                value_date: '20220102'
+                proxy_status: ACTIVE
+                banelco_flag: 'Y'
+                clearing_system_id: '3233423'
+              lookup_status_information:
+                lookup_reference: ModifyAlias29122
+                lookup_response_status: Success
+                status_code: '200'
+                status_message: Success
+          schema:
+            $ref: '#/definitions/BeneficiaryValidationResponse'
+        '400':
+          description: Bad Request
+          examples:
+            application/json:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: VC00002
+                  issue: invalid value provided for property debtor_account
+                  action: please provide valid value for property debtor_account
+                - code: VC00002
+                  issue: invalid value provided for property country_code
+                  action: >-
+                    please provide valid value for property country_code, in
+                    format ^[A-Z]{2}$
+                - code: VC00002
+                  issue: invalid value provided for property creditor_account
+                  action: please provide valid value for property creditor_account
+                - code: VC00002
+                  issue: invalid value provided for property creditor_bank_code
+                  action: please provide valid value for property creditor_bank_code
+            application/xml:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: VC00002
+                  issue: invalid value provided for property debtor_account
+                  action: please provide valid value for property debtor_account
+                - code: VC00002
+                  issue: invalid value provided for property country_code
+                  action: >-
+                    please provide valid value for property country_code, in
+                    format ^[A-Z]{2}$
+                - code: VC00002
+                  issue: invalid value provided for property creditor_account
+                  action: please provide valid value for property creditor_account
+                - code: VC00002
+                  issue: invalid value provided for property creditor_bank_code
+                  action: please provide valid value for property creditor_bank_code
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          examples:
+            application/json:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00007
+                  issue: Authorization failed
+                  action: Please try again with valid credentials.
+            application/xml:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00007
+                  issue: Authorization failed
+                  action: Please try again with valid credentials.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not Found
+          examples:
+            application/json:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00006
+                  issue: requested resource not found
+                  action: please try again later.
+            application/xml:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00006
+                  issue: requested resource not found
+                  action: please try again later.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '405':
+          description: Method Not Allowed
+          examples:
+            application/json:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00001
+                  action: Please use valid Http Verb.
+                  issue: Method Not Allowed
+            application/xml:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00001
+                  issue: Method Not Allowed
+                  action: Please use valid Http Verb.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          examples:
+            application/json:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00004
+                  action: Please try again after sometime
+                  issue: >-
+                    Internal error , Unable to process the request at this
+                    moment
+            application/xml:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00004
+                  action: Please try again after sometime
+                  issue: >-
+                    Internal error , Unable to process the request at this
+                    moment
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '503':
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+          examples:
+            application/json:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00011
+                  issue: unable to serve your request at this moment
+                  action: Not in business hours. Please try after sometime
+            application/xml:
+              ref_id: ec689822-9864-4c4d-9d68-222467627902
+              error_details:
+                - code: CC00011
+                  issue: unable to serve your request at this moment
+                  action: Not in business hours. Please try after sometime
+      tags:
+        - BeneficiaryValidation
+      description: This API allows the client to retrieve beneficiary details.
+      operationId: getBeneficiaryDetails
+      summary: >-
+        Retrieve the Beneficiary details for a given debit and credit account
+        number of account holder.
+  /taxid/validation:
+    post:
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/TaxIdValidationResponse'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/TaxIdErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/TaxIdErrorResponse'
+        '403':
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/TaxIdErrorResponse'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/TaxIdErrorResponse'
+        '405':
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/TaxIdErrorResponse'
+        '415':
+          description: Unsupported Media Type
+          schema:
+            $ref: '#/definitions/TaxIdErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/TaxIdErrorResponse'
+      parameters:
+        - name: body
+          required: true
+          in: body
+          description: contains consumer id's and other optional to validate the status
+          schema:
+            $ref: '#/definitions/TaxIdValidationRequest'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      operationId: validateTaxIdDetails
+      summary: >-
+        This API has the ability to check status of the given taxId as well
+        as         the eligibility information.
+      tags:
+        - TaxIdValidation
+      description: >-
+        TaxId validation API has the ability to valdate status of the
+        given         taxId and other eligibility information in Json format.
+        This          functionality can be access with following input fields
+        tax id, tax id         name, country code and other optional details.
+        <br><br><font         size='2'><b>Content-Type</b> :
+        application/json.         <br><b>Authorization</b> : The OAuth Token
+        prefixed with Bearer and         space in between.
+definitions:
+  BeneficiaryValidationResponse:
+    type: object
+    properties:
+      debtor:
+        title: debtor
+        allOf:
+          - $ref: '#/definitions/AccountInfo'
+        xml:
+          name: Debtor
+      creditor:
+        title: creditor
+        allOf:
+          - $ref: '#/definitions/AccountInfo'
+        xml:
+          name: Creditor
+      additional_information:
+        title: additional_information
+        allOf:
+          - $ref: '#/definitions/AdditionalInformation'
+        xml:
+          name: AdditionalInformation
+      lookup_status_information:
+        title: lookup_status_information
+        allOf:
+          - $ref: '#/definitions/LookupStatusInformation'
+        xml:
+          name: LookupStatusInformation
+    xml:
+      name: BeneficiaryValidationResponse
+  AccountInfo:
+    type: object
+    properties:
+      name:
+        type: string
+        description: >-
+          Name by which a party is known and which is usually used to identify
+          that party
+        maxLength: 140
+        xml:
+          name: Name
+      alias:
+        title: alias
+        type: string
+        description: Alias name of the party used for identification.
+        maxLength: 140
+        xml:
+          name: Alias
+      resolved_name:
+        type: string
+        description: Actual account name of the party resolved by backend system.
+        maxLength: 140
+        xml:
+          name: RslvdName
+      owner_type:
+        type: string
+        description: >
+          Describes the type of party who owns the respective proxy/alias,
+          either an Individual(NATURAL_PERSON) or Corporate(LEGAL_PERSON)
+        maxLength: 30
+        xml:
+          name: OwnerTp
+      tax_id:
+        type: string
+        description: |
+          Tax identification number of the party.
+        minLength: 8
+        maxLength: 16
+        xml:
+          name: TaxId
+      country_code:
+        type: string
+        description: >-
+          Country where the request is initiated for beneficiary account
+          search/validation in ISO 3166-1 alpha-2 format
+        maxLength: 2
+        xml:
+          name: CtryCode
+      bank_code:
+        type: string
+        description: >
+          Bank identification code of the party used for identification of a
+          financial institution
+        maxLength: 10
+        xml:
+          name: BkCode
+      branch_id:
+        title: branch_id
+        type: string
+        description: >
+          Branch identification identification code of the party used for
+          identification of a financial institution
+        maxLength: 10
+        xml:
+          name: BrnchId
+      account_id:
+        title: account_id
+        type: string
+        description: Account number of the party as provided in the Input API request
+        maxLength: 35
+        xml:
+          name: AcctId
+      proxy_type:
+        title: proxy_type
+        type: string
+        description: |
+          Type of the proxy value used for validation/search
+        maxLength: 35
+        xml:
+          name: ProxyTp
+      proxy_value:
+        title: proxy_value
+        type: string
+        description: >-
+          Actual proxy value related to the proxy type used for
+          validation/search
+        maxLength: 70
+        xml:
+          name: ProxyVal
+      account_type:
+        title: account_type
+        type: string
+        description: |
+          Account type of the party."
+        maxLength: 20
+        xml:
+          name: AcctTp
+      account_currency:
+        title: account_currency
+        type: string
+        description: >
+          Identification of the currency in which the account is held.
+
+
+          Single & mMltiple account currency is supported which are seperated by
+          comma.
+        pattern: ^[A-Z]{3}(,[A-Z]{3})*$
+        xml:
+          name: AcctCcy
+      account_opening_date:
+        title: account_opening_date
+        type: string
+        maxLength: 8
+        description: >
+          Date to identify when the Account is Operationally available for
+          business transactions in business date format YYYYMMDD
+        xml:
+          name: AcctOpeningDate
+      trade_name:
+        title: trade_name
+        type: string
+        description: >
+          Describes the trade name of the party who owns the respective
+          proxy/alias
+        maxLength: 100
+        xml:
+          name: TradeName
+      document_type:
+        title: document_type
+        type: string
+        description: |
+          Name of Tax ID based on the country
+
+          Example - Tax ID for Peru is 'RUC'.
+        maxLength: 10
+        xml:
+          name: DcType
+      document_number:
+        title: document_number
+        type: string
+        description: |
+          Unique Tax Identification number of the party.
+        maxLength: 25
+        xml:
+          name: DcNumber
+      account_verification_status:
+        title: account_verification_status
+        type: string
+        description: |
+          Account status details received from Early Warning Systems (EWS). 
+        maxLength: 20
+        xml:
+          name: accountverificationstatus
+      account_verification_description:
+        title: account_verification_description
+        type: string
+        description: >
+          Account status description details received from Early Warning Systems
+          (EWS). 
+        maxLength: 200
+        xml:
+          name: accountverificationdescription
+      account_owner_status:
+        title: account_owner_status
+        type: string
+        description: |
+          Account status details received from Early Warning Systems (EWS). 
+        maxLength: 20
+        xml:
+          name: accountownerstatus
+      account_owner_description:
+        title: account_owner_description
+        type: string
+        description: >
+          Account status description details received from Early Warning Systems
+          (EWS). 
+        maxLength: 200
+        xml:
+          name: accountownerdescription
+      firstname:
+        title: firstname
+        type: string
+        description: >
+          Beneficiary First Name verification response received from Early
+          Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: firstname
+      lastname:
+        title: lastname
+        type: string
+        description: >
+          Beneficiary Last Name verification response received from Early
+          Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: lastname
+      dob:
+        title: dob
+        type: string
+        description: >
+          Beneficiary date of birth verification response received from Early
+          Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: dob
+      address_line1:
+        title: address_line1
+        type: string
+        description: >
+          Beneficiary Address line1 verification response received from Early
+          Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: address_line1
+      address_line2:
+        title: address_line2
+        type: string
+        description: >
+          Beneficiary Address line2 verification response received from Early
+          Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: address_line2
+      city:
+        title: city
+        type: string
+        description: >
+          Beneficiary city verification response received from Early Warning
+          Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: city
+      state:
+        title: state
+        type: string
+        description: >
+          Beneficiary city verification response received from Early Warning
+          Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: state
+      zip:
+        title: zip
+        type: string
+        description: >
+          Beneficiary zipcode verification response received from Early Warning
+          Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: zip
+      home_phone:
+        title: home_phone
+        type: string
+        description: >
+          Beneficiary home phone number verification response received from
+          Early Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: home_phone
+      work_phone:
+        title: work_phone
+        type: string
+        description: >
+          Beneficiary work phone number verification response received from
+          Early Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: work_phone
+      id_type:
+        title: id_type
+        type: string
+        description: >
+          Beneficiary identification type verification response received from
+          Early Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: id_type
+      id_no:
+        title: id_no
+        type: string
+        description: >
+          Beneficiary identification number verification response received from
+          Early Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: id_no
+      id_issuanceplace:
+        title: id_issuanceplace
+        type: string
+        description: >
+          Beneficiary identification issuance place verification response
+          received from Early Warning Systems (EWS). 
+        maxLength: 6
+        xml:
+          name: id_issuanceplace
+      additional_information:
+        title: additional_information
+        type: string
+        description: >
+          Additional information received in the payload request for Early
+          Warning Systems (EWS). 
+        maxLength: 255
+        xml:
+          name: additional_information
+      creditor_name:
+        title: creditor_name
+        type: string
+        description: >
+          Account name of the creditor intended for search/validation whose
+          payment amount will be credited.
+
+          For early warning system (EWS), if the verification_type = (BANKOWN or
+          BASICVR) either creditor_firstname & creditor_lastname or
+          creditor_name (Business Name) should be passed. Business name maximum
+          allowed length 87 characters. 
+        maxLength: 140
+        minLength: 3
+        xml:
+          name: creditor_name
+  AdditionalInformation:
+    type: object
+    properties:
+      end_to_end_id:
+        type: string
+        description: >
+          Unique identification assigned by the initiating party to
+          unambiguously identify the transaction which can be used for
+          reconciliation or to link tasks relating to the transaction. It can be
+          included in several messages related to the transaction.
+        maxLength: 32
+        xml:
+          name: EndtoEndId
+      value_date:
+        type: string
+        description: >
+          Requested execution date post alias resolution when the payment needs
+          to be processed for settlement, format would be YYYYMMDD.
+        maxLength: 8
+        xml:
+          name: ValueDate
+      proxy_status:
+        type: string
+        description: >
+          Describes the status of Alias/Proxy - whether Active, Inactive or
+          Deleted
+        maxLength: 20
+        xml:
+          name: ProxySts
+      banelco_flag:
+        type: string
+        description: >
+          Flag will be 'Y' for successfull search/validation & 'N' for failure
+          case.
+        maxLength: 1
+        xml:
+          name: BanFlag
+      clearing_system_id:
+        title: clearing_system_id
+        type: string
+        description: |
+          Unique reference, as assigned by a clearing system.
+        maxLength: 16
+        xml:
+          name: ClrSysId
+  LookupStatusInformation:
+    type: object
+    properties:
+      lookup_reference:
+        type: string
+        description: >-
+          unique reference number of the request.This is e2e tracking reference
+          from CCD. It will be provided by Concord.
+        maxLength: 35
+        xml:
+          name: LkUpRef
+      lookup_response_status:
+        type: string
+        description: >-
+          status(SUCCESS / FAILURE) of the request and get processed
+          successfully. If account exist then status is SUCCESS else FAILURE.
+        maxLength: 10
+        xml:
+          name: Status
+      status_code:
+        type: string
+        description: >-
+          Response status of validation-Complete with data from Status
+          Validation.
+        maxLength: 3
+        xml:
+          name: StCod
+      status_message:
+        type: string
+        description: >-
+          Response message of validation-Complete with data from Message
+          Validation.
+        maxLength: 100
+        xml:
+          name: StMessage
+  ErrorDetail:
+    properties:
+      code:
+        description: Unique ID for the error code
+        maxLength: 7
+        type: string
+      issue:
+        title: issue
+        description: more details about the  issue
+        maxLength: 200
+        type: string
+      action:
+        title: action
+        description: corrective action to be taken to resolve above issue
+        maxLength: 350
+        type: string
+    type: object
+  ErrorResponse:
+    properties:
+      ref_id:
+        title: ref_id
+        description: Unique ID for the Transaction
+        maxLength: 60
+        type: string
+      error_details:
+        title: error_details
+        items:
+          $ref: '#/definitions/ErrorDetail'
+        type: array
+    type: object
+  TaxIdErrorResponse:
+    properties:
+      errors:
+        items:
+          $ref: '#/definitions/ErrorDetail'
+        type: array
+      http_code:
+        title: http_code
+        description: Http Status code
+        format: int32
+        maxLength: 3
+        type: integer
+      ref_id:
+        title: ref_id
+        description: Unique ID for the Transaction
+        maxLength: 60
+        type: string
+      status:
+        title: status
+        description: Status of the Transaction SUCCESS/FAILURE
+        maxLength: 20
+        type: string
+    type: object
+  TaxIdValidationRequest:
+    description: contains consumer id's and other optional  to validate the status
+    properties:
+      additional_info:
+        additionalProperties:
+          type: string
+        description: >-
+          It is generic place holder object, it allows any generic key and value
+          pairs
+        type: object
+      country_code:
+        description: indicates the tax_id's country
+        pattern: ^[A-Z]{2}$
+        type: string
+      tax_id:
+        description: >-
+          tax_id is the personal identification number given by the regulator
+          body
+        pattern: ^[A-Z a-z]{5}[0-9]{4}[A-Z a-z]{1}$
+        type: string
+      tax_id_name:
+        description: >-
+          tax_id_name is the name maintained under personal identification
+          number given by the regulator body
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+      - country_code
+      - tax_id
+      - tax_id_name
+    type: object
+  TaxIdValidationResponse:
+    description: contains taxId stautus and other details
+    properties:
+      additional_info:
+        additionalProperties:
+          type: string
+        description: >-
+          it is generic place holder object, it contains all other optional
+          fields
+        type: object
+      request_status:
+        title: request_status
+        description: >-
+          Indicates the taxId validation request status either
+          SUCCESS/FAILURE/REJECT
+        maxLength: 10
+        minLength: 1
+        type: string
+      tax_id:
+        title: tax_id
+        description: >-
+          tax_id is the personal identification number given by the regulator
+          body
+        pattern: ^[A-Z a-z]{5}[0-9]{4}[A-Z a-z]{1}$
+        type: string
+      tax_id_status:
+        title: tax_id_status
+        description: tax_id_status describes the taxId present status
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+      - request_status
+      - tax_id
+      - tax_id_status
+    type: object
+tags:
+  - name: BeneficiaryValidation
+    description: API to retrieve Beneficiry details
+  - name: TaxIdValidation
+    description: API to validate taxId status
+securityDefinitions:
+  clientCredentials:
+    description: >+
+      All CitiConnect APIs use the oAuth2 authentication scheme, which requires
+      a bearer token to authenticate your API call. The Token URL includes the
+      version of authentication used by this API. See <a
+      href="../../authentication/authentication-api-reference/"
+      target="_blank">the Citi Authentication API reference</a> for information
+      on requesting a token.
+
+    type: oauth2
+    tokenUrl: https://tts.apib2b.citi.com/tts/cards/api/v1/oauth2/token
+    flow: application
+    scopes: null
+x-components: {}
+x-ibm-configuration:
+  enforced: true
+  testable: true
+  phase: realized
+  cors:
+    enabled: false
+  properties:
+    PanValidation:
+      value: https://self-support-services-dev-168554.nam.nsroot.net/v3
+      description: ''
+      encoded: false
+    hostName:
+      value: https://beneficiary-dev-168554.nam.nsroot.net
+      description: ''
+      encoded: false
+  catalogs:
+    SIT5:
+      properties:
+        hostName: https://beneficiary-dev-168554.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-dev-168554.nam.nsroot.net/v3
+    PTE:
+      properties:
+        hostName: https://beneficiary-pte-168554.cloudgsl.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-pte-168554.nam.nsroot.net/v3
+    UAT1:
+      properties:
+        hostName: https://beneficiary-uat-168554.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-uat-168554.nam.nsroot.net/v3
+    UAT2:
+      properties:
+        hostName: https://beneficiary-uat-168554.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-uat-168554.nam.nsroot.net/v3
+    Sandbox:
+      properties:
+        hostName: https://beneficiary-cte-168554.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-cte-168554.nam.nsroot.net/v3
+    prod:
+      properties:
+        hostName: https://beneficiary-168554.cloudgsl.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-168554.cloudgsl.nam.nsroot.net/v3
+  assembly:
+    execute:
+      - operation-switch:
+          title: operation-switch
+          case:
+            - operations:
+                - getBeneficiaryDetails
+              execute:
+                - proxy:
+                    title: proxy
+                    timeout: 60
+                    verb: keep
+                    cache-response: protocol
+                    cache-ttl: 900
+                    version: 1.0.0
+                    target-url: $(hostName)$(api.operation.path)
+                    tls-profile: icg-tts-ic
+            - operations:
+                - validateTaxIdDetails
+              execute:
+                - proxy:
+                    title: proxy
+                    timeout: 60
+                    verb: keep
+                    cache-response: protocol
+                    cache-ttl: 900
+                    version: 1.0.0
+                    target-url: $(PanValidation)$(api.operation.path)
+                    tls-profile: icg-tts-ic
+          otherwise: []
+          version: 1.0.0
+      - activity-log:
+          title: activity-log
+          content: header
+          error-content: header
+          version: 1.0.0
+    catch: []
+consumes:
+  - application/xml
+  - application/json
+produces:
+  - application/json
+  - application/xml
+responses:
+  '200':
+    description: 200 OK
+  '401':
+    description: Unauthorised Access
+  '403':
+    description: Access Forbidden
+  '500':
+    description: Internal Server Error

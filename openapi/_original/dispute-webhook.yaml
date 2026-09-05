@@ -1,0 +1,278 @@
+openapi: 3.0.0
+info:
+  description: Cards dispute APIs.
+  version: 1.0.0
+  title: Cards Disputes
+  x-ibm-name: cards-disputes
+  contact:
+    name: GLOBAL Commercial Cards API Production support
+    email: >-
+      dl.icg.global.commercial.cards.digital.production.support@imcap.ap.ssmb.com
+tags:
+  - name: Dispute webhook
+    description: ' Webhook notification to be sent to clients for case status'
+paths:
+  /v1/webhook:
+    post:
+      summary: Webhooks notifications
+      description: Webhooks notifications to client  for dispute case status
+      operationId: disputeNotifications
+      tags:
+        - Dispute webhook
+      parameters:
+        - name: Authorization
+          in: header
+          description: >-
+            <br>`Client has option to choose basicAuth for webhook connectivity
+            `</br>`Example:`</br>Basic
+            AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB
+          schema:
+            type: string
+          required: false
+        - name: grace_tracking_id
+          in: header
+          description: Unique tracking Id sent by Citi
+          schema:
+            type: string
+          required: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisputeCaseStatusUpdate'
+            examples:
+              Create:
+                $ref: '#/components/examples/create'
+              Update:
+                $ref: '#/components/examples/update'
+              Status Change:
+                $ref: '#/components/examples/statusChange'
+              Upload Document:
+                $ref: '#/components/examples/uploadDocument'
+      responses:
+        '201':
+          description: Dispute Case Status Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/successResponsePayload'
+components:
+  schemas:
+    successResponsePayload:
+      properties:
+        response:
+          type: string
+          format: string
+          title: res
+          example: Acknowledged
+    DisputeCaseStatusUpdate:
+      properties:
+        trackingId:
+          type: string
+          format: string
+          title: trackingId
+          description: >-
+            Unique identifier associated with the client’s original request.
+            This ID matches the value returned in the synchronous
+            acknowledgement for the corresponding API call (create, update, or
+            upload) and enables the client to track and reconcile webhook
+            notifications.
+          example: 7d13245e-243a-5e8f-bc10-8626ec728291
+        reasonCode:
+          type: string
+          format: string
+          title: reasonCode
+          description: >-
+            Reason Code provided in the Case Creation request for the Dispute
+            reason
+          example: >-
+            Reason Code sent by client in request e.g DuplicateProcessing,
+            AlteredAmount etc
+        eventType:
+          type: string
+          format: string
+          description: >-
+            Specifies the type of event that triggered this webhook
+            notification, helping the client understand the context and purpose
+            of the payload.
+          title: eventType
+          enum:
+            - CREATE
+            - UPDATE
+            - STATUS_CHANGE
+            - UPLOAD_DOCUMENT
+        disputeCaseDetails:
+          description: Details of dispute case
+          type: array
+          title: disputeCaseDetails
+          items:
+            $ref: '#/components/schemas/DisputeCaseDetails'
+      required:
+        - trackingId
+        - disputeCaseDetails
+    DisputeCaseDetails:
+      properties:
+        requestId:
+          description: Request ID sent by client in case creation request
+          type: string
+          format: alphanumeric
+          title: requestId
+          example: 73d150f5-ee16-4841-a2db-4f24b6d372cc
+          maxLength: 36
+          minLength: 36
+        acquirerReferenceNumber:
+          description: Acquirer Reference Number (ARN)
+          type: string
+          format: numeric
+          title: acquirerReferenceNumber
+          example: '22345678901234500000000'
+          maxLength: 24
+          minLength: 23
+        caseId:
+          description: >-
+            The unique identifier assigned to the dispute case related to this
+            webhook event.
+          type: string
+          format: alphanumeric
+          title: caseId
+          example: '22345678901'
+          minLength: 11
+          maxLength: 11
+        statusDescription:
+          description: >-
+            Case status description. Possible values - OP - Open; CP - Awaiting
+            Information from Cardholder; CR - Cancelled / Rejected; CM - Closed
+            in favour of bank; CC - Closed in favour of cardholder; CB -
+            Chargeback submitted to Network
+          type: string
+          format: string
+          title: statusDescription
+          example: CC - Closed in favour of cardholder
+        statusAsOnDate:
+          description: >-
+            This is the Date Timestamp that the status was last updated. This is
+            in the GMT timezone with format YYYYMMDD HH:MM:SS:MMM
+          type: string
+          format: alphanumeric
+          title: statusAsOnDate
+          example: 20260101 02:30:34:000
+        status:
+          description: 'Status of update or upload event. eg: SUCCESS, FAILED'
+          type: string
+          format: string
+          title: status
+          example: SUCCESS
+        documentReferenceId:
+          description: Document Id
+          type: string
+          format: string
+          title: documentReferenceId
+          example: NchL202404251414678
+          maxLength: 19
+          minLength: 19
+        remarks:
+          description: >-
+            The latest remarks or comments  added to the dispute case id to
+            provide additional information to the client.
+          type: string
+          format: string
+          title: remarks
+        remarksLastUpdatedOn:
+          description: >-
+            Timestamp indicating when the remarks associated with the case were
+            last updated.
+          type: string
+          format: string
+          title: remarksLastUpdatedOn
+          example: 20260131 23:09:00:001
+        errors:
+          title: errors
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+    ErrorMessage:
+      title: ErrorMessage
+      properties:
+        errorCode:
+          type: string
+          example: ErrorCode
+          description: >
+            ErrorCode * `DISP250` * `DISP251` * `DISP252` * `DISP253` *
+            `DISP254` * `DISP255` * `DISP256` * `DISP257` * `DISP258` *
+            `DISP259` * `DISP260` * `DISP261` * `DISP262` * `DISP263` *
+            `DISP264` * `DISP265` * `DISP266` * `DISP267` * `DISP200` *
+            `GRC0014`
+        errorDescription:
+          type: string
+          example: ErrorDescription
+          description: >
+            ErrorDescription * `DisPute case creation failed- Invalid dispute
+            Reason Code` * `Dispute case creation failed- Settlement Details
+            cannot be fetched for the given ARN` * `Dispute case creation
+            failed- Invalid Client relationship number (GCN)` * `Dispute case
+            creation failed- Invalid dispute Amount` * `Dispute case creation
+            failed- Dispute Amount higher than amount cap` * `Dispute case
+            creation failed- Internal technical failure` * `Dispute case
+            creation failed- Dispute request transaction not posted to
+            cardholder statement` * `Dispute case creation failed- Transaction
+            should be a purchase to dispute` * `Dispute case creation failed-
+            Transaction aging is beyond 90 days` * `Dispute case creation
+            failed- Blocked card. Cannot be disputed` * `Dispute case creation
+            failed- C2AT type transaction. Cannot be disputed` * `Dispute case
+            creation failed- Internal Processing error` * `Dispute case creation
+            failed- Internal Processing error` * `Dispute case creation failed-
+            Internal Processing error` * `Dispute case creation failed- Internal
+            Processing error` * `Dispute case creation failed- Internal
+            Processing error` * `Dispute case creation failed- Internal
+            Processing error` * `Dispute case creation failed- Internal
+            Processing error` * `We have encountered an error and couldn't
+            process your request. Please call the Dispute Status Enquiry API
+            using the ARN to see whether a case ID was created. If a case ID was
+            not created, please try your case creation request again, or contact
+            Citi support if you have any further questions or comments.`
+      required:
+        - requestId
+        - acquirerReferenceNumber
+  examples:
+    create:
+      value:
+        trackingId: 7d13245e-243a-5e8f-bc10-8626ec728291
+        reasonCode: DuplicateProcessing
+        eventType: CREATE
+        disputeCaseDetails:
+          - caseId: '22345678901'
+            statusDescription: OP - Open
+            acquirerReferenceNumber: '22345678901234500000000'
+            requestId: 73d150f5-ee16-4841-a2db-4f24b6d372cc
+            statusAsOnDate: 20260101 02:30:34:000
+            remarks: Case created successfully
+            remarksLastUpdatedOn: 20260101 02:30:34:000
+    update:
+      value:
+        trackingId: 7d13245e-243a-5e8f-bc10-8626ec728291
+        reasonCode: DuplicateProcessing
+        eventType: UPDATE
+        disputeCaseDetails:
+          - caseId: '22345678901'
+            status: SUCCESS
+    statusChange:
+      value:
+        trackingId: 7d13245e-243a-5e8f-bc10-8626ec728291
+        reasonCode: DuplicateProcessing
+        eventType: STATUS_CHANGE
+        disputeCaseDetails:
+          - caseId: '22345678901'
+            statusDescription: CC - Closed in favour of cardholder
+            acquirerReferenceNumber: '22345678901234500000000'
+            statusAsOnDate: 20260101 02:30:34:000
+            remarks: Case closed successfully
+            remarksLastUpdatedOn: 20260101 02:30:34:000
+    uploadDocument:
+      value:
+        trackingId: 7d13245e-243a-5e8f-bc10-8626ec728291
+        eventType: UPLOAD_DOCUMENT
+        disputeCaseDetails:
+          - caseId: '22345678901'
+            status: SUCCESS
+            documentReferenceId: NchL202404251414678

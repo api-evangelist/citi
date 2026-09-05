@@ -1,0 +1,1140 @@
+openapi: 3.0.0
+info:
+  title: Virtual Accounts Single Entity
+  description: >-
+    CitiConnect API services allows you to enable STP
+    (straight-through-processing) for incremental virtual account creation
+    functionality where the client ERP system can invoke CitiConnect API
+    requests to open virtual accounts for reservation and activation
+    functionalities. The user can also invoke the CitiConnect API request to
+    inquire on the status or modify existing of virtual accounts or delete an
+    active virtual account.
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+servers:
+  - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+    description: 'sandbox URL '
+  - url: https://tts.apib2b.citi.com/citiconnect/prod
+    description: production gateway URL
+tags:
+  - name: Virtual Account Single Entity
+    description: Virtual Account Single Entity
+paths:
+  /receivablesservices/v1/virtualaccount/activateorreserve:
+    post:
+      summary: Create a Virtual Account
+      description: >-
+        This endpoint allows you to create a virtual account with activation and
+        reservation services. The endpoint supports both XML and JSON format.
+        The activation and reservation functionality is identified based on the
+        `action` in the request payload.
+      operationId: virtualAccountActivateOrReserve
+      tags:
+        - Virtual Account Single Entity
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for OAuth token
+            generation.
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          description: Supports \"application/xml\" and \"application/json\".
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Describes the virtual account creation APIs request body fields.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VirtualAccountRequest'
+            examples:
+              Virtual-Account-Reservation-Request:
+                $ref: '#/components/examples/Virtual-Account-Reservation-Request'
+              Virtual-Account-Activation-Request:
+                $ref: '#/components/examples/Virtual-Account-Activation-Request'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/VirtualAccountRequest'
+            examples:
+              Virtual-Account-Reservation-Request:
+                value: >-
+                  <?xml
+                  version="1.0"encoding="UTF-8"?><VirtualAccountRequest><ApiVersion>1.0</ApiVersion><Action>reservation</Action><BranchCode>920</BranchCode><NumAccountsRequired>1</NumAccountsRequired><VirtualHeaderAccount>54444598</VirtualHeaderAccount><ContactFirstName>James</ContactFirstName><ContactLastName>Smith</ContactLastName><ContactEmail>james.smith@email.com</ContactEmail><ContactPhone>+44-2021220909</ContactPhone></VirtualAccountRequest>
+              Virtual-Account-Activation-Request:
+                value: >-
+                  <VirtualAccountRequest><ApiVersion>1.0</ApiVersion><Action>activation</Action><BranchCode>920</BranchCode><VirtualHeaderAccount>54444598</VirtualHeaderAccount><ContactFirstName>James</ContactFirstName><ContactLastName>Smith</ContactLastName><ContactEmail>james.smith@email.com</ContactEmail><ContactPhone>+44-2021220909</ContactPhone><Accounts><Account><VirtualHeaderAccount>54444598</VirtualHeaderAccount><VirtualAccountNumber>54536468</VirtualAccountNumber><AlternateAccountNumber>54536468</AlternateAccountNumber><TaxIdentificationNumber>12345678</TaxIdentificationNumber><ReportingAccountNumber>54444598</ReportingAccountNumber><PurposeOfVirtualAccount>C</PurposeOfVirtualAccount><Name>David</Name><AddressLine1>New
+                  York</AddressLine1><VirtualAccountBalanceDisplayOption>Y</VirtualAccountBalanceDisplayOption><BalanceControlOption>O</BalanceControlOption></Account></Accounts></VirtualAccountRequest>
+        required: true
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualAccountResponse'
+              examples:
+                Virtual-Account-Reservation-Response:
+                  $ref: '#/components/examples/Virtual-Account-Reservation-Response'
+                Virtual-Account-Activation-Response:
+                  $ref: '#/components/examples/Virtual-Account-Activation-Response'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/VirtualAccountResponse'
+              examples:
+                Virtual-Account-Reservation-Response:
+                  value: >-
+                    <VirtualAccountResponse><RequestId>b8f-d8e5-4a48-ad13-5d1ec8bb32e858052</RequestId><Status>success</Status><Message>Request
+                    accepted Successfully</Message></VirtualAccountResponse>
+                Virtual-Account-Activation-Response:
+                  value: >-
+                    <VirtualAccountResponse><RequestId>8c4-c93c-4803-b9b6-aef2d43ca76e57920</RequestId><Status>success</Status><Message>Request
+                    accepted Successfully</Message></VirtualAccountResponse>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - clientCredentials: []
+  /receivablesservices/v1/virtualaccounts:
+    get:
+      summary: Virtual Account Status
+      description: >-
+        This endpoint allows you to retrieve details of any active virtual
+        accounts.
+      operationId: getVirtualAccounts
+      tags:
+        - Virtual Account Single Entity
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for OAuth token
+            generation.
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          schema:
+            type: string
+        - name: encrypted-params
+          in: header
+          description: >-
+            Indicates the virtual_account_number To specify the virtual account
+            number that must be for inquired/updated/deleted.<br>Sample message
+            before encryption - {"virtual_account_number":"09834572"}
+          required: true
+          schema:
+            type: string
+        - name: branch_code
+          in: query
+          description: >-
+            Citi's internal branch code associated with a virtual account
+            number.
+          required: true
+          schema:
+            type: string
+            maxLength: 4
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualAccountResponse'
+              examples:
+                Virtual-Account-Get-Response:
+                  $ref: '#/components/examples/Virtual-Account-Get-Response'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/VirtualAccountResponse'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><VirtualAccountResponse><RequestId>3c2224a8-ce1b-4c12-8a05-f9b3ee2716c6</RequestId><Status>success</Status><Message>Request
+                accepted Successfully</Message></VirtualAccountResponse>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - clientCredentials: []
+    put:
+      summary: Modify a Virtual Account
+      description: >-
+        This endpoint allows you to modify existing accounts or reopen
+        previously closed virtual accounts. You can modify the account's
+        description, tax ID, address as well as specify whether the virtual
+        account will allow credits or debits to post.
+      operationId: updateVirtualAccounts
+      tags:
+        - Virtual Account Single Entity
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for OAuth token
+            generation.
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          description: Supports \"application/xml\" and \"application/json\".
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVirtualAccounts'
+            examples:
+              Virtual-Account-Modify-Request:
+                $ref: '#/components/examples/Virtual-Account-Modify-Request'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/UpdateVirtualAccounts'
+            example: >-
+              <?xml version="1.0"
+              encoding="UTF-8"?><UpdateVirtualAccounts><VirtualAccountNumber>14337204</VirtualAccountNumber><Action>Modify</Action><BranchCode>600</BranchCode><AccountDescription>David</AccountDescription><TaxPayerId>123452354</TaxPayerId><Address><AddressLine1>Ireland
+              country</AddressLine1><AddressLine2>Addressline
+              2</AddressLine2></Address></UpdateVirtualAccounts>
+        required: true
+        x-s2o-overloaded: true
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualAccountResponse'
+              examples:
+                Account-Modify-Response:
+                  $ref: '#/components/examples/Modify-Virtual-Account-Response'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/VirtualAccountResponse'
+              example: >-
+                <VirtualAccountResponse><RequestId>912-1b37-449a-9e1a-3401d7ab7d8384932</RequestId><Status>success</Status><Message>Request
+                accepted Successfully</Message></VirtualAccountResponse>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - clientCredentials: []
+      x-s2o-warning: Operation updateVirtualAccounts has multiple requestBodies
+    delete:
+      summary: Delete a Virtual Account
+      description: This endpoint allows you to delete an active virtual account.
+      operationId: deleteVirtualAccount
+      tags:
+        - Virtual Account Single Entity
+      parameters:
+        - name: client_id
+          in: query
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for OAuth token
+            generation.
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: The OAuth token prefixed with "Bearer" and a space in between.
+          required: true
+          schema:
+            type: string
+        - name: encrypted-params
+          in: header
+          description: >-
+            Indicates the virtual account number that must be for status
+            inquiries updates and deletions. <br>Sample message before
+            encryption - {"virtual_account_number":"09834572"}
+          required: true
+          schema:
+            type: string
+        - name: branch_code
+          in: query
+          description: Citi internal branch code associated with a virtual account number.
+          required: true
+          schema:
+            type: string
+            maxLength: 4
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualAccountResponse'
+              examples:
+                Virtual-Account-Delete-Request:
+                  $ref: '#/components/examples/Virtual-Account-Delete-Request'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/VirtualAccountResponse'
+              example: >-
+                <?xml version="1.0"
+                encoding="UTF-8"?><VirtualAccountResponse><RequestId>2aafe680-c12d-41a3-8b3d-f9b3ee2792a4</RequestId><Status>success</Status><Message>Request
+                accepted Successfully</Message></VirtualAccountResponse>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+        - clientCredentials: []
+x-components:
+  parameters:
+    BranchCode:
+      description: Citi branch code associated with a given virtual header account.
+      in: query
+      maxLength: 4
+      name: branch_code
+      required: true
+      type: string
+    ClientId:
+      description: >-
+        This is your unique identifier shared during your CitiConnect API
+        onboarding. This is the same `client_id` used for OAuth token
+        generation.
+      in: query
+      name: client_id
+      required: true
+      type: string
+    EncryptedHeader:
+      description: >-
+        Indicates the virtual account number that must be for status inquiries
+        updates and deletions. Sample message before  encryption -
+        {"virtual_account_number":"09834572"}
+      in: header
+      name: encrypted-params
+      required: true
+      type: string
+  responses:
+    BadRequest:
+      description: Bad Request
+      schema:
+        $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Internal Server Error
+      schema:
+        $ref: '#/components/schemas/ErrorResponse'
+    MethodNotAllowed:
+      description: Method Not Allowed
+      schema:
+        $ref: '#/components/schemas/ErrorResponse'
+    OKResponse:
+      description: Accepted
+      schema:
+        $ref: '#/components/schemas/VirtualAccountResponse'
+    Unauthorized:
+      description: Unauthorized
+      schema:
+        $ref: '#/components/schemas/ErrorResponse'
+    UnsupportedMediaType:
+      description: Unsupported Media Type
+      schema:
+        $ref: '#/components/schemas/ErrorResponse'
+  examples:
+    Account-Reservation: null
+    value:
+      api_version: '1.0'
+      action: reservation
+      branch_code: '920'
+      number_of_accounts_required: '4'
+      virtual_header_account: '54444598'
+      contact_first_name: RAVI6
+      contact_last_name: SATPUTE6
+      contact_email: raviksatpute6@citi.com
+      contact_phone: +91-9762615353
+    BadRequestExample:
+      value:
+        code: CC00004
+        error_details:
+          - action: please provide valid branch code
+            issue: branch code is invalid/missing
+        message: Bad Request
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        status: '400'
+    CreditDebitPreferencesExample:
+      value:
+        action: CreditDebitPreferences
+        branch_code: GB3
+        credit_debit_preferences:
+          disallow_credit: 'Y'
+          disallow_debit: 'Y'
+        virtual_account_number: 987453211
+    InternalServerErrorExample:
+      value:
+        code: CC00003
+        error_details:
+          - action: please try some time later
+            issue: unable to serve your request at this moment
+        message: Internal Server Error
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        status: '500'
+    MethodNotAllowedExample:
+      value:
+        code: CC00007
+        message: Method Not Allowed
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        status: '405'
+    ModifyExample:
+      value:
+        account_description: VA Account
+        action: Modify
+        address:
+          address_line_1: 127 Geetanagar 2 Society
+          address_line_2: Near Sitanagar Chowk
+          address_line_3: Punagam, Surat-395010
+          address_line_4: Gujarat, India
+        branch_code: GB3
+        tax_payer_id: TINX2354
+        virtual_account_number: 987453211
+    OKResponseSuccessExample:
+      value:
+        message: Request accepted Successfully
+        request_id: 29b9c9d7-d4d9-48ce-8823-f9b3ee276b8f
+        status: success
+    ReopenExample:
+      value:
+        action: Reopen
+        branch_code: GB3
+        virtual_account_number: 987453211
+    UnauthorizedExample:
+      value:
+        code: CC00005
+        error_details:
+          - action: Please try again with valid credentials.
+            issue: Unauthorized user
+        message: Unauthorized user
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        status: '401'
+    UnsupportedMediaTypeExample:
+      value:
+        code: CC00007
+        message: Unsupported Media Type
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        status: '415'
+    VAActivationExample:
+      value:
+        accounts:
+          - address_line_1: New York
+            alternate_account_number: '212345332'
+            balance_control_option: F
+            fixed_amount: '10.0'
+            iban: 9823456
+            name: David
+            purpose_of_virtual_account: P
+            reporting_account_number: '23124553'
+            tax_identification_number: TINX2354
+            virtual_account_balance_display_option: 'Y'
+            virtual_account_number: 987453211
+            virtual_header_account: 983029057
+        action: activation
+        api_version: '1.0'
+        branch_code: GB3
+        contact_email: james.smith@email.com
+        contact_first_name: James
+        contact_last_name: Smith
+        contact_phone: '+442021220909'
+        virtual_header_account: 983029057
+    VAReservationExample:
+      value:
+        action: reservation
+        api_version: '1.0'
+        branch_code: GB3
+        contact_email: james.smith@email.com
+        contact_first_name: James
+        contact_last_name: Smith
+        contact_phone: '+442021220909'
+        number_of_accounts_required: 50
+        virtual_header_account: 983029057
+components:
+  securitySchemes:
+    clientCredentials:
+      description: >+
+        All CitiConnect APIs use the oAuth2 authentication scheme, which
+        requires a bearer token to authenticate your API call. The Token URL
+        includes the version of authentication used by this API. See <a
+        href="../../authentication/authentication-api-reference/"
+        target="_blank">the Citi Authentication API reference</a> for
+        information on requesting a token.
+
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes: {}
+  schemas:
+    Account:
+      type: object
+      required:
+        - balance_control_option
+        - purpose_of_virtual_account
+        - virtual_account_balance_display_option
+        - virtual_account_number
+        - virtual_header_account
+      properties:
+        address_line_1:
+          type: string
+          xml:
+            name: AddressLine1
+          description: >-
+            AddressLine-1 is to be provided by client, if purpose of VA is not P
+            (Physical Account Owner). Information that locates and identifies a
+            specific address, as defined by postal services, presented in
+            free-form text.
+          maxLength: 105
+        address_line_2:
+          type: string
+          xml:
+            name: AddressLine2
+          description: >-
+            AddressLine-2 is to be provided by client, if purpose of VA is not
+            P(Physical Account Owner). Information that locates and identifies a
+            specific address, as defined by postal services, presented in
+            free-form text.
+          maxLength: 105
+        address_line_3:
+          type: string
+          xml:
+            name: AddressLine3
+          description: >-
+            AddressLine-3 is to be provided by client, if purpose of VA is not
+            P(Physical Account Owner). Information that locates and identifies a
+            specific address, as defined by postal services, presented in
+            free-form text.
+          maxLength: 105
+        address_line_4:
+          type: string
+          xml:
+            name: AddressLine4
+          description: >-
+            AddressLine-4 is to be provided by client, if purpose of VA is not
+            P(Physical Account Owner). Information that locates and identifies a
+            specific address, as defined by postal services, presented in
+            free-form text.
+          maxLength: 105
+        alternate_account_number:
+          type: string
+          xml:
+            name: AlternateAccountNumber
+          description: Alternate account number associated with virtual header account.
+          maxLength: 40
+        balance_control_option:
+          type: string
+          xml:
+            name: BalanceControlOption
+          description: >-
+            Mandatory parameter only if value of 'action' parameter is
+            'activation'.<br><br>Default options as below:<br> Option will be
+            defaulted from reporting virtual account if any. OR <br> Full pool
+            balance if the Virtual Account is reporting to virtual header
+            account. <br>  If Purpose of Virtual Account is 'C', then value
+            allowed should be only 'O'. <br><br>Description of possible
+            parameter values:<br><b>O</b>: Own Balance - Virtual Account to be
+            able to use its own balance only. <br><br><b>F</b>: Full pool
+            balance - Virtual Account to have access to full pool balance.
+            <br><br><b>X</b>: Fixed Amount from pool - Fixed amount that a
+            Virtual Account can withdraw from the pool over and above its own
+            balance.
+          minLength: 1
+          maxLength: 10
+        file_export_template_ids:
+          type: string
+          xml:
+            name: FileExportTemplateIds
+          description: provide comma separated fileExport TemplateIds
+        fixed_amount:
+          type: string
+          xml:
+            name: FixedAmount
+          description: >-
+            Should be mandatory for virtual accounts if the balance control
+            option is 'X' (balanceControlOption parameter value).
+          maxLength: 25
+        iban:
+          type: string
+          xml:
+            name: IBAN
+          description: >-
+            >- International Bank Account Number (IBAN) - identifier used
+            internationally by financial institutions to uniquely identify the
+            account of a customer. Further specifications of the format and
+            content of the IBAN can be found in the standard ISO 13616 "Banking
+            and related financial services - International Bank Account Number
+            (IBAN)" version 1997-10-01, or later revisions.
+          pattern: ^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$
+        name:
+          type: string
+          xml:
+            name: Name
+          description: >-
+            Name is to be provided by client, if purpose of VA is not P
+            (Physical Account Owner).
+          maxLength: 105
+        purpose_of_virtual_account:
+          type: string
+          xml:
+            name: PurposeOfVirtualAccount
+          description: >-
+            Mandatory parameter only if value of 'action' parameter is
+            'activation'.<br><br>It specifies the purpose for creation of
+            virtual account. <br><br>Description of possible parameter
+            values:<br><b>P - Physical Account Owner. <br><br><b>S - Client
+            Subsidiary. <br><br><b>C - Client's Customer.
+          minLength: 1
+          maxLength: 10
+        reporting_account_number:
+          type: string
+          xml:
+            name: ReportingAccountNumber
+          description: Reporting Account Number associated with virtual header account.
+          maxLength: 40
+        tax_identification_number:
+          type: string
+          xml:
+            name: TaxIdentificationNumber
+          description: Tax Identification Number of the account holder.
+          maxLength: 10
+        virtual_account_balance_display_option:
+          type: string
+          xml:
+            name: VirtualAccountBalanceDisplayOption
+          description: >-
+            Mandatory parameter only if value of 'action' parameter is
+            'activation'.<br><br>It specifies whether to display opening or
+            closing balances or not. Default value will be
+            'N'.<br><br>Description of possible parameter values:<br><b>Y Show
+            virtual account opening and closing balances. <br><br><b>N Show ZERO
+            opening and closing balance for virtual account in statements and
+            reports.
+          minLength: 1
+          maxLength: 10
+        virtual_account_number:
+          type: string
+          xml:
+            name: VirtualAccountNumber
+          description: >-
+            Mandatory parameter only if the value of the 'action' parameter is
+            'activation'.<br><br>It specifies the virtual account to be
+            activated.
+          maxLength: 40
+        virtual_header_account:
+          type: string
+          xml:
+            name: VirtualHeaderAccount
+          description: Physical account in a VAM structure.
+          maxLength: 40
+      xml:
+        name: Account
+    AddressDetails:
+      type: object
+      properties:
+        address_line_1:
+          type: string
+          xml:
+            name: AddressLine1
+          description: >-
+            AddressLine-1 is to be provided by client, Information that locates
+            and identifies a specific address, as defined by postal services,
+            presented in free-form text.
+          maxLength: 105
+        address_line_2:
+          type: string
+          xml:
+            name: AddressLine2
+          description: >-
+            AddressLine-2 is to be provided by client, Information that locates
+            and identifies a specific address, as defined by postal services,
+            presented in free-form text.
+          maxLength: 105
+        address_line_3:
+          type: string
+          xml:
+            name: AddressLine3
+          description: >-
+            AddressLine-3 is to be provided by client, Information that locates
+            and identifies a specific address, as defined by postal services,
+            presented in free-form text.
+          maxLength: 105
+        address_line_4:
+          type: string
+          xml:
+            name: AddressLine4
+          description: >-
+            AddressLine-4 is to be provided by client, Information that locates
+            and identifies a specific address, as defined by postal services,
+            presented in free-form text.
+          maxLength: 105
+      description: >-
+        Address Details of the entity to which the previously mentioned Virtual
+        Account is assigned to.<br><br> This parameter is conditionally
+        mandatory only for action = 'Modify'.
+    CreditDebitPreference:
+      type: object
+      properties:
+        disallow_credit:
+          type: string
+          xml:
+            name: DisallowCredit
+          description: >-
+            Indicative parameter as No 'N' or Yes 'Y' to disallow or Allow
+            Credit posting for the previously mentioned Virtual Account
+          minLength: 1
+          maxLength: 10
+        disallow_debit:
+          type: string
+          xml:
+            name: DisallowDebit
+          description: >-
+            Indicative parameter as No 'N' or Yes 'Y' to disallow or Allow Debit
+            posting for the previously mentioned Virtual Account
+          minLength: 1
+          maxLength: 10
+    ErrorDetail:
+      type: object
+      properties:
+        action:
+          type: string
+          xml:
+            name: Action
+          description: corrective action to be taken to resolve above issue
+          maxLength: 350
+        issue:
+          type: string
+          xml:
+            name: Issue
+          description: more details about the  issue
+          maxLength: 200
+      xml:
+        name: Error
+    ErrorResponse:
+      properties:
+        code:
+          type: string
+          xml:
+            name: Code
+          description: >-
+            The code which categorize the https error, to compile recognize at
+            application, i.e. CC00003,CC00004,CC00005 etc
+          maxLength: 10
+          pattern: \w*\W*
+        error_details:
+          type: array
+          xml:
+            name: ErrorDetails
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          maxItems: 10
+        message:
+          type: string
+          xml:
+            name: Message
+          description: message for error
+          maxLength: 60
+          pattern: \w*\W*
+        ref_id:
+          type: string
+          xml:
+            name: RefId
+          description: unique reference ID for a particular request
+          maxLength: 60
+          pattern: \w*\W*
+        status:
+          type: string
+          xml:
+            name: Status
+          description: https status code
+          maxLength: 3
+          pattern: \w*\W*
+        httpMessage:
+          type: string
+        httpCode:
+          type: string
+        moreInformation:
+          type: string
+      xml:
+        name: ErrorMessage
+      description: Description of Error
+    UpdateVirtualAccounts:
+      required:
+        - action
+        - branch_code
+        - virtual_account_number
+      properties:
+        account_description:
+          type: string
+          xml:
+            name: AccountDescription
+          description: >-
+            Description for the previously mentioned virtual account. <br><br>
+            This parameter is conditional if the action = 'Modify'.
+          maxLength: 105
+        action:
+          type: string
+          xml:
+            name: Action
+          description: >-
+            Type of action that will be applied to virtual account. Actions that
+            can be chosen are: <br>- CreditDebitPreferences<br>- Reopen<br>-
+            Modify
+          enum:
+            - CreditDebitPreferences
+            - Reopen
+            - Modify
+        address:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/AddressDetails'
+        branch_code:
+          type: string
+          xml:
+            name: BranchCode
+          description: Citi internal branch code associated with a virtual account number.
+          maxLength: 4
+        credit_debit_preferences:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CreditDebitPreference'
+        tax_payer_id:
+          type: string
+          xml:
+            name: TaxPayerId
+          description: >-
+            Tax payer ID to which entity the previously mentioned virtual
+            account is assigned to.<br><br>This parameter is mandatory only when
+            the action = 'Modify'.
+          maxLength: 10
+        virtual_account_number:
+          type: string
+          xml:
+            name: VirtualAccountNumber
+          description: specifies the virtual account that has to be updated.
+          maxLength: 40
+      xml:
+        name: UpdateVirtualAccounts
+    VirtualAccountRequest:
+      required:
+        - action
+        - api_version
+        - branch_code
+        - contact_email
+        - contact_first_name
+        - contact_last_name
+        - contact_phone
+        - virtual_header_account
+      properties:
+        accounts:
+          type: array
+          xml:
+            name: Accounts
+            wrapped: true
+          description: >-
+            Mandatory only if value of 'action' parameter is
+            'activation'.<br><br>This parameter specifies the list of Virtual
+            Accounts.
+          items:
+            $ref: '#/components/schemas/Account'
+        action:
+          type: string
+          xml:
+            name: Action
+          description: >-
+            Action is a request type. if you are requesting to activate a
+            virtual account, then provide action values as ``activation``. If
+            requesting to reserve virtual accounts for a previously cited
+            virtual header account then provide action value as ``reservation``.
+          enum:
+            - reservation
+            - activation
+        api_version:
+          type: string
+          xml:
+            name: ApiVersion
+          description: Version of the API.
+          maxLength: 10
+        branch_code:
+          type: string
+          xml:
+            name: BranchCode
+          description: Citi branch code associated with a given virtual header account.
+          maxLength: 4
+        contact_email:
+          type: string
+          format: email
+          xml:
+            name: ContactEmail
+          description: Email address as defined on the virtual header account.
+          maxLength: 2048
+        contact_first_name:
+          type: string
+          xml:
+            name: ContactFirstName
+          description: First name as defined on the virtual header account.
+          maxLength: 105
+        contact_last_name:
+          type: string
+          xml:
+            name: ContactLastName
+          description: Last name as defined on the virtual header account.
+          maxLength: 105
+        contact_phone:
+          type: string
+          xml:
+            name: ContactPhone
+          description: Phone number as defined on the virtual header account.
+          pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
+        number_of_accounts_required:
+          type: integer
+          xml:
+            name: NumAccountsRequired
+          description: >-
+            Mandatory parameter only if  the value of 'action' parameter is
+            'reservation', and specifies the number of virtual accounts
+            requested to be reserved.
+          maximum: 1200
+        virtual_header_account:
+          type: string
+          xml:
+            name: VirtualHeaderAccount
+          description: Physical account in a VAM structure.
+          maxLength: 40
+      description: Describes the Virtual Account Creation APIs request parameters.
+    VirtualAccountResponse:
+      required:
+        - message
+        - request_id
+        - status
+      properties:
+        message:
+          type: string
+          xml:
+            name: Message
+          description: Detailed response description for given request.
+          maxLength: 400
+        request_id:
+          type: string
+          xml:
+            name: RequestId
+          description: Auto-generated unique identification assigned for the request.
+          maxLength: 40
+        status:
+          type: string
+          xml:
+            name: Status
+          description: Status of the request.
+          maxLength: 20
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example: >-
+            <ErrorMessage><code>CC00003</code><message>Method argument(s) are
+            invalid</message><ref_id>8c4-c93c-4803-b9b6-aef2d43ca76e57931</ref_id><status>400</status><error_details><error_details><issue>virtualAccountNumber
+            is invalid/missing</issue><action>please provide valid value for
+            property
+            virtualAccountNumber</action></error_details></error_details></ErrorMessage>
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: CC00003
+            message: Method argument(s) are invalid
+            ref_id: 560-c6aa-4061-9038-bdb53da20d1084991
+            status: '400'
+            error_details:
+              - issue: invalid value provided for property branch code
+                action: please provide valid value for property branch code
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            httpCode: '401'
+            httpMessage: Unauthorized
+            moreInformation: >-
+              This server could not verify that you are authorized to access the
+              URL
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example: >-
+            <errormessage><httpCode>401</httpCode><httpMessage>Invalid OAuth
+            Token</httpMessage><moreInformation>Please use valid OAuth
+            Token</moreInformation></errormessage>
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example: >-
+            <ErrorMessage><httpCode>405</httpCode><httpMessage>Method Not
+            Allowed</httpMessage><moreInformation>The method is not allowed for
+            the requested URL.</moreInformation></ErrorMessage>
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            httpCode: '405'
+            httpMessage: Method Not Allowed
+            moreInformation: The method is not allowed for the requested URL.
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example: >-
+            <ErrorMessage><httpCode>415</httpCode><httpMessage>Unsupported Media
+            Type</httpMessage><moreInformation>Unsupported
+            Content-Type</moreInformation></ErrorMessage>
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            httpCode: '415'
+            httpMessage: Unsupported Media Type
+            moreInformation: Unsupported Content-Type
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example: >-
+            <ErrorMessage><httpCode>500</httpCode><httpMessage>Internal Server
+            Error</httpMessage><moreInformation>Internal Server
+            Error</moreInformation></ErrorMessage>
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            httpCode: '500'
+            httpMessage: Internal Server Error
+            moreInformation: Internal Server Error
+  examples:
+    Virtual-Account-Reservation-Request:
+      value:
+        api_version: '1.0'
+        action: reservation
+        branch_code: '920'
+        number_of_accounts_required: 4
+        virtual_header_account: '54444598'
+        contact_first_name: RAVI6
+        contact_last_name: SATPUTE6
+        contact_email: raviksatpute6@citi.com
+        contact_phone: +91-9762615353
+    Virtual-Account-Reservation-Response:
+      value:
+        request_id: 560-c6aa-4061-9038-bdb53da20d1084973
+        status: success
+        message: Request accepted Successfully
+    Virtual-Account-Activation-Request:
+      value:
+        api_version: '1.0'
+        action: activation
+        branch_code: '920'
+        virtual_header_account: '54444598'
+        contact_first_name: RAVI6
+        contact_last_name: SATPUTE6
+        contact_email: raviksatpute6@citi.com
+        contact_phone: +91-9762615353
+        accounts:
+          - virtual_header_account: '54444598'
+            virtual_account_number: '54535799'
+            alternate_account_number: '54535799'
+            reporting_account_number: '54444598'
+            tax_identification_number: '12345678'
+            purpose_of_virtual_account: C
+            name: David
+            address_line_1: address
+            virtual_account_balance_display_option: 'Y'
+            balance_control_option: O
+    Virtual-Account-Activation-Response:
+      value:
+        request_id: 560-c6aa-4061-9038-bdb53da20d1084976
+        status: success
+        message: Request accepted Successfully
+    Virtual-Account-Get-Response:
+      value:
+        request_id: b8f-d8e5-4a48-ad13-5d1ec8bb32e858066
+        status: success
+        message: Request accepted Successfully
+    Virtual-Account-Modify-Request:
+      value:
+        virtual_account_number: '54390868'
+        action: Modify
+        branch_code: '920'
+        account_description: VA Account
+        tax_payer_id: '12345678'
+        address:
+          address_line_1: Robn Society
+          address_line_2: Ring Road
+          address_line_3: RJ, Surat-395010
+          address_line_4: Gujarat
+    Modify-Virtual-Account-Response:
+      value:
+        request_id: 560-c6aa-4061-9038-bdb53da20d1084984
+        status: success
+        message: Request accepted Successfully
+    Virtual-Account-Delete-Request:
+      value:
+        request_id: 912-1b37-449a-9e1a-3401d7ab7d8384945
+        status: success
+        message: Request accepted Successfully

@@ -1,0 +1,5199 @@
+openapi: 3.0.1
+info:
+  title: Custody Billing API
+  description: >
+    The Custody Billing APIs provide comprehensive visibility into fees charged
+    across custody services.  These APIs cover valuation fees at the security
+    and account level, corporate action and corporate  action income–related
+    fees at the event level, and an aggregated invoice‑level view of all fees 
+    across multiple invoices or billing periods. Together, they enable clients
+    to analyze custody billing  details by charge type, description, market,
+    security, account, and corporate action, supporting  transparent
+    reconciliation and reporting of custody service charges.
+    <br><br>**Authentication**<br><br>Client applications must supply an
+    authentication token with every request, and therefore must first
+    authenticate before it can proceed. A client can use the OAuth 2 client
+    credential grant flow to obtain a time limited access token. To get an
+    access token send a HTTP Post request to the token endpoint using basic
+    authentication with the client key and secret (provided under separate
+    cover).<br><br>**Request**<br><br>```POST {baseURL}/api/oauth2/token
+    HTTPS/1.1 
+
+    Authorization: Basic base64(key:secret) 
+
+    Content-Type:application/x-www-form-urlencoded```<br><br>
+
+    **Response**<br><br>```
+      {
+          "token_type": "bearer", 
+          "access_token": <access token>, 
+          "expires_in": <seconds until expiry>, 
+          "consented_on":<timestamp>, 
+          "scope": "/dod"`
+      }```    <br><br>The bearer token is valid for 1800 seconds (30 minutes) after which it will expire. At this point, you would need to re-authenticate.
+  version: v1.0.0
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets/dod
+    description: Sandbox server (uses test data)
+  - url: https://api.citivelocity.com/markets/dod
+    description: Production server
+security:
+  - client-Credential-Oauth-Security-Schema: []
+components:
+  headers:
+    dod-request-id:
+      schema:
+        type: string
+      description: The UUID representing the unique identifier of the dod request
+    paging-page-number:
+      schema:
+        type: string
+      description: The current page number
+    paging-total-page-count:
+      schema:
+        type: string
+      description: The total count of pages available
+    paging-total-record-count:
+      schema:
+        type: string
+      description: The total count of records
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  examples:
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: path-param servicePortableId is mandatory and it cannot be empty
+            action: please provide valid parameter values
+            code: VC00010
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: User not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Resource that you are searching is not found
+            action: Please use valid resource details
+            code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Method not supported
+            action: please use valid http verb
+            code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+  schemas:
+    febf0553-d455-4849-b6fa-2337b4989b0f-data-schema:
+      type: object
+      properties:
+        ACCOUNT_CURRENCY:
+          type: string
+          description: >-
+            Account Currency is the ISO 4217 currency code corresponding to the
+            base currency of the safekeeping account.
+          example: SGD
+        SAFE_KEEPING_ACCOUNT:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: '0000000258944'
+        ACTIVITY_CATEGORY:
+          type: string
+          description: >-
+            Activity Category is the low level description of the billable
+            activity (e.g. Asset Services, Settlements, Tax).
+          example: Settlements
+        ACTIVITY_CURRENCY:
+          type: string
+          description: >-
+            Activity Currency is the ISO 4217 currency code corresponding to the
+            market currency of the billable activity.
+          example: AED
+        ACTIVITY_TYPE:
+          type: string
+          description: >-
+            Activity Type is the high level description of the billable activity
+            (e.g. Valuations, Transactions, Surcharges, Other fees).
+          example: Surcharges
+        CLARITY_BRANCH_NAME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: UNITED KINGDOM
+        CHARGE_IN_FEE_CURENCY:
+          type: number
+          format: double
+          description: >-
+            Charge (Fee Schedule Currency) is the calculated charge for the
+            billable activity in the Fee Schedule Currency.
+          example: 10
+        CHARGE_IN_USD:
+          type: number
+          format: double
+          description: >-
+            Charge (USD) is the calculated charge for the billable activity in
+            US dollars.
+          example: 1.75
+        CLIENT_ID:
+          type: string
+          description: >-
+            Client ID is an identifier for the client as set up in the core
+            billing system.
+          example: ID123456
+        DELIVERY_METHOD:
+          type: string
+          description: >-
+            Delivery Method indicates how the invoice is sent to the client.
+            E.g. By post, by email, etc.
+          example: Email
+        DIRECT_DEBIT_CASH_ACCOUNT:
+          type: string
+          description: >-
+            Direct Debit Cash Account is the account id of the cash account from
+            which the invoice amount will be debited.
+          example: '12727277'
+        DIRECT_DEBIT_SLA_DATE:
+          type: string
+          description: >-
+            Direct Debit SLA is the date on which the direct debit is expected
+            to be taken.
+          example: '2021-03-25 00:00:00.0'
+        FEE_SCHEDULE_CURRENCY:
+          type: string
+          description: >-
+            Fee Schedule Currency is the ISO 4217 currency code corresponding to
+            the currency in which the rate card is published.
+          example: ARS
+        INVOICE_CURRENCY:
+          type: string
+          description: >-
+            Invoice Currency is the ISO 4217 currency code corresponding to the
+            currency in which the invoice is to be paid.
+          example: EUR
+        INVOICE_DELIVERY_DATE:
+          type: string
+          format: date
+          description: >-
+            Invoice Delivery Date is the date on which the invoice was sent to
+            the client.
+          example: '2020-10-28'
+        BILLING_FREQUENCY:
+          type: string
+          description: >-
+            Invoice Frequency indicates how often the invoice is calculated.
+            E.g. Monthly, Quarterly, etc.
+          example: Monthly
+        BILLABLE_MONTH:
+          type: string
+          format: date
+          description: >-
+            Represents the billing month for which the invoice is generated. The
+            date typically reflects a day within the billable month.
+          example: '2020-11-30'
+        BILLING_PERIOD:
+          type: string
+          format: date
+          description: >-
+            Represents the specific date or timestamp associated with the
+            billing period used for invoice calculation.
+          example: '2020-11-30'
+        INVOICE_NUMBER:
+          type: integer
+          format: int64
+          description: Invoice Number is the unique reference number of the invoice.
+          example: 20210100647
+        INVOICE_SCHEDULE_ID:
+          type: integer
+          format: int64
+          description: >-
+            Invoice Schedule Identifier is a unique reference for the schedule
+            under which each invoice is created.
+          example: 1965199
+        REPORTING_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Invoice Update Date is the date on which the invoice was last
+            changed.
+          example: '2020-09-18 04:17:00'
+        MARKET:
+          type: string
+          description: >-
+            Market is the name of the market or International Central Securities
+            Depositories in which the billable activity has occurred.
+          example: DENMARK
+        PAYMENT_BASIS:
+          type: string
+          description: >-
+            Payment Basis indicates how the invoice is expected to be paid. e.g.
+            Remittance, Direct Debit.
+          example: Remittance
+        BILLING_CENTRE:
+          type: string
+          description: >-
+            Place Of Settlement Code is a 3 digit code corresponding to the
+            settlement location of the holding.
+          example: HKG
+        BILLING_CENTRE_NAME:
+          type: string
+          description: Place Of Settlement is the settlement location of the holding.
+          example: CITIBANK
+        QUANTITY_IN_ACCOUNT_CURRENCY:
+          type: number
+          format: double
+          description: >-
+            Quantity (Account Currency) is either the number of charges incurred
+            or the value used in the fee calculation converted to the Account
+            Currency.
+          example: 4597.12
+        QUANTITY_IN_FEE_SCHEDULE_CURRENCY:
+          type: number
+          format: double
+          description: >-
+            Quantity (Activity Currency) is either the number of charges
+            incurred or the value used in the fee calculation converted to the
+            Activity Currency.
+          example: 1722.02
+        QUANTITY_IN_INVOICE_CURRENCY:
+          type: number
+          format: double
+          description: >-
+            Quantity (Invoice Currency) is either the number of charges incurred
+            or the value used in the fee calculation converted to the Invoice
+            Currency.
+          example: 533.33
+        QUANTITY_IN_USD:
+          type: number
+          format: double
+          description: >-
+            Quantity (USD) is either the number of charges incurred or the value
+            used in the fee calculation converted to US dollars.
+          example: 30
+        REGION:
+          type: string
+          description: >-
+            Region is the name of the geographical region (if appropriate) in
+            which the billable activity has occurred.
+          example: Europe
+        REVISED_FLAG:
+          type: string
+          description: >-
+            Revised Flag indicates whether or not the invoice has been changed
+            since it was first calculated.
+          example: 'Y'
+        REVISION_NUMBER:
+          type: integer
+          format: int32
+          description: >-
+            Revision Number indicates how many times the invoice has been
+            revised.
+          example: 7
+        SALES_TAX_FEE_IN_ACCOUNT_CURRENCY:
+          type: number
+          format: double
+          description: >-
+            Sales Tax (Account Currency) is the applicable sales tax in the
+            Account Currency.
+          example: 10615
+        SALES_TAX_FEE_IN_FEE_CURRENCY:
+          type: number
+          format: double
+          description: >-
+            Sales Tax (Fee Schedule Currency) is the applicable sales tax in the
+            Fee Schedule Currency.
+          example: 397.8
+        SALES_TAX_FEE_IN_INVOICE_CURRENCY:
+          type: number
+          format: double
+          description: >-
+            Sales Tax (Invoice Currency) is the applicable sales tax in the
+            Invoice Currency.
+          example: 54.59253
+        SALES_TAX_FEE_IN_USD:
+          type: number
+          format: double
+          description: Sales Tax (USD) is the applicable sales tax in US Dollars.
+          example: 24.843
+        TOTAL_FEE_IN_ACCOUNT_CURRENCY:
+          type: number
+          format: double
+          description: >-
+            Total Fee (Account Currency) is the total charge for the billable
+            activity in the Account Currency.
+          example: 552.11
+        TOTAL_FEE_IN_FEE_CURRENCY:
+          type: number
+          format: double
+          description: >-
+            Total Fee (Fee Schedule Currency) is the total charge for the
+            billable activity in the Fee Schedule Currency.
+          example: 461.87
+        TOTAL_FEE_IN_INVOICE_CURRENCY:
+          type: number
+          format: double
+          description: >-
+            Total Fee (Invoice Currency) is the total charge for the billable
+            activity in the Invoice Currency.
+          example: 377.43
+        TOTAL_FEE_IN_USD:
+          type: number
+          format: double
+          description: >-
+            Total Fee (USD) is the total charge for the billable activity in US
+            Dollars.
+          example: 163.18996
+        INVOICE_YEAR:
+          type: string
+          description: >-
+            Represents the calendar year in which the custody invoice is
+            generated.
+          example: '2020'
+        INVOICE_MONTH:
+          type: string
+          description: Billable Invoice Month.
+          example: '11'
+        CATEGORY_CODE:
+          type: string
+          description: Category Code.
+          example: A
+        TRANSACTION_TYPE:
+          type: string
+          description: >-
+            Type of transaction. List of available values: 'AllocBuyExt':'Buy
+            Future':'Open Repo':'Open Reverse':'Buy TBA':'Buy
+            Protection':'MatRepo':'IssueFunds':'OpenSwap':'Buy
+            Option':'Assignment':'Call on Rights':'Scrip
+            Dividend':'CASell':'Exerc. Opt.':'Expire
+            Option':'CloseFX':'Sell':'VariatMarg':'Buy':'Redemption':'ChargeCash':'MatLend':'Payment':'Coupon':'CALiqu':'IniMar':'Lend':'DepMoney':'Dividend':'Loan
+            Facility Fee Pay In':'Withdraw':'WdrMoney':'MatReverse':'CA Stock
+            split':'CA Reverse stock split':'Rights Distribution':'Exchange
+            Offer':'Deliver Collateral':'RalocCdyPor':'CABuy':'Bonus
+            Issue':'DemergerMor':'DRP Scrip Dividend':'Merger':'Spin
+            Off':'Worthless':'BuyFXSpot':'BuyFXFwd':'SellFXSpot':'SellFXFwd':'Deposit':'Accept
+            Collateral':'Close Facility Commitment':'Open Facility
+            Commitment':'AllocSellExt':'Sell Future':'Sell TBA':'Sell
+            Option':'Close Opt':'BuyFXFwdDbd':'SellFXFwdDbd'.
+          example: BUY FUTURE
+        RESPONSIBLE_PERSON:
+          type: string
+          description: Responsible person.
+          example: Billing
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - Japan 2
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account. For the
+            Cash Account the branch code is a numeric value and for the
+            Safekeeping Account it is the ISO Country code.
+          example: '484'
+        ALTV_CUR_CD:
+          type: string
+          description: Account Base Currency Code is the ISO Currency Code for the account.
+          example: JPY
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: 8-DEMOCSH53JPY
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            Account Type Code indicates the type of the account. Values are: C
+            (Cash Account), S (Safekeeping Account).
+          example: C
+        IOD_TIMESTAMP:
+          type: string
+          format: date-time
+          description: Provides the Timestamp when data is loaded in the Data Lake.
+          example: '2024-11-12 19:30:08'
+    febf0553-d455-4849-b6fa-2337b4989b0f-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/febf0553-d455-4849-b6fa-2337b4989b0f-data-schema
+    febf0553-d455-4849-b6fa-2337b4989b0f-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/febf0553-d455-4849-b6fa-2337b4989b0f-data-schema
+      xml:
+        name: data
+    3291fe1b-9d6f-4285-9836-a2c66ac1dbd3-data-schema:
+      type: object
+      properties:
+        REPORTING_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Invoice Update Date is the date on which the invoice was last
+            changed.
+          example: '2025-08-27 07:33:00'
+        BRANCH_ID:
+          type: integer
+          format: int32
+          description: >-
+            Branch Code is the identifier of the branch for the account. For the
+            Cash Account the branch code is a numeric value and for the
+            Safekeeping Account it is the ISO 3166 Country code.
+          example: 101
+        BILLING_PERIOD:
+          type: string
+          description: >-
+            Represents the specific date or timestamp associated with the
+            billing period used for invoice calculation.
+          example: '2020-11-30 00:00:00'
+        INVOICE_SCHEDULE_ID:
+          type: integer
+          format: int64
+          description: >-
+            Invoice Schedule Identifier is a unique reference for the schedule
+            under which each invoice is created.
+          example: 1965199
+        SK_ACCOUNT:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and or a
+            Safekeeping Account that is unique within a branch.
+          example: '12345678901'
+        CLIENT_ID:
+          type: string
+          description: >-
+            Client ID is an identifier for the client as set up in the core
+            billing system.
+          example: ID123456
+        SK_GRP_NAME:
+          type: string
+          description: >-
+            Safekeeping Group Name is the name of a group of safekeeping
+            accounts that the client has defined and set up in the core billing
+            system.
+          example: AB123456
+        PROFIT_CENTER:
+          type: integer
+          format: int32
+          description: Profit Centre is an internal field not for client consumption.
+          example: 1
+        PROFIT_CENTER_NAME:
+          type: string
+          description: Profit Centre Name is an internal field not for client consumption.
+          example: Foreign Bank
+        CENTRE_CODE:
+          type: string
+          description: >-
+            Place Of Settlement Code is a 3 digit code corresponding to the
+            settlement location of the holding.
+          example: AR3
+        NAME:
+          type: string
+          description: Place Of Settlement is the settlement location of the holding.
+          example: New York
+        ASSET_TYPE:
+          type: string
+          description: >-
+            Asset Type is a code representing the Asset Type of the security.
+            Values may include EQTY Equity FI Fixed Income etc.
+          example: EQTY
+        CURRENCY:
+          type: string
+          description: >-
+            Currency is the ISO 4217 currency code corresponding to the currency
+            in the market. The currency of the balance/bank account, List of
+            possible values: AED: UAE Dirham AFN: Afghani ALL: Lek AMD: Armenian
+            Dram ANG: Netherlands Antillean Guilder AOA: Kwanza ARS: Argentine.
+          example: AED
+        MARKET_VALUE:
+          type: number
+          format: double
+          description: >-
+            Market Value is the market value at the Market Value Date in the
+            Market Currency.
+          example: 1250000.75
+        AVG_MARKET_VALUE:
+          type: number
+          format: double
+          description: >-
+            Average Market Value is the average daily market value across the
+            billing period in the Market Currency.
+          example: 1200000.5
+        AVERAGE_QUANTITY_SHARES:
+          type: number
+          format: double
+          description: >-
+            Average Quantity is the average daily settled quantity across the
+            billing period.
+          example: 150
+        UNITS_OF_SHARE:
+          type: number
+          format: double
+          description: Units of Share
+          example: 1
+        MARKET_VALUE_DATE:
+          type: string
+          description: Market Value Date is the date on which the Market Value is provided.
+          example: '2025-03-31'
+        HOLDINGS:
+          type: number
+          format: double
+          description: >-
+            Quantity is the settled quantity of the security at the Market Value
+            Date.
+          example: 150
+        PRICE:
+          type: number
+          format: double
+          description: Issue Price is the price of the security at the Market Value Date.
+          example: 83.45
+        ISIN:
+          type: string
+          description: >-
+            ISIN International Securities Identification Number is a 12
+            character alpha numerical code governed by ISO 6166 it is a uniform
+            identification of a security at trading and settlement.
+          example: US0378331005
+        PRICE_CURRENCY:
+          type: string
+          description: >-
+            Issue Price Currency is the ISO 4217 currency code corresponding to
+            the currency in which the Issue Price is published.
+          example: USD
+        FEE:
+          type: number
+          format: double
+          description: Fee is the charge in the Fee Schedule Currency.
+          example: 1.11
+        FEE_CURRENCY:
+          type: string
+          description: >-
+            Total Fee Fee Schedule Currency is the total charge for the billable
+            activity in the Fee Schedule Currency It is the ISO 4217 currency
+            code corresponding to the currency in which the rate card is
+            published.
+          example: USD
+        REVISION_NUMBER:
+          type: integer
+          format: int32
+          description: >-
+            Revision Number indicates how many times the invoice has been
+            revised.
+          example: 7
+        INVOICE_NUMBER:
+          type: integer
+          format: int64
+          description: Invoice Number is the unique reference number of the invoice.
+          example: 2025030001
+        CLARITY_BRANCH_NAME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and or
+            Safekeeping Account.
+          example: BRAZIL
+        MARKET:
+          type: string
+          description: >-
+            Market is the name of the market or International Central Securities
+            Depositories in which the billable activity has occurred.
+          example: HONG KONG
+        REGION:
+          type: string
+          description: >-
+            Region is the name of the geographical region if appropriate in
+            which the billable activity has occurred.
+          example: Europe
+        FUND_MANAGER:
+          type: string
+          description: >-
+            A fund manager is a person or company who manages a portfolio of
+            investments for a funds clients Fund Manager field from Client
+            Profile Table.
+          example: ABC Asset Management
+        LEAD_FUND_MANAGER:
+          type: string
+          description: >-
+            A lead fund manager is a person or company who manages a portfolio
+            of investments for a funds clients.
+          example: John Doe
+        MARKETING_GFCID_L4_NAME:
+          type: string
+          description: >-
+            A Global Finance Customer Identifier (GFCID) is a 10-digit
+            identifier assigned to represent legal entities as well as branches
+            and sub accounts within ICG and other businesses This is the L4
+            GFCID for the client record. Where the L4 GFCID is equal to GFCID
+            the GFCID the record identifies an L4 GFCID. This represents the
+            Sub-Account level as recorded in the STaRs (Service Tracking and
+            Reporting System) for the specified source region.
+          example: LEGAL & GENERAL REINSURANCE CO LTD
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account. If an Alternate Account Name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - Japan 2
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account. For the
+            Cash Account the branch code is a numeric value and for the
+            Safekeeping Account it is the ISO 3166 Country code.
+          example: '484'
+        ALTV_CUR_CD:
+          type: string
+          description: >-
+            Account Base Currency Code is the ISO 4217 Currency Code for the
+            account.
+          example: USD
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal client identifier that is
+            associated to a Safekeeping or Cash Account or A customer ID
+            associated with a group (one or more) of accounts held by that
+            customer.
+          example: 8-DEMOCSH53JPY
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            A code to indicate the type of account - Cash, Safekeeping or
+            E-Report.
+          example: S
+        SID_SEDOL:
+          type: string
+          description: >-
+            SEDOL (Stock Exchange Daily Official List) is a unique
+            identification code, consisting of seven alphanumeric characters,
+            that is assigned to all securities trading on the London Stock
+            Exchange.
+          example: BMW2DZ3
+        SID_CUSIP:
+          type: string
+          description: >-
+            CUSIP (Committee on Uniform Securities Identification Procedures) It
+            is a nine-character alphanumeric code that identifies a North
+            American financial security for the purposes of facilitating
+            clearing and settlement of trades.
+          example: 594918AL9
+        SID_TICKER_SYMB:
+          type: string
+          description: Ticker is the symbol used on the exchange to identify the security.
+          example: MSFT
+        SID_ISIN:
+          type: string
+          description: >-
+            ISIN (International Securities Identification Number) is a
+            12-character alpha-numerical code that does not contain information
+            characterizing financial instruments but serves for uniform
+            identification of a security at trading and settlement.
+          example: US0378331005
+        SEC_SHRT_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: Apple Inc
+        EXCH_MNEM:
+          type: string
+          description: The internal code for the exchange market.
+          example: XNAS
+        SEC_SECURITY_CD:
+          type: string
+          description: >-
+            Internal Security Code is the identifier of the Internal Security
+            Identifier.
+          example: SEC12345
+        PFD_ID_CTXT_CD:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID field. Possible values may include: CUSIP,
+            ISIN, SEDOL, LOCAL, etc.
+          example: ISIN
+        PFD_ISS_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: B2R3PV1
+        DNOMD_CUR_CD:
+          type: string
+          description: >-
+            The currency in which this security is denominated in the local
+            market.
+          example: USD
+        BKING_CUR_CD:
+          type: string
+          description: >-
+            The code of the native or local currency in which this cash flow is
+            scheduled to actually occur.
+          example: USD
+        DLAY_DAYS:
+          type: string
+          description: Delay Days
+          example: '2'
+        PMT_FREQY_DESC:
+          type: string
+          description: >-
+            Payment Frequency Description indicates how often interest is paid
+            on the security. Possible values may include: Annual (00001),
+            Sem-Annual (00002), One Payment Per Year (00035), etc.
+          example: Annual
+        PMT_FREQY:
+          type: string
+          description: >-
+            Payment Frequency indicates how often interest is paid on the
+            security. Possible values may include: 00001 (Annual), 00002
+            (Sem-Annual), 00035 (One Payment Per Year), etc.
+          example: '00001'
+        ISS_CATG_CD:
+          type: string
+          description: >-
+            Issue Category Code is a specific category for the security.
+            Possible values may include: CSTK (Common Stock), DERIV
+            (Derivatives), MBS (Mortgage Backed Securities), etc.
+          example: CSTK
+        ISS_CAT_NME:
+          type: string
+          description: The classification of the security as ADR CMO ETF etc.
+          example: ETF
+        IOD_TIMESTAMP:
+          type: string
+          format: date-time
+          description: Provides the Timestamp when data is loaded in the Data Lake.
+          example: '2025-03-23 12:22:46'
+        POSITION_LOCATION_CODE:
+          type: string
+          description: Position Location Code
+          example: HU
+        ISO_COUNTRY_CODE:
+          type: string
+          description: >-
+            ISO country code is the ISO 3166 code corresponding to the country
+            in which the invoice is to be paid.
+          example: GB
+        SECURITY_QUOTATION_SOURCE:
+          type: string
+          description: Security Quotation Source
+          example: GB
+    3291fe1b-9d6f-4285-9836-a2c66ac1dbd3-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/3291fe1b-9d6f-4285-9836-a2c66ac1dbd3-data-schema
+    3291fe1b-9d6f-4285-9836-a2c66ac1dbd3-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/3291fe1b-9d6f-4285-9836-a2c66ac1dbd3-data-schema
+      xml:
+        name: data
+    f733f311-c85c-4b66-a29e-64dec7d84753-data-schema:
+      type: object
+      properties:
+        REPORTING_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Invoice Update Date is the date on which the invoice was last
+            changed.
+          example: '2025-08-27 07:33:00'
+        BILLING_PERIOD:
+          type: string
+          description: >-
+            Represents the specific date or timestamp associated with the
+            billing period used for invoice calculation.
+          example: '2020-11-30'
+        SAFE_KEEPING_ACCOUNT:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: '0000000258944'
+        INVOICE_NUMBER:
+          type: integer
+          format: int64
+          description: Invoice Number is the unique reference number of the invoice.
+          example: 20210100647
+        INVOICE_SCHEDULE_ID:
+          type: integer
+          format: int64
+          description: >-
+            Invoice Schedule Identifier is a unique reference for the schedule
+            under which each invoice is created.
+          example: 1965199
+        REVISION_NUMBER:
+          type: integer
+          format: int32
+          description: >-
+            Revision Number indicates how many times the invoice has been
+            revised.
+          example: 7
+        CORP_ACT_ID:
+          type: string
+          description: >-
+            Event Reference is the reference associated to the corporate action
+            event.
+          example: '46305405693'
+        CORPORATE_ACTION_TYPE:
+          type: string
+          description: >-
+            Corporate Action Type is a 3 digit code indicating the type of
+            corporate action.
+          example: RDB
+        DESCRIPTION:
+          type: string
+          description: Charge Description is a description of the charge reason.
+          example: Event Notifications
+        CENTRE:
+          type: string
+          description: >-
+            Place Of Settlement Code is a 3 digit code corresponding to the
+            settlement location of the holding.
+          example: HKG
+        CENTRE_NAME:
+          type: string
+          description: Place Of Settlement is the settlement location of the holding.
+          example: CB HONG KONG
+        RELEASE_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Payment Release Date is the date on which payment of the corporate
+            action was released.
+          example: '2020-10-23 00:00:00'
+        CUSTOMER:
+          type: string
+          description: >-
+            Client ID is an identifier for the client as set up in the core
+            billing system.
+          example: '0000111114'
+        SWIFT_CODE:
+          type: string
+          description: Event Code (SWIFT) is the corporate type code per SWIFT standards.
+          example: REDM
+        STP_FLAG:
+          type: string
+          description: >-
+            STP indicates whether or not the instruction was processed without
+            manual intervention.
+          example: 'Y'
+        BENCHMARK_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Ex Date is the trading cut off date after which position changes
+            will no longer alter the eligibility to the corporate action.
+          example: '2020-11-16 00:00:00'
+        PAY_DATE:
+          type: string
+          format: date-time
+          description: Pay Date is the pay date of the dividend payment.
+          example: '2024-01-25 00:00:00'
+        VALUE_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Value Date is the date on which the cash posting is expected to be
+            valued.
+          example: '2020-10-26 00:00:00'
+        QTY_PAID:
+          type: string
+          description: Quantity Paid
+          example: '1000'
+        CLAIM_ID:
+          type: string
+          description: Claim Reference is the reference associated to the market claim.
+          example: '971400122'
+        NET_PYMT_OF_DIV:
+          type: string
+          description: Net Payment is the amount of the associated cash posting.
+          example: '1500.75'
+        ASSOC_TRADE_REF:
+          type: string
+          description: >-
+            Cash Reference is the Reference of the cash posting associated with
+            the event.
+          example: '276300007'
+        DIV_CURRENCY:
+          type: string
+          description: >-
+            Dividend Currency is the ISO 4217 currency code of the currency in
+            which the dividend is paid.
+          example: USD
+        QTY_SETTLED:
+          type: string
+          description: Quantity Settled
+          example: '950'
+        QTY_RESPONDED:
+          type: string
+          description: Quantity Responded
+          example: '900'
+        FEE:
+          type: number
+          format: double
+          description: Fee is the charge in the Fee Schedule Currency.
+          example: 25.5
+        FEE_CURRENCY:
+          type: string
+          description: >-
+            Total Fee (Fee Schedule Currency) is the total charge for the
+            billable activity in the Fee Schedule Currency, It is the ISO 4217
+            currency code corresponding to the currency in which the rate card
+            is published.
+          example: USD
+        TOTAL_FEE:
+          type: number
+          format: double
+          description: Total Fee
+          example: 30.75
+        CLARITY_BRANCH_NAME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: UNITED KINGDOM
+        MARKET:
+          type: string
+          description: >-
+            Market is the name of the market or International Central Securities
+            Depositories in which the billable activity has occurred.
+          example: HONG KONG
+        REGION:
+          type: string
+          description: >-
+            Region is the name of the geographical region (if appropriate) in
+            which the billable activity has occurred.
+          example: Europe
+        FUND_MANAGER:
+          type: string
+          description: >-
+            A fund manager is a person or company who manages a portfolio of
+            investments for a fund's clients, Fund Manager field from Client
+            Profile Table.
+          example: ABC Asset Management
+        LEAD_FUND_MANAGER:
+          type: string
+          description: >-
+            A lead fund manager is a person or company who manages a portfolio
+            of investments for a fund's clients.
+          example: John Doe
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account.
+          example: Demo - SK - Japan 2
+        BR_ID:
+          type: string
+          description: Branch Code is the identifier of the branch for the account.
+          example: '484'
+        ALTV_CUR_CD:
+          type: string
+          description: >-
+            Account Base Currency Code is the ISO 4217 Currency Code for the
+            account.
+          example: USD
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: ACC128-DEMOCSH53JPY3456
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            A code to indicate the type of account - Cash, Safekeeping or
+            E-Report.
+          example: S
+        SID_SEDOL:
+          type: string
+          description: >-
+            SEDOL (Stock Exchange Daily Official List) is a unique
+            identification code, consisting of seven alphanumeric characters.
+          example: BMW2DZ3
+        SID_CUSIP:
+          type: string
+          description: >-
+            CUSIP (Committee on Uniform Securities Identification Procedures) It
+            is a nine-character alphanumeric code.
+          example: 594918AL9
+        SID_TICKER_SYMB:
+          type: string
+          description: Ticker is the symbol used on the exchange to identify the security.
+          example: MSFT
+        SID_ISIN:
+          type: string
+          description: >-
+            ISIN (International Securities Identification Number) is a
+            12-character alpha-numerical code.
+          example: US0378331005
+        SEC_SHRT_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: Apple Inc
+        EXCH_MNEM:
+          type: string
+          description: The internal code for the exchange/market.
+          example: XNYS
+        SEC_SECURITY_CD:
+          type: string
+          description: >-
+            Internal Security Code is the identifier of the Internal Security
+            Identifier.
+          example: SEC12345
+        PFD_ID_CTXT_CD:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID field. Possible Values may include: CUSIP,
+            ISIN, SEDOL, LOCAL.
+          example: ISIN
+        PFD_ISS_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: US0378331005
+        DNOMD_CUR_CD:
+          type: string
+          description: >-
+            The currency in which this security is denominated in the local
+            market.
+          example: USD
+        BKING_CUR_CD:
+          type: string
+          description: >-
+            The code of the native or local currency in which this cash flow is
+            scheduled to actually occur.
+          example: USD
+        DLAY_DAYS:
+          type: string
+          description: Delay Days
+          example: '2'
+        PMT_FREQY_DESC:
+          type: string
+          description: >-
+            Payment Frequency Description indicates how often interest is paid
+            on the security.  Values may include: Annual (00001),  Sem-Annual
+            (00002), One Payment Per Year (00035), etc.
+          example: Annual
+        PMT_FREQY:
+          type: string
+          description: >-
+            Payment Frequency indicates how often interest is paid on the
+            security.  Values may include: 00001 (Annual), 00002 (Sem-Annual),
+            00035 (One Payment Per Year), etc. 
+          example: '00001'
+        ISS_CATG_CD:
+          type: string
+          description: >-
+            Issue Category Code is a specific category for the security.  Values
+            may include: CSTK (Common Stock), DERIV (Derivatives), MBS (Mortgage
+            Backed Securities), etc.
+          example: CSTK
+        ISS_CAT_NME:
+          type: string
+          description: The classification of the security as ADR,CMO, ETF etc.
+          example: ETF
+        IOD_TIMESTAMP:
+          type: string
+          format: date-time
+          description: Provides the Timestamp when data is loaded in the Data Lake.
+          example: '2024-11-17 19:30:08'
+        ISO_COUNTRY_CODE:
+          type: string
+          description: >-
+            ISO country code is the ISO 3166 code corresponding to the country
+            in which the invoice is to be paid.
+          example: US
+        SECURITY_QUOTATION_SOURCE:
+          type: string
+          description: Security Quotation Source
+          example: GB
+    f733f311-c85c-4b66-a29e-64dec7d84753-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/f733f311-c85c-4b66-a29e-64dec7d84753-data-schema
+    f733f311-c85c-4b66-a29e-64dec7d84753-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/f733f311-c85c-4b66-a29e-64dec7d84753-data-schema
+      xml:
+        name: data
+    d3723b0b-c5b9-4306-854c-8d1e7bc59ed3-data-schema:
+      type: object
+      properties:
+        REPORTING_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Invoice Update Date is the date on which the invoice was last
+            changed.
+          example: '2025-08-27 07:33:00'
+        BILLING_PERIOD:
+          type: string
+          description: >-
+            Represents the specific date or timestamp associated with the
+            billing period used for invoice calculation.
+          example: '2020-11-30'
+        SAFE_KEEPING_ACCOUNT:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: '0000000258944'
+        INVOICE_NUMBER:
+          type: integer
+          format: int64
+          description: Invoice Number is the unique reference number of the invoice.
+          example: 20210100647
+        INVOICE_SCHEDULE_ID:
+          type: integer
+          format: int64
+          description: >-
+            Invoice Schedule Identifier is a unique reference for the schedule
+            under which each invoice is created.
+          example: 1965199
+        REVISION_NUMBER:
+          type: integer
+          format: int32
+          description: >-
+            Revision Number indicates how many times the invoice has been
+            revised.
+          example: 7
+        CORP_ACT_ID:
+          type: string
+          description: >-
+            Event Reference is the reference associated to the corporate action
+            event.
+          example: '46305405693'
+        CORPORATE_ACTION_TYPE:
+          type: string
+          description: >-
+            Corporate Action Type is a 3 digit code indicating the type of
+            corporate action.
+          example: RDB
+        DESCRIPTION:
+          type: string
+          description: Charge Description is a description of the charge reason.
+          example: Event Notifications
+        CENTER:
+          type: string
+          description: >-
+            Place Of Settlement Code is a 3 digit code corresponding to the
+            settlement location of the holding.
+          example: HKG
+        CENTER_NAME:
+          type: string
+          description: Place Of Settlement is the settlement location of the holding.
+          example: CB HONG KONG
+        RELEASE_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Payment Release Date is the date on which payment of the corporate
+            action was released.
+          example: '2020-10-23 00:00:00'
+        CUSTOMER:
+          type: string
+          description: >-
+            Client ID is an identifier for the client as set up in the core
+            billing system.
+          example: '0000111114'
+        SWIFT_CODE:
+          type: string
+          description: Event Code (SWIFT) is the corporate type code per SWIFT standards.
+          example: REDM
+        BENCHMARK_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Ex Date is the trading cut off date after which position changes
+            will no longer alter the eligibility to the corporate action.
+          example: '2020-11-16 00:00:00'
+        PAY_DATE:
+          type: string
+          format: date-time
+          description: Pay Date is the pay date of the dividend payment.
+          example: '2024-01-25 00:00:00'
+        VALUE_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Value Date is the date on which the cash posting is expected to be
+            valued.
+          example: '2020-10-26 00:00:00'
+        QTY_PAID:
+          type: string
+          description: Quantity Paid
+          example: '1000'
+        NET_PYMT_OF_DIV:
+          type: string
+          description: Net Payment is the amount of the associated cash posting.
+          example: '1500.75'
+        ASSOC_TRADE_REF:
+          type: string
+          description: >-
+            Cash Reference is the Reference of the cash posting associated with
+            the event.
+          example: '276300007'
+        DIV_CURRENCY:
+          type: string
+          description: >-
+            Dividend Currency is the ISO 4217 currency code of the currency in
+            which the dividend is paid.
+          example: USD
+        FEE:
+          type: number
+          format: double
+          description: Fee is the charge in the Fee Schedule Currency.
+          example: 25.5
+        FEE_CCY:
+          type: string
+          description: >-
+            Total Fee (Fee Schedule Currency) is the total charge for the
+            billable activity in the Fee Schedule Currency, It is the ISO 4217
+            currency code corresponding to the currency in which the rate card
+            is published.
+          example: USD
+        TOTAL_FEE:
+          type: number
+          format: double
+          description: Total Fee
+          example: 30.75
+        BOOKING_OFFICE_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the safekeeping
+            account.
+          example: H2898
+        CLARITY_BRANCH_NAME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: UNITED KINGDOM
+        MARKET:
+          type: string
+          description: >-
+            Market is the name of the market or International Central Securities
+            Depositories in which the billable activity has occurred.
+          example: HONG KONG
+        REGION:
+          type: string
+          description: >-
+            Region is the name of the geographical region (if appropriate) in
+            which the billable activity has occurred.
+          example: Europe
+        FUND_MANAGER:
+          type: string
+          description: >-
+            A fund manager is a person or company who manages a portfolio of
+            investments for a fund's clients, Fund Manager field from Client
+            Profile Table.
+          example: ABC Asset Management
+        LEAD_FUND_MANAGER:
+          type: string
+          description: >-
+            A lead fund manager is a person or company who manages a portfolio
+            of investments for a fund's clients.
+          example: John Doe
+        MARKETING_GFCID_L4_NAME:
+          type: string
+          description: >-
+            A Global Finance Customer Identifier (GFCID) is a 10-digit
+            identifier assigned to represent legal entities as well as branches
+            and sub accounts within ICG and other businesses This is the L4
+            GFCID for the client record. Where the L4 GFCID is equal to GFCID
+            the GFCID the record identifies an L4 GFCID. This represents the
+            Sub-Account level as recorded in the STaRs (Service Tracking and
+            Reporting System) for the specified source region.
+          example: LEGAL & GENERAL REINSURANCE CO LTD
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account.
+          example: Demo - SK - Japan 2
+        BR_ID:
+          type: string
+          description: Branch Code is the identifier of the branch for the account.
+          example: '484'
+        ALTV_CUR_CD:
+          type: string
+          description: >-
+            Account Base Currency Code is the ISO 4217 Currency Code for the
+            account.
+          example: USD
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: ACC128-DEMOCSH53JPY3456
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            A code to indicate the type of account - Cash, Safekeeping or
+            E-Report.
+          example: S
+        SID_SEDOL:
+          type: string
+          description: >-
+            SEDOL (Stock Exchange Daily Official List) is a unique
+            identification code, consisting of seven alphanumeric characters.
+          example: BMW2DZ3
+        SID_CUSIP:
+          type: string
+          description: >-
+            CUSIP (Committee on Uniform Securities Identification Procedures) It
+            is a nine-character alphanumeric code.
+          example: 594918AL9
+        SID_TICKER_SYMB:
+          type: string
+          description: Ticker is the symbol used on the exchange to identify the security.
+          example: MSFT
+        SID_ISIN:
+          type: string
+          description: >-
+            ISIN (International Securities Identification Number) is a
+            12-character alpha-numerical code.
+          example: US0378331005
+        SEC_SHRT_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: Apple Inc
+        EXCH_MNEM:
+          type: string
+          description: The internal code for the exchange/market.
+          example: XNYS
+        SEC_SECURITY_CD:
+          type: string
+          description: >-
+            Internal Security Code is the identifier of the Internal Security
+            Identifier.
+          example: SEC12345
+        PFD_ID_CTXT_CD:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID field. Values may include: CUSIP, ISIN,
+            SEDOL, LOCAL.
+          example: ISIN
+        PFD_ISS_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: US0378331005
+        DNOMD_CUR_CD:
+          type: string
+          description: >-
+            The currency in which this security is denominated in the local
+            market.
+          example: USD
+        BKING_CUR_CD:
+          type: string
+          description: >-
+            The code of the native or local currency in which this cash flow is
+            scheduled to actually occur.
+          example: USD
+        DLAY_DAYS:
+          type: string
+          description: Delay Days
+          example: '2'
+        PMT_FREQY_DESC:
+          type: string
+          description: >-
+            Payment Frequency Description indicates how often interest is paid
+            on the security.  Values may include: Annual (00001),  Sem-Annual
+            (00002), One Payment Per Year (00035), etc.
+          example: Annual
+        PMT_FREQY:
+          type: string
+          description: >-
+            Payment Frequency indicates how often interest is paid on the
+            security.  Values may include: 00001 (Annual), 00002 (Sem-Annual),
+            00035 (One Payment Per Year), etc. 
+          example: '00001'
+        ISS_CATG_CD:
+          type: string
+          description: >-
+            Issue Category Code is a specific category for the security.  Values
+            may include: CSTK (Common Stock), DERIV (Derivatives), MBS (Mortgage
+            Backed Securities), etc.
+          example: CSTK
+        ISS_CAT_NME:
+          type: string
+          description: The classification of the security as ADR,CMO, ETF etc.
+          example: ETF
+        IOD_TIMESTAMP:
+          type: string
+          format: date-time
+          description: Provides the Timestamp when data is loaded in the Data Lake.
+          example: '2024-11-17 19:30:08'
+        ISO_COUNTRY_CODE:
+          type: string
+          description: >-
+            ISO country code is the ISO 3166 code corresponding to the country
+            in which the invoice is to be paid.
+          example: US
+        SECURITY_QUOTATION_SOURCE:
+          type: string
+          description: Security Quotation Source
+          example: GB
+    d3723b0b-c5b9-4306-854c-8d1e7bc59ed3-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/d3723b0b-c5b9-4306-854c-8d1e7bc59ed3-data-schema
+    d3723b0b-c5b9-4306-854c-8d1e7bc59ed3-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/d3723b0b-c5b9-4306-854c-8d1e7bc59ed3-data-schema
+      xml:
+        name: data
+    a5ae4ee1-c9c8-4b1b-9437-8acdc6ac815c-data-schema:
+      type: object
+      properties:
+        REPORTING_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Invoice Update Date is the date on which the invoice was last
+            changed.
+          example: '2025-08-27 07:33:00'
+        BILLING_PERIOD:
+          type: string
+          description: >-
+            Represents the specific date or timestamp associated with the
+            billing period used for invoice calculation.
+          example: '2020-11-30'
+        INVOICE_SCHEDULE_ID:
+          type: integer
+          format: int64
+          description: >-
+            Invoice Schedule Identifier is a unique reference for the schedule
+            under which each invoice is created.
+          example: 1965199
+        INVOICE_NUMBER:
+          type: integer
+          format: int64
+          description: Invoice Number is the unique reference number of the invoice.
+          example: 20210100647
+        REV_NO:
+          type: integer
+          format: int32
+          description: >-
+            Revision Number indicates how many times the invoice has been
+            revised.
+          example: 7
+        SK_ACCOUNT:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: '12345678901'
+        SK_GRP_NAME:
+          type: string
+          description: >-
+            Safekeeping Group Name is the name of a group of safekeeping
+            accounts that the client has defined and set up in the core billing
+            system.
+          example: AB123456
+        TXN_TYPE:
+          type: string
+          description: Transaction Type is a descriptive name for the type of transaction.
+          example: BUY FUTURE
+        VAL_TYPE_ID:
+          type: string
+          description: Valuation Type indicates where the trade is equity vs desk.
+          example: ''
+        TXN_REF:
+          type: string
+          description: >-
+            Citi Reference is the unique reference number of the trade within
+            Citi systems.
+          example: '276300007'
+        TXN_COUNT:
+          type: integer
+          format: int32
+          description: >-
+            Partial Settlement Count indicates how many separate settlements
+            took place for the transaction if it partially settled. If full
+            settlement occurred this will be 0.
+          example: 0
+        BROKER_CODE:
+          type: string
+          description: Counterparty is the counterparty of the trade.
+          example: ''
+        ACTUAL_SETTLEMENT_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Actual Settlement Date is the date when the trade settled in market
+            or date of final settlement of the trade.
+          example: '2020-10-23 00:00:00'
+        CONCEPTUAL_SETTLEMENT_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Contractual Settlement Date is the date when the trade was supposed
+            to settle in the market.
+          example: '2020-10-26 00:00:00'
+        INSTR_MODE:
+          type: string
+          description: >-
+            Instruction Mode is an internal classification for how the
+            transaction was instructed.
+          example: C
+        CURRENCY:
+          type: string
+          description: >-
+            Currency is the ISO 4217 currency code corresponding to the currency
+            in the market.
+          example: USD
+        CONSIDERATION:
+          type: number
+          format: double
+          description: >-
+            Settlement Amount is the cash value of the transaction in the Market
+            Currency.
+          example: 1500.75
+        CUST_REF:
+          type: string
+          description: >-
+            Client Reference is a unique number assigned by the client to the
+            transaction.
+          example: E2C15519943
+        CLIENT_ID:
+          type: string
+          description: >-
+            Client ID is an identifier for the client as set up in the core
+            billing system.
+          example: ID123456
+        FEE:
+          type: number
+          format: double
+          description: Fee is the charge in the Fee Schedule Currency.
+          example: 25.5
+        FEE_CURRENCY:
+          type: string
+          description: >-
+            Total Fee (Fee Schedule Currency) is the total charge for the
+            billable activity in the Fee Schedule Currency.
+          example: USD
+        TOTAL_FEE:
+          type: number
+          format: double
+          description: Total Fee.
+          example: 30.75
+        QUANTITY:
+          type: number
+          format: double
+          description: Quantity provides the number of units of the traded security.
+          example: 150
+        BENEFICIARY:
+          type: string
+          description: >-
+            Beneficiary is the ultimate beneficiary of the transaction and the
+            recipient of the funds.
+          example: /458597V
+        CLARITY_BRANCH_NAME:
+          type: string
+          description: Branch Name is the name of the branch for the account.
+          example: UNITED KINGDOM
+        MARKET:
+          type: string
+          description: >-
+            Market is the name of the market or International Central Securities
+            Depositories.
+          example: HONG KONG
+        REGION:
+          type: string
+          description: >-
+            Region is the name of the geographical region in which the billable
+            activity has occurred.
+          example: Europe
+        CENTRE_CODE:
+          type: string
+          description: >-
+            Place Of Settlement Code is a 3 digit code corresponding to the
+            settlement location.
+          example: HKG
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name assigned to the Cash or Safekeeping
+            Account.
+          example: Demo - SK - Japan 2
+        BR_ID:
+          type: string
+          description: Branch Code is the identifier of the branch for the account.
+          example: '484'
+        ALTV_CUR_CD:
+          type: string
+          description: >-
+            Account Base Currency Code is the ISO 4217 Currency Code for the
+            account.
+          example: USD
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier associated
+            with accounts.
+          example: ACC128-DEMOCSH53JPY3456
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            A code to indicate the type of account - Cash, Safekeeping or
+            E-Report.
+          example: S
+        SID_SEDOL:
+          type: string
+          description: >-
+            SEDOL is a seven-character identification code for securities
+            trading.
+          example: BMW2DZ3
+        SID_CUSIP:
+          type: string
+          description: CUSIP is a nine-character alphanumeric code identifying securities.
+          example: 594918AL9
+        SID_TICKER_SYMB:
+          type: string
+          description: Ticker is the symbol used on the exchange.
+          example: MSFT
+        SID_ISIN:
+          type: string
+          description: >-
+            ISIN is a 12-character alphanumeric code for security
+            identification.
+          example: US0378331005
+        SEC_SHRT_NME:
+          type: string
+          description: Issue Name is the Security Name.
+          example: Apple Inc
+        EXCH_MNEM:
+          type: string
+          description: Internal code for the exchange.
+          example: XNYS
+        SEC_SECURITY_CD:
+          type: string
+          description: Citi Internal Security Code identifier.
+          example: SEC12345
+        PFD_ID_CTXT_CD:
+          type: string
+          description: >-
+            Security ID Type indicates the type of identifier of the
+            corresponding Security ID field. Possible Values may include: CUSIP,
+            ISIN, SEDOL, LOCAL, etc.
+          example: ISIN
+        PFD_ISS_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: US0378331005
+        DNOMD_CUR_CD:
+          type: string
+          description: >-
+            The currency in which this security is denominated in the local
+            market.
+          example: USD
+        BKING_CUR_CD:
+          type: string
+          description: >-
+            The code of the native or local currency in which this cash flow is
+            scheduled to actually occur.
+          example: USD
+        DLAY_DAYS:
+          type: string
+          description: Delay Days.
+          example: '2'
+        PMT_FREQY_DESC:
+          type: string
+          description: >-
+            Payment Frequency Description indicates how often interest is paid
+            on the security. Possible values may include: Annual (00001), 
+            Sem-Annual (00002), One Payment Per Year (00035), etc.
+          example: Annual
+        PMT_FREQY:
+          type: string
+          description: >-
+            Payment Frequency indicates how often interest is paid on the
+            security.  Possible values may include: 00001 (Annual), 00002
+            (Sem-Annual), 00035 (One Payment Per Year), etc.
+          example: '00001'
+        ISS_CATG_CD:
+          type: string
+          description: >-
+            Issue Category Code is a specific category for the security. 
+            Possible values may include: CSTK (Common Stock), DERIV
+            (Derivatives), MBS (Mortgage Backed Securities), etc.
+          example: CSTK
+        ISS_CAT_NME:
+          type: string
+          description: The classification of the security as ADR,CMO, ETF etc.
+          example: ETF
+        POSITION_LOCATION_CODE:
+          type: string
+          description: Position Location Code.
+          example: HU
+        ISO_COUNTRY_CODE:
+          type: string
+          description: >-
+            ISO country code is the ISO 3166 code corresponding to the country
+            in which the invoice is to be paid.
+          example: US
+        SECURITY_QUOTATION_SOURCE:
+          type: string
+          description: Security Quotation Source.
+          example: GB
+    a5ae4ee1-c9c8-4b1b-9437-8acdc6ac815c-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/a5ae4ee1-c9c8-4b1b-9437-8acdc6ac815c-data-schema
+    a5ae4ee1-c9c8-4b1b-9437-8acdc6ac815c-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/a5ae4ee1-c9c8-4b1b-9437-8acdc6ac815c-data-schema
+      xml:
+        name: data
+    bfd3c727-0034-4ac4-9905-b58ca4437cf2-data-schema:
+      type: object
+      properties:
+        REPORTING_DATE:
+          type: string
+          format: date-time
+          description: >-
+            Invoice Update Date is the date on which the invoice was last
+            changed.
+          example: '2025-08-27 07:33:00'
+        BILLING_PERIOD:
+          type: string
+          description: >-
+            Represents the specific date or timestamp associated with the
+            billing period used for invoice calculation.
+          example: '2020-11-30'
+        SK_ACCOUNT:
+          type: string
+          description: >-
+            Account ID is an identifier for both a Cash Account and/or a
+            Safekeeping Account that is unique within a branch.
+          example: '0000000258944'
+        CLIENT_ID:
+          type: string
+          description: >-
+            Client ID is an identifier for the client as set up in the core
+            billing system.
+          example: ID123456
+        INVOICE_SCHEDULE_ID:
+          type: integer
+          format: int64
+          description: >-
+            Invoice Schedule Identifier is a unique reference for the schedule
+            under which each invoice is created.
+          example: 1965199
+        INVOICE_NUMBER:
+          type: integer
+          format: int64
+          description: Invoice Number is the unique reference number of the invoice.
+          example: 20210100647
+        REVISION_NUMBER:
+          type: integer
+          format: int32
+          description: >-
+            Revision Number indicates how many times the invoice has been
+            revised.
+          example: 7
+        SURCHARGE_TYPE:
+          type: string
+          description: Surcharge Type
+          example: PHY
+        CENTRE:
+          type: string
+          description: >-
+            Place Of Settlement Code is a 3 digit code corresponding to the
+            settlement location of the holding.
+          example: HKG
+        BROKE_CODE:
+          type: string
+          description: Counterparty is the counterparty of the trade.
+          example: EUROCLEAR 10307
+        CONTRACTUAL_SETTLEMENT_DATE:
+          type: string
+          description: >-
+            Contractual Settlement Date is the date when the trade was supposed
+            to settle in the market.
+          example: '2020-10-26 00:00:00'
+        TXN_REF:
+          type: string
+          description: >-
+            Citi Reference is the unique reference number of the trade within
+            Citi systems.
+          example: '276300007'
+        CUST_REF:
+          type: string
+          description: >-
+            Client Reference is a unique number assigned by the client, to the
+            transaction, for identification purposes within their organization
+          example: EOC7640105200521
+        INSTR_MODE:
+          type: string
+          description: >-
+            Instruction Mode is an internal classification for how the
+            transaction was instructed.
+          example: P
+        TRADE_UNITS:
+          type: number
+          format: double
+          description: Quantity is the number of units of the security traded.
+          example: 21534
+        DELIVERY:
+          type: string
+          description: >-
+            Physical Delivery indicates if the charge is on account of a manual
+            delivery.
+          example: P
+        FEE:
+          type: string
+          description: Fee is the charge in the Fee Schedule Currency.
+          example: '25.50'
+        FEE_CURRENCY:
+          type: string
+          description: >-
+            Total Fee (Fee Schedule Currency) is the total charge for the
+            billable activity in the Fee Schedule Currency.
+          example: USD
+        TOTAL_FEE:
+          type: number
+          format: double
+          description: Total Fee
+          example: 30.75
+        CLARITY_BRANCH_NAME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the Cash Account and/or
+            Safekeeping Account.
+          example: UNITED KINGDOM
+        MARKET:
+          type: string
+          description: >-
+            Market is the name of the market or International Central Securities
+            Depositories in which the billable activity has occurred.
+          example: HONG KONG
+        REGION:
+          type: string
+          description: >-
+            Region is the name of the geographical region in which the billable
+            activity has occurred.
+          example: Europe
+        CENTRE_CODE:
+          type: string
+          description: >-
+            Place Of Settlement Code is a 3 digit code corresponding to the
+            settlement location of the holding.
+          example: HKG
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the Cash Account and/or
+            the Safekeeping Account.
+          example: Demo - SK - Japan 2
+        BR_ID:
+          type: string
+          description: Branch Code is the identifier of the branch for the account.
+          example: '484'
+        ALTV_CUR_CD:
+          type: string
+          description: >-
+            Account Base Currency Code is the ISO 4217 Currency Code for the
+            account.
+          example: USD
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal client identifier that is
+            associated to a Safekeeping or Cash Account.
+          example: ACC128-DEMOCSH53JPY3456
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            A code to indicate the type of account - Cash, Safekeeping or
+            E-Report.
+          example: S
+        SID_SEDOL:
+          type: string
+          description: >-
+            SEDOL (Stock Exchange Daily Official List) is a unique
+            identification code.
+          example: BMW2DZ3
+        SID_CUSIP:
+          type: string
+          description: CUSIP is a nine-character alphanumeric code.
+          example: 594918AL9
+        SID_TICKER_SYMB:
+          type: string
+          description: Ticker is the symbol used on the exchange to identify the security.
+          example: MSFT
+        SID_ISIN:
+          type: string
+          description: ISIN is a 12-character alphanumeric code.
+          example: US0378331005
+        SEC_SHRT_NME:
+          type: string
+          description: Issue Name is the Security Name of the security instrument.
+          example: Apple Inc
+        EXCH_MNEM:
+          type: string
+          description: The internal code for the exchange/market.
+          example: XNYS
+        SEC_SECURITY_CD:
+          type: string
+          description: >-
+            Internal Security Code is the identifier of the Internal Security
+            Identifier.
+          example: SEC12345
+        PFD_ID_CTXT_CD:
+          type: string
+          description: "\tSecurity ID Type indicates the type of identifier of the corresponding Security ID field. Possible Values may  include: CUSIP, ISIN, SEDOL, LOCAL, etc."
+          example: ISIN
+        PFD_ISS_ID:
+          type: string
+          description: >-
+            Security ID is the most commonly used identifier for the security in
+            a given market.
+          example: US0378331005
+        DNOMD_CUR_CD:
+          type: string
+          description: >-
+            The currency in which this security is denominated in the local
+            market.
+          example: USD
+        BKING_CUR_CD:
+          type: string
+          description: >-
+            The code of the native or local currency in which this cash flow is
+            scheduled to actually occur.
+          example: USD
+        DLAY_DAYS:
+          type: string
+          description: Delay Days
+          example: '2'
+        PMT_FREQY_DESC:
+          type: string
+          description: >-
+            Payment Frequency Description indicates how often interest is paid
+            on the security. Possible values may include: Annual (00001),
+            Sem-Annual (00002), One Payment Per Year (00035), etc.
+          example: Annual
+        PMT_FREQY:
+          type: string
+          description: >-
+            Payment Frequency indicates how often interest is paid on the
+            security. Possible values may include: 00001 (Annual), 00002
+            (Sem-Annual), 00035 (One Payment Per Year), etc.
+          example: '00001'
+        ISS_CATG_CD:
+          type: string
+          description: >-
+            Issue Category Code is a specific category for the security.
+            Possible values may include: CSTK (Common Stock), DERIV
+            (Derivatives), MBS (Mortgage Backed Securities), etc.
+          example: CSTK
+        ISS_CAT_NME:
+          type: string
+          description: The classification of the security as ADR,CMO, ETF etc.
+          example: ETF
+        POSITION_LOCATION_CODE:
+          type: string
+          description: Position Location Code
+          example: HU
+        ISO_COUNTRY_CODE:
+          type: string
+          description: >-
+            ISO country code is the ISO 3166 code corresponding to the country
+            in which the invoice is to be paid.
+          example: US
+        SECURITY_QUOTATION_SOURCE:
+          type: string
+          description: Security Quotation Source
+          example: GB
+    bfd3c727-0034-4ac4-9905-b58ca4437cf2-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/bfd3c727-0034-4ac4-9905-b58ca4437cf2-data-schema
+    bfd3c727-0034-4ac4-9905-b58ca4437cf2-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/bfd3c727-0034-4ac4-9905-b58ca4437cf2-data-schema
+      xml:
+        name: data
+    ErrorResponse:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errorDetails:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      title: Error Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+  parameters:
+    client_id:
+      description: >-
+        Your unique ID. This is the same as the ID you used for OAuth token
+        generation. Citi shared this ID with you during your Data On Demand API
+        onboarding
+      name: client_id
+      in: header
+      required: true
+      schema:
+        type: string
+    skip:
+      name: skip
+      in: query
+      description: The number of records to skip before returning the results
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    take:
+      name: take
+      in: query
+      description: The maximum number of records to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 5000
+    select:
+      name: $select
+      in: query
+      description: >-
+        The $SELECT parameter in an API allows users to specify which data
+        fields (properties or columns) they want to receive in the API response.
+        This helps improve efficiency by reducing the amount of data transferred
+        and simplifying client-side processing.
+      required: false
+      schema:
+        type: string
+    parameter-31831:
+      name: ACCOUNT_CURRENCY
+      description: >-
+        Account Currency is the ISO 4217 currency code corresponding to the base
+        currency of the safekeeping account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31862:
+      name: SAFE_KEEPING_ACCOUNT
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31832:
+      name: ACTIVITY_CATEGORY
+      description: >-
+        Activity Category is the low level description of the billable activity
+        (e.g. Asset Services, Settlements, Tax).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31833:
+      name: ACTIVITY_CURRENCY
+      description: >-
+        Activity Currency is the ISO 4217 currency code corresponding to the
+        market currency of the billable activity.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31834:
+      name: ACTIVITY_TYPE
+      description: >-
+        Activity Type is the high level description of the billable activity
+        (e.g. Valuations, Transactions, Surcharges, Other fees).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31819:
+      name: CLARITY_BRANCH_NAME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31817:
+      name: CHARGE_IN_FEE_CURENCY
+      description: >-
+        Charge (Fee Schedule Currency) is the calculated charge for the billable
+        activity in the Fee Schedule Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31818:
+      name: CHARGE_IN_USD
+      description: >-
+        Charge (USD) is the calculated charge for the billable activity in US
+        dollars.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31821:
+      name: CLIENT_ID
+      description: >-
+        Client ID is an identifier for the client as set up in the core billing
+        system.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31823:
+      name: DELIVERY_METHOD
+      description: >-
+        Delivery Method indicates how the invoice is sent to the client. E.g. By
+        post, by email, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31824:
+      name: DIRECT_DEBIT_CASH_ACCOUNT
+      description: >-
+        Direct Debit Cash Account is the account id of the cash account from
+        which the invoice amount will be debited.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31825:
+      name: DIRECT_DEBIT_SLA_DATE
+      description: >-
+        Direct Debit SLA is the date on which the direct debit is expected to be
+        taken.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31830:
+      name: FEE_SCHEDULE_CURRENCY
+      description: >-
+        Fee Schedule Currency is the ISO 4217 currency code corresponding to the
+        currency in which the rate card is published.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31859:
+      name: INVOICE_CURRENCY
+      description: >-
+        Invoice Currency is the ISO 4217 currency code corresponding to the
+        currency in which the invoice is to be paid.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31866:
+      name: INVOICE_DELIVERY_DATE
+      description: >-
+        Invoice Delivery Date is the date on which the invoice was sent to the
+        client.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-31838:
+      name: BILLING_FREQUENCY
+      description: >-
+        Invoice Frequency indicates how often the invoice is calculated. E.g.
+        Monthly, Quarterly, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31864:
+      name: BILLABLE_MONTH
+      description: >-
+        Represents the billing month for which the invoice is generated. The
+        date typically reflects a day within the billable month.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-31865:
+      name: BILLING_PERIOD
+      description: >-
+        Represents the specific date or timestamp associated with the billing
+        period used for invoice calculation.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-31869:
+      name: INVOICE_NUMBER
+      description: Invoice Number is the unique reference number of the invoice.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-31870:
+      name: INVOICE_SCHEDULE_ID
+      description: >-
+        Invoice Schedule Identifier is a unique reference for the schedule under
+        which each invoice is created.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-31863:
+      name: REPORTING_DATE
+      description: Invoice Update Date is the date on which the invoice was last changed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-31855:
+      name: MARKET
+      description: >-
+        Market is the name of the market or International Central Securities
+        Depositories in which the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31856:
+      name: PAYMENT_BASIS
+      description: >-
+        Payment Basis indicates how the invoice is expected to be paid. e.g.
+        Remittance, Direct Debit.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31836:
+      name: BILLING_CENTRE
+      description: >-
+        Place Of Settlement Code is a 3 digit code corresponding to the
+        settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31837:
+      name: BILLING_CENTRE_NAME
+      description: Place Of Settlement is the settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31813:
+      name: QUANTITY_IN_ACCOUNT_CURRENCY
+      description: >-
+        Quantity (Account Currency) is either the number of charges incurred or
+        the value used in the fee calculation converted to the Account Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31814:
+      name: QUANTITY_IN_FEE_SCHEDULE_CURRENCY
+      description: >-
+        Quantity (Activity Currency) is either the number of charges incurred or
+        the value used in the fee calculation converted to the Activity
+        Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31815:
+      name: QUANTITY_IN_INVOICE_CURRENCY
+      description: >-
+        Quantity (Invoice Currency) is either the number of charges incurred or
+        the value used in the fee calculation converted to the Invoice Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31816:
+      name: QUANTITY_IN_USD
+      description: >-
+        Quantity (USD) is either the number of charges incurred or the value
+        used in the fee calculation converted to US dollars.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31842:
+      name: REGION
+      description: >-
+        Region is the name of the geographical region (if appropriate) in which
+        the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31861:
+      name: REVISED_FLAG
+      description: >-
+        Revised Flag indicates whether or not the invoice has been changed since
+        it was first calculated.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31804:
+      name: REVISION_NUMBER
+      description: Revision Number indicates how many times the invoice has been revised.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-31805:
+      name: SALES_TAX_FEE_IN_ACCOUNT_CURRENCY
+      description: >-
+        Sales Tax (Account Currency) is the applicable sales tax in the Account
+        Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31806:
+      name: SALES_TAX_FEE_IN_FEE_CURRENCY
+      description: >-
+        Sales Tax (Fee Schedule Currency) is the applicable sales tax in the Fee
+        Schedule Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31807:
+      name: SALES_TAX_FEE_IN_INVOICE_CURRENCY
+      description: >-
+        Sales Tax (Invoice Currency) is the applicable sales tax in the Invoice
+        Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31808:
+      name: SALES_TAX_FEE_IN_USD
+      description: Sales Tax (USD) is the applicable sales tax in US Dollars.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31809:
+      name: TOTAL_FEE_IN_ACCOUNT_CURRENCY
+      description: >-
+        Total Fee (Account Currency) is the total charge for the billable
+        activity in the Account Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31810:
+      name: TOTAL_FEE_IN_FEE_CURRENCY
+      description: >-
+        Total Fee (Fee Schedule Currency) is the total charge for the billable
+        activity in the Fee Schedule Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31811:
+      name: TOTAL_FEE_IN_INVOICE_CURRENCY
+      description: >-
+        Total Fee (Invoice Currency) is the total charge for the billable
+        activity in the Invoice Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31812:
+      name: TOTAL_FEE_IN_USD
+      description: >-
+        Total Fee (USD) is the total charge for the billable activity in US
+        Dollars.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31852:
+      name: INVOICE_YEAR
+      description: Represents the calendar year in which the custody invoice is generated.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31847:
+      name: INVOICE_MONTH
+      description: Billable Invoice Month
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31843:
+      name: CATEGORY_CODE
+      description: Category Code
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31848:
+      name: TRANSACTION_TYPE
+      description: >-
+        Type of transaction. List of available values: "AllocBuyExt":"Buy
+        Future":"Open Repo":"Open Reverse":"Buy TBA":"Buy
+        Protection":"MatRepo":"IssueFunds":"OpenSwap":"Buy
+        Option":"Assignment":"Call on Rights":"Scrip Dividend":"CASell":"Exerc.
+        Opt.":"Expire
+        Option":"CloseFX":"Sell":"VariatMarg":"Buy":"Redemption":"ChargeCash":"MatLend":"Payment":"Coupon":"CALiqu":"IniMar":"Lend":"DepMoney":"Dividend":"Loan
+        Facility Fee Pay In":"Withdraw":"WdrMoney":"MatReverse":"CA Stock
+        split":"CA Reverse stock split":"Rights Distribution":"Exchange
+        Offer":"Deliver Collateral":"RalocCdyPor":"CABuy":"Bonus
+        Issue":"DemergerMor":"DRP Scrip Dividend":"Merger":"Spin
+        Off":"Worthless":"BuyFXSpot":"BuyFXFwd":"SellFXSpot":"SellFXFwd":"Deposit":"Accept
+        Collateral":"Close Facility Commitment":"Open Facility
+        Commitment":"AllocSellExt":"Sell Future":"Sell TBA":"Sell Option":"Close
+        Opt":"BuyFXFwdDbd":"SellFXFwdDbd".
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31860:
+      name: RESPONSIBLE_PERSON
+      description: responsible person
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-17663:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-17664:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account.  For the
+        Cash Account the branch code is a numeric value and for the Safekeeping
+        Account it is the ISO Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-17666:
+      name: ALTV_CUR_CD
+      description: Account Base Currency Code is the ISO Currency Code for the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-17667:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal client identifier that is associated
+        to a Safekeeping or Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-17668:
+      name: ACCT_BUS_TYP_CD
+      description: >-
+        Account Type Code indicates the type of the account. Values are: C (Cash
+        Account), S (Safekeeping Account).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37237:
+      name: IOD_TIMESTAMP
+      description: Provides the Timestamp when data is loaded in the Data Lake.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-31976:
+      name: REPORTING_DATE
+      description: Invoice Update Date is the date on which the invoice was last changed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-31939:
+      name: BRANCH_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account. For the
+        Cash Account the branch code is a numeric value and for the Safekeeping
+        Account it is the ISO 3166 Country code.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-31954:
+      name: BILLING_PERIOD
+      description: >-
+        Represents the specific date or timestamp associated with the billing
+        period used for invoice calculation.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31978:
+      name: INVOICE_SCHEDULE_ID
+      description: >-
+        Invoice Schedule Identifier is a unique reference for the schedule under
+        which each invoice is created.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-31971:
+      name: SK_ACCOUNT
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31958:
+      name: CLIENT_ID
+      description: >-
+        Client ID is an identifier for the client as set up in the core billing
+        system.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31972:
+      name: SK_GRP_NAME
+      description: >-
+        Safekeeping Group Name is the name of a group of safekeeping accounts
+        that the client has defined and set up in the core billing system.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31940:
+      name: PROFIT_CENTER
+      description: Profit Centre is an internal field not for client consumption.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-31974:
+      name: PROFIT_CENTER_NAME
+      description: Profit Centre Name is an internal field not for client consumption.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31956:
+      name: CENTRE_CODE
+      description: >-
+        Place Of Settlement Code is a 3 digit code corresponding to the
+        settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31965:
+      name: NAME
+      description: Place Of Settlement is the settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31953:
+      name: ASSET_TYPE
+      description: >-
+        Asset Type is a code representing the Asset Type of the security. 
+        Possible values may include: EQTY (Equity), FI (Fixed Income), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31959:
+      name: CURRENCY
+      description: >-
+        Currency is the ISO 4217 currency code corresponding to the currency in
+        the market. The currency of the balance/bank account, List of available
+        values: AED: UAE Dirham AFN: Afghani ALL: Lek AMD: Armenian Dram ANG:
+        Netherlands Antillean Guilder AOA: Kwanza ARS: Argentine.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31943:
+      name: MARKET_VALUE
+      description: >-
+        Market Value is the market value at the Market Value Date in the Market
+        Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31946:
+      name: AVG_MARKET_VALUE
+      description: >-
+        Average Market Value is the average daily market value across the
+        billing period in the Market Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31945:
+      name: AVERAGE_QUANTITY_SHARES
+      description: >-
+        Average Quantity is the average daily settled quantity across the
+        billing period.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31949:
+      name: UNITS_OF_SHARE
+      description: Internal field only?
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31964:
+      name: MARKET_VALUE_DATE
+      description: Market Value Date is the date on which the Market Value is provided.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31942:
+      name: HOLDINGS
+      description: >-
+        Quantity is the settled quantity of the security at the Market Value
+        Date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31948:
+      name: PRICE
+      description: Issue Price is the price of the security at the Market Value Date.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31966:
+      name: ISIN
+      description: >-
+        ISIN (International Securities Identification Number) is a 12-character
+        alpha-numerical code governed by ISO 6166 it is a uniform identification
+        of a security at trading and settlement.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31950:
+      name: PRICE_CURRENCY
+      description: >-
+        Issue Price Currency is the ISO 4217 currency code corresponding to the
+        currency in which the Issue Price is published.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31947:
+      name: FEE
+      description: Fee is the charge in the Fee Schedule Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-31951:
+      name: FEE_CURRENCY
+      description: >-
+        Total Fee (Fee Schedule Currency) is the total charge for the billable
+        activity in the Fee Schedule Currency, It is the ISO 4217 currency code
+        corresponding to the currency in which the rate card is published.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31941:
+      name: REVISION_NUMBER
+      description: Revision Number indicates how many times the invoice has been revised.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-31977:
+      name: INVOICE_NUMBER
+      description: Invoice Number is the unique reference number of the invoice.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-31957:
+      name: CLARITY_BRANCH_NAME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31968:
+      name: MARKET
+      description: >-
+        Market is the name of the market or International Central Securities
+        Depositories in which the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-31975:
+      name: REGION
+      description: >-
+        Region is the name of the geographical region (if appropriate) in which
+        the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37180:
+      name: FUND_MANAGER
+      description: >-
+        A fund manager is a person or company who manages a portfolio of
+        investments for a fund's clients, Fund Manager field from Client Profile
+        Table.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37181:
+      name: LEAD_FUND_MANAGER
+      description: >-
+        A lead fund manager is a person or company who manages a portfolio of
+        investments for a fund's clients.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-49452:
+      name: MARKETING_GFCID_L4_NAME
+      description: >-
+        A Global Finance Customer Identifier (GFCID) is a 10-digit identifier
+        assigned to represent legal entities as well as branches and sub
+        accounts within ICG and other businesses This is the L4 GFCID for the
+        client record. Where the L4 GFCID is equal to GFCID the GFCID the record
+        identifies an L4 GFCID. This represents the Sub-Account level as
+        recorded in the STaRs (Service Tracking and Reporting System) for the
+        specified source region.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-26961:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-26965:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account. For the
+        Cash Account the branch code is a numeric value and for the Safekeeping
+        Account it is the ISO 3166 Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-26964:
+      name: ALTV_CUR_CD
+      description: >-
+        Account Base Currency Code is the ISO 4217 Currency Code for the
+        account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-26972:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal client identifier that is associated
+        to a Safekeeping or Cash Account or A customer ID associated with a
+        group (one or more) of accounts held by that customer.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-26974:
+      name: ACCT_BUS_TYP_CD
+      description: A code to indicate the type of account - Cash, Safekeeping or E-Report.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18177:
+      name: SID_SEDOL
+      description: >-
+        SEDOL (Stock Exchange Daily Official List) is a unique identification
+        code, consisting of seven alphanumeric characters, that is assigned to
+        all securities trading on the London Stock Exchange.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18178:
+      name: SID_CUSIP
+      description: >-
+        CUSIP (Committee on Uniform Securities Identification Procedures) It is
+        a nine-character alphanumeric code that identifies a North American
+        financial security for the purposes of facilitating clearing and
+        settlement of trades.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18179:
+      name: SID_TICKER_SYMB
+      description: Ticker is the symbol used on the exchange to identify the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18180:
+      name: SID_ISIN
+      description: >-
+        ISIN (International Securities Identification Number) is a 12-character
+        alpha-numerical code that does not contain information characterizing
+        financial instruments but serves for uniform identification of a
+        security at trading and settlement.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18181:
+      name: SEC_SHRT_NME
+      description: Issue Name is the Security Name of the security instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18182:
+      name: EXCH_MNEM
+      description: The internal code for the exchange/market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18185:
+      name: SEC_SECURITY_CD
+      description: >-
+        Internal Security Code is the identifier of the Internal Security
+        Identifier.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18194:
+      name: PFD_ID_CTXT_CD
+      description: >-
+        Security ID Type indicates the type of identifier of the corresponding
+        Security ID field. Possible values may include: CUSIP, ISIN, SEDOL,
+        LOCAL, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18195:
+      name: PFD_ISS_ID
+      description: >-
+        Security ID is the most commonly used identifier for the security in a
+        given market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18196:
+      name: DNOMD_CUR_CD
+      description: The currency in which this security is denominated in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18202:
+      name: BKING_CUR_CD
+      description: >-
+        The code of the native or local currency in which this cash flow is
+        scheduled to actually occur.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18203:
+      name: DLAY_DAYS
+      description: Delay Days
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18208:
+      name: PMT_FREQY_DESC
+      description: >-
+        Payment Frequency Description indicates how often interest is paid on
+        the security.  Possible values may include: Annual (00001),  Sem-Annual
+        (00002), One Payment Per Year (00035), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18213:
+      name: PMT_FREQY
+      description: >-
+        Payment Frequency indicates how often interest is paid on the security. 
+        Possible values may include: 00001 (Annual), 00002 (Sem-Annual), 00035
+        (One Payment Per Year), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18215:
+      name: ISS_CATG_CD
+      description: >-
+        Issue Category Code is a specific category for the security.  Possible
+        values may include: CSTK (Common Stock), DERIV (Derivatives), MBS
+        (Mortgage Backed Securities), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18216:
+      name: ISS_CAT_NME
+      description: The classification of the security as ADR,CMO, ETF etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37242:
+      name: IOD_TIMESTAMP
+      description: Provides the Timestamp when data is loaded in the Data Lake.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-42224:
+      name: POSITION_LOCATION_CODE
+      description: Position Location Code
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-42225:
+      name: ISO_COUNTRY_CODE
+      description: >-
+        ISO country code is the ISO 3166 code corresponding to the country in
+        which the invoice is to be paid.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-42226:
+      name: SECURITY_QUOTATION_SOURCE
+      description: Security Quotation Source
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32114:
+      name: REPORTING_DATE
+      description: Invoice Update Date is the date on which the invoice was last changed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32099:
+      name: BILLING_PERIOD
+      description: >-
+        Represents the specific date or timestamp associated with the billing
+        period used for invoice calculation.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32106:
+      name: SAFE_KEEPING_ACCOUNT
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32116:
+      name: INVOICE_NUMBER
+      description: Invoice Number is the unique reference number of the invoice.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-32117:
+      name: INVOICE_SCHEDULE_ID
+      description: >-
+        Invoice Schedule Identifier is a unique reference for the schedule under
+        which each invoice is created.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-32068:
+      name: REVISION_NUMBER
+      description: Revision Number indicates how many times the invoice has been revised.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-32090:
+      name: CORP_ACT_ID
+      description: >-
+        Event Reference is the reference associated to the corporate action
+        event.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32091:
+      name: CORPORATE_ACTION_TYPE
+      description: >-
+        Corporate Action Type is a 3 digit code indicating the type of corporate
+        action.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32095:
+      name: DESCRIPTION
+      description: Charge Description is a description of the charge reason.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32085:
+      name: CENTRE
+      description: >-
+        Place Of Settlement Code is a 3 digit code corresponding to the
+        settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32086:
+      name: CENTRE_NAME
+      description: Place Of Settlement is the settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32113:
+      name: RELEASE_DATE
+      description: >-
+        Payment Release Date is the date on which payment of the corporate
+        action was released.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32092:
+      name: CUSTOMER
+      description: >-
+        Client ID is an identifier for the client as set up in the core billing
+        system.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32109:
+      name: SWIFT_CODE
+      description: Event Code (SWIFT) is the corporate type code per SWIFT standards.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32108:
+      name: STP_FLAG
+      description: >-
+        STP indicates whether or not the instruction was processed without
+        manual intervention.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32111:
+      name: BENCHMARK_DATE
+      description: >-
+        Ex Date is the trading cut off date after which position changes will no
+        longer alter the eligibility to the corporate action.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32115:
+      name: PAY_DATE
+      description: Pay Date is the pay date of the dividend payment.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32110:
+      name: VALUE_DATE
+      description: >-
+        Value Date is the date on which the cash posting is expected to be
+        valued.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32075:
+      name: QTY_PAID
+      description: Quantity Paid
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32087:
+      name: CLAIM_ID
+      description: Claim Reference is the reference associated to the market claim.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32083:
+      name: NET_PYMT_OF_DIV
+      description: Net Payment is the amount of the associated cash posting.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32098:
+      name: ASSOC_TRADE_REF
+      description: >-
+        Cash Reference is the Reference of the cash posting associated with the
+        event.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32096:
+      name: DIV_CURRENCY
+      description: >-
+        Dividend Currency is the ISO 4217 currency code of the currency in which
+        the dividend is paid.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32077:
+      name: QTY_SETTLED
+      description: Quantity Settled
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32076:
+      name: QTY_RESPONDED
+      description: Quantity Responded
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32071:
+      name: FEE
+      description: Fee is the charge in the Fee Schedule Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-32073:
+      name: FEE_CURRENCY
+      description: >-
+        Total Fee (Fee Schedule Currency) is the total charge for the billable
+        activity in the Fee Schedule Currency, It is the ISO 4217 currency code
+        corresponding to the currency in which the rate card is published.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32069:
+      name: TOTAL_FEE
+      description: Total Fee
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-32088:
+      name: CLARITY_BRANCH_NAME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32082:
+      name: MARKET
+      description: >-
+        Market is the name of the market or International Central Securities
+        Depositories in which the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32078:
+      name: REGION
+      description: >-
+        Region is the name of the geographical region (if appropriate) in which
+        the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37156:
+      name: FUND_MANAGER
+      description: >-
+        A fund manager is a person or company who manages a portfolio of
+        investments for a fund's clients, Fund Manager field from Client Profile
+        Table.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37157:
+      name: LEAD_FUND_MANAGER
+      description: >-
+        A lead fund manager is a person or company who manages a portfolio of
+        investments for a fund's clients.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32097:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-26971:
+      name: SK_ACCOUNT
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37238:
+      name: IOD_TIMESTAMP
+      description: Provides the Timestamp when data is loaded in the Data Lake.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-42258:
+      name: ISO_COUNTRY_CODE
+      description: >-
+        ISO country code is the ISO 3166 code corresponding to the country in
+        which the invoice is to be paid.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-42259:
+      name: SECURITY_QUOTATION_SOURCE
+      description: Security Quotation Source
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32158:
+      name: REPORTING_DATE
+      description: Invoice Update Date is the date on which the invoice was last changed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32149:
+      name: BILLING_PERIOD
+      description: >-
+        Represents the specific date or timestamp associated with the billing
+        period used for invoice calculation.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32130:
+      name: SAFE_KEEPING_ACCOUNT
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32161:
+      name: INVOICE_NUMBER
+      description: Invoice Number is the unique reference number of the invoice.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-32162:
+      name: INVOICE_SCHEDULE_ID
+      description: >-
+        Invoice Schedule Identifier is a unique reference for the schedule under
+        which each invoice is created.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-32119:
+      name: REVISION_NUMBER
+      description: Revision Number indicates how many times the invoice has been revised.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-32140:
+      name: CORP_ACT_ID
+      description: >-
+        Event Reference is the reference associated to the corporate action
+        event.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32141:
+      name: CORPORATE_ACTION_TYPE
+      description: >-
+        Corporate Action Type is a 3 digit code indicating the type of corporate
+        action.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32145:
+      name: DESCRIPTION
+      description: Charge Description is a description of the charge reason.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32136:
+      name: CENTER
+      description: >-
+        Place Of Settlement Code is a 3 digit code corresponding to the
+        settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32137:
+      name: CENTER_NAME
+      description: Place Of Settlement is the settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32157:
+      name: RELEASE_DATE
+      description: >-
+        Payment Release Date is the date on which payment of the corporate
+        action was released.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32142:
+      name: CUSTOMER
+      description: >-
+        Client ID is an identifier for the client as set up in the core billing
+        system.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32132:
+      name: SWIFT_CODE
+      description: Event Code (SWIFT) is the corporate type code per SWIFT standards.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32155:
+      name: BENCHMARK_DATE
+      description: >-
+        Ex Date is the trading cut off date after which position changes will no
+        longer alter the eligibility to the corporate action.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32160:
+      name: PAY_DATE
+      description: Pay Date is the pay date of the dividend payment.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32159:
+      name: VALUE_DATE
+      description: >-
+        Value Date is the date on which the cash posting is expected to be
+        valued.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-32134:
+      name: QTY_PAID
+      description: Quantity Paid
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32129:
+      name: NET_PYMT_OF_DIV
+      description: Net Payment is the amount of the associated cash posting.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32148:
+      name: ASSOC_TRADE_REF
+      description: >-
+        Cash Reference is the Citi Reference of the cash posting associated with
+        the event.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32146:
+      name: DIV_CURRENCY
+      description: >-
+        Dividend Currency is the ISO 4217 currency code of the currency in which
+        the dividend is paid.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32120:
+      name: FEE
+      description: Fee is the charge in the Fee Schedule Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-32124:
+      name: FEE_CCY
+      description: >-
+        Fee Schedule Currency is the ISO 4217 currency code corresponding to the
+        currency in which the rate card is published.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32122:
+      name: TOTAL_FEE
+      description: Total Fee
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-32150:
+      name: BOOKING_OFFICE_ID
+      description: Branch Code is the identifier of the branch for the safekeeping account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32138:
+      name: CLARITY_BRANCH_NAME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32128:
+      name: MARKET
+      description: >-
+        Market is the name of the market or International Central Securities
+        Depositories in which the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32135:
+      name: REGION
+      description: >-
+        Region is the name of the geographical region (if appropriate) in which
+        the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37162:
+      name: FUND_MANAGER
+      description: >-
+        A fund manager is a person or company who manages a portfolio of
+        investments for a fund's clients, Fund Manager field from Client Profile
+        Table.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37163:
+      name: LEAD_FUND_MANAGER
+      description: >-
+        A lead fund manager is a person or company who manages a portfolio of
+        investments for a fund's clients.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-49455:
+      name: MARKETING_GFCID_L4_NAME
+      description: >-
+        A Global Finance Customer Identifier (GFCID) is a 10-digit identifier
+        assigned to represent legal entities as well as branches and sub
+        accounts within ICG and other businesses This is the L4 GFCID for the
+        client record. Where the L4 GFCID is equal to GFCID the GFCID the record
+        identifies an L4 GFCID. This represents the Sub-Account level as
+        recorded in the STaRs (Service Tracking and Reporting System) for the
+        specified source region.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-32147:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-37239:
+      name: IOD_TIMESTAMP
+      description: Provides the Timestamp when data is loaded in the Data Lake.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-42267:
+      name: ISO_COUNTRY_CODE
+      description: >-
+        ISO country code is the ISO 3166 code corresponding to the country in
+        which the invoice is to be paid.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-42268:
+      name: SECURITY_QUOTATION_SOURCE
+      description: Security Quotation Source
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58207:
+      name: REPORTING_DATE
+      description: Invoice Update Date is the date on which the invoice was last changed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-58176:
+      name: BILLING_PERIOD
+      description: >-
+        Represents the specific date or timestamp associated with the billing
+        period used for invoice calculation.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58198:
+      name: INVOICE_SCHEDULE_ID
+      description: >-
+        Invoice Schedule Identifier is a unique reference for the schedule under
+        which each invoice is created.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-58197:
+      name: INVOICE_NUMBER
+      description: Invoice Number is the unique reference number of the invoice.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-58208:
+      name: REV_NO
+      description: Revision Number indicates how many times the invoice has been revised.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-58212:
+      name: SK_ACCOUNT
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58213:
+      name: SK_GRP_NAME
+      description: >-
+        Safekeeping Group Name is the name of a group of safekeeping accounts
+        that the client has defined and set up in the core billing system.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58218:
+      name: TXN_TYPE
+      description: Transaction Type is a descriptive name for the type of transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58220:
+      name: VAL_TYPE_ID
+      description: Valuation Type indicates where the trade is equity vs desk
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58217:
+      name: TXN_REF
+      description: >-
+        Citi Reference is the unique reference number of the trade within Citi
+        systems.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58216:
+      name: TXN_COUNT
+      description: >-
+        Partial Settlement Count indicates how many separate settlements took
+        place for the transaction if it partially settled. If full settlement
+        occurred this will be 0.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-58179:
+      name: BROKER_CODE
+      description: Counterparty is the counterparty of the trade.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58174:
+      name: ACTUAL_SETTLEMENT_DATE
+      description: Actual Settlement Date is the date when the trade settled in the market.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-58184:
+      name: CONCEPTUAL_SETTLEMENT_DATE
+      description: >-
+        Contractual Settlement Date is the date when the trade was supposed to
+        settle in the market.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-58195:
+      name: INSTR_MODE
+      description: >-
+        Instruction Mode is an internal classification for how the transaction
+        was instructed.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58187:
+      name: CURRENCY
+      description: >-
+        Market Currency is the ISO currency code corresponding to the currency
+        in the market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58186:
+      name: CONSIDERATION
+      description: >-
+        Settlement Amount is the cash value of the transaction in the Market
+        Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-58188:
+      name: CUST_REF
+      description: >-
+        Client Reference is the reference provided by the client on their
+        instruction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58183:
+      name: CLIENT_ID
+      description: >-
+        Client ID is an identifier for the client as set up in the core billing
+        system.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58193:
+      name: FEE
+      description: Fee is the charge in the Fee Schedule Currency.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-58194:
+      name: FEE_CURRENCY
+      description: >-
+        Fee Schedule Currency is the ISO currency code corresponding to the
+        currency in which the rate card is published.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58214:
+      name: TOTAL_FEE
+      description: Total Fee
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-58205:
+      name: QUANTITY
+      description: Quantity is the number of units of the security traded.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-58175:
+      name: BENEFICIARY
+      description: Beneficiary is the ultimate beneficiary of the transaction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58182:
+      name: CLARITY_BRANCH_NAME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58201:
+      name: MARKET
+      description: >-
+        Market is the name of the market or ICSD in which the billable activity
+        has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58206:
+      name: REGION
+      description: >-
+        Region is the name of the geographical region (if appropriate) in which
+        the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58181:
+      name: CENTRE_CODE
+      description: >-
+        Place Of Settlement Code is a 3 digit code corresponding to the
+        settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-51997:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the Cash Account and/or the
+        Safekeeping Account. If an Alternate Account Name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-52001:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account.  For the
+        Cash Account the branch code is a numeric value and for the Safekeeping
+        Account it is the ISO Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-52000:
+      name: ALTV_CUR_CD
+      description: Account Base Currency Code is the ISO Currency Code for the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-51992:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal Citi client identifier that is
+        associated to a Safekeeping or Cash Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-51994:
+      name: ACCT_BUS_TYP_CD
+      description: >-
+        Account Type Code indicates the type of the account. Values are: C (Cash
+        Account), S (Safekeeping Account).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39784:
+      name: SID_SEDOL
+      description: >-
+        SEDOL (Stock Exchange Daily Official List) is a unique identification
+        code, consisting of seven alphanumeric characters, that is assigned to
+        all securities trading on the London Stock Exchange.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39785:
+      name: SID_CUSIP
+      description: >-
+        CUSIP (Committee on Uniform Securities Identification Procedures) It is
+        a nine-character alphanumeric code that identifies a North American
+        financial security for the purposes of facilitating clearing and
+        settlement of trades.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39786:
+      name: SID_TICKER_SYMB
+      description: Ticker is the symbol used on the exchange to identify the security.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39787:
+      name: SID_ISIN
+      description: >-
+        ISIN (International Securities Identification Number) is a 12-character
+        alpha-numerical code that does not contain information characterizing
+        financial instruments but serves for uniform identification of a
+        security at trading and settlement.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39788:
+      name: SEC_SHRT_NME
+      description: Issue Name is the Security Name of the security instrument.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39789:
+      name: EXCH_MNEM
+      description: The internal code for the exchange/market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39792:
+      name: SEC_SECURITY_CD
+      description: >-
+        CITI Internal Security Code is the identifier of the CITI Internal
+        Security Identifier.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39801:
+      name: PFD_ID_CTXT_CD
+      description: >-
+        Security ID Type indicates the type of identifier of the corresponding
+        Security ID field. Possible values may include: CUSIP, ISIN, SEDOL,
+        LOCAL, etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39802:
+      name: PFD_ISS_ID
+      description: >-
+        Security ID is the most commonly used identifier for the security in a
+        given market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39803:
+      name: DNOMD_CUR_CD
+      description: The currency in which this security is denominated in the local market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39809:
+      name: BKING_CUR_CD
+      description: >-
+        The code of the native or local currency in which this cash flow is
+        scheduled to actually occur.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39810:
+      name: DLAY_DAYS
+      description: Delay Days
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39815:
+      name: PMT_FREQY_DESC
+      description: >-
+        Payment Frequency Description indicates how often interest is paid on
+        the security.  Possible values may include: Annual (00001),  Sem-Annual
+        (00002), One Payment Per Year (00035), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39820:
+      name: PMT_FREQY
+      description: >-
+        Payment Frequency indicates how often interest is paid on the security. 
+        Possible values may include: 00001 (Annual), 00002 (Sem-Annual), 00035
+        (One Payment Per Year), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39822:
+      name: ISS_CATG_CD
+      description: >-
+        Issue Category Code is a specific category for the security.  Possible
+        values may include: CSTK (Common Stock), DERIV (Derivatives), MBS
+        (Mortgage Backed Securities), etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-39823:
+      name: ISS_CAT_NME
+      description: The classification of the security as ADR,CMO, ETF etc.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58173:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for the Safekeeping Account that is unique
+        within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-52007:
+      name: SAFE_KEEPING_ACCOUNT
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-52008:
+      name: SK_ACCOUNT
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58219:
+      name: UID
+      description: >-
+        Indicates whether or not the record was inserted, updated or deleted in
+        Custody Reporting.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-68883:
+      name: POSITION_LOCATION_CODE
+      description: Position Location Code
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-68884:
+      name: ISO_COUNTRY_CODE
+      description: >-
+        ISO country code is the ISO 3166 code corresponding to the country in
+        which the invoice is to be paid.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-68885:
+      name: SECURITY_QUOTATION_SOURCE
+      description: Security Quotation Source
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58250:
+      name: REPORTING_DATE
+      description: Invoice Update Date is the date on which the invoice was last changed.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-58222:
+      name: BILLING_PERIOD
+      description: Invoice Month is the month and year that the invoice was calculated.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58253:
+      name: SK_ACCOUNT
+      description: >-
+        Account ID is an identifier for both a Cash Account and/or a Safekeeping
+        Account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58229:
+      name: CLIENT_ID
+      description: >-
+        Client ID is an identifier for the client as set up in the core billing
+        system.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58243:
+      name: INVOICE_SCHEDULE_ID
+      description: >-
+        Invoice Schedule Identifier is a unique reference for the schedule under
+        which each invoice is created.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-58242:
+      name: INVOICE_NUMBER
+      description: Invoice Number is the unique reference number of the invoice.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+    parameter-58251:
+      name: REVISION_NUMBER
+      description: Revision Number indicates how many times the invoice has been revised.
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+    parameter-58255:
+      name: SURCHARGE_TYPE
+      description: Surcharge Type
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58226:
+      name: CENTRE
+      description: Place Of Settlement is the settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58225:
+      name: BROKE_CODE
+      description: Counterparty is the counterparty of the trade.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58231:
+      name: CONTRACTUAL_SETTLEMENT_DATE
+      description: >-
+        Contractual Settlement Date is the date when the trade was supposed to
+        settle in the market.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58259:
+      name: TXN_REF
+      description: >-
+        Citi Reference is the unique reference number of the trade within Citi
+        systems.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58232:
+      name: CUST_REF
+      description: >-
+        Client Reference is the reference provided by the client on their
+        instruction.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58240:
+      name: INSTR_MODE
+      description: >-
+        Instruction Mode is an internal classification for how the transaction
+        was instructed.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58258:
+      name: TRADE_UNITS
+      description: Quantity is the number of units of the security traded.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-58233:
+      name: DELIVERY
+      description: >-
+        Physical Delivery indicates if the charge is on account of a manual
+        delivery.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58238:
+      name: FEE
+      description: Fee is the charge in the Fee Schedule Currency.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58239:
+      name: FEE_CURRENCY
+      description: >-
+        Fee Schedule Currency is the ISO currency code corresponding to the
+        currency in which the rate card is published.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58256:
+      name: TOTAL_FEE
+      description: Total Fee
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-58228:
+      name: CLARITY_BRANCH_NAME
+      description: >-
+        Branch Name is the name of the branch for the Cash Account and/or
+        Safekeeping Account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58246:
+      name: MARKET
+      description: >-
+        Market is the name of the market or ICSD in which the billable activity
+        has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58249:
+      name: REGION
+      description: >-
+        Region is the name of the geographical region (if appropriate) in which
+        the billable activity has occurred.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58227:
+      name: CENTRE_CODE
+      description: >-
+        Place Of Settlement Code is a 3 digit code corresponding to the
+        settlement location of the holding.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-58221:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for the Safekeeping Account that is unique
+        within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-68895:
+      name: POSITION_LOCATION_CODE
+      description: Position Location Code
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-68896:
+      name: ISO_COUNTRY_CODE
+      description: >-
+        ISO country code is the ISO 3166 code corresponding to the country in
+        which the invoice is to be paid.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-68897:
+      name: SECURITY_QUOTATION_SOURCE
+      description: Security Quotation Source
+      in: query
+      required: false
+      schema:
+        type: string
+  securitySchemes:
+    client-Credential-Oauth-Security-Schema:
+      type: oauth2
+      description: This API uses OAuth 2 with the client credentials flow
+      flows:
+        clientCredentials:
+          tokenUrl: /markets/api/oauth2/token
+          scopes:
+            /dod: Access to Custody Billing Information
+paths:
+  /api/services/febf0553-d455-4849-b6fa-2337b4989b0f/filter:
+    get:
+      tags:
+        - Billing
+      summary: Billing Activities
+      description: >-
+        Billing Activites API provides an invoice level view across multiple
+        invoices and/or months of all fees by charge type/description and
+        market.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-31831'
+        - $ref: '#/components/parameters/parameter-31862'
+        - $ref: '#/components/parameters/parameter-31832'
+        - $ref: '#/components/parameters/parameter-31833'
+        - $ref: '#/components/parameters/parameter-31834'
+        - $ref: '#/components/parameters/parameter-31819'
+        - $ref: '#/components/parameters/parameter-31817'
+        - $ref: '#/components/parameters/parameter-31818'
+        - $ref: '#/components/parameters/parameter-31821'
+        - $ref: '#/components/parameters/parameter-31823'
+        - $ref: '#/components/parameters/parameter-31824'
+        - $ref: '#/components/parameters/parameter-31825'
+        - $ref: '#/components/parameters/parameter-31830'
+        - $ref: '#/components/parameters/parameter-31859'
+        - $ref: '#/components/parameters/parameter-31866'
+        - $ref: '#/components/parameters/parameter-31838'
+        - $ref: '#/components/parameters/parameter-31864'
+        - $ref: '#/components/parameters/parameter-31865'
+        - $ref: '#/components/parameters/parameter-31869'
+        - $ref: '#/components/parameters/parameter-31870'
+        - $ref: '#/components/parameters/parameter-31863'
+        - $ref: '#/components/parameters/parameter-31855'
+        - $ref: '#/components/parameters/parameter-31856'
+        - $ref: '#/components/parameters/parameter-31836'
+        - $ref: '#/components/parameters/parameter-31837'
+        - $ref: '#/components/parameters/parameter-31813'
+        - $ref: '#/components/parameters/parameter-31814'
+        - $ref: '#/components/parameters/parameter-31815'
+        - $ref: '#/components/parameters/parameter-31816'
+        - $ref: '#/components/parameters/parameter-31842'
+        - $ref: '#/components/parameters/parameter-31861'
+        - $ref: '#/components/parameters/parameter-31804'
+        - $ref: '#/components/parameters/parameter-31805'
+        - $ref: '#/components/parameters/parameter-31806'
+        - $ref: '#/components/parameters/parameter-31807'
+        - $ref: '#/components/parameters/parameter-31808'
+        - $ref: '#/components/parameters/parameter-31809'
+        - $ref: '#/components/parameters/parameter-31810'
+        - $ref: '#/components/parameters/parameter-31811'
+        - $ref: '#/components/parameters/parameter-31812'
+        - $ref: '#/components/parameters/parameter-31852'
+        - $ref: '#/components/parameters/parameter-31847'
+        - $ref: '#/components/parameters/parameter-31843'
+        - $ref: '#/components/parameters/parameter-31848'
+        - $ref: '#/components/parameters/parameter-31860'
+        - $ref: '#/components/parameters/parameter-17663'
+        - $ref: '#/components/parameters/parameter-17664'
+        - $ref: '#/components/parameters/parameter-17666'
+        - $ref: '#/components/parameters/parameter-17667'
+        - $ref: '#/components/parameters/parameter-17668'
+        - $ref: '#/components/parameters/parameter-37237'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/febf0553-d455-4849-b6fa-2337b4989b0f-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/febf0553-d455-4849-b6fa-2337b4989b0f-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/3291fe1b-9d6f-4285-9836-a2c66ac1dbd3/filter:
+    get:
+      tags:
+        - Billing
+      summary: Billing Valuations
+      description: >-
+        Billing Valuations API provides the detail of valuation fees charged in
+        each invoice at security and account level.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-31976'
+        - $ref: '#/components/parameters/parameter-31939'
+        - $ref: '#/components/parameters/parameter-31954'
+        - $ref: '#/components/parameters/parameter-31978'
+        - $ref: '#/components/parameters/parameter-31971'
+        - $ref: '#/components/parameters/parameter-31958'
+        - $ref: '#/components/parameters/parameter-31972'
+        - $ref: '#/components/parameters/parameter-31940'
+        - $ref: '#/components/parameters/parameter-31974'
+        - $ref: '#/components/parameters/parameter-31956'
+        - $ref: '#/components/parameters/parameter-31965'
+        - $ref: '#/components/parameters/parameter-31953'
+        - $ref: '#/components/parameters/parameter-31959'
+        - $ref: '#/components/parameters/parameter-31943'
+        - $ref: '#/components/parameters/parameter-31946'
+        - $ref: '#/components/parameters/parameter-31945'
+        - $ref: '#/components/parameters/parameter-31949'
+        - $ref: '#/components/parameters/parameter-31964'
+        - $ref: '#/components/parameters/parameter-31942'
+        - $ref: '#/components/parameters/parameter-31948'
+        - $ref: '#/components/parameters/parameter-31966'
+        - $ref: '#/components/parameters/parameter-31950'
+        - $ref: '#/components/parameters/parameter-31947'
+        - $ref: '#/components/parameters/parameter-31951'
+        - $ref: '#/components/parameters/parameter-31941'
+        - $ref: '#/components/parameters/parameter-31977'
+        - $ref: '#/components/parameters/parameter-31957'
+        - $ref: '#/components/parameters/parameter-31968'
+        - $ref: '#/components/parameters/parameter-31975'
+        - $ref: '#/components/parameters/parameter-37180'
+        - $ref: '#/components/parameters/parameter-37181'
+        - $ref: '#/components/parameters/parameter-49452'
+        - $ref: '#/components/parameters/parameter-26961'
+        - $ref: '#/components/parameters/parameter-26965'
+        - $ref: '#/components/parameters/parameter-26964'
+        - $ref: '#/components/parameters/parameter-26972'
+        - $ref: '#/components/parameters/parameter-26974'
+        - $ref: '#/components/parameters/parameter-18177'
+        - $ref: '#/components/parameters/parameter-18178'
+        - $ref: '#/components/parameters/parameter-18179'
+        - $ref: '#/components/parameters/parameter-18180'
+        - $ref: '#/components/parameters/parameter-18181'
+        - $ref: '#/components/parameters/parameter-18182'
+        - $ref: '#/components/parameters/parameter-18185'
+        - $ref: '#/components/parameters/parameter-18194'
+        - $ref: '#/components/parameters/parameter-18195'
+        - $ref: '#/components/parameters/parameter-18196'
+        - $ref: '#/components/parameters/parameter-18202'
+        - $ref: '#/components/parameters/parameter-18203'
+        - $ref: '#/components/parameters/parameter-18208'
+        - $ref: '#/components/parameters/parameter-18213'
+        - $ref: '#/components/parameters/parameter-18215'
+        - $ref: '#/components/parameters/parameter-18216'
+        - $ref: '#/components/parameters/parameter-37242'
+        - $ref: '#/components/parameters/parameter-42224'
+        - $ref: '#/components/parameters/parameter-42225'
+        - $ref: '#/components/parameters/parameter-42226'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/3291fe1b-9d6f-4285-9836-a2c66ac1dbd3-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/3291fe1b-9d6f-4285-9836-a2c66ac1dbd3-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/f733f311-c85c-4b66-a29e-64dec7d84753/filter:
+    get:
+      tags:
+        - Billing
+      summary: Billing Corporate Actions
+      description: >-
+        Billing Corporate Actions API provides the detail of corporate action
+        related fees charged in each invoice at the corporate action level.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-32114'
+        - $ref: '#/components/parameters/parameter-32099'
+        - $ref: '#/components/parameters/parameter-32106'
+        - $ref: '#/components/parameters/parameter-32116'
+        - $ref: '#/components/parameters/parameter-32117'
+        - $ref: '#/components/parameters/parameter-32068'
+        - $ref: '#/components/parameters/parameter-32090'
+        - $ref: '#/components/parameters/parameter-32091'
+        - $ref: '#/components/parameters/parameter-32095'
+        - $ref: '#/components/parameters/parameter-32085'
+        - $ref: '#/components/parameters/parameter-32086'
+        - $ref: '#/components/parameters/parameter-32113'
+        - $ref: '#/components/parameters/parameter-32092'
+        - $ref: '#/components/parameters/parameter-32109'
+        - $ref: '#/components/parameters/parameter-32108'
+        - $ref: '#/components/parameters/parameter-32111'
+        - $ref: '#/components/parameters/parameter-32115'
+        - $ref: '#/components/parameters/parameter-32110'
+        - $ref: '#/components/parameters/parameter-32075'
+        - $ref: '#/components/parameters/parameter-32087'
+        - $ref: '#/components/parameters/parameter-32083'
+        - $ref: '#/components/parameters/parameter-32098'
+        - $ref: '#/components/parameters/parameter-32096'
+        - $ref: '#/components/parameters/parameter-32077'
+        - $ref: '#/components/parameters/parameter-32076'
+        - $ref: '#/components/parameters/parameter-32071'
+        - $ref: '#/components/parameters/parameter-32073'
+        - $ref: '#/components/parameters/parameter-32069'
+        - $ref: '#/components/parameters/parameter-32088'
+        - $ref: '#/components/parameters/parameter-32082'
+        - $ref: '#/components/parameters/parameter-32078'
+        - $ref: '#/components/parameters/parameter-37156'
+        - $ref: '#/components/parameters/parameter-37157'
+        - $ref: '#/components/parameters/parameter-26961'
+        - $ref: '#/components/parameters/parameter-26965'
+        - $ref: '#/components/parameters/parameter-26964'
+        - $ref: '#/components/parameters/parameter-26972'
+        - $ref: '#/components/parameters/parameter-26974'
+        - $ref: '#/components/parameters/parameter-18177'
+        - $ref: '#/components/parameters/parameter-18178'
+        - $ref: '#/components/parameters/parameter-18179'
+        - $ref: '#/components/parameters/parameter-18180'
+        - $ref: '#/components/parameters/parameter-18181'
+        - $ref: '#/components/parameters/parameter-18182'
+        - $ref: '#/components/parameters/parameter-18185'
+        - $ref: '#/components/parameters/parameter-18194'
+        - $ref: '#/components/parameters/parameter-18195'
+        - $ref: '#/components/parameters/parameter-18196'
+        - $ref: '#/components/parameters/parameter-18202'
+        - $ref: '#/components/parameters/parameter-18203'
+        - $ref: '#/components/parameters/parameter-18208'
+        - $ref: '#/components/parameters/parameter-18213'
+        - $ref: '#/components/parameters/parameter-18215'
+        - $ref: '#/components/parameters/parameter-18216'
+        - $ref: '#/components/parameters/parameter-32097'
+        - $ref: '#/components/parameters/parameter-26971'
+        - $ref: '#/components/parameters/parameter-37238'
+        - $ref: '#/components/parameters/parameter-42258'
+        - $ref: '#/components/parameters/parameter-42259'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/f733f311-c85c-4b66-a29e-64dec7d84753-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/f733f311-c85c-4b66-a29e-64dec7d84753-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/d3723b0b-c5b9-4306-854c-8d1e7bc59ed3/filter:
+    get:
+      tags:
+        - Billing
+      summary: Billing Corporate Actions Income
+      description: >-
+        Billing Corporate Action Income API provides the detail of the corporate
+        action income related fees charged in each invoice at the corporate
+        action level.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-32158'
+        - $ref: '#/components/parameters/parameter-32149'
+        - $ref: '#/components/parameters/parameter-32130'
+        - $ref: '#/components/parameters/parameter-32161'
+        - $ref: '#/components/parameters/parameter-32162'
+        - $ref: '#/components/parameters/parameter-32119'
+        - $ref: '#/components/parameters/parameter-32140'
+        - $ref: '#/components/parameters/parameter-32141'
+        - $ref: '#/components/parameters/parameter-32145'
+        - $ref: '#/components/parameters/parameter-32136'
+        - $ref: '#/components/parameters/parameter-32137'
+        - $ref: '#/components/parameters/parameter-32157'
+        - $ref: '#/components/parameters/parameter-32142'
+        - $ref: '#/components/parameters/parameter-32132'
+        - $ref: '#/components/parameters/parameter-32155'
+        - $ref: '#/components/parameters/parameter-32160'
+        - $ref: '#/components/parameters/parameter-32159'
+        - $ref: '#/components/parameters/parameter-32134'
+        - $ref: '#/components/parameters/parameter-32129'
+        - $ref: '#/components/parameters/parameter-32148'
+        - $ref: '#/components/parameters/parameter-32146'
+        - $ref: '#/components/parameters/parameter-32120'
+        - $ref: '#/components/parameters/parameter-32124'
+        - $ref: '#/components/parameters/parameter-32122'
+        - $ref: '#/components/parameters/parameter-32150'
+        - $ref: '#/components/parameters/parameter-32138'
+        - $ref: '#/components/parameters/parameter-32128'
+        - $ref: '#/components/parameters/parameter-32135'
+        - $ref: '#/components/parameters/parameter-37162'
+        - $ref: '#/components/parameters/parameter-37163'
+        - $ref: '#/components/parameters/parameter-49455'
+        - $ref: '#/components/parameters/parameter-26961'
+        - $ref: '#/components/parameters/parameter-26965'
+        - $ref: '#/components/parameters/parameter-26964'
+        - $ref: '#/components/parameters/parameter-26972'
+        - $ref: '#/components/parameters/parameter-26974'
+        - $ref: '#/components/parameters/parameter-18177'
+        - $ref: '#/components/parameters/parameter-18178'
+        - $ref: '#/components/parameters/parameter-18179'
+        - $ref: '#/components/parameters/parameter-18180'
+        - $ref: '#/components/parameters/parameter-18181'
+        - $ref: '#/components/parameters/parameter-18182'
+        - $ref: '#/components/parameters/parameter-18185'
+        - $ref: '#/components/parameters/parameter-18194'
+        - $ref: '#/components/parameters/parameter-18195'
+        - $ref: '#/components/parameters/parameter-18196'
+        - $ref: '#/components/parameters/parameter-18202'
+        - $ref: '#/components/parameters/parameter-18203'
+        - $ref: '#/components/parameters/parameter-18208'
+        - $ref: '#/components/parameters/parameter-18213'
+        - $ref: '#/components/parameters/parameter-18215'
+        - $ref: '#/components/parameters/parameter-18216'
+        - $ref: '#/components/parameters/parameter-32147'
+        - $ref: '#/components/parameters/parameter-26971'
+        - $ref: '#/components/parameters/parameter-37239'
+        - $ref: '#/components/parameters/parameter-42267'
+        - $ref: '#/components/parameters/parameter-42268'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/d3723b0b-c5b9-4306-854c-8d1e7bc59ed3-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/d3723b0b-c5b9-4306-854c-8d1e7bc59ed3-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/a5ae4ee1-c9c8-4b1b-9437-8acdc6ac815c/filter:
+    get:
+      tags:
+        - Billing
+      summary: Billing Transactions
+      description: >-
+        Billing Transactions API provides the detail of transaction fees charged
+        in each invoice at trade level.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-58207'
+        - $ref: '#/components/parameters/parameter-58176'
+        - $ref: '#/components/parameters/parameter-58198'
+        - $ref: '#/components/parameters/parameter-58197'
+        - $ref: '#/components/parameters/parameter-58208'
+        - $ref: '#/components/parameters/parameter-58212'
+        - $ref: '#/components/parameters/parameter-58213'
+        - $ref: '#/components/parameters/parameter-58218'
+        - $ref: '#/components/parameters/parameter-58220'
+        - $ref: '#/components/parameters/parameter-58217'
+        - $ref: '#/components/parameters/parameter-58216'
+        - $ref: '#/components/parameters/parameter-58179'
+        - $ref: '#/components/parameters/parameter-58174'
+        - $ref: '#/components/parameters/parameter-58184'
+        - $ref: '#/components/parameters/parameter-58195'
+        - $ref: '#/components/parameters/parameter-58187'
+        - $ref: '#/components/parameters/parameter-58186'
+        - $ref: '#/components/parameters/parameter-58188'
+        - $ref: '#/components/parameters/parameter-58183'
+        - $ref: '#/components/parameters/parameter-58193'
+        - $ref: '#/components/parameters/parameter-58194'
+        - $ref: '#/components/parameters/parameter-58214'
+        - $ref: '#/components/parameters/parameter-58205'
+        - $ref: '#/components/parameters/parameter-58175'
+        - $ref: '#/components/parameters/parameter-58182'
+        - $ref: '#/components/parameters/parameter-58201'
+        - $ref: '#/components/parameters/parameter-58206'
+        - $ref: '#/components/parameters/parameter-58181'
+        - $ref: '#/components/parameters/parameter-51997'
+        - $ref: '#/components/parameters/parameter-52001'
+        - $ref: '#/components/parameters/parameter-52000'
+        - $ref: '#/components/parameters/parameter-51992'
+        - $ref: '#/components/parameters/parameter-51994'
+        - $ref: '#/components/parameters/parameter-39784'
+        - $ref: '#/components/parameters/parameter-39785'
+        - $ref: '#/components/parameters/parameter-39786'
+        - $ref: '#/components/parameters/parameter-39787'
+        - $ref: '#/components/parameters/parameter-39788'
+        - $ref: '#/components/parameters/parameter-39789'
+        - $ref: '#/components/parameters/parameter-39792'
+        - $ref: '#/components/parameters/parameter-39801'
+        - $ref: '#/components/parameters/parameter-39802'
+        - $ref: '#/components/parameters/parameter-39803'
+        - $ref: '#/components/parameters/parameter-39809'
+        - $ref: '#/components/parameters/parameter-39810'
+        - $ref: '#/components/parameters/parameter-39815'
+        - $ref: '#/components/parameters/parameter-39820'
+        - $ref: '#/components/parameters/parameter-39822'
+        - $ref: '#/components/parameters/parameter-39823'
+        - $ref: '#/components/parameters/parameter-58173'
+        - $ref: '#/components/parameters/parameter-52007'
+        - $ref: '#/components/parameters/parameter-52008'
+        - $ref: '#/components/parameters/parameter-58219'
+        - $ref: '#/components/parameters/parameter-68883'
+        - $ref: '#/components/parameters/parameter-68884'
+        - $ref: '#/components/parameters/parameter-68885'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/a5ae4ee1-c9c8-4b1b-9437-8acdc6ac815c-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/a5ae4ee1-c9c8-4b1b-9437-8acdc6ac815c-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/bfd3c727-0034-4ac4-9905-b58ca4437cf2/filter:
+    get:
+      tags:
+        - Billing
+      summary: Billing Surcharges
+      description: >-
+        Billing Surcharges API provides the granular detail of any surcharges
+        charged in each invoice.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-58250'
+        - $ref: '#/components/parameters/parameter-58222'
+        - $ref: '#/components/parameters/parameter-58253'
+        - $ref: '#/components/parameters/parameter-58229'
+        - $ref: '#/components/parameters/parameter-58243'
+        - $ref: '#/components/parameters/parameter-58242'
+        - $ref: '#/components/parameters/parameter-58251'
+        - $ref: '#/components/parameters/parameter-58255'
+        - $ref: '#/components/parameters/parameter-58226'
+        - $ref: '#/components/parameters/parameter-58225'
+        - $ref: '#/components/parameters/parameter-58231'
+        - $ref: '#/components/parameters/parameter-58259'
+        - $ref: '#/components/parameters/parameter-58232'
+        - $ref: '#/components/parameters/parameter-58240'
+        - $ref: '#/components/parameters/parameter-58258'
+        - $ref: '#/components/parameters/parameter-58233'
+        - $ref: '#/components/parameters/parameter-58238'
+        - $ref: '#/components/parameters/parameter-58239'
+        - $ref: '#/components/parameters/parameter-58256'
+        - $ref: '#/components/parameters/parameter-58228'
+        - $ref: '#/components/parameters/parameter-58246'
+        - $ref: '#/components/parameters/parameter-58249'
+        - $ref: '#/components/parameters/parameter-58227'
+        - $ref: '#/components/parameters/parameter-51997'
+        - $ref: '#/components/parameters/parameter-52001'
+        - $ref: '#/components/parameters/parameter-52000'
+        - $ref: '#/components/parameters/parameter-51992'
+        - $ref: '#/components/parameters/parameter-51994'
+        - $ref: '#/components/parameters/parameter-39784'
+        - $ref: '#/components/parameters/parameter-39785'
+        - $ref: '#/components/parameters/parameter-39786'
+        - $ref: '#/components/parameters/parameter-39787'
+        - $ref: '#/components/parameters/parameter-39788'
+        - $ref: '#/components/parameters/parameter-39789'
+        - $ref: '#/components/parameters/parameter-39792'
+        - $ref: '#/components/parameters/parameter-39801'
+        - $ref: '#/components/parameters/parameter-39802'
+        - $ref: '#/components/parameters/parameter-39803'
+        - $ref: '#/components/parameters/parameter-39809'
+        - $ref: '#/components/parameters/parameter-39810'
+        - $ref: '#/components/parameters/parameter-39815'
+        - $ref: '#/components/parameters/parameter-39820'
+        - $ref: '#/components/parameters/parameter-39822'
+        - $ref: '#/components/parameters/parameter-39823'
+        - $ref: '#/components/parameters/parameter-58221'
+        - $ref: '#/components/parameters/parameter-52007'
+        - $ref: '#/components/parameters/parameter-68895'
+        - $ref: '#/components/parameters/parameter-68896'
+        - $ref: '#/components/parameters/parameter-68897'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/bfd3c727-0034-4ac4-9905-b58ca4437cf2-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/bfd3c727-0034-4ac4-9905-b58ca4437cf2-xml-response-schema
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'

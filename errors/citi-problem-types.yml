@@ -1,0 +1,109 @@
+generated: '2026-09-05'
+method: derived
+source: openapi/ — 118 first-party Citi OpenAPI/Swagger specifications harvested from https://developer.citi.com/apidocs/redocusaurus/<id>.yaml
+  on 2026-09-05
+format: mixed — see envelopes[]
+note: 'Derived by counting every declared response across all 118 contracts. Citi does not publish one error envelope:
+  the JSON product surfaces return bespoke error objects, the ISO 20022 payment surfaces return pain.002/pacs.002
+  status reports as XML, and only the three Brazil PIX contracts use RFC 9457 application/problem+json.'
+envelopes:
+- format: bespoke-json
+  content_type: application/json
+  responses: 442
+  note: Dominant. Shape varies per product family; there is no shared error schema across the estate.
+- format: iso20022-xml
+  content_type: application/xml
+  responses: 194
+  note: Payment status and rejection reported as ISO 20022 pain.002.001.03 / pacs.002.001.10 status reports carrying
+    an External Return Reason Code. See errors/citi-decline-codes.yml.
+- format: rfc9457
+  content_type: application/problem+json
+  responses: 12
+  specs:
+  - openapi/citi-brazillocalmandate-openapi.yaml
+  - openapi/citi-due-date-openapi.yaml
+  - openapi/citi-immediate-openapi.yaml
+  note: Inherited from the BACEN Pix specification rather than chosen fleet-wide.
+status_codes:
+- status: 400
+  declared_on: 247
+  title: Bad Request
+  remediation: Payload failed schema or business validation. The express-payments and payment-acceptance surfaces
+    return a field-level reasonCode; see errors/citi-decline-codes.yml.
+- status: 401
+  declared_on: 230
+  title: Unauthorized
+  remediation: Access token missing, malformed or expired. Citi issues no refresh token — the published guidance
+    is to renew the access token only on receiving a 401, then retry once.
+- status: 403
+  declared_on: 103
+  title: Forbidden
+  remediation: The client is authenticated but not entitled to this operation, region or country. Entitlement is
+    granted per client during onboarding, not self-served.
+- status: 404
+  declared_on: 187
+  title: Not Found
+  remediation: Resource or reference identifier not found under the calling client entitlement.
+- status: 405
+  declared_on: 199
+  title: Method Not Allowed
+- status: 406
+  declared_on: 5
+  title: Not Acceptable
+  remediation: Requested representation unavailable — check Accept against the JSON vs XML variant of the contract.
+- status: 409
+  declared_on: 52
+  title: Conflict
+  remediation: 'Includes the Idempotency-Id conflict case: a replayed Idempotency-Id whose payload differs from
+    the original. See conventions/citi-conventions.yml.'
+- status: 412
+  declared_on: 3
+  title: Precondition Failed
+- status: 413
+  declared_on: 2
+  title: Payload Too Large
+- status: 415
+  declared_on: 130
+  title: Unsupported Media Type
+  remediation: The estate is dual-encoded; a JSON body sent to an XML contract fails here.
+- status: 422
+  declared_on: 4
+  title: Unprocessable Entity
+- status: 429
+  declared_on: 82
+  title: Too Many Requests
+  remediation: Throttled. Only three contracts declare RateLimit-* response headers, so on most operations the status
+    code is the only signal. Back off exponentially. See rate-limits/citi-rate-limits.yml.
+- status: 500
+  declared_on: 253
+  title: Internal Server Error
+- status: 502
+  declared_on: 4
+  title: Bad Gateway
+- status: 503
+  declared_on: 67
+  title: Service Unavailable
+  remediation: Downstream clearing or market infrastructure unavailable. The ISO reason codes AB04/AB08/ED06 describe
+    the same condition at message level.
+- status: 504
+  declared_on: 66
+  title: Gateway Timeout
+  remediation: Clearing timeout. Reason codes AB01/AB06/AB11 and FF11 correspond. Do NOT blind-retry a payment initiation
+    without an Idempotency-Id — most payment operations do not declare one.
+success_codes:
+- status: 200
+  declared_on: 238
+- status: 201
+  declared_on: 21
+- status: 202
+  declared_on: 42
+  note: Asynchronous acceptance — the dominant pattern on payment initiation. Final state arrives via a status inquiry
+    operation or a webhook.
+- status: 204
+  declared_on: 4
+- status: 206
+  declared_on: 5
+domain_error_catalog: errors/citi-decline-codes.yml
+docs:
+- https://developer.citi.com/apidocs/outgoing-payments/express-instant-payments/express-instant-payments-error-codes
+- https://developer.citi.com/apidocs/accept-payments/online-payment-acceptance/online-payment-acceptance-error-codes

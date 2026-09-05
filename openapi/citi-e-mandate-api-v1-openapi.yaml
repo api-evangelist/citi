@@ -1,0 +1,2425 @@
+swagger: '2.0'
+info:
+  description: >-
+    The eMandate API allows you to access CitiDirect based mandate services in a
+    light weight message exchange interface. This API supports
+    `theMandateInitiationRequest` message and `MandateAcceptanceReport` message.
+    A `MandateInitiationRequestmessage` which is sent by the initiator of the
+    request to his agent. The initiator can either be the debtor or the
+    creditor. A MandateAcceptanceReport message is used to confirm the
+    acceptance or rejection of a Mandate Request message.
+  version: 1.0.0
+  title: eMandate API
+host: tts.apib2b.citi.com
+basePath: /citiconnect/prod
+schemes:
+  - https
+paths:
+  /emandateservices/v1/emandateinitiation:
+    post:
+      summary: Initiate An eMandate
+      description: >-
+        The eMandate Initiation API is sent by an initiating party (Creditor) to
+        the receiving party (Debtor) in the collection chain to register an
+        eMandate. Citi Connect API clients can initiate eMandate Initiation for
+        the direct debit collections. <br/><br><b>payloadType</b> :Currently
+        Citi supports only “urn:iso:std:iso:20022:tech:xsd: pain.009.001.06”
+      operationId: EmandateServicesInitiationOperation
+      consumes:
+        - application/xml
+      produces:
+        - application/xml
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          schema: null
+          type: string
+        - name: Content-Type
+          in: header
+          description: Supports "application/xml"
+          required: true
+          type: string
+        - name: payloadType
+          in: header
+          description: Supports urn:iso:std:iso:20022:tech:xsd:pain.009.001.06
+          required: true
+          type: string
+        - name: Authorization
+          in: header
+          description: The OAuth Token prefixed with "Bearer" and space in between.
+          required: true
+          type: string
+        - in: body
+          name: Request Body
+          required: true
+          schema:
+            $ref: '#/definitions/MandateInitiationRequest'
+      responses:
+        '200':
+          description: OK. Success.
+          examples:
+            application/xml:
+              MndtAccptncRpt:
+                GrpHdr:
+                  MsgId: CITIBANK/20200803-PSR/1100977414
+                  CreDtTm: '2020-08-03T04:31:20'
+                UndrlygAccptncDtls:
+                  OrgnlMsgInf:
+                    MsgId: citiconnect api mandate062303
+                    MsgNmId: pain.009.001.06
+                    CreDtTm: '2001-12-31T12:00:00'
+                  AccptncRslt:
+                    Accptd: 'false'
+                    RjctRsn:
+                      Prtry: PDNG
+                  OrgnlMndt:
+                    OrgnlMndt:
+                      MndtId: Not Available
+                      MndtReqId: userguide03082001
+                      Tp:
+                        LclInstrm:
+                          Cd: DDMU
+                      TrckgInd: 'false'
+                      Cdtr:
+                        Nm: Citiconnect tester
+                      CdtrAcct:
+                        Id:
+                          Othr:
+                            Id: '1192834003'
+                      CdtrAgt:
+                        FinInstnId:
+                          ClrSysMmbId:
+                            MmbId: '12345'
+                      Dbtr:
+                        Nm: payer name
+                      DbtrAcct:
+                        Id:
+                          Othr:
+                            Id: '10897933748'
+                      DbtrAgt:
+                        FinInstnId:
+                          ClrSysMmbId:
+                            MmbId: '147992'
+                      MndtRef: 4FDD231247EA44BA85FA67FEC1024A6F
+                      RfrdDoc:
+                        CdtrRef: payer ref name
+          schema:
+            $ref: '#/definitions/Document'
+        '400':
+          description: Bad Request. Please try with Valid Request
+        '401':
+          description: >-
+            The request is Unauthorized. Please try again with valid
+            credentials.
+        '405':
+          description: Method Not Allowed. Please try with Valid HTTP Verb.
+        '415':
+          description: Unsupported Media Type. Resend the request with valid content-type
+        '500':
+          description: Internal Server Error. Check the service of API.
+        '503':
+          description: Service Unavailable. Please try again later/ after some time
+        '504':
+          description: GatewayTimeout. Look for server connectivity issues.
+      security:
+        - clientCredentials: []
+  /emandateservices/v1/emandatestatusinquiry:
+    get:
+      summary: Get The Status Of An eMandate
+      description: >-
+        The eMandate Status Inquiry API allows you to access the status of your
+        eMandate and generates eMandate details with the status of the
+        eMandatetransaction.
+      operationId: EmandateServicesStatusInquiryOperation
+      consumes:
+        - application/xml
+      produces:
+        - application/xml
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          description: >-
+            This is your unique identifier shared during your CitiConnect API
+            onboarding. This is the same `client_id` used for oauth token
+            generation
+          schema: null
+          type: string
+        - name: Accept
+          in: header
+          description: Supports "application/xml"
+          required: true
+          type: string
+        - name: x-citi-enc-type
+          in: header
+          description: xmlenc
+          required: true
+          type: string
+        - name: mndtReqId
+          in: header
+          description: >-
+            Unique identification assigned by the initiating party to
+            clearlyidentify the transaction. This Identification is passed on,
+            unchanged,throughout the entire end-to-end chain
+          required: false
+          type: string
+        - name: mndtId
+          in: header
+          description: >-
+            Unique identification assigned by an institution to clearly identify
+            the transaction.
+          required: false
+          type: string
+        - name: payerRefNm
+          in: header
+          description: >-
+            Identification assigned by the initiating party to clearly identify
+            the purpose of transaction.
+          required: false
+          type: string
+        - name: creationDate
+          in: header
+          description: Date when mandate is initiated (MM-DD-yyyy).
+          required: false
+          type: string
+        - name: amount
+          in: header
+          description: >-
+            This represents the amount of money for which the eMandate request
+            has been made.
+          required: false
+          type: string
+        - name: currency
+          in: header
+          description: Currency (HKD/CNY).
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK. Success.
+          examples:
+            application/xml:
+              MndtAccptncRpt:
+                GrpHdr:
+                  MsgId: CITIBANK/20200803-PSR/1245084092
+                  CreDtTm: '2020-08-03T04:34:59'
+                UndrlygAccptncDtls:
+                  AccptncRslt:
+                    Accptd: 'false'
+                    RjctRsn:
+                      Prtry: PDNG
+                  OrgnlMndt:
+                    OrgnlMndt:
+                      MndtId: Not Available
+                      MndtReqId: userguide03082001
+                      Tp:
+                        LclInstrm:
+                          Cd: DDMU
+                      Ocrncs:
+                        SeqTp: RCUR
+                        Frqcy:
+                          Prd:
+                            Tp: WEEK
+                            CntPerPrd: '100'
+                        Drtn:
+                          FrDt: '2020-08-03'
+                          ToDt: '2020-08-03'
+                      TrckgInd: 'false'
+                      MaxAmt:
+                        _Ccy: HKD
+                        __text: '4086.67'
+                      Cdtr:
+                        Nm: Citiconnect tester
+                      CdtrAcct:
+                        Id:
+                          Othr:
+                            Id: '1192834003'
+                      CdtrAgt:
+                        FinInstnId:
+                          ClrSysMmbId:
+                            MmbId: '006'
+                      Dbtr:
+                        Nm: payer name
+                        Id:
+                          PrvtId: ''
+                      DbtrAcct:
+                        Id:
+                          Othr:
+                            Id: Not Available
+                            SchmeNm:
+                              Prtry: AIIN
+                      DbtrAgt:
+                        FinInstnId:
+                          ClrSysMmbId:
+                            MmbId: '147992'
+                      RfrdDoc:
+                        CdtrRef: payer ref name
+          schema:
+            $ref: '#/definitions/Document'
+        '400':
+          description: Bad Request. Please try with Valid Request
+          examples:
+            application/xml:
+              statusCode: '400'
+              statusMessage: Either mndtReqId or mndtId should be provided
+          schema:
+            $ref: '#/definitions/Response'
+        '401':
+          description: Unauthorized.
+          examples:
+            application/xml:
+              statusCode: '401'
+              statusMessage: >-
+                The request is Unauthorized. Please try again with valid
+                credentials.
+          schema:
+            $ref: '#/definitions/Response'
+        '405':
+          description: Method Not Allowed.
+          examples:
+            application/xml:
+              statusCode: '405'
+              statusMessage: Please try with Valid HTTP Verb.
+          schema:
+            $ref: '#/definitions/Response'
+        '415':
+          description: Unsupported Media Type.
+          examples:
+            application/xml:
+              statusCode: '415'
+              statusMessage: Resend the request with valid content-type
+          schema:
+            $ref: '#/definitions/Response'
+        '500':
+          description: Internal Server Error.
+          examples:
+            application/xml:
+              statusCode: '500'
+              statusMessage: Check the service of API.
+          schema:
+            $ref: '#/definitions/Response'
+        '503':
+          description: Service Unavailable.
+          examples:
+            application/xml:
+              statusCode: '503'
+              statusMessage: Please try again later/ after some time
+          schema:
+            $ref: '#/definitions/Response'
+        '504':
+          description: GatewayTimeout.
+          examples:
+            application/xml:
+              statusCode: '504'
+              statusMessage: Look for server connectivity issues.
+          schema:
+            $ref: '#/definitions/Response'
+      security:
+        - clientCredentials: []
+securityDefinitions:
+  clientCredentials:
+    description: >+
+      All CitiConnect APIs use the oAuth2 authentication scheme, which requires
+      a bearer token to authenticate your API call. The Token URL includes the
+      version of authentication used by this API. See <a
+      href="../../authentication/authentication-api-reference/"
+      target="_blank">the Citi Authentication API reference</a> for information
+      on requesting a token.
+
+    type: oauth2
+    tokenUrl: >-
+      https://tts.sit.apib2b.citi.com/citiconnect/sit5/authenticationservices/v1/oauth/token
+    flow: application
+    scopes: null
+definitions:
+  Response:
+    type: object
+    properties:
+      statusCode:
+        type: string
+        description: Http Code
+        minLength: 3
+        maxLength: 3
+      statusMessage:
+        type: string
+        description: Status Message
+  MandateInitiationRequest:
+    type: object
+    required:
+      - mandate_initiation_request
+    properties:
+      mandate_initiation_request:
+        type: object
+        description: >-
+          The MandateInitiationRequest message is sent by the initiator of the
+          request to his agent. The initiator can either be the debtor or the
+          creditor. The MandateInitiationRequest message is forwarded by the
+          agent of the initiator to the agent of the counterparty. The
+          MandateInitiationRequest message is used to setup the instruction that
+          allows the debtor agent to accept instructions from the creditor,
+          through the creditor agent, to debit the account of the debtor.
+        allOf:
+          - $ref: '#/definitions/MandateInitiationRequestV06'
+    xml:
+      name: Document
+  MandateInitiationRequestV06:
+    type: object
+    required:
+      - group_header
+    properties:
+      group_header:
+        type: object
+        description: >-
+          Set of characteristics to identify the message and parties playing a
+          role in the mandate initiation, but which are not part of the mandate.
+        allOf:
+          - $ref: '#/definitions/GroupHeader80'
+      mandate:
+        type: array
+        xml:
+          name: Mndt
+        description: >-
+          Set of elements used to provide the details of the mandate signed
+          between the ultimate creditor and the ultimate debtor. Information
+          that serves as a basis to debit an account.
+        items:
+          $ref: '#/definitions/Mandate13'
+      supplementary_data:
+        type: array
+        xml:
+          name: SplmtryData
+        description: >-
+          Additional information that cannot be captured in the structured
+          elements and/or any other specific block. The SupplementaryData
+          building block at message level must not be used to provide additional
+          information about a transaction. The SupplementaryData element at
+          transaction level should be used for that purpose.
+        items:
+          $ref: '#/definitions/SupplementaryData1'
+    description: >-
+      The CreditorPaymentActivationRequestStatusReport message is sent by a
+      party to the next party in the creditor payment activation request chain.
+      It is used to inform the latter about the positive or negative status of a
+      creditor payment activation request (either single or file).
+  GroupHeader80:
+    required:
+      - creation_Date_time
+      - message_identification
+    properties:
+      message_identification:
+        type: object
+        description: >-
+          Point to point reference, as assigned by the instructing party, and
+          sent to the instructed party, to unambiguously identify the message.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      creation_Date_time:
+        type: object
+        description: Date and time at which the message was created.
+        allOf:
+          - $ref: '#/definitions/ISODateTime'
+      authorisation:
+        type: array
+        xml:
+          name: Authstn
+        description: >-
+          User identification or any user key to be used to check the authority
+          of the initiating party.
+        items:
+          $ref: '#/definitions/Authorisation1Choice'
+        maxItems: 2
+      initiating_party:
+        type: object
+        description: Party that initiates the mandate message.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      instructing_agent:
+        type: object
+        description: >-
+          Agent that is instructed by the previous party in the chain to carry
+          out an instruction.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      instructed_agent:
+        type: object
+        description: >-
+          Agent that is instructed by the previous party in the chain to carry
+          out an instruction. In case of amendment and cancellation request
+          messages, the instructed agent is the party receiving the amendment
+          and cancellation request message and not the party that received the
+          original mandate initiation request message. In case of acceptance
+          report message, the instructed agent is the party receiving the
+          acceptance report message and not the party that received the original
+          mandate request message.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+  BranchAndFinancialInstitutionIdentification6:
+    type: object
+    required:
+      - FinInstnId
+    properties:
+      branch_identification:
+        type: object
+        allOf:
+          - $ref: '#/definitions/BranchData3'
+      FinInstnId:
+        type: object
+        allOf:
+          - $ref: '#/definitions/FinancialInstitutionIdentification18'
+  FinancialInstitutionIdentification18:
+    type: object
+    properties:
+      bicfi:
+        type: object
+        description: >-
+          Code allocated to a financial institution by the ISO 9362 Registration
+          Authority as described in ISO 9362 Banking - Banking telecommunication
+          messages - Business identifier code (BIC).
+        allOf:
+          - $ref: '#/definitions/BICFIDec2014Identifier'
+      ClrSysMmbId:
+        type: object
+        description: Information used to identify a member within a clearing system.
+        allOf:
+          - $ref: '#/definitions/ClearingSystemMemberIdentification2'
+      legal_entity:
+        type: object
+        description: >-
+          Legal entity identification for the branch of the
+          financialinstitution.
+        allOf:
+          - $ref: '#/definitions/LEIIdentifier'
+      name:
+        type: object
+        description: >-
+          Name by which an agent is known and which is usually used to identify
+          that agent.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      postal_address:
+        type: object
+        description: >-
+          Information that locates and identifies a specific address, as defined
+          by postal services.
+        allOf:
+          - $ref: '#/definitions/PostalAddress24'
+      other:
+        type: object
+        description: >-
+          Unique identification of an agent, as assigned by an institution,
+          using an identification scheme.
+        allOf:
+          - $ref: '#/definitions/GenericFinancialIdentification1'
+  GenericFinancialIdentification1:
+    type: object
+    required:
+      - identification
+    properties:
+      identification:
+        type: object
+        description: Unique and unambiguous identification of a person.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      issuer:
+        type: object
+        description: Entity that assigns the identification.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      scheme_name:
+        type: object
+        allOf:
+          - $ref: '#/definitions/FinancialIdentificationSchemeName1Choice'
+    description: >-
+      Unique identification of an agent, as assigned by an institution, using an
+      identification scheme.
+  FinancialIdentificationSchemeName1Choice:
+    type: object
+    properties:
+      code:
+        type: string
+        xml:
+          name: Cd
+        description: >-
+          Name of the identification scheme, in a coded form as published in an
+          external list.
+        minLength: 1
+        maxLength: 4
+      proprietary:
+        type: object
+        description: Name of the identification scheme, in a free text form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    description: >-
+      Name of the identification scheme. Either Code or Proprietary field value
+      should be passed on request.
+  BICFIDec2014Identifier:
+    type: string
+    pattern: '[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}'
+  BranchData3:
+    type: object
+    properties:
+      identification:
+        type: object
+        description: >-
+          Unique and unambiguous identification of a branch of a financial
+          institution.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      legal_entity:
+        type: object
+        description: >-
+          Legal entity identification for the branch of the financial
+          institution.
+        allOf:
+          - $ref: '#/definitions/LEIIdentifier'
+      name:
+        type: object
+        description: >-
+          Name by which an agent is known and which is usually used to identify
+          that agent.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      postal_address:
+        type: object
+        description: >-
+          Information that locates and identifies a specific address, as defined
+          by postal services.
+        allOf:
+          - $ref: '#/definitions/PostalAddress24'
+    description: Identifies a specific branch of a financial institution.
+  LEIIdentifier:
+    type: string
+    pattern: '[A-Z0-9]{18,18}[0-9]{2,2}'
+  Authorisation1Choice:
+    type: object
+    properties:
+      code:
+        type: object
+        description: >-
+          Specifies the level of approval depending on a number of factors,
+          including payment type, threshold amount or local country or
+          operations practice.<br><br><b>AUTH</b>: Indicates a file has been
+          pre-authorized or approved within the originating customer environment
+          and no further approval is required. <br><br><b>FDET</b>: Indicates
+          that a file requires additional file level approval, with the ability
+          to view both the payment information block and supporting customer
+          credit transaction detail. <br><br><b>FSUM</b>: Indicates that a file
+          requires additional file level approval, with the ability to view only
+          the payment information block level information.<br><br><b>ILEV</b>:
+          Indicates that a file requires all customer transactions to be
+          authorized or approved.
+        allOf:
+          - $ref: '#/definitions/Authorisation1Code'
+      proprietary:
+        type: string
+        xml:
+          name: Prtry
+        description: Specifies the proprietary description
+        minLength: 1
+        maxLength: 128
+    description: Either of Code or Proprietary is required.
+  ClearingSystemMemberIdentification2:
+    type: object
+    required:
+      - MmbId
+    properties:
+      clearing_system_identification:
+        type: object
+        xml:
+          name: ClrSysId
+        description: >-
+          Specification of a pre-agreed offering between clearing agents or the
+          channel through which the payment instruction is processed.
+        properties:
+          code:
+            type: string
+            xml:
+              name: Cd
+            description: >-
+              Identification of a clearing system, in a coded form as published
+              in an external list.
+            minLength: 1
+            maxLength: 5
+          proprietary:
+            type: object
+            description: >-
+              Identification code for a clearing system, that has not yet been
+              identified in the list of clearing systems.
+            allOf:
+              - $ref: '#/definitions/Max35Text'
+      MmbId:
+        type: object
+        description: Identification of a member of a clearing system.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    description: Information used to identify a member within a clearing system.
+  Authorisation1Code:
+    type: string
+    description: >-
+      <br><br><b>AUTH</b>: Indicates a file has been pre authorized or approved
+      within the originating customer environment and no further approval is
+      required. <br><br><b>FDET</b>: Indicates that a file requires additional
+      file-level approval, with the ability to view both the payment information
+      block and supporting customer credit transaction detail.
+      <br><br><b>FSUM</b>: Indicates that a file requires additional file level
+      approval, with the ability to view only the payment information block
+      level information. <br><br><b>ILEV</b>: Indicates that a file requires all
+      customer transactions to be authorized or approved.
+    enum:
+      - AUTH
+      - FDET
+      - FSUM
+      - ILEV
+  Max35Text:
+    type: string
+    minLength: 1
+    maxLength: 35
+  ISODateTime:
+    type: string
+    format: date-time
+  PartyIdentification135:
+    type: object
+    properties:
+      Nm:
+        type: object
+        description: >-
+          Name by which a party is known and which is usually used to identify
+          that party.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      postal_address:
+        type: object
+        description: >-
+          Information that locates and identifies a specific address, as defined
+          by postal services.
+        allOf:
+          - $ref: '#/definitions/PostalAddress24'
+      Id:
+        type: object
+        description: >-
+          Unique and unambiguous identification of a party. Should pass EITHER
+          OrgId or PrvtId for organisation and private respectively.
+        allOf:
+          - $ref: '#/definitions/Party38Choice'
+      country_of_residence:
+        type: object
+        description: >-
+          Country in which a person resides (the place of a person's home).In
+          the case of a company, it is the country from which the affairs of
+          that company are directed.
+        allOf:
+          - $ref: '#/definitions/CountryCode'
+      contact_details:
+        type: object
+        description: Set of elements used to indicate how to contact the party.
+        allOf:
+          - $ref: '#/definitions/Contact4'
+  Contact4:
+    type: object
+    properties:
+      name_prefix:
+        type: object
+        description: >-
+          Specifies the terms used to formally address a
+          person.<br><br><b>DOCT</b>: Title of the person is Doctor or Dr.
+          <br><br><b>MIST</b>: Title of the person is Mister or Mr.
+          <br><br><b>MISS</b>: Title of the person is Miss. <br><br><b>MADM</b>:
+          Title of the person is Madam.<br><br><b>MIKS</b>: Title of the person
+          is Gender Neutral.
+        allOf:
+          - $ref: '#/definitions/NamePrefix2Code'
+      name:
+        type: object
+        description: >-
+          Name by which a party is known and which is usually used to identify
+          that party.
+        allOf:
+          - $ref: '#/definitions/Max140Text'
+      phone_number:
+        type: object
+        description: >-
+          Collection of information that identifies a phone number, as defined
+          by telecom services.
+        allOf:
+          - $ref: '#/definitions/PhoneNumber'
+      mobile_number:
+        type: object
+        description: >-
+          Collection of information that identifies a mobile phone number, as
+          defined by telecom services.
+        allOf:
+          - $ref: '#/definitions/PhoneNumber'
+      fax_number:
+        type: object
+        description: >-
+          Collection of information that identifies a FAX number, as defined by
+          telecom services.
+        allOf:
+          - $ref: '#/definitions/PhoneNumber'
+      email_address:
+        type: object
+        description: Address for electronic mail (e-mail).
+        allOf:
+          - $ref: '#/definitions/Max2048Text'
+      email_purpose:
+        type: object
+        description: Purpose for which an email address may be used.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      job_title:
+        type: object
+        description: Title of the function.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      responsibility:
+        type: object
+        description: Role of a person in an organisation.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      department:
+        type: object
+        description: Identification of a division of a large organization or building.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      other:
+        type: array
+        xml:
+          name: Othr
+        description: Contact details in another form.
+        items:
+          $ref: '#/definitions/OtherContact1'
+      contact_preferred_method:
+        type: object
+        description: >-
+          Preferred method used to reach the contact.<br><br><b>LETT</b>:
+          Preferred method used to reach the contact is per letter.
+          <br><br><b>FAXX</b>: Preferred method used to reach the contact is per
+          fax.<br><br><b>PHON</b>: Preferred method used to reach the contact is
+          per phone. <br><br><b>MAIL</b>: Preferred method used to reach the
+          contact is per Email .<br><br><b>CELL</b>: Preferred method used to
+          reach the contact is per mobile or cell phone.
+        allOf:
+          - $ref: '#/definitions/PreferredContactMethod1Code'
+    description: Set of elements used to indicate how to contact the party.
+  NamePrefix2Code:
+    type: string
+    description: >-
+      Specifies the terms used to formally address a person.<br><br><b>DOCT</b>:
+      Title of the person is Doctor or Dr. <br><br><b>MIST</b>: Title of the
+      person is Mister or Mr. <br><br><b>MISS</b>: Title of the person is
+      Miss.<br><br><b>MADM</b>: Title of the person is
+      Madam.<br><br><b>MIKS</b>: Title of the person is Gender Neutral.
+    enum:
+      - DOCT
+      - MADM
+      - MISS
+      - MIST
+      - MIKS
+  Max2048Text:
+    type: string
+    minLength: 1
+    maxLength: 2048
+  Max140Text:
+    type: string
+    minLength: 1
+    maxLength: 140
+  PostalAddress24:
+    type: object
+    properties:
+      AdrLine:
+        type: array
+        description: >-
+          Information that locates and identifies a specific address, as defined
+          by postal services, presented in free format text.
+        items:
+          type: string
+        maxItems: 7
+      AdrTp:
+        type: object
+        description: >-
+          Identifies the nature of the postal address. Either Code or
+          Proprietary is required
+        allOf:
+          - $ref: '#/definitions/AddressType3Choice'
+      BldgNm:
+        type: string
+        description: Name of the building or house.
+        minLength: 1
+        maxLength: 35
+      BldgNb:
+        type: object
+        description: Number that identifies the position of a building on a street.
+        allOf:
+          - $ref: '#/definitions/Max16Text'
+      Ctry:
+        $ref: '#/definitions/CountryCode'
+      CtrySubDvsn:
+        type: object
+        description: >-
+          Identifies a subdivision of a country such as state, region, or
+          county.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      Dept:
+        type: object
+        description: Identification of a division of a large organisation or building.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      PstCd:
+        type: object
+        description: >-
+          Identifier consisting of a group of letters and/or numbers that is
+          added to a postal address to assist the sorting of mail.
+        allOf:
+          - $ref: '#/definitions/Max16Text'
+      StrtNm:
+        type: object
+        description: Name of a street or thoroughfare.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      SubDept:
+        type: object
+        description: Identification of a sub-division of a large organization or building.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      TwnNm:
+        type: object
+        description: >-
+          Name of a built-up area, with defined boundaries, and a local
+          government.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      TwnLctnNm:
+        type: string
+        description: Specific location name within the town.
+        minLength: 1
+        maxLength: 35
+      PstBx:
+        type: string
+        description: >-
+          Name of a built-up area, with defined boundaries, and a local
+          government.
+        minLength: 1
+        maxLength: 16
+      Flr:
+        type: string
+        description: Floor or story within a building.
+        minLength: 1
+        maxLength: 70
+      Room:
+        type: string
+        description: Building room number.
+        minLength: 1
+        maxLength: 70
+      DstrctNm:
+        type: string
+        description: Identifies a subdivision within a country sub-division.
+        minLength: 1
+        maxLength: 35
+    description: >-
+      Information that locates and identifies a specific address, as defined by
+      postal services.
+  AddressType3Choice:
+    type: object
+    properties:
+      code:
+        type: object
+        description: >-
+          Specifies the type of address.<br><br><b>ADDR</b>: Address is the
+          complete postal address. <br><br><b>PBOX</b>: Address is a postal
+          office (PO) box. <br><br><b>HOME</b>: Address is the home address.
+          <br><br><b>BIZZ</b>: Address is the business
+          address.<br><br><b>MLTO</b>: Address is the address to which mail is
+          sent.<br><br><b>DLVY</b>: Address is the address to which delivery is
+          to take place.
+        allOf:
+          - $ref: '#/definitions/AddressType2Code'
+      proprietary:
+        type: object
+        description: >-
+          Information related to an identification, for example, party
+          identification or account identification.
+        allOf:
+          - $ref: '#/definitions/GenericIdentification30'
+    description: Either from Code or Proprietary is required.
+  GenericIdentification30:
+    type: object
+    required:
+      - identification
+      - issuer
+    properties:
+      identification:
+        type: string
+        xml:
+          name: Id
+        description: >-
+          Proprietary information, often a code, issued by the data source
+          scheme issuer.
+        pattern: '[a-zA-Z0-9]{4}'
+      issuer:
+        type: string
+        xml:
+          name: Issr
+        description: Entity that assigns the identification.
+        minLength: 1
+        maxLength: 35
+      scheme_name:
+        type: string
+        xml:
+          name: SchmeNm
+        description: Short textual description of the scheme.
+        minLength: 1
+        maxLength: 35
+  AddressType2Code:
+    type: string
+    description: >-
+      <br><br><b>ADDR</b>: Address is the complete postal address.
+      <br><br><b>PBOX</b>: Address is a postal office (PO) box.
+      <br><br><b>HOME</b>: Address is the home address. <br><br><b>BIZZ</b>:
+      Address is the business address.<br><br><b>MLTO</b>: Address is the
+      address to which mail is sent.<br><br><b>DLVY</b>: Address is the address
+      to which delivery is to take place.
+    enum:
+      - ADDR
+      - PBOX
+      - HOME
+      - BIZZ
+      - MLTO
+      - DLVY
+  CountryCode:
+    type: string
+    pattern: '[A-Z]{2,2}'
+    description: >-
+      Nation with its own government. The code is checked against thelist of
+      country names obtained from the United Nations (ISO 3166, Alpha-2code).
+  OtherContact1:
+    type: object
+    required:
+      - channel_type
+    properties:
+      channel_type:
+        type: object
+        description: >-
+          Method used to contact the financial institution’s contact forthe
+          specific tax region.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      identification:
+        type: object
+        description: Communication value such as phone number or email address.
+        allOf:
+          - $ref: '#/definitions/Max128Text'
+  Max128Text:
+    type: string
+    minLength: 1
+    maxLength: 128
+  Max4Text:
+    type: string
+    minLength: 1
+    maxLength: 4
+  Max16Text:
+    type: string
+    minLength: 1
+    maxLength: 16
+  Max70Text:
+    type: string
+    minLength: 1
+    maxLength: 70
+  PreferredContactMethod1Code:
+    type: string
+    description: >-
+      Preferred method used to reach the individual contact within an
+      organization. <br><br><b>LETT</b>: Preferred method used to reach the
+      contact is per letter. <br><br><b>FAXX</b>: Preferred method used to reach
+      the contact is per fax.<br><br><b>PHON</b>: Preferred method used to reach
+      the contact is per phone. <br><br><b>MAIL</b>: Preferred method used to
+      reach the contact is per email .<br><br><b>CELL</b : Preferred method used
+      to reach the contact is per mobile or cell phone.
+    enum:
+      - LETT
+      - FAXX
+      - PHON
+      - MAIL
+      - CELL
+  SupplementaryData1:
+    type: object
+    required:
+      - envelope
+    properties:
+      place_and_name:
+        type: object
+        description: >-
+          Unambiguous reference to the location where the supplementary data
+          must be inserted in the message instance.
+        allOf:
+          - $ref: '#/definitions/Max350Text'
+      envelope:
+        type: string
+        xml:
+          name: Envlp
+          namespace: '##any'
+        description: >-
+          Technical element wrapping the supplementary data. Elements from any
+          namespace is allowed. Process Contents is 'lax' Specifies how the XML
+          processor should handle validation against the elements specified by
+          this any element. if the schema cannot be obtained, no errors will
+          occur.
+    description: >-
+      Additional information that cannot be captured in the structured elements
+      and/or any other specific block. This component may not be used without
+      the explicit approval of a SEG and submission to the RA of ISO 20022
+      compliant structure(s) to be used in the envelope element.
+  Max350Text:
+    type: string
+    minLength: 1
+    maxLength: 350
+  PhoneNumber:
+    type: string
+    pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
+  Party38Choice:
+    type: object
+    properties:
+      organisation_identification:
+        type: object
+        description: Unique and unambiguous way to identify an organization.
+        allOf:
+          - $ref: '#/definitions/OrganisationIdentification29'
+      PrvtId:
+        type: object
+        description: Unique and unambiguous way to identify a person.
+        allOf:
+          - $ref: '#/definitions/PersonIdentification13'
+    description: >-
+      Unique and unambiguous identification of a party. Either from
+      OrganisationIdentification and Private Identification is required.
+  OrganisationIdentification29:
+    type: object
+    properties:
+      any_bic:
+        type: object
+        description: >-
+          Business identification code of the organisation.  Code allocatedto a
+          financial or non-financial institution by the ISO 9362
+          RegistrationAuthority, as described in ISO 9362: 2014 - Banking -
+          Banking telecommunicationmessages - Business identifier code
+          (BIC).Only a valid Business identifiercode is allowed. Business
+          identifier codes for financial or non-financialinstitutions are
+          registered and published by the ISO 9362 RegistrationAuthority in the
+          ISO directory of BICs, and consists of eight (8) or eleven(11)
+          contiguous characters.
+        allOf:
+          - $ref: '#/definitions/AnyBICDec2014Identifier'
+      legal_entity:
+        type: object
+        description: Legal entity identification as an alternate identification fora party.
+        allOf:
+          - $ref: '#/definitions/LEIIdentifier'
+      other:
+        type: array
+        xml:
+          name: Othr
+        description: >-
+          Unique identification of an organization, as assigned by an
+          institution, using an identification scheme.
+        items:
+          $ref: '#/definitions/GenericOrganisationIdentification1'
+  AnyBICDec2014Identifier:
+    type: string
+    pattern: '[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}'
+  GenericOrganisationIdentification1:
+    type: object
+    required:
+      - identification
+    properties:
+      identification:
+        type: object
+        description: Identification assigned by an institution.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      scheme_name:
+        type: object
+        description: Name of the identification scheme.
+        allOf:
+          - $ref: '#/definitions/IdentificationSchemeName1Choice'
+      issuer:
+        type: object
+        description: Entity that assigns the identification.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  PersonIdentification13:
+    type: object
+    properties:
+      date_and_place_of_birth:
+        type: object
+        description: Date and place of birth of a person.
+        allOf:
+          - $ref: '#/definitions/DateAndPlaceOfBirth1'
+      other:
+        type: array
+        xml:
+          name: Othr
+        description: >-
+          Unique identification of a person, as assigned by an institution,
+          using an identification scheme.
+        items:
+          $ref: '#/definitions/GenericPersonIdentification1'
+  GenericPersonIdentification1:
+    type: object
+    required:
+      - identification
+    properties:
+      identification:
+        type: object
+        description: Unique and unambiguous identification of a person.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      scheme_name:
+        type: object
+        description: Name of the identification scheme.
+        allOf:
+          - $ref: '#/definitions/IdentificationSchemeName1Choice'
+      issuer:
+        type: object
+        description: Entity that assigns the identification.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    description: >-
+      Unique identification of a person, as assigned by an institution,using an
+      identification scheme.
+  IdentificationSchemeName1Choice:
+    type: object
+    properties:
+      code:
+        type: string
+        xml:
+          name: Cd
+        description: >-
+          Name of the identification scheme, in a coded form as publishedin an
+          external list.
+        minLength: 1
+        maxLength: 4
+      proprietary:
+        type: object
+        description: Name of the identification scheme, in free-form text.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+  DateAndPlaceOfBirth1:
+    type: object
+    required:
+      - birth_date
+      - city_of_birth
+      - country_of_birth
+    properties:
+      birth_date:
+        type: object
+        description: 'Date on which a person is born allOf: - $ref: '
+      province_of_birth:
+        type: object
+        description: Province where a person was born.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      city_of_birth:
+        type: object
+        description: City where a person was born.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      country_of_birth:
+        type: object
+        description: Country where a person was born.
+        allOf:
+          - $ref: '#/definitions/CountryCode'
+    description: Date and place of birth of a person.
+  ISODate:
+    type: string
+    format: date
+  Mandate13:
+    type: object
+    required:
+      - creditor
+      - debtor
+      - debtor_agent
+      - mandate_request_identification
+      - tracking_identicator
+    properties:
+      mandate_identification:
+        type: array
+        xml:
+          name: MndtId
+        description: >-
+          Unique identification, as assigned by the responsible party(such as
+          the creditor) or agent (such as the debtor agent), to unambiguously
+          identify the mandate.
+        items:
+          $ref: '#/definitions/Max35Text'
+      mandate_request_identification:
+        type: object
+        description: >-
+          Identification for the mandate request, as assigned by the initiating
+          party.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      authentication:
+        type: object
+        description: Specifies the transport authentication details related to the mandate.
+        allOf:
+          - $ref: '#/definitions/MandateAuthentication1'
+      type:
+        type: object
+        description: Specifies the type of mandate, such as paper, electronic or scheme.
+        allOf:
+          - $ref: '#/definitions/MandateTypeInformation2'
+      occurences:
+        type: object
+        description: >-
+          Provides details of the duration of the mandate and occurrenceof the
+          underlying transactions.
+        allOf:
+          - $ref: '#/definitions/MandateOccurrences4'
+      tracking_identicator:
+        type: boolean
+        xml:
+          name: TrckgInd
+        description: >-
+          Specifies whether the direct debit instructions should be
+          automatically re-submitted periodically when bilaterally agreed. A
+          flag indicating a True or False value.
+      first_collection_amount:
+        type: object
+        description: >-
+          Amount different from the collection amount, as it includesthe costs
+          associated with the first debited amount.
+        allOf:
+          - $ref: '#/definitions/ActiveCurrencyAndAmount'
+      collection_amount:
+        type: object
+        description: Fixed amount to be collected from the debtor's account.
+        allOf:
+          - $ref: '#/definitions/ActiveCurrencyAndAmount'
+      maximum_amount:
+        type: object
+        description: >-
+          Maximum amount that may be collected from the debtor's account,per
+          instruction.
+        allOf:
+          - $ref: '#/definitions/ActiveCurrencyAndAmount'
+      adjustment:
+        type: object
+        description: >-
+          Specifies the characteristics of the adjustment applied to
+          thecollection amount of a direct debit instruction.
+        allOf:
+          - $ref: '#/definitions/MandateAdjustment1'
+      reason:
+        type: object
+        description: Provides the reason for the setup of the mandate.
+        allOf:
+          - $ref: '#/definitions/MandateSetupReason1Choice'
+      creditor_scheme_identification:
+        type: object
+        description: Credit party that signs the mandate.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      creditor:
+        type: object
+        description: Party that signs the mandate and to whom an amount of moneyis due.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      creditor_account:
+        type: object
+        description: >-
+          Unambiguous identification of the account of the creditor towhich a
+          credit entry will be posted as a result of the payment transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      creditor_agent:
+        type: object
+        description: Financial institution servicing an account for the creditor.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      ultimate_creditor:
+        type: object
+        description: Ultimate party to which an amount of money is due.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      debtor:
+        type: object
+        description: >-
+          Party that signs the mandate and owes an amount of money to the
+          (ultimate) creditor.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      debtor_account:
+        type: object
+        description: >-
+          Unambiguous identification of the account of the debtor, towhich a
+          debit entry will be made as a result of the transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      debtor_agent:
+        type: object
+        description: Financial institution servicing an account for the debtor.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      ultimate_debtor:
+        type: object
+        description: >-
+          Ultimate party that owes an amount of money to the (ultimate)
+          creditor.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      mandate_reference:
+        type: object
+        description: >-
+          Reference assigned by a creditor or ultimate creditor for internal
+          usage for the mandate.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      referred_document:
+        type: array
+        xml:
+          name: RfrdDoc
+        description: >-
+          Provides information to identify the underlying documents associated
+          with the mandate.
+        items:
+          $ref: '#/definitions/ReferredMandateDocument1'
+      supplementary_data:
+        type: array
+        xml:
+          name: SplmtryData
+        description: >-
+          Additional information that cannot be captured in the structured
+          elements within the message component.
+        items:
+          $ref: '#/definitions/SupplementaryData1'
+    description: >-
+      Information that serves as a basis to debit an account. Set of elements
+      used to provide the details of the mandate signed between the (ultimate)
+      creditorand the (ultimate) debtor. Ultimate Debtor may only be present if
+      different from Debtor. Ultimate Creditor may only be present if different
+      from Creditor.
+  MandateOccurrences4:
+    type: object
+    required:
+      - sequence_type
+    properties:
+      sequence_type:
+        type: string
+        xml:
+          name: SeqTp
+        description: >-
+          Identifies the underlying transaction sequence as either recurring or
+          one-off. RCUR - Direct debit instruction where the debtor's
+          authorization is used for regular direct debit transactions initiated
+          by the creditor. OOFF - Direct debit instruction where the debtor's
+          authorization is used to initiate one single direct debit transaction.
+      Frqcy:
+        type: object
+        allOf:
+          - $ref: '#/definitions/Frequency36Choice'
+      Drtn:
+        type: object
+        allOf:
+          - $ref: '#/definitions/DatePeriodDetails1'
+      first_collection_date:
+        type: string
+        format: date
+        xml:
+          name: FrstColltnDt
+        description: Date of the first collection of a direct debit as per the mandate.
+      final_collection_date:
+        type: string
+        format: date
+        xml:
+          name: FnlColltnDt
+        description: Date of the final collection of a direct debit as per the mandate.
+    description: >-
+      Provides details of the duration of the mandate and occurrence ofthe
+      underlying transactions.
+  Frequency6Code:
+    type: string
+    description: >-
+      Specifies the regularity of an event.<br><br><b>YEAR</b>: Event takes
+      place every year or once a year. <br><br><b>MNTH</b>: Event takes
+      placeevery month or once a month. <br><br><b>QURT</b>: Event takes place
+      everythree months or four times a year. <br><br><b>MIAN</b>: Event takes
+      placeevery six months or two times a year.<br><br><b>WEEK</b>: Event takes
+      place once a week. <br><br><b>DAIL</b>: Event takes place every day.
+      <br><br><b>ADHO</b>: Event takes place on request or as necessary.
+      <br><br><b>INDA</b>: Event takes place several times a day.
+      <br><br><b>FRTN</b>: Event takes place every two weeks.
+    enum:
+      - YEAR
+      - MNTH
+      - QURT
+      - MIAN
+      - WEEK
+      - DAIL
+      - ADHO
+      - INDA
+      - FRTN
+  Frequency36Choice:
+    type: object
+    required:
+      - Prd
+      - point_in_time
+      - type
+    properties:
+      type:
+        type: object
+        allOf:
+          - $ref: '#/definitions/Frequency6Code'
+      Prd:
+        type: object
+        xml:
+          name: Prd
+        description: >-
+          Defines a frequency in terms on counts per period for a specific
+          period type.
+        properties:
+          type:
+            type: object
+            description: >-
+              Period for which the number of instructions are to be created and
+              processed.
+            allOf:
+              - $ref: '#/definitions/Frequency6Code'
+          count_per_period:
+            type: string
+            xml:
+              name: CntPerPrd
+            description: >-
+              Number of instructions to be created and processed during the
+              specified period. Number of objects represented as a decimal
+              number, for example 0.75 or 45.6. Fractional Digits up to 17
+              allowed.
+            maxLength: 18
+        required:
+          - count_per_period
+          - type
+      point_in_time:
+        type: object
+        allOf:
+          - $ref: '#/definitions/FrequencyAndMoment1'
+    description: Regularity with which instructions are to be created and processed.
+  FrequencyAndMoment1:
+    type: object
+    required:
+      - point_in_time
+      - type
+    properties:
+      type:
+        type: object
+        allOf:
+          - $ref: '#/definitions/Frequency6Code'
+      point_in_time:
+        type: string
+        xml:
+          name: PtInTm
+        description: >-
+          Further information on the exact point in time the event should take
+          place.
+        pattern: '[0-9]{2}'
+    description: >-
+      Defines a frequency in terms a specific moment within a specified period
+      type.
+  DatePeriodDetails1:
+    type: object
+    required:
+      - from_date
+    properties:
+      from_date:
+        type: object
+        description: Start date of the range.
+        allOf:
+          - $ref: '#/definitions/ISODate'
+      to_date:
+        type: object
+        description: End date of the range.
+        allOf:
+          - $ref: '#/definitions/ISODate'
+    description: Length of time for which the mandate remains valid.
+  MandateSetupReason1Choice:
+    properties:
+      code:
+        type: string
+        xml:
+          name: Cd
+        description: >-
+          Specifies the external mandate setup reason code in the format of
+          character string with a maximum length of 4 characters.
+        minLength: 1
+        maxLength: 4
+      proprietary:
+        type: object
+        description: Propreitary details
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+    description: >-
+      Provides the reason for the setup of the mandate. Either from Code or
+      Proprietary is Required
+  MandateTypeInformation2:
+    properties:
+      service_level:
+        type: object
+        description: Agreement under which or rules under which the mandate resides.
+        allOf:
+          - $ref: '#/definitions/ServiceLevel8Choice'
+      LclInstrm:
+        type: object
+        description: >-
+          User community specific instrument. This element is used to specify a
+          local instrument, local clearing option and/or further qualify the
+          service or service level.
+        allOf:
+          - $ref: '#/definitions/LocalInstrument2Choice'
+      category_purpose:
+        type: object
+        description: >-
+          Specifies the high level purpose of the mandate based on a set of
+          pre-defined categories.
+        allOf:
+          - $ref: '#/definitions/CategoryPurpose1Choice'
+      classification:
+        type: object
+        description: Type of direct debit instruction.
+        allOf:
+          - $ref: '#/definitions/MandateClassification1Choice'
+    description: Specifies the type of mandate, such as paper, electronic or scheme.
+  CategoryPurpose1Choice:
+    type: object
+    properties:
+      code:
+        type: string
+        xml:
+          name: Cd
+        description: >-
+          Specifies the category purpose, as published in an external category
+          purpose code list.
+        minLength: 1
+        maxLength: 4
+      proprietary:
+        type: object
+        description: Category purpose, in a proprietary form.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    description: >-
+      Specifies the high level purpose of the mandate based on a set of
+      pre-defined categories. Either Code or Proprietary field value should be
+      passed in request.
+  ServiceLevel8Choice:
+    type: object
+    properties:
+      code:
+        type: object
+        description: >-
+          Specifies the external service level code in the format of character
+          string with a maximum length of 4 characters. The list of valid codes
+          is an external code list published separately.
+        allOf:
+          - $ref: '#/definitions/Max4Text'
+      proprietary:
+        type: object
+        description: >-
+          Specifies a pre-agreed service or level of service between the
+          parties, as a proprietary code.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    description: >-
+      Agreement under which or rules under which the transaction should be
+      processed. Either code or proprietary field values should be sent in
+      request.
+  LocalInstrument2Choice:
+    type: object
+    properties:
+      code:
+        type: object
+        description: >-
+          Specifies the external local instrument code in the format of
+          character string with a maximum length of 35 characters. The list of
+          valid codes is an external code list published separately.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      proprietary:
+        type: object
+        description: Specifies the local instrument, as a proprietary code.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    description: >-
+      User community specific instrument. Either Code or Proprietary field value
+      should be passed in request.
+  MandateClassification1Choice:
+    type: object
+    properties:
+      code:
+        type: object
+        description: Specifies the type of direct debit amount, such as fixed or variable.
+        allOf:
+          - $ref: '#/definitions/MandateClassification1Code'
+      proprietary:
+        type: object
+        description: Proprietary Details
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    description: Either from Code or Proprietary is Required
+  MandateClassification1Code:
+    type: string
+    description: >-
+      Specifies the type of direct debit amount, such as fixed or variable. FIXE
+      - Direct debit amount is fixed. USGB - Direct debit amount is based on
+      usage. VARI - Direct debit amount is variable.
+    enum:
+      - FIXE
+      - USGB
+      - VARI
+  CashAccount38:
+    type: object
+    properties:
+      currency:
+        type: object
+        description: Identification of the currency in which the account is held.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyCode'
+      Id:
+        type: object
+        allOf:
+          - $ref: '#/definitions/AccountIdentification4Choice'
+      name:
+        type: object
+        description: >-
+          Name of the account, as assigned by the account servicing institution,
+          in agreement with the account owner in order to provide an additional
+          means of identification of the account.
+        allOf:
+          - $ref: '#/definitions/Max70Text'
+      type:
+        type: object
+        allOf:
+          - $ref: '#/definitions/CashAccountType2Choice'
+      proxy:
+        type: object
+        xml:
+          name: Prxy
+        description: >-
+          Specifies an alternate assumed name for the identification of the
+          account.
+        properties:
+          type:
+            type: object
+            xml:
+              name: Tp
+            description: >-
+              Type of the proxy identification. Either of Code or Proprietary is
+              required.
+            properties:
+              code:
+                type: string
+                xml:
+                  name: Cd
+                description: >-
+                  Specifies the external proxy account type code, as published
+                  in the proxy account type external code set.
+                minLength: 1
+                maxLength: 4
+              proprietary:
+                type: string
+                xml:
+                  name: Prtry
+                description: Proprietary details
+                minLength: 1
+                maxLength: 35
+          identification:
+            type: string
+            xml:
+              name: Id
+            description: >-
+              Identification used to indicate the account identification under
+              another specified name.
+            minLength: 1
+            maxLength: 2048
+        required:
+          - identification
+  CashAccountType2Choice:
+    type: object
+    properties:
+      code:
+        type: string
+        xml:
+          name: Cd
+        description: >-
+          Specifies the nature, or use, of the cash account in the format of
+          character string with a maximum length of 4 characters. The list of
+          valid codes is an external code list published separately.
+        minLength: 1
+        maxLength: 4
+      proprietary:
+        type: string
+        xml:
+          name: Prtry
+        description: proprietary details
+        minLength: 1
+        maxLength: 35
+    description: >-
+      Specifies the nature, or use of the account. Either from Code Or
+      Proprietary is required.
+  ActiveOrHistoricCurrencyAndAmount:
+    type: object
+    properties:
+      amount:
+        type: string
+        xml:
+          name: amt
+        description: >-
+          The number of fractional digits (or minor unit of currency) must
+          comply with ISO 4217. Note: The decimal separator is a dot. Total18
+          digits allowed with up to 5 decimal places.
+        maxLength: 18
+      Ccy:
+        type: string
+        xml:
+          name: Ccy
+          attribute: true
+        description: Currency for the amount. Passed as tag attribute.
+        pattern: '[A-Z]{3,3}'
+  ActiveCurrencyAndAmount:
+    type: object
+    properties:
+      amount:
+        type: string
+        xml:
+          name: amt
+        description: >-
+          The number of fractional digits (or minor unit of currency) must
+          comply with ISO 4217. Note: The decimal separator is a dot. Total18
+          digits allowed with up to 5 decimal places.
+      currency:
+        type: string
+        xml:
+          name: Ccy
+          attribute: true
+        description: Currency for the amount. Passed as Tag Attribute.
+        pattern: '[A-Z]{3,3}'
+  ActiveOrHistoricCurrencyCode:
+    type: object
+    properties:
+      currency:
+        type: string
+        description: >-
+          Currency should only be used in case one and the same account number
+          covers several currencies and the initiating party needs to identify
+          which currency needs to be used for settlement on the account.
+        pattern: '[A-Z]{3,3}'
+    xml:
+      name: Ccy
+    description: Identification of the currency in which the account is held.
+  ReferredMandateDocument1:
+    type: object
+    properties:
+      type:
+        type: object
+        description: Specifies the type of referred document.
+        allOf:
+          - $ref: '#/definitions/ReferredDocumentType4'
+      number:
+        type: object
+        description: Unique and unambiguous identification of the referred document.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      creditor_reference:
+        type: object
+        description: >-
+          Unique and unambiguous identification as assigned by the creditor to
+          the referred document shared with the debtor for its own reference.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      related_date:
+        type: string
+        format: date
+        xml:
+          name: RltdDt
+        description: Date associated with the referred document.
+    description: >-
+      Provides information to identify the underlying documents associated with
+      the mandate.
+  ReferredDocumentType4:
+    type: object
+    required:
+      - code_or_proprietary
+    properties:
+      code_or_proprietary:
+        type: object
+        allOf:
+          - $ref: '#/definitions/ReferredDocumentType3Choice'
+      issuer:
+        type: object
+        description: Identification of the issuer of the reference document type.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    description: Specifies the type of referred document.
+  ReferredDocumentType3Choice:
+    type: object
+    properties:
+      code:
+        type: object
+        description: Specifies a type of financial or commercial document.
+        allOf:
+          - $ref: '#/definitions/DocumentType6Code'
+      proprietary:
+        type: object
+        description: Specifies a proprietary type of financial or commercial document.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+    description: Either from Code or Proprietary is Required
+  DocumentType6Code:
+    type: string
+    description: >-
+      Document type in a coded form.<br><br><b>MSIN</b>: Document is an invoice
+      claiming payment for the supply of metered services, for example gas or
+      electricity supplied to a fixed meter. <br><br><b>CNFA</b>: Document is a
+      credit note for the final amount settled for a commercial
+      transaction.<br><br><b>DNFA</b>: Document is a debit note for the final
+      amount settled for a commercial transaction. <br><br><b>CINV</b>:  
+      Document is an invoice.<br><br><b>CREN</b>: Document is a credit note.
+      <br><br><b>DEBN</b>: Document is a debit note. <br><br><b>HIRI</b>:
+      Document is an invoice for the hiring of human resources or renting goods
+      or equipment. <br><br><b>SBIN</b>: Document is an invoice issued by the
+      debtor. <br><br><b>SVGS</b>: Account used for savings.
+      <br><br><b>CMCN</b>: Document is an agreement between the parties,
+      stipulating the terms and conditions of the delivery of goods or
+      services.<br><br><b>SOAC</b>: Document is a statement of the transactions
+      posted to the debtor's account at the supplier. <br><br><b>DISP</b>:
+      Document is a dispatch advice. <br><br><b>BOLD</b>: Document is a shipping
+      notice. <br><br><b>VCHR</b>: Document is an electronic payment document.
+      <br><br><b>AROI</b>: Document is a payment that applies to a specific
+      source document. <br><br><b>TSUT</b>: Document is a transaction identifier
+      as assigned by the Trade Services Utility.<br><br><b>PUOR</b>: Document is
+      a purchase order.
+    enum:
+      - MSIN
+      - CNFA
+      - DNFA
+      - CINV
+      - CREN
+      - DEBN
+      - HIRI
+      - SBIN
+      - CMCN
+      - SOAC
+      - DISP
+      - BOLD
+      - VCHR
+      - AROI
+      - TSUT
+      - PUOR
+  AccountIdentification4Choice:
+    type: object
+    required:
+      - Othr
+      - iban
+    properties:
+      iban:
+        type: object
+        allOf:
+          - $ref: '#/definitions/IBAN2007Identifier'
+      Othr:
+        type: object
+        allOf:
+          - $ref: '#/definitions/GenericAccountIdentification1'
+    description: >-
+      Unique and unambiguous identification for the account between the account
+      owner and the account servicer. Either iban or Othr field value should be
+      passed on request.
+  IBAN2007Identifier:
+    type: string
+    pattern: ^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$
+    description: >-
+      >- International Bank Account Number (IBAN) - identifier used
+      internationally by financial institutions to uniquely identify the account
+      of a customer. Further specifications of the format and content of the
+      IBAN can be found in the standard ISO 13616 "Banking and related financial
+      services - International Bank Account Number (IBAN)" version 1997-10-01,
+      or later revisions.
+  GenericAccountIdentification1:
+    type: object
+    required:
+      - Id
+    properties:
+      Id:
+        type: object
+        description: Identification assigned by an institution.
+        allOf:
+          - $ref: '#/definitions/Max34Text'
+      issuer:
+        type: object
+        description: Entity that assigns the identification.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      SchmeNm:
+        type: object
+        description: Name of the identification scheme.
+        allOf:
+          - $ref: '#/definitions/AccountSchemeName1Choice'
+    description: Information related to a generic account identification.
+  AccountSchemeName1Choice:
+    type: object
+    properties:
+      code:
+        type: string
+        xml:
+          name: Cd
+        description: >-
+          Specifies the external account identification scheme name code in the
+          format of character string with a maximum length of 4 characters.
+        minLength: 1
+        maxLength: 4
+      proprietary:
+        type: string
+        xml:
+          name: Prtry
+        description: Proprietary Details
+        minLength: 1
+        maxLength: 35
+    description: >-
+      Name of the identification scheme. Either from Code or Proprietary is
+      Required
+  Max34Text:
+    type: string
+    minLength: 1
+    maxLength: 34
+  MandateAuthentication1:
+    properties:
+      message_authentication_code:
+        type: string
+        xml:
+          name: MsgAuthntcnCd
+        description: >-
+          Specifies a piece of information used to authenticate a message,that
+          is to confirm that the message came from the stated sender (its
+          authenticity)and has not been changed in transit (its integrity).
+        minLength: 1
+        maxLength: 16
+      date:
+        type: string
+        format: date
+        xml:
+          name: Dt
+        description: Date when the authentication was conducted.
+      channel:
+        type: object
+        description: Channel used to transmit the authentication information
+        allOf:
+          - $ref: '#/definitions/AuthenticationChannel1Choice'
+  AuthenticationChannel1Choice:
+    properties:
+      code:
+        type: string
+        xml:
+          name: Cd
+        description: >-
+          Specifies the transaction authentication channel, as published in an
+          external authentication channel code set.
+        minLength: 1
+        maxLength: 4
+      proprietary:
+        type: string
+        xml:
+          name: Prtry
+        description: Proprietary Details
+        minLength: 1
+        maxLength: 35
+    description: >-
+      Channel used to transmit the authentication information. Either of Code or
+      Proprietary is Required.
+  MandateAdjustment1:
+    properties:
+      date_adjustment_rule_indicator:
+        type: boolean
+        xml:
+          name: DtAdjstmntRuleInd
+        description: >-
+          Specifies whether an adjustment is to be applied on pre-agreed
+          collection date or not.
+      category:
+        type: object
+        description: Defines the category of adjustment.
+        allOf:
+          - $ref: '#/definitions/Frequency37Choice'
+      amount:
+        type: object
+        description: >-
+          Pre-agreed amount to increase or decrease the mandate amountas
+          justified per information in the category
+        allOf:
+          - $ref: '#/definitions/ActiveCurrencyAndAmount'
+      rate:
+        type: string
+        xml:
+          name: Rate
+        description: >-
+          Pre-agreed increase or decrease rate that will be applied to the
+          collection amount. Total Digits 11 are allowed and up to 10 fractional
+          digits
+    description: >-
+      Specifies the characteristics of the adjustment applied to the collection
+      amount of a direct debit instruction.
+  Frequency37Choice:
+    properties:
+      code:
+        type: object
+        description: >-
+          Specifies the regularity of an event. NEVR - Event does never take
+          place. YEAR - Event takes place every year or once a year. RATE -Event
+          takes place based on a change of a rate. MIAN - Event takes place
+          every six months or two times a year. QURT - Event takes place every
+          three months or four times a year.
+        allOf:
+          - $ref: '#/definitions/Frequency10Code'
+      proprietary:
+        type: string
+        xml:
+          name: Prtry
+        description: Proprietary Details
+    description: >-
+      Defines the category of adjustment.Either from Code or Proprietaryis
+      Required.
+  Frequency10Code:
+    type: string
+    description: >-
+      Specifies the regularity of an event. NEVR - Event does never take place.
+      YEAR - Event takes place every year or once a year. RATE - Event takes
+      place based on a change of a rate. MIAN - Event takes place every six
+      months or two times a year. QURT - Event takes place every three months or
+      four times a year.
+    enum:
+      - NEVR
+      - YEAR
+      - RATE
+      - MIAN
+      - QURT
+  Document:
+    type: object
+    required:
+      - MndtAccptncRpt
+    properties:
+      MndtAccptncRpt:
+        type: object
+        xml:
+          name: MndtAccptncRpt
+        description: >-
+          The MandateAcceptanceReport message is sent from the agent of the
+          receiver (debtor or creditor) of the MandateRequest message
+          (initiation,amendment or cancellation) to the agent of the initiator
+          of the MandateRequestmessage (debtor or creditor). A
+          MandateAcceptanceReport message is usedto confirm the acceptance or
+          rejection of a MandateRequest message. Where acceptance is part of the
+          full process flow, a MandateRequest message only becomes valid after a
+          confirmation of acceptance is received through a 
+          MandateAcceptanceReport message from the agent of the receiver.
+        properties:
+          GrpHdr:
+            type: object
+            description: >-
+              Set of characteristics to identify the message and parties playing
+              a role in the mandate acceptance, but which are not part of the
+              mandate.
+            allOf:
+              - $ref: '#/definitions/GroupHeader80'
+          UndrlygAccptncDtls:
+            type: array
+            xml:
+              name: UndrlygAccptncDtls
+            description: >-
+              Provides information on the acceptance or rejection of themandate
+              request.
+            items:
+              $ref: '#/definitions/MandateAcceptance6'
+          SplmtryData:
+            type: array
+            xml:
+              name: SplmtryData
+            description: >-
+              Additional information that cannot be captured in the structured
+              elements and/or any other specific block.  The Supplementary Data
+              building block at message level must not be used to provide
+              additional information about a transaction. The SupplementaryData
+              element at transaction level should be used for that purpose.
+            items:
+              $ref: '#/definitions/SupplementaryData1'
+        required:
+          - GrpHdr
+    description: >-
+      Payment Status Response generates payment details with status ofthe
+      payment transaction.
+  MandateAcceptance6:
+    type: object
+    properties:
+      OrgnlMsgInf:
+        type: object
+        description: Provides information on the original message.
+        allOf:
+          - $ref: '#/definitions/OriginalMessageInformation1'
+      AccptncRslt:
+        type: object
+        description: Provides detailed information on the acceptance result
+        allOf:
+          - $ref: '#/definitions/AcceptanceResult6'
+      OrgnlMndt:
+        type: object
+        description: Provides the original mandate data.
+        allOf:
+          - $ref: '#/definitions/OriginalMandate7Choice'
+      supplementary_data:
+        type: object
+        description: >-
+          Additional information that cannot be captured in the
+          structuredelements and/or any other specific block.
+        allOf:
+          - $ref: '#/definitions/SupplementaryData1'
+    description: >-
+      Identifies the mandate, which is being accepted. When Acceptance
+      Results/Accepted is true then OriginalMandate or
+      OriginalMandateIdentification must be present or OriginalMandateor
+      OriginalMandate or OriginalMandateIdentification must be present.
+  OriginalMessageInformation1:
+    type: object
+    properties:
+      message_identification:
+        type: object
+        description: >-
+          Point to point reference, as assigned by the original initiating
+          party, to unambiguously identify the original mandate request message.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      message_name_identification:
+        type: object
+        description: Specifies the message name identifier to which the message refers.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      creation_date_time:
+        type: string
+        format: date-time
+        xml:
+          name: CreDtTm
+        description: Date and time at which the message was created.
+  AcceptanceResult6:
+    type: object
+    required:
+      - accepted
+    properties:
+      accepted:
+        type: boolean
+        xml:
+          name: Accptd
+        description: Indicates whether the mandate request was accepted or rejected.
+      RjctRsn:
+        type: object
+        description: Specifies the reason for the rejection of a mandate request.
+        allOf:
+          - $ref: '#/definitions/MandateReason1Choice'
+      additional_reject_reason_information:
+        type: array
+        xml:
+          name: AddtlRjctRsnInf
+        description: Additional Reject Reason Information
+        items:
+          $ref: '#/definitions/Max105Text'
+    description: Provides detailed information on the acceptance result.
+  MandateReason1Choice:
+    type: object
+    properties:
+      code:
+        xml:
+          name: Cd
+        description: >-
+          Specifies the external mandate processing reason code in the format of
+          character string with a maximum length of 4 characters. The list of
+          valid codes is an external code list published separately.
+      proprietary:
+        xml:
+          name: Prtry
+        description: Proprietary Details
+    description: >-
+      Specifies the reason for the rejection of a mandate request. Eitherfrom
+      Code or Proprietary is Required.
+  Max105Text:
+    type: string
+    minLength: 1
+    maxLength: 105
+  OriginalMandate7Choice:
+    type: object
+    properties:
+      original_mandate_information:
+        type: object
+        description: original mandate information
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      OrgnlMndt:
+        type: object
+        description: >-
+          Information that serves as a basis to debit an account. Ultimate
+          Debtor may only be present if different from Debtor.UltimateCreditor
+          may only be present if different from Creditor.
+        allOf:
+          - $ref: '#/definitions/Mandate15'
+    description: >-
+      Provides the original mandate data. Either from original
+      mandateinformation OR Original Mandate is required.
+  Mandate15:
+    type: object
+    required:
+      - Cdtr
+      - Dbtr
+      - DbtrAgt
+      - TrckgInd
+    properties:
+      MndtId:
+        type: string
+        xml:
+          name: MndtId
+        description: >-
+          Unique identification, as assigned by the responsible party(such as
+          the creditor) or agent (such as the debtor agent), to unambiguously
+          identify the mandate.
+      mandate_request_identification:
+        type: object
+        description: >-
+          Identification for the mandate request, as assigned by the initiating
+          party.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      authentication:
+        type: object
+        description: Specifies the transport authentication details related to the mandate.
+        allOf:
+          - $ref: '#/definitions/MandateAuthentication1'
+      Tp:
+        type: object
+        description: Specifies the type of mandate, such as paper, electronic or scheme.
+        allOf:
+          - $ref: '#/definitions/MandateTypeInformation2'
+      Ocrncs:
+        type: object
+        description: >-
+          Provides details of the duration of the mandate and occurrenceof the
+          underlying transactions.
+        allOf:
+          - $ref: '#/definitions/MandateOccurrences4'
+      TrckgInd:
+        type: boolean
+        xml:
+          name: TrckgInd
+        description: >-
+          Specifies whether the direct debit instructions should be
+          automatically re-submitted periodically when bilaterally agreed. A
+          flag indicating a True or False value.
+      first_collection_amount:
+        type: object
+        description: >-
+          Amount different from the collection amount, as it includesthe costs
+          associated with the first debited amount.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      collection_amount:
+        type: object
+        description: Fixed amount to be collected from the debtor's account.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      MaxAmt:
+        type: object
+        description: >-
+          Maximum amount that may be collected from the debtor's account, per
+          instruction.
+        allOf:
+          - $ref: '#/definitions/ActiveOrHistoricCurrencyAndAmount'
+      adjustment:
+        type: object
+        description: >-
+          Specifies the characteristics of the adjustment applied to
+          thecollection amount of a direct debit instruction.
+        allOf:
+          - $ref: '#/definitions/MandateAdjustment1'
+      reason:
+        type: object
+        description: Provides the reason for the setup of the mandate.
+        allOf:
+          - $ref: '#/definitions/MandateSetupReason1Choice'
+      creditor_scheme_identification:
+        type: object
+        description: Credit party that signs the mandate.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      Cdtr:
+        type: object
+        description: Party that signs the mandate and to whom an amount of money is due.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      CdtrAcct:
+        type: object
+        description: >-
+          Unambiguous identification of the account of the creditor to which a
+          credit entry will be posted as a result of the payment transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      CdtrAgt:
+        type: object
+        description: Financial institution servicing an account for the creditor.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      ultimate_creditor:
+        type: object
+        description: Ultimate party to which an amount of money is due.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      Dbtr:
+        type: object
+        description: >-
+          Party that signs the mandate and owes an amount of money to the
+          (ultimate) creditor.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      DbtrAcct:
+        type: object
+        description: >-
+          Unambiguous identification of the account of the debtor, to which a
+          debit entry will be made as a result of the transaction.
+        allOf:
+          - $ref: '#/definitions/CashAccount38'
+      DbtrAgt:
+        type: object
+        description: Financial institution servicing an account for the debtor.
+        allOf:
+          - $ref: '#/definitions/BranchAndFinancialInstitutionIdentification6'
+      ultimate_debtor:
+        type: object
+        description: >-
+          Ultimate party that owes an amount of money to the (ultimate)
+          creditor.
+        allOf:
+          - $ref: '#/definitions/PartyIdentification135'
+      mandate_reference:
+        type: object
+        description: >-
+          Reference assigned by a creditor or ultimate creditor for internal
+          usage for the mandate.
+        allOf:
+          - $ref: '#/definitions/Max35Text'
+      RfrdDoc:
+        type: array
+        xml:
+          name: RfrdDoc
+        description: >-
+          Provides information to identify the underlying documents associated
+          with the mandate.
+        items:
+          $ref: '#/definitions/ReferredMandateDocument1'
+    description: >-
+      Information that serves as a basis to debit an account. Set of elements
+      used to provide the details of the mandate signed between the (ultimate)
+      creditor and the (ultimate) debtor. UltimateDebtor may only be present if
+      different from Debtor.UltimateCreditor may only be present if different
+      from Creditor.

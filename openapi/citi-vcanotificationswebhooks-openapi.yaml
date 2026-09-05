@@ -1,0 +1,1287 @@
+openapi: 3.0.0
+info:
+  description: Webhook event notifications for authorized and clearing transactions.
+  version: 2.0.0
+  title: CommercialEventNotifications
+  contact:
+    name: GLOBAL Commercial Cards API Production support
+    email: >-
+      dl.icg.global.commercial.cards.digital.production.support@imcap.ap.ssmb.com
+tags:
+  - name: push Notifications
+    description: >-
+      Webhook push notification operations for authorized and clearing
+      transactions
+paths:
+  /push/notifications:
+    post:
+      summary: Webhooks notifications
+      description: >-
+        Webhooks notifications for authorized and clearing transactions pushed
+        to clients from Citi
+      operationId: pushNotification
+      tags:
+        - push Notifications
+      parameters:
+        - name: networkType
+          in: header
+          description: >-
+            The network in which the notification originated from .Possible
+            values- Mastercard,Visa
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+            examples:
+              Authorization Transaction Webhook:
+                $ref: '#/components/examples/AuthorizationTransactionExample'
+              Clearing Transaction Debit Adjustment Webhook:
+                $ref: >-
+                  #/components/examples/ClearingTransactionDebitAdjustmentExample
+              Clearing Transaction Force Post Webhook:
+                $ref: '#/components/examples/ClearingTransactionForcePostExample'
+              Clearing Transaction Refund Webhook:
+                $ref: '#/components/examples/ClearingTransactionRefundExample'
+              Clearing Transaction Credit Adjustment Webhook:
+                $ref: >-
+                  #/components/examples/ClearingTransactionCreditAdjustmentExample
+              Clearing Transaction Presentment Webhook:
+                $ref: '#/components/examples/ClearingTransactionPresentmentExample'
+      responses:
+        '200':
+          description: Event processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        '201':
+          description: Event processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  schemas:
+    Webhook:
+      properties:
+        notifications:
+          description: List of Notification requests
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationResponse'
+    NotificationResponse:
+      properties:
+        eventType:
+          description: >-
+            The event type for which the client wants the
+            notifications<br>Possible
+            Values:<ul><li>PAYMENT_AUTHORIZATION</li><li>CLEARING</li></ul>
+          type: string
+          example: PAYMENT_AUTHORIZATION
+          maxLength: 100
+        subscriptionName:
+          description: The subscription that created the notification.
+          type: string
+          maxLength: 50
+          minLength: 1
+        transactionContent:
+          $ref: '#/components/schemas/TransactionContent'
+    TransactionContent:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/ClearingTransactionContent'
+        - $ref: '#/components/schemas/AuthTransactionContent'
+    AuthTransactionContent:
+      properties:
+        messageTypeIndicator:
+          description: >-
+            Message Type Identifier<br>Possible values:<br>"0100" -
+            Authorization<br>"0110" - Authorization Request Response<br>"0120" -
+            Authorization Advice<br>"0400" - Reversal (full or
+            partial)<br>"0410" - Reversal response<br>"0420" - Reversal advice
+            (full or partial))<br>"0430" - Reversal advice response (full or
+            partial)
+          type: string
+          example: '0110'
+          maxLength: 4
+        transactionId:
+          description: Unique identifier of the transaction
+          type: string
+          example: '1234539320977930'
+          maxLength: 50
+        transactionAmount:
+          $ref: '#/components/schemas/TransactionAmount'
+        billingAmount:
+          $ref: '#/components/schemas/BillingAmount'
+        authorizationResponseDetail:
+          description: >-
+            Authorization Status/Reason Description from Issuer<br>Max legnth -
+            MC: 100<br><br>Mastercard<br><br>00 - Approved or completed
+            successfully<br>01 - Refer to card issuer<br>03 - Invalid merchant
+            Decline<br>04 - Capture card Capture<br>05 - Do not honor<br>06 -
+            Error<br>08 - Honor with ID<br>10 - Partial Approval<br>12 - Invalid
+            transaction<br>13 - Invalid amount<br>14 - Invalid card number<br>15
+            - Invalid issuer<br>17 - Customer cancellation<br>30 - Format
+            error<br>32 - Partial reversal<br>34 - Suspect Fraud<br>41 - Lost
+            card<br>43 - Stolen card<br>51 - Insufficient funds/over credit
+            limit<br>54 - Expired card<br>55 - Invalid PIN<br>57 - Transaction
+            not permitted to issuer/cardholder<br>58 - Transaction not permitted
+            to acquirer/terminal<br>61 - Exceeds withdrawal amount limit<br>62 -
+            Restricted card<br>63 - Security violation<br>65 - Exceeds
+            withdrawal count limit<br>68 - Response received late<br>70 -
+            Contact Card Issuer<br>71 - PIN Not Changed<br>75 - Allowable number
+            of PIN tries exceeded<br>76 - Invalid/nonexistent  To Account 
+            specified<br>77 - Invalid/nonexistent  From Account  specified<br>78
+            - Invalid/nonexistent account specified (general)<br>81 - Domestic
+            Debit Transaction Not Allowed<br>82 - Timeout at issuer<br>84 -
+            Invalid Authorization Life Cycle<br>85 - Not declined Valid for all
+            zero amount transactions.<br>86 - PIN Validation not possible<br>87
+            - Purchase Amount Only, No Cash Back Allowed<br>88 - Cryptographic
+            failure<br>89 - Unacceptable PIN Transaction Declined Retry<br>91 -
+            Authorization System or issuer system inoperative<br>92 - Unable to
+            route transaction<br>94 - Duplicate transmission detected<br>96 -
+            System error
+          type: string
+          maxLength: 100
+        authorizationCode:
+          description: >-
+            Transaction response ID assigned by the authorizing institution for
+            Authorization transactions
+          type: string
+          example: ''
+          maxLength: 50
+        transactionDate:
+          description: >-
+            Masercard: Convert UTC date to format YYYY-MM-DD (ISO-8601) and
+            enrich the YYYY value based on the current year
+          type: string
+          example: '2021-05-25'
+          maxLength: 10
+        transactionTime:
+          description: >-
+            The time of the transaction that was initiated. hh:mm:ss (24 hours
+            format)
+          type: string
+          example: hh:mm:ss
+          maxLength: 8
+        transactionType:
+          description: >-
+            Specifies the nature of the transaction whether it was authorized or
+            returned etc<br>Visa : 107 max length MC: 40 Max length
+          type: string
+          example: ''
+          maxLength: 107
+        preAuthorizationFlag:
+          description: >-
+            Pre Authorization flag<br>Possible values: 'Yes' - When
+            posTransactionStatus is 4 'No' - For all other values
+          type: string
+          example: 'Yes'
+        merchant:
+          $ref: '#/components/schemas/Merchant'
+        realCardDetails:
+          $ref: '#/components/schemas/RealCardDetails'
+        virtualCardDetails:
+          $ref: '#/components/schemas/VirtualCardDetails'
+        inControlOnBehalfServiceResult:
+          $ref: '#/components/schemas/InControlOnBehalfServiceResult'
+        originalMessage:
+          $ref: '#/components/schemas/OriginalMessage'
+        adviceReasonCode:
+          description: >-
+            Advice Reason Code indicates to the receiver of an Advice message
+            the specific reason for the transmission of the Advice message
+          type: string
+          format: string
+          maxLength: 50
+        replacementAmounts:
+          $ref: '#/components/schemas/ReplacementAmounts'
+        purchaseRequest:
+          $ref: '#/components/schemas/PurchaseRequest'
+        acquirerIdentifier:
+          description: The identifier under which the acquirer has been categorised
+          type: string
+          example: ''
+          maxLength: 50
+      required:
+        - messageTypeIndicator
+        - transactionId
+        - transactionAmount
+        - billingAmount
+        - authorizationResponseDetail
+        - authorizationCode
+        - transactionDate
+        - transactionTime
+        - transactionType
+        - merchant
+        - inControlOnBehalfServiceResult
+        - originalMessage
+    ClearingTransactionContent:
+      properties:
+        clearingTransactionId:
+          description: Unique identifier of the transaction
+          type: string
+          example: '1234539320977930'
+          maxLength: 50
+        clearingType:
+          description: >-
+            Specifies the type of transaction whether it is Credit or Debit.If
+            Mastercard returns 'C', then GRACE returns 'Credit'If Mastercard
+            returns 'D', then GRACE returns 'Debit'
+          type: string
+          example: C
+          maxLength: 6
+        acquirerReferenceData:
+          description: >-
+            Data an acquirer supplies in an acquirer-originated message to an
+            issuer
+          type: string
+          example: '382299507007100000000'
+          maxLength: 23
+        functionCode:
+          description: >-
+            Three-digit data element that indicates the specific purpose of a
+            message in a message class.Uniquely identifies all transaction
+            functions the clearing system performs.
+          type: string
+          example: '200'
+          maxLength: 3
+        messageTypeIndicator:
+          description: >-
+            Four-digit numeric field describing the type of message being
+            interchanged.<br>Possible values:<ul><li>'1240' -
+            Presentment</li><li>'1442' - Chargeback</li><li>'1644' -
+            Administrative</li><li>'1740' - Fee Collection</li></ul>
+          type: string
+          example: '1442'
+          maxLength: 4
+        transactionType:
+          description: >-
+            Specifies the type of transaction<br>Possible Values<ul><li>First
+            Presentment</li><li>Second Presentment (Full)</li><li>Second
+            Presentment (Partial)</li><li>First Chargeback
+            (Full)</li><li>Arbitration Chargeback (Full)</li><li>First
+            Chargeback (Partial)</li><li>Arbitration Chargeback (Partial)
+          type: string
+          example: First Presentment
+          maxLength: 50
+        messageReasonCode:
+          description: >-
+            Four-digit data element that indicates the reason for sending a
+            message
+          type: string
+          example: '1401'
+          maxLength: 4
+        originalMessageTransactionId:
+          description: >-
+            Original transaction ID indicates the transaction ID that was in the
+            original message.
+          type: string
+          example: '127'
+          maxLength: 50
+        transactionExchangeRate:
+          description: >-
+            Currency exchange from transaction curency to cardholder billing
+            curency.
+          type: string
+          example: '23.23'
+          minLength: 1
+          maxLength: 7
+        authorizationCode:
+          description: >-
+            Transaction response ID assigned by the authorizing institution for
+            Authorization transactions
+          type: string
+          example: '111111'
+          maxLength: 50
+        transactionDateTime:
+          description: >-
+            The date and timestamp the transaction ocurred at the card acceptor
+            location.<br>Format<br>ISO Date Time format yyyy-MM-dd HH:mm:ss
+          type: string
+          example: '2020-07-16 11:09:42'
+          maxLength: 28
+        settlementAmount:
+          $ref: '#/components/schemas/SettlementAmount'
+        reversalIndicator:
+          description: >-
+            Flag which indicates the Reversal of a clearing. Supported values
+            are true if this is a reversal, false otherwise.
+          type: boolean
+          example: false
+        settledIndicator:
+          description: >-
+            Flag which indicates whether the transaction is settled or unsettled
+            with an associated cleared transaction record.<br>Possible values:
+            <br>'True' is transaction is settled <br>'False' is transaction is
+            unsettled
+          type: boolean
+          example: true
+        originalOrLinked:
+          description: >-
+            Determines if it is an Original or linked transaction.<br>Possible
+            values<br>'O' - Original<br>'L' - Linked
+          type: string
+          example: L
+          maxLength: 1
+        settlementDate:
+          description: >-
+            Specifies the Settlement date. Represented in ISO Date Time format
+            'yyyy-MM-dd HH:mm:ss'. Defaults to System Date if not written by
+            Settlement Process in Mastercard Incontrol platfrom.
+          type: string
+          example: '2019-07-03 11:09:42'
+        banknetReferenceNumber:
+          description: >-
+            Banknet Reference Number is generated by the Authorization Platform
+            for each originating message it routes. The reference number is
+            guaranteed to be a unique value for any transaction within the
+            specified financial network on any processing day.
+          type: string
+          example: 4977D7
+        billingCurrencyAmount:
+          $ref: '#/components/schemas/BillingCurrencyAmount'
+        authorization:
+          $ref: '#/components/schemas/Authorization'
+        virtualCardAccount:
+          $ref: '#/components/schemas/VirtualCardAccount'
+        fundingAccount:
+          $ref: '#/components/schemas/FundingAccount'
+        merchant:
+          $ref: '#/components/schemas/Merchant'
+        virtualCard:
+          $ref: '#/components/schemas/VirtualCard'
+      required:
+        - clearingTransactionId
+        - clearingType
+        - acquirerReferenceData
+        - functionCode
+        - messageTypeIndicator
+        - transactionType
+        - messageReasonCode
+        - transactionExchangeRate
+        - authorizationCode
+        - settlementAmount
+        - reversalIndicator
+        - settledIndicator
+        - originalOrLinked
+        - settlementDate
+        - banknetReferenceNumber
+        - billingCurrencyAmount
+        - authorization
+        - virtualCard
+    OriginalMessage:
+      properties:
+        messageTypeIndicator:
+          description: >-
+            The data elements in the original message, intended to identify a
+            transaction for correction or reversal.<br>Original Message Type
+            Identifier indicates the Message Type Identifier (MTI) of the
+            original message.<br><br>Possible Values<br>"0110" - Authorization
+            Request Response<br>"0120" - Authorization Advice<br>"0400" -
+            Reversal (full or partial)<br>"0420" - Reversal Response (full or
+            partial)
+          type: string
+          example: '0110'
+          maxLength: 4
+        transactionId:
+          description: >-
+            Original transaction ID indicates the transaction ID that was in the
+            original message.
+          type: string
+          example: '1234539320977930'
+          maxLength: 50
+        transactionDate:
+          description: >-
+            The date of the transaction that was initiated<br><br>YYYY-MM-DD
+            (ISO-8601)
+          type: string
+          example: '2021-05-25'
+          maxLength: 10
+        transactionTime:
+          description: >-
+            The time of the transaction that was initiated<br><br>hh:mm:ss (24
+            hours format)
+          type: string
+          example: '06:11:33'
+          maxLength: 8
+    ReplacementAmounts:
+      properties:
+        transactionCurrencyAmount:
+          description: >-
+            Replacement Amounts - corrected transaction amounts for a reversal.
+            Values must be zero or not present for a full reversal, corrected
+            amount for a partial reversal. Indicates the actual transaction
+            amount.<br><br>12, Upto 4 decimal (depends on currency exponent)
+          type: string
+          format: string
+          example: '100.00'
+          maxLength: 12
+        settlementCurrencyAmount:
+          description: >-
+            Indicates the actual settlement amount in the settlement
+            currency.<br><br>12, Upto 4 decimal (depends on currency exponent)
+          type: string
+          format: string
+          example: '100.00'
+          maxLength: 12
+        billingCurrencyAmount:
+          description: >-
+            The actual amount in the issuer currency.<br><br>12, Upto 4 decimal
+            (depends on currency exponent)
+          type: string
+          format: string
+          example: '100.00'
+          maxLength: 12
+    TransactionAmount:
+      properties:
+        transactionCurrencyAmount:
+          description: >-
+            Specifies the value of the transaction amount in the local currency
+            of the merchant or acquirer of the transaction
+          type: string
+          example: '123.45'
+          maxLength: 12
+        transactionCurrencyCode:
+          description: >-
+            Specifies the ISO currency code of the local currency of the
+            merchant or acquirer of the transaction
+          type: string
+          example: USD
+          maxLength: 3
+      required:
+        - transactionCurrencyAmount
+        - transactionCurrencyCode
+    Merchant:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/AuthMerchant'
+        - $ref: '#/components/schemas/ClearingMerchant'
+    AuthMerchant:
+      properties:
+        merchantId:
+          description: The ID created for a specific merchant by the card network
+          type: string
+          example: '305678'
+          maxLength: 50
+        merchantCategoryCode:
+          description: >-
+            The category under which the merchant  is been assigned by the
+            network
+          type: string
+          example: '0041'
+          maxLength: 4
+        merchantName:
+          description: >-
+            The merchant name that corresponds to merchant id defined by the
+            card netwrok
+          type: string
+          example: AUTH_TEST
+          maxLength: 200
+        merchantCity:
+          description: Merchant city
+          type: string
+          example: New York
+          maxLength: 100
+        merchantState:
+          description: Alphabetic code for the Merchant state
+          type: string
+          example: CA
+          maxLength: 3
+        merchantCountryCode:
+          description: 3 digit country code for the merchant country
+          type: string
+          example: USA
+          maxLength: 3
+      required:
+        - merchantId
+        - merchantCategoryCode
+        - merchantName
+        - merchantCity
+        - merchantState
+        - merchantCountryCode
+      additionalProperties: false
+    RealCardDetails:
+      properties:
+        accountNumber:
+          description: >-
+            Account number of the real card<br>Account number is masked with
+            only the last 4 digits
+          type: string
+          example: '************0112'
+          maxLength: 16
+      required:
+        - accountNumber
+    VirtualCardDetails:
+      properties:
+        virtualCardAccountNumber:
+          description: >-
+            The virtual card account number associated to the PAN that was used
+            for the transaction<br>Mastercard: The virtual card account number
+            is masked with only the last 4 digits <br><br>Max legnth - MC :19
+          type: string
+          example: '************4586'
+          maxLength: 19
+      required:
+        - virtualCardAccountNumber
+    InControlOnBehalfServiceResult:
+      properties:
+        vcaAuthorizationResponseDetail:
+          description: >-
+            Authorization status/reason description from Networks Payment
+            Control<br>MC: 100<br><br>Possbile
+            Values<br><br>Mastercard<br><br>A  -  Virtual Card Number expiration
+            date does not match<br>B  -  Virtual Card Number expiration date
+            expired<br>C  -  Virtual Card Number Virtual CVC 2 does not
+            match<br>D  -  In Control Validity Period Limit<br>E  -  In Control
+            Transaction Amount Limit Check<br>F  -  In Control Cumulative Amount
+            Limit Check<br>G  -  In Control Transaction Number Usage<br>H  -  In
+            Control Merchant ID Limit<br>I  -  In Control Invalid Virtual Card
+            Number Real Card Number mapping relationship<br>J  -  In Control MCC
+            Limit<br>K  -  In Control Database Status Bad<br>L  -  In Control
+            Geographic Restriction<br>M  -  In Control Transaction Type
+            Restriction<br>P  -  In Control Transaction Time/Date
+            Restriction<br>U  -  Unable to process<br>V  -  Valid (all controls
+            passed)
+          type: string
+          example: V  -  Valid (all controls passed)
+          maxLength: 100
+      required:
+        - vcaAuthorizationResponseDetail
+    PurchaseRequest:
+      properties:
+        vcaId:
+          description: >-
+            A reference number that uniquely identifies the virtual card
+            account.
+          type: string
+          format: string
+          example: '94840311'
+          maxLength: 19
+        fundingSourceName:
+          description: Name of the funding source to which the virtual card rolls up.
+          type: string
+          example: Bank VCA Funding Acount
+          maxLength: 200
+        programId:
+          description: Unique ID of the company record defined in the virtual cards system.
+          type: string
+          format: string
+          example: '701089'
+          maxLength: 19
+      required:
+        - vcaId
+        - fundingSourceName
+        - programId
+    SettlementAmount:
+      properties:
+        amount:
+          description: >-
+            Specifies the amount of funds to be transferred between the acquirer
+            and the issuer in the settlement currency.
+          type: string
+          example: '123.45'
+          maxLength: 12
+        currencyCode:
+          description: >-
+            Specifies the currency code of funds to be transferred between the
+            acquirer and the issuer.
+          type: string
+          example: '840'
+        currencyCodeAlphabetic:
+          description: >-
+            Specifies the currency name of funds to be transferred between the
+            acquirer and the issuer.
+          type: string
+          example: USD
+      required:
+        - amount
+        - currencyCode
+        - currencyCodeAlphabetic
+    BillingAmount:
+      properties:
+        billingCurrencyAmount:
+          description: >-
+            Specifies the value of the transaction amount which is converted to
+            the cardholder's billling currency, excluding cardholder billing
+            fees.
+          type: string
+          example: '123.45'
+          maxLength: 12
+        billingCurrencyCode:
+          description: >-
+            Specifies the ISO currency code of accounts that was initially set
+            up for billing the transactions
+          type: string
+          example: USD
+          maxLength: 3
+      required:
+        - billingCurrencyAmount
+        - billingCurrencyCode
+    BillingCurrencyAmount:
+      properties:
+        amount:
+          description: >-
+            Specifies the value of the transaction amount which is converted to
+            the cardholder's billling currency, excluding cardholder billing
+            fees.
+          type: string
+          example: '123.45'
+          maxLength: 12
+        currencyCode:
+          description: >-
+            Specifies the ISO currency code of accounts that was initially set
+            up for billing the transactions
+          type: string
+          example: '840'
+          maxLength: 3
+        currencyCodeAlphabetic:
+          description: >-
+            Indicates the currency name of the transaction amount in the
+            issuer�s currency
+          type: string
+          example: USD
+          maxLength: 3
+      required:
+        - amount
+        - currencyCode
+        - currencyCodeAlphabetic
+    Authorization:
+      properties:
+        authorizationTransactionId:
+          description: Specifies the Authorization Transaction ID used for matching.
+          type: string
+          example: '2450'
+        systemTraceAuditNumber:
+          description: >-
+            Systems Trace Audit Number (STAN) is a number a message initiator
+            assigns to uniquely identify a transaction.
+          type: string
+          example: '2450'
+        type:
+          description: >-
+            Indicates the type of transaction.<br>Possible Values<ul><li>'0' -
+            Auth</li><li>'1' - Advice</li><li>'2' - Reversal</li><li>'3' -
+            Reversal advice</li><li>'4' -  Offline Auth</li><li>'5' - Offline
+            purchase return</li><li>'6' = Reserved for use internal to the
+            Mastercard ICCP platform</li><li>'7' = Reserved for use internal to
+            the Mastercard ICCP platform</l><li>'8' = Offline Auth for purchase
+            return</li></ul>
+          type: string
+          example: '0'
+          maxLength: 1
+        merchantLocalDate:
+          description: >-
+            Transaction local date (month and day) in the format of MMDD on
+            which the transaction takes place at the point of card acceptor
+            location. This date is represneted in local time zone units, not in
+            UTC time zone.
+          type: string
+          example: '0912'
+          maxLength: 4
+        merchantLocalTime:
+          description: >-
+            Transaction local time at which the transaction takes place at the
+            point of card acceptor location. Time is repreented in local time
+            zone units, not in UTC time zone.
+          type: string
+          example: '175603'
+          maxLength: 6
+        messageTypeIndicator:
+          description: >-
+            Message Type Identifier.<br>Possible values:<br>'0100' -
+            Authorization<br>'0120' - Authorization Advice<br>'0400' - Reversal
+            (full or partial)<br>'0420' - Reversal advice (full or partial)
+          type: string
+          example: '0420'
+          maxLength: 4
+        billingCurrencyAmount:
+          $ref: '#/components/schemas/BillingCurrencyAmount'
+        effectOnBalance:
+          description: >-
+            This value will be same as the billing currency amount in event of a
+            Partial Replacement. In Partial replacement the actual billing
+            currency amount will replace the billing currency amount
+          type: string
+          example: '75'
+        transactionCurrencyAmount:
+          $ref: '#/components/schemas/TransactionCurrencyAmount'
+      required:
+        - authorizationTransactionId
+        - systemTraceAuditNumber
+        - type
+        - merchantLocalDate
+        - messageTypeIndicator
+        - billingCurrencyAmount
+    TransactionCurrencyAmount:
+      properties:
+        amount:
+          description: >-
+            Specifies the value of the transaction amount in the local currency
+            of the merchant or acquirer of the transaction
+          type: string
+          example: '123.45'
+          maxLength: 12
+        currencyCode:
+          description: >-
+            Specifies the ISO currency code of the local currency of the
+            merchant or acquirer of the transaction
+          type: string
+          example: '840'
+          maxLength: 3
+        currencyCodeAlphabetic:
+          description: >-
+            Indicates the currency name local currency of the merchant or
+            acquirer of the transaction
+          type: string
+          example: USD
+          maxLength: 3
+      required:
+        - amount
+        - currencyCode
+        - currencyCodeAlphabetic
+    VirtualCardAccount:
+      properties:
+        virtualCardAccountNumber:
+          description: >-
+            The virtual card account number associated to the PAN that was used
+            for the transaction
+          type: string
+          example: '************7890'
+          maxLength: 19
+      required:
+        - virtualCardAccountNumber
+    FundingAccount:
+      properties:
+        accountNumber:
+          description: >-
+            Account number of the real card. The value is masked and only last
+            four digits are visible
+          type: string
+          example: '************7890'
+          maxLength: 19
+      required:
+        - accountNumber
+    ClearingMerchant:
+      properties:
+        merchantCategoryCode:
+          description: >-
+            The category under which the merchant  is been assigned by the
+            network
+          type: string
+          example: '0041'
+          maxLength: 4
+        mccDescription:
+          description: >-
+            The decsription of the category on which merchant has been assigned
+            by the card network
+          type: string
+          example: GAMBLING TRANSACTIONS
+          maxLength: 200
+        merchantId:
+          description: The ID created for a specific merchant by the card network
+          type: string
+          example: '305678'
+          maxLength: 50
+        terminalId:
+          description: The ID under which the terminal has been categorised
+          type: string
+          example: '98123456'
+          maxLength: 50
+        merchantName:
+          description: >-
+            The merchant name that corresponds to merchant id defined by the
+            card netwrok
+          type: string
+          example: AUTH_TEST
+          maxLength: 200
+        additionalMerchantName:
+          description: >-
+            Alternate Card Acceptor Description Data may provide a local
+            language version of the data using a non-standard character set
+          type: string
+          example: GAMBLING TRANSACTIONS PVT LTD
+          maxLength: 200
+        retrievalReferenceNumber:
+          description: Specifies the Terminal transaction Number in a number format
+          type: string
+          example: '123456'
+          maxLength: 50
+        merchantStreetAddress:
+          description: Specifies the address of the merchant
+          type: string
+          example: 123 THE DRIVE
+          maxLength: 200
+        merchantCity:
+          description: Merchant city
+          type: string
+          example: New York
+          maxLength: 100
+        merchantState:
+          description: Alphabetic code for the Merchant state
+          type: string
+          example: CA
+          maxLength: 3
+        merchantPostalCode:
+          description: Postal code for merchant address
+          type: string
+          example: '90213'
+          maxLength: 50
+        merchantCountryCode:
+          description: 3 digit country code for the merchant country
+          type: string
+          example: USA
+          maxLength: 3
+        merchantCountryCodeDescription:
+          description: Merchant country name
+          type: string
+          example: United States
+          maxLength: 200
+        transactionCurrencyAmount:
+          $ref: '#/components/schemas/TransactionCurrencyAmount'
+      required:
+        - merchantCategoryCode
+        - mccDescription
+        - merchantId
+        - terminalId
+        - merchantName
+        - retrievalReferenceNumber
+        - merchantStreetAddress
+        - merchantCity
+        - merchantCountryCode
+    VirtualCard:
+      properties:
+        vcaId:
+          description: >-
+            A reference number that uniquely identifies the virtual card
+            account.
+          type: string
+          example: '5213'
+          maxLength: 19
+        fundingSourceName:
+          description: Name of the funding source to which the virtual card rolls up.
+          type: string
+          example: Bank VCA Funding Acount
+          maxLength: 200
+        programId:
+          description: Unique ID of the company record defined in the virtual cards system.
+          type: string
+          format: string
+          example: '701089'
+          maxLength: 19
+      required:
+        - vcaId
+  examples:
+    AuthorizationTransactionExample:
+      value:
+        notifications:
+          - eventType: PAYMENT_AUTHORIZATION
+            subscriptionName: string
+            transactionContent:
+              messageTypeIndicator: '0110'
+              transactionId: '1234539320977930'
+              transactionAmount:
+                transactionCurrencyAmount: '123.45'
+                transactionCurrencyCode: USD
+              billingAmount:
+                billingCurrencyAmount: '123.45'
+                billingCurrencyCode: USD
+              authorizationResponseDetail: string
+              authorizationCode: ''
+              transactionDate: '2021-05-25'
+              transactionTime: hh:mm:ss
+              transactionType: ''
+              preAuthorizationFlag: 'Yes'
+              merchant:
+                merchantId: '305678'
+                merchantCategoryCode: '0041'
+                merchantName: AUTH_TEST
+                merchantCity: New York
+                merchantState: CA
+                merchantCountryCode: USA
+              realCardDetails:
+                accountNumber: '************0112'
+              virtualCardDetails:
+                virtualCardAccountNumber: '************4586'
+              inControlOnBehalfServiceResult:
+                vcaAuthorizationResponseDetail: V  -  Valid (all controls passed)
+              originalMessage:
+                messageTypeIndicator: '0110'
+                transactionId: '1234539320977930'
+                transactionDate: '2021-05-25'
+                transactionTime: '06:11:33'
+              adviceReasonCode: string
+              replacementAmounts:
+                transactionCurrencyAmount: '100.00'
+                settlementCurrencyAmount: '100.00'
+                billingCurrencyAmount: '100.00'
+              purchaseRequest:
+                vcaId: '94840311'
+                fundingSourceName: Bank VCA Funding Acount
+                programId: '701089'
+              acquirerIdentifier: ''
+    ClearingTransactionDebitAdjustmentExample:
+      value:
+        notifications:
+          - eventType: CLEARING
+            subscriptionName: TestClearingSubscription
+            transactionContent:
+              clearingTransactionId: '900001'
+              clearingType: Debit
+              acquirerReferenceData: '25502590195480000239999'
+              functionCode: '205'
+              messageTypeIndicator: '1240'
+              transactionType: Second Presentment
+              messageReasonCode: '2011'
+              originalMessageTransactionId: '123456'
+              transactionExchangeRate: '14.5'
+              authorizationCode: '123'
+              transactionDateTime: '2024-05-23 01:05:50'
+              settlementAmount:
+                amount: '12.3'
+                currencyCode: '840'
+                currencyCodeAlphabetic: USD
+              reversalIndicator: true
+              settledIndicator: true
+              originalOrLinked: L
+              settlementDate: '2024-05-23 01:05:50'
+              banknetReferenceNumber: '1234'
+              billingCurrencyAmount:
+                amount: '41.2'
+                currencyCode: '840'
+                currencyCodeAlphabetic: USD
+              authorization:
+                authorizationTransactionId: '567890'
+                systemTraceAuditNumber: '1234'
+                type: '0'
+                merchantLocalDate: ''
+                merchantLocalTime: ''
+                messageTypeIndicator: '1240'
+                billingCurrencyAmount:
+                  amount: '123.2'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+                effectOnBalance: '1'
+                transactionCurrencyAmount:
+                  amount: '21'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+              virtualCardAccount:
+                virtualCardAccountNumber: '***************1878'
+              fundingAccount:
+                accountNumber: '***************2222'
+              merchant:
+                merchantCategoryCode: '1711'
+                mccDescription: HEATING, PLUMBING, AIR CONDITIONING CONTRACTORS
+                merchantId: '520009999999'
+                terminalId: '01999999'
+                merchantName: sample name
+                additionalMerchantName: SAMPLE MERCHANT
+                retrievalReferenceNumber: '123'
+                merchantStreetAddress: Wheel street
+                merchantCity: dublin
+                merchantState: dub
+                merchantPostalCode: '432531'
+                merchantCountryCode: '840'
+                merchantCountryCodeDescription: XXX
+                transactionCurrencyAmount:
+                  amount: '14.1'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+              virtualCard:
+                vcaId: '7022463'
+                fundingSourceName: test
+                programId: '498764'
+    ClearingTransactionForcePostExample:
+      value:
+        notifications:
+          - eventType: CLEARING
+            subscriptionName: TestClearingSubscription
+            transactionContent:
+              clearingTransactionId: '900001'
+              clearingType: Debit
+              acquirerReferenceData: '25502590195480000239999'
+              functionCode: '200'
+              messageTypeIndicator: '1240'
+              transactionType: First Presentment
+              messageReasonCode: ''
+              originalMessageTransactionId: '123456'
+              transactionExchangeRate: '14.5'
+              authorizationCode: ''
+              transactionDateTime: '2024-05-23 01:05:50'
+              settlementAmount:
+                amount: '12.3'
+                currencyCode: '840'
+                currencyCodeAlphabetic: USD
+              reversalIndicator: false
+              settledIndicator: false
+              originalOrLinked: O
+              settlementDate: '2024-05-23 01:05:50'
+              banknetReferenceNumber: '1234'
+              billingCurrencyAmount:
+                amount: '41.2'
+                currencyCode: '840'
+                currencyCodeAlphabetic: USD
+              authorization:
+                authorizationTransactionId: '567890'
+                systemTraceAuditNumber: '1234'
+                type: '0'
+                merchantLocalDate: ''
+                merchantLocalTime: ''
+                messageTypeIndicator: '1240'
+                billingCurrencyAmount:
+                  amount: '123.2'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+                effectOnBalance: '1'
+                transactionCurrencyAmount:
+                  amount: '21'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+              virtualCardAccount:
+                virtualCardAccountNumber: '***************1878'
+              fundingAccount:
+                accountNumber: '***************2222'
+              merchant:
+                merchantCategoryCode: '1711'
+                mccDescription: HEATING, PLUMBING, AIR CONDITIONING CONTRACTORS
+                merchantId: '520009999999'
+                terminalId: '01999999'
+                merchantName: sample name
+                additionalMerchantName: SAMPLE MERCHANT
+                retrievalReferenceNumber: '123'
+                merchantStreetAddress: Wheel street
+                merchantCity: dublin
+                merchantState: dub
+                merchantPostalCode: '432531'
+                merchantCountryCode: '840'
+                merchantCountryCodeDescription: XXX
+                transactionCurrencyAmount:
+                  amount: '14.1'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+              virtualCard:
+                vcaId: '7022463'
+                fundingSourceName: test
+                programId: '498764'
+    ClearingTransactionRefundExample:
+      value:
+        notifications:
+          - eventType: CLEARING
+            subscriptionName: TestClearingSubscription
+            transactionContent:
+              clearingTransactionId: '900001'
+              clearingType: Credit
+              acquirerReferenceData: '25502590195480000239999'
+              functionCode: '453'
+              messageTypeIndicator: '1442'
+              transactionType: First Chargeback
+              messageReasonCode: '4837'
+              originalMessageTransactionId: '123456'
+              transactionExchangeRate: '1.0'
+              authorizationCode: '123'
+              transactionDateTime: '2026-01-10 00:00:00'
+              settlementAmount:
+                amount: '12.3'
+                currencyCode: '978'
+                currencyCodeAlphabetic: EUR
+              reversalIndicator: false
+              settledIndicator: true
+              originalOrLinked: L
+              settlementDate: '2026-01-11 01:40:17'
+              banknetReferenceNumber: '1234'
+              billingCurrencyAmount:
+                amount: '12.3'
+                currencyCode: '978'
+                currencyCodeAlphabetic: EUR
+              authorization:
+                authorizationTransactionId: '567890'
+                systemTraceAuditNumber: '1234614'
+                type: '0'
+                merchantLocalDate: '0109'
+                merchantLocalTime: '151824'
+                messageTypeIndicator: '0100'
+                billingCurrencyAmount:
+                  amount: '12.3'
+                  currencyCode: '978'
+                  currencyCodeAlphabetic: EUR
+                effectOnBalance: '12.3'
+                transactionCurrencyAmount:
+                  amount: '12.3'
+                  currencyCode: '978'
+                  currencyCodeAlphabetic: EUR
+              virtualCardAccount:
+                virtualCardAccountNumber: '***************1878'
+              fundingAccount:
+                accountNumber: '***************2222'
+              merchant:
+                merchantCategoryCode: '1711'
+                mccDescription: HEATING, PLUMBING, AIR CONDITIONING CONTRACTORS
+                merchantId: '520009999999'
+                terminalId: '01999999'
+                merchantName: All Source HVAC
+                additionalMerchantName: SAMPLE MERCHANT
+                retrievalReferenceNumber: '123667'
+                merchantStreetAddress: Wheel street
+                merchantCity: DUBLIN
+                merchantState: LEN
+                merchantPostalCode: D01 F5P2
+                merchantCountryCode: '372'
+                merchantCountryCodeDescription: Ireland
+                transactionCurrencyAmount:
+                  amount: '12.3'
+                  currencyCode: '978'
+                  currencyCodeAlphabetic: EUR
+              virtualCard:
+                vcaId: '7022463'
+                fundingSourceName: test
+                programId: '498764'
+    ClearingTransactionCreditAdjustmentExample:
+      value:
+        notifications:
+          - eventType: CLEARING
+            subscriptionName: TestClearingSubscription
+            transactionContent:
+              clearingTransactionId: '900001'
+              clearingType: Credit
+              acquirerReferenceData: '25502590195480000239999'
+              functionCode: '205'
+              messageTypeIndicator: '1240'
+              transactionType: Second Presentment
+              messageReasonCode: '2011'
+              originalMessageTransactionId: '123456'
+              transactionExchangeRate: '14.5'
+              authorizationCode: '123'
+              transactionDateTime: '2024-05-23 01:05:50'
+              settlementAmount:
+                amount: '12.3'
+                currencyCode: '840'
+                currencyCodeAlphabetic: USD
+              reversalIndicator: true
+              settledIndicator: true
+              originalOrLinked: L
+              settlementDate: '2024-05-23 01:05:50'
+              banknetReferenceNumber: '1234'
+              billingCurrencyAmount:
+                amount: '41.2'
+                currencyCode: '840'
+                currencyCodeAlphabetic: USD
+              authorization:
+                authorizationTransactionId: '567890'
+                systemTraceAuditNumber: '1234'
+                type: '0'
+                merchantLocalDate: ''
+                merchantLocalTime: ''
+                messageTypeIndicator: '1240'
+                billingCurrencyAmount:
+                  amount: '123.2'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+                effectOnBalance: '1'
+                transactionCurrencyAmount:
+                  amount: '21'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+              virtualCardAccount:
+                virtualCardAccountNumber: '***************1878'
+              fundingAccount:
+                accountNumber: '***************2222'
+              merchant:
+                merchantCategoryCode: '1711'
+                mccDescription: HEATING, PLUMBING, AIR CONDITIONING CONTRACTORS
+                merchantId: '520009999999'
+                terminalId: '01999999'
+                merchantName: sample name
+                additionalMerchantName: SAMPLE MERCHANT
+                retrievalReferenceNumber: '123'
+                merchantStreetAddress: Wheel street
+                merchantCity: dublin
+                merchantState: dub
+                merchantPostalCode: '432531'
+                merchantCountryCode: '840'
+                merchantCountryCodeDescription: XXX
+                transactionCurrencyAmount:
+                  amount: '14.1'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+              virtualCard:
+                vcaId: '7022463'
+                fundingSourceName: test
+                programId: '498764'
+    ClearingTransactionPresentmentExample:
+      value:
+        notifications:
+          - eventType: CLEARING
+            subscriptionName: TestClearingSubscription
+            transactionContent:
+              clearingTransactionId: '900001'
+              clearingType: Debit
+              acquirerReferenceData: '25502590195480000239999'
+              functionCode: '200'
+              messageTypeIndicator: '1240'
+              transactionType: First Presentment
+              messageReasonCode: '1401'
+              originalMessageTransactionId: '123456'
+              transactionExchangeRate: '14.5'
+              authorizationCode: '123'
+              transactionDateTime: '2024-05-23 01:05:50'
+              settlementAmount:
+                amount: '12.3'
+                currencyCode: '840'
+                currencyCodeAlphabetic: USD
+              reversalIndicator: false
+              settledIndicator: true
+              originalOrLinked: O
+              settlementDate: '2024-05-23 01:05:50'
+              banknetReferenceNumber: '1234'
+              billingCurrencyAmount:
+                amount: '41.2'
+                currencyCode: '840'
+                currencyCodeAlphabetic: USD
+              authorization:
+                authorizationTransactionId: '567890'
+                systemTraceAuditNumber: '1234'
+                type: '0'
+                merchantLocalDate: ''
+                merchantLocalTime: ''
+                messageTypeIndicator: '1240'
+                billingCurrencyAmount:
+                  amount: '123.2'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+                effectOnBalance: '1'
+                transactionCurrencyAmount:
+                  amount: '21'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+              virtualCardAccount:
+                virtualCardAccountNumber: '**************1878'
+              fundingAccount:
+                accountNumber: '**************2222'
+              merchant:
+                merchantCategoryCode: '1711'
+                mccDescription: HEATING, PLUMBING, AIR CONDITIONING CONTRACTORS
+                merchantId: '520009999999'
+                terminalId: '01999999'
+                merchantName: sample name
+                additionalMerchantName: SAMPLE MERCHANT
+                retrievalReferenceNumber: '123'
+                merchantStreetAddress: Wheel street
+                merchantCity: dublin
+                merchantState: dub
+                merchantPostalCode: '432531'
+                merchantCountryCode: '840'
+                merchantCountryCodeDescription: XXX
+                transactionCurrencyAmount:
+                  amount: '14.1'
+                  currencyCode: '840'
+                  currencyCodeAlphabetic: USD
+              virtualCard:
+                vcaId: '7022463'
+                fundingSourceName: test
+                programId: '498764'

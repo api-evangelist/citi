@@ -1,0 +1,1256 @@
+openapi: 3.0.1
+info:
+  title: Cash Balances API
+  description: >
+    The Cash Balances API provides a secure, centralized gateway for retrieving
+    real-time and historical liquidity data across your global accounts. It
+    delivers Intraday Balances to track active movements throughout the business
+    day, alongside END-of-Day(EOD) Balances, which offer a final, official
+    record of your accounts once the business day is complete.
+    <br><br>**Authentication**<br><br>Client applications must supply an
+    authentication token with every request, and therefore must first
+    authenticate before it can proceed. A client can use the OAuth 2 client
+    credential grant flow to obtain a time limited access token. To get an
+    access token send a HTTP Post request to the token endpoint using basic
+    authentication with the client key and secret (provided under separate
+    cover).<br><br>**Request**<br><br>```POST {baseURL}/api/oauth2/token
+    HTTPS/1.1 
+
+    Authorization: Basic base64(key:secret) 
+
+    Content-Type:application/x-www-form-urlencoded```<br><br>
+
+    **Response**<br><br>```
+      {
+          "token_type": "bearer", 
+          "access_token": <access token>, 
+          "expires_in": <seconds until expiry>, 
+          "consented_on":<timestamp>, 
+          "scope": "/dod"`
+      }```    <br><br>The bearer token is valid for 1800 seconds (30 minutes) after which it will expire. At this point, you would need to re-authenticate.
+servers:
+  - url: https://sandbox.api.citivelocity.com/markets/dod
+    description: Sandbox server (uses test data)
+  - url: https://api.citivelocity.com/markets/dod
+    description: Production server
+security:
+  - client-Credential-Oauth-Security-Schema: []
+components:
+  headers:
+    dod-request-id:
+      schema:
+        type: string
+      description: The UUID representing the unique identifier of the dod request.
+    paging-page-number:
+      schema:
+        type: string
+      description: The current page number
+    paging-total-page-count:
+      schema:
+        type: string
+      description: The total count of pages available
+    paging-total-record-count:
+      schema:
+        type: string
+      description: The total count of records
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  examples:
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: path-param servicePortableId is mandatory and it cannot be empty
+            action: please provide valid parameter values
+            code: VC00010
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: You not authorized for this functionality
+            action: please use valid credentials to access this functionality
+            code: CC00007
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Resource that you are searching is not found
+            action: Please use valid resource details
+            code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Method not supported
+            action: please use valid http verb
+            code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: Media type not supported
+            action: please use valid content-type in header
+            code: CC00002
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errorDetails:
+          - issue: unable to serve your request at this moment
+            action: Please refer to documentation provided or contact support team
+            code: CC00004
+  schemas:
+    e0b62396-5920-4270-96b1-26dddee0c242-data-schema:
+      type: object
+      properties:
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier that is
+            associated to a safekeeping or cash account.
+          example: 8-DEMOCSH53JPY
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            A code to indicate the type of account<br>Cash<br>Safekeeping<br>
+            E-Report.
+          example: C
+        ACCT_BUS_TYP_NME:
+          type: string
+          description: >-
+            Account type description indicates the type of the account. Values
+            are<br> CASH (C)<br>S/K (S)
+          example: CASH
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a cash account and/or a
+            safekeeping account that is unique within a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the cash account and/or
+            the safekeeping account. If an alternate account name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - US DCC Equity
+        ACCT_STS_TYP:
+          type: string
+          description: >-
+            Account status provides the current status of the cash account
+            and/or the safekeeping account.  Values are:<br> Open<br> Closed<br>
+            Frozen
+          example: Open
+        ALTV_CUR_CD:
+          type: string
+          description: Account Base Currency Code is the ISO Currency Code for the account.
+          example: JPY
+        ASOF_TMS:
+          type: string
+          format: date-time
+          description: The As Of Date is the date of the information being reported.
+          example: '2019-08-26 00:00:00'
+        AVAL_BAL:
+          type: number
+          format: double
+          description: >-
+            Available Balance is the cash account balance for  all posted
+            transactions,  except for future value dated transactions.
+          example: '6136188.61'
+        BAL_STS_TYP:
+          type: string
+          description: >-
+            Cash Balance Type will be Posted for all cash accounts except for US
+            Direct cash accounts where  the balance type can be either Posted or
+            Sweep.
+          example: POSTED
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account.For the
+            cash account the branch code is a numeric value  and for the
+            safekeeping account it is the ISO Country code.
+          example: '484'
+        BR_NME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the cash account and/or
+            safekeeping account.
+          example: NEW YORK SECURITIES CB
+        CASH_TYPE:
+          type: number
+          format: double
+          description: >-
+            Cash Type Code pertains to US Direct cash accounts and indicates
+            whether the cash account has a split income and principal balance.
+          example: '1'
+        COB_DATE:
+          type: string
+          format: date
+          description: Close of Business Date
+          example: '2019-08-26'
+        EOD_INTRA_IND:
+          type: string
+          description: >-
+            EOD/intraday Indicator advises if the balance is an end-of-day
+            reported balance or  if the balance is an Intraday reported balance.
+            Values are:<br>- 1 (Intraday)<br>- 2 (End of Day).
+          example: '2'
+        GFC_ID:
+          type: string
+          description: >-
+            Client ID is an identifier that is available on a cash account
+            and/or a safekeeping account. This Client ID is referred to,
+            internally at Citi, as a GFCID.
+          nullable: true
+          example: '1000123456'
+        LCL_CUR_CD:
+          type: string
+          description: Currency code is the ISO currency code for the amount.
+          example: JPY
+        LED_BAL:
+          type: number
+          format: double
+          description: >-
+            Ledger Balance is the balance for the cash account that includes all
+            posted transactions including future value dated transactions.
+          example: '6136188.61'
+        LST_ENTRY_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Balance change date displays the date of the last change to the
+            balance based on transactions  that have been posted to the cash
+            account.
+          example: '2019-08-26 00:00:00'
+        LST_UPD_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Balance Update Timestamp displays the date/time of the last update
+            to the balance due to transactions  that have posted to the cash
+            account (Intraday) or due to reporting database updates (End of
+            Day).
+          example: '2019-08-26 00:00:00'
+        OPNG_BAL:
+          type: number
+          format: double
+          description: >-
+            Opening balance is the opening ledger balance (previous days closing
+            balance) for the cash account.  Ledger Balance includes all posted
+            transactions including future value dated transactions.
+          example: '6136188.61'
+        PRNCPL_INC_IND:
+          type: string
+          description: >-
+            Principal / Income Indicator advises if the balance is for principal
+            or income.   Values include:<br> P (Principal)<br> I (Income)
+          example: P
+        ROLLED_FWD:
+          type: string
+          description: >-
+            Rolled Forward indicator parameter is used to flag if position
+            valuation has been rolled forward from last close of business.
+          example: 'Y'
+        TRANS_REF_NBR:
+          type: string
+          description: >-
+            Custodian Reference is the unique reference assigned by the
+            custodian to the record.  The reference number is unique within a
+            branch.
+          example: '46050312345'
+        IOD_TIMESTAMP:
+          type: string
+          format: date-time
+          description: Provides the Timestamp when data is loaded in the Data Lake
+          example: '2019-08-26 00:00:00'
+        HEAD_ACCOUNT:
+          type: string
+          description: SCAR Head Account Number
+          example: '1234567'
+    e0b62396-5920-4270-96b1-26dddee0c242-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/e0b62396-5920-4270-96b1-26dddee0c242-data-schema
+    e0b62396-5920-4270-96b1-26dddee0c242-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/e0b62396-5920-4270-96b1-26dddee0c242-data-schema
+      xml:
+        name: data
+    1bcf00be-b782-4f9f-a814-0752b0326ae6-data-schema:
+      type: object
+      properties:
+        ACCT_BASE_NBR:
+          type: string
+          description: >-
+            Account Base Number is an internal Citi client identifier that is
+            associated to a safekeeping or cash account.
+          example: 8-DEMOCSH53JPY
+        ACCT_BUS_TYP_CD:
+          type: string
+          description: >-
+            A code to indicate the type of account<br> Cash<br> Safekeeping,br>
+            E-Report.
+          example: C
+        ACCT_BUS_TYP_NME:
+          type: string
+          description: >-
+            Account type description indicates the type of the account. Values
+            are:<br> CASH (C)<br> S/K (S)
+          example: CASH
+        ACCT_ID:
+          type: string
+          description: >-
+            Account ID is an identifier for both a cash account and/or a
+            safekeeping account that is unique within a branch.
+          example: DEMOSK02US
+        ACCT_NME:
+          type: string
+          description: >-
+            Account Name is the name that is assigned to the cash account and/or
+            the safekeeping account. If an alternate account name has been
+            specified for an account it will be displayed as the Account Name.
+          example: Demo - SK - US DCC Equity
+        ACCT_STS_TYP:
+          type: string
+          description: >-
+            Account status provides the current status of the cash account
+            and/or the safekeeping account.  Values are<br> Open<br> Closed<br>
+            Frozen
+          example: Open
+        ALTV_CUR_CD:
+          type: string
+          description: Account Base Currency Code is the ISO Currency Code for the account.
+          example: JPY
+        ASOF_TMS:
+          type: string
+          format: date-time
+          description: The As Of Date is the date of the information being reported.
+          example: '2019-08-26 00:00:00'
+        AVAL_BAL:
+          type: number
+          format: double
+          description: >-
+            Available Balance is the cash account balance for all posted
+            transactions,  except for future value dated transactions.
+          example: '6136188.61'
+        BAL_STS_TYP:
+          type: string
+          description: >-
+            Cash Balance Type will be Posted for all cash accounts except for US
+            Direct cash accounts where  the balance type can be either Posted or
+            Sweep.
+          example: POSTED
+        BR_ID:
+          type: string
+          description: >-
+            Branch Code is the identifier of the branch for the account.For the
+            cash account the branch code is a numeric value  and for the
+            safekeeping account it is the ISO Country code.
+          example: '484'
+        BR_NME:
+          type: string
+          description: >-
+            Branch Name is the name of the branch for the cash account and/or
+            safekeeping account.
+          example: NEW YORK SECURITIES CB
+        CASH_TYPE:
+          type: number
+          format: double
+          description: >-
+            Cash Type Code pertains to US Direct cash accounts and indicates
+            whether the cash account has a split income and principal balance.
+          example: '1'
+        COB_DATE:
+          type: string
+          format: date
+          description: Close of Business Date
+          example: '2019-08-26'
+        EOD_INTRA_IND:
+          type: string
+          description: >-
+            EOD/intraday Indicator advises if the balance is an end-of-day
+            reported balance or  if the balance is an Intraday reported balance.
+            Values are:<br>- 1 (Intraday)<br>- 2 (End of Day)
+          example: '2'
+        GFC_ID:
+          type: string
+          description: >-
+            Client ID is an identifier that is available on a cash account
+            and/or a safekeeping account. This Client ID is referred to,
+            internally at Citi, as a GFCID.
+          nullable: true
+          example: '1000123456'
+        IOD_UPDATE_TMS:
+          type: string
+          format: date-time
+          description: IOD Timestamp
+          example: '2019-08-26 00:00:00'
+        LCL_CUR_CD:
+          type: string
+          description: Currency code is the ISO currency code for the amount.
+          example: JPY
+        LED_BAL:
+          type: number
+          format: double
+          description: >-
+            Ledger Balance is the balance for the cash account that includes all
+            posted transactions including future value dated transactions.
+          example: '6136188.61'
+        LST_ENTRY_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Balance change date displays the date of the last change to the
+            balance based on transactions  that have been posted to the cash
+            account.
+          example: '2019-08-26 00:00:00'
+        LST_UPD_TMS:
+          type: string
+          format: date-time
+          description: >-
+            Balance Update Timestamp displays the date/time of the last update
+            to the balance due to transactions  that have posted to the cash
+            account (Intraday) or due to reporting database updates
+            (end-of-day).
+          example: '2019-08-26 00:00:00'
+        OPNG_BAL:
+          type: number
+          format: double
+          description: >-
+            Opening balance is the opening ledger balance (previous days closing
+            balance) for the cash account.  Ledger Balance includes all posted
+            transactions including future value dated transactions.
+          example: '6136188.61'
+        PRNCPL_INC_IND:
+          type: string
+          description: >-
+            Principal / Income Indicator advises if the balance is for principal
+            or income.   Values include: <br>P (Principal)<br> I (Income)
+          example: P
+        TRANS_REF_NBR:
+          type: string
+          description: >-
+            Custodian Reference is the unique reference assigned by the
+            custodian to the record.  The reference number is unique within a
+            branch.
+          example: '46050312345'
+    1bcf00be-b782-4f9f-a814-0752b0326ae6-json-response-schema:
+      type: object
+      properties:
+        Count:
+          type: number
+          format: integer
+        PagedList:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/1bcf00be-b782-4f9f-a814-0752b0326ae6-data-schema
+    1bcf00be-b782-4f9f-a814-0752b0326ae6-xml-response-schema:
+      type: object
+      properties:
+        row:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/1bcf00be-b782-4f9f-a814-0752b0326ae6-data-schema
+      xml:
+        name: data
+    ErrorResponse:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errorDetails:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      title: Error Detail
+      xml:
+        name: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+  parameters:
+    client_id:
+      description: >-
+        Your unique ID. This is the same as the ID you used for OAuth token
+        generation. Citi shared this ID with you during your Data On Demand API
+        onboarding
+      name: client_id
+      in: header
+      required: true
+      schema:
+        type: string
+    skip:
+      name: skip
+      in: query
+      description: The number of records to skip before returning the results
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    take:
+      name: take
+      in: query
+      description: The maximum number of records to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 5000
+    select:
+      name: $select
+      in: query
+      description: >-
+        The `$select` parameter in an API allows you to specify which data
+        parameters (properties or columns) you want to receive in the API
+        response. This helps improve efficiency by reducing the amount of data
+        transferred and simplifying client-side processing.
+      required: false
+      schema:
+        type: string
+    parameter-18785:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal Citi client identifier that is
+        associated to a safekeeping or cash account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18787:
+      name: ACCT_BUS_TYP_CD
+      description: >-
+        Account Type Code indicates the type of the account. Values are:<br>- C
+        (cash account)<br>- S (Safekeeping Account).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18788:
+      name: ACCT_BUS_TYP_NME
+      description: >-
+        Account type description indicates the type of the account. Values
+        are:<br>- CASH (C)<br>- S/K (S)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18791:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a cash account and/or a safekeeping
+        account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18793:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the cash account and/or the
+        safekeeping account. If an alternate account name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18796:
+      name: ACCT_STS_TYP
+      description: >-
+        Account status provides the current status of the cash account and/or
+        the safekeeping account.  Values are: <br>- Open<br>- Closed<br>- Frozen
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18799:
+      name: ALTV_CUR_CD
+      description: Account Base Currency Code is the ISO Currency Code for the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18800:
+      name: ASOF_TMS
+      description: The As Of Date is the date of the information being reported.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-18802:
+      name: AVAL_BAL
+      description: >-
+        Available Balance is the cash account balance for  all posted
+        transactions, except for future value dated transactions.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-18803:
+      name: BAL_STS_TYP
+      description: >-
+        Cash Balance Type will be Posted for all cash accounts except for US
+        Direct cash accounts where the balance type can be either Posted or
+        Sweep.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18804:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account.  For the
+        cash account the branch code is a numeric value and for the safekeeping
+        account it is the ISO Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18805:
+      name: BR_NME
+      description: >-
+        Branch Name is the name of the branch for the cash account and/or
+        safekeeping account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18806:
+      name: CASH_TYPE
+      description: >-
+        Cash Type Code pertains to US Direct cash accounts and indicates whether
+        the cash account has a split income and principal balance.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-18813:
+      name: COB_DATE
+      description: Close of Business Date
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-18815:
+      name: EOD_INTRA_IND
+      description: >-
+        EOD/intraday Indicator advises if the balance is an end-of-day reported
+        balance or if the balance is an Intraday reported balance. Values
+        are:<br>- 1 (Intraday)<br>- 2 (End of Day)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18816:
+      name: GFC_ID
+      description: >-
+        Client ID is an identifier that is available on a cash account and/or a
+        safekeeping account. This Client ID is referred to, internally at Citi,
+        as a GFCID.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18817:
+      name: LCL_CUR_CD
+      description: Currency code is the ISO currency code for the amount.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18818:
+      name: LED_BAL
+      description: >-
+        Ledger Balance is the balance for the cash account that includes all
+        posted transactions including future value dated transactions.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-18820:
+      name: LST_ENTRY_TMS
+      description: >-
+        Balance change date displays the date of the last change to the balance
+        based on transactions that have been posted to the cash account.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-18821:
+      name: LST_UPD_TMS
+      description: >-
+        Balance Update Timestamp displays the date/time of the last update to
+        the balance due to transactions that have posted to the cash account
+        (Intraday) or due to reporting database updates (end-of-day).
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-18824:
+      name: OPNG_BAL
+      description: >-
+        Opening balance is the opening ledger balance (previous days closing
+        balance) for the cash account.  Ledger Balance includes all posted
+        transactions including future value dated transactions.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-18826:
+      name: PRNCPL_INC_IND
+      description: >-
+        Principal / Income Indicator advises if the balance is for principal or
+        income.  Values include:<br> P (Principal) <br> I (Income)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18829:
+      name: ROLLED_FWD
+      description: >-
+        Rolled Forward indicator parameter is used to flag if position valuation
+        has been rolled forward from last close of business.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18832:
+      name: TRANS_REF_NBR
+      description: >-
+        Custodian Reference is the unique reference assigned by the custodian to
+        the record. The reference number is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-18833:
+      name: IOD_TIMESTAMP
+      description: Provides the Timestamp when data is loaded in the Data Lake
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-42407:
+      name: HEAD_ACCOUNT
+      description: SCAR Head Account Number
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13535:
+      name: ACCT_BASE_NBR
+      description: >-
+        Account Base Number is an internal Citi client identifier that is
+        associated to a safekeeping or cash account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13562:
+      name: ACCT_BUS_TYP_CD
+      description: >-
+        Account Type Code indicates the type of the account. Values are:<br> C
+        (cash account)<br> S (Safekeeping Account).
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13536:
+      name: ACCT_BUS_TYP_NME
+      description: >-
+        Account type description indicates the type of the account. Values
+        are:<br> CASH (C)<br> S/K (S)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-28702:
+      name: ACCT_ID
+      description: >-
+        Account ID is an identifier for both a cash account and/or a safekeeping
+        account that is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13553:
+      name: ACCT_NME
+      description: >-
+        Account Name is the name that is assigned to the cash account and/or the
+        safekeeping account. If an alternate account name has been specified for
+        an account it will be displayed as the Account Name.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13574:
+      name: ACCT_STS_TYP
+      description: >-
+        Account status provides the current status of the cash account and/or
+        the safekeeping account.  Values are:<br> Open<br> Closed<br> Frozen
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13539:
+      name: ALTV_CUR_CD
+      description: Account Base Currency Code is the ISO Currency Code for the account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-28709:
+      name: ASOF_TMS
+      description: The As Of Date is the date of the information being reported.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-28696:
+      name: AVAL_BAL
+      description: >-
+        Available Balance is the cash account balance for  all posted
+        transactions, except for future value dated transactions.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-28699:
+      name: BAL_STS_TYP
+      description: >-
+        Cash Balance Type will be Posted for all cash accounts except for US
+        Direct cash accounts where the balance type can be either Posted or
+        Sweep.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-28700:
+      name: BR_ID
+      description: >-
+        Branch Code is the identifier of the branch for the account.  For the
+        cash account the branch code is a numeric value and for the safekeeping
+        account it is the ISO Country code.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13554:
+      name: BR_NME
+      description: >-
+        Branch Name is the name of the branch for the cash account and/or
+        safekeeping account.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13572:
+      name: CASH_TYPE
+      description: >-
+        Cash Type Code pertains to US Direct cash accounts and indicates whether
+        the cash account has a split income and principal balance.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-28711:
+      name: COB_DATE
+      description: Close of Business Date
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    parameter-28701:
+      name: EOD_INTRA_IND
+      description: >-
+        EOD/intraday Indicator advises if the information is as of end-of-day or
+        as of Intraday.  Values are:<br>- 1 (Intraday)<br>- 2 (End of Day)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-13544:
+      name: GFC_ID
+      description: >-
+        Client ID is an identifier that is available on a cash account and/or a
+        safekeeping account. This Client ID is referred to, internally at Citi,
+        as a GFCID.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-28710:
+      name: IOD_UPDATE_TMS
+      description: IOD Timestamp
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-28704:
+      name: LCL_CUR_CD
+      description: Currency code is the ISO currency code for the amount.
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-28694:
+      name: LED_BAL
+      description: >-
+        Ledger Balance is the balance for the cash account that includes all
+        posted transactions including future value dated transactions.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-28707:
+      name: LST_ENTRY_TMS
+      description: >-
+        Balance change date displays the date of the last change to the balance
+        based on transactions that have been posted to the cash account.
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-28708:
+      name: LST_UPD_TMS
+      description: >-
+        Balance Update Timestamp displays the date/time of the last update to
+        the balance due to transactions that have posted to the cash account
+        (Intraday) or due to reporting database updates (end-of-day).
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    parameter-28693:
+      name: OPNG_BAL
+      description: >-
+        Opening balance is the opening ledger balance (previous days closing
+        balance) for the cash account.  Ledger Balance includes all posted
+        transactions including future value dated transactions.
+      in: query
+      required: false
+      schema:
+        type: number
+        format: double
+    parameter-28705:
+      name: PRNCPL_INC_IND
+      description: >-
+        Principal / Income Indicator advises if the balance is for principal or
+        income.  Values include:<br> P (Principal) <br> I (Income)
+      in: query
+      required: false
+      schema:
+        type: string
+    parameter-28698:
+      name: TRANS_REF_NBR
+      description: >-
+        Custodian Reference is the unique reference assigned by the custodian to
+        the record. The reference number is unique within a branch.
+      in: query
+      required: false
+      schema:
+        type: string
+  securitySchemes:
+    client-Credential-Oauth-Security-Schema:
+      type: oauth2
+      description: This API uses OAuth 2 with the client credentials flow
+      flows:
+        clientCredentials:
+          tokenUrl: /markets/api/oauth2/token
+          scopes:
+            /dod: Access to Cash Balances Information
+paths:
+  /api/services/e0b62396-5920-4270-96b1-26dddee0c242/filter:
+    get:
+      summary: Cash Balances
+      description: >-
+        Provides Custody Cash Balances by currency for a particular date and
+        cash account
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-18785'
+        - $ref: '#/components/parameters/parameter-18787'
+        - $ref: '#/components/parameters/parameter-18788'
+        - $ref: '#/components/parameters/parameter-18791'
+        - $ref: '#/components/parameters/parameter-18793'
+        - $ref: '#/components/parameters/parameter-18796'
+        - $ref: '#/components/parameters/parameter-18799'
+        - $ref: '#/components/parameters/parameter-18800'
+        - $ref: '#/components/parameters/parameter-18802'
+        - $ref: '#/components/parameters/parameter-18803'
+        - $ref: '#/components/parameters/parameter-18804'
+        - $ref: '#/components/parameters/parameter-18805'
+        - $ref: '#/components/parameters/parameter-18806'
+        - $ref: '#/components/parameters/parameter-18813'
+        - $ref: '#/components/parameters/parameter-18815'
+        - $ref: '#/components/parameters/parameter-18816'
+        - $ref: '#/components/parameters/parameter-18817'
+        - $ref: '#/components/parameters/parameter-18818'
+        - $ref: '#/components/parameters/parameter-18820'
+        - $ref: '#/components/parameters/parameter-18821'
+        - $ref: '#/components/parameters/parameter-18824'
+        - $ref: '#/components/parameters/parameter-18826'
+        - $ref: '#/components/parameters/parameter-18829'
+        - $ref: '#/components/parameters/parameter-18832'
+        - $ref: '#/components/parameters/parameter-18833'
+        - $ref: '#/components/parameters/parameter-42407'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/e0b62396-5920-4270-96b1-26dddee0c242-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/e0b62396-5920-4270-96b1-26dddee0c242-xml-response-schema
+              example: >-
+                <?xml version="1.0" encoding="UTF-8"?> <data> <row>
+                <ACCT_BASE_NBR>8-DEMOCSH53JPY</ACCT_BASE_NBR>
+                <ACCT_BUS_TYP_CD>C</ACCT_BUS_TYP_CD>
+                <ACCT_BUS_TYP_NME>CASH</ACCT_BUS_TYP_NME>
+                <ACCT_ID>DEMOSK02US</ACCT_ID> <ACCT_NME>Demo - SK - US DCC
+                Equity</ACCT_NME> <ACCT_STS_TYP>Open</ACCT_STS_TYP>
+                <ALTV_CUR_CD>JPY</ALTV_CUR_CD> <ASOF_TMS>2019-08-26
+                00:00:00</ASOF_TMS> <AVAL_BAL>6136188.61</AVAL_BAL>
+                <BAL_STS_TYP>POSTED</BAL_STS_TYP> <BR_ID>484</BR_ID> <BR_NME>NEW
+                YORK SECURITIES CB</BR_NME> <CASH_TYPE>1</CASH_TYPE>
+                <COB_DATE>2019-08-26</COB_DATE> <EOD_INTRA_IND>2</EOD_INTRA_IND>
+                <GFC_ID>1000123456</GFC_ID> <LCL_CUR_CD>JPY</LCL_CUR_CD>
+                <LED_BAL>6136188.61</LED_BAL> <LST_ENTRY_TMS>2019-08-26
+                00:00:00</LST_ENTRY_TMS> <LST_UPD_TMS>2019-08-26
+                00:00:00</LST_UPD_TMS> <OPNG_BAL>6136188.61</OPNG_BAL>
+                <PRNCPL_INC_IND>P</PRNCPL_INC_IND> <ROLLED_FWD>Y</ROLLED_FWD>
+                <TRANS_REF_NBR>46050312345</TRANS_REF_NBR>
+                <IOD_TIMESTAMP>2019-08-26 00:00:00</IOD_TIMESTAMP>
+                <HEAD_ACCOUNT>1234567</HEAD_ACCOUNT> </row> </data>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+  /api/services/1bcf00be-b782-4f9f-a814-0752b0326ae6/filter:
+    get:
+      summary: Current Cash Balances
+      description: >-
+        Current Cash Balances provides the current cash balance for each cash
+        account.
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/take'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/parameter-13535'
+        - $ref: '#/components/parameters/parameter-13562'
+        - $ref: '#/components/parameters/parameter-13536'
+        - $ref: '#/components/parameters/parameter-28702'
+        - $ref: '#/components/parameters/parameter-13553'
+        - $ref: '#/components/parameters/parameter-13574'
+        - $ref: '#/components/parameters/parameter-13539'
+        - $ref: '#/components/parameters/parameter-28709'
+        - $ref: '#/components/parameters/parameter-28696'
+        - $ref: '#/components/parameters/parameter-28699'
+        - $ref: '#/components/parameters/parameter-28700'
+        - $ref: '#/components/parameters/parameter-13554'
+        - $ref: '#/components/parameters/parameter-13572'
+        - $ref: '#/components/parameters/parameter-28711'
+        - $ref: '#/components/parameters/parameter-28701'
+        - $ref: '#/components/parameters/parameter-13544'
+        - $ref: '#/components/parameters/parameter-28710'
+        - $ref: '#/components/parameters/parameter-28704'
+        - $ref: '#/components/parameters/parameter-28694'
+        - $ref: '#/components/parameters/parameter-28707'
+        - $ref: '#/components/parameters/parameter-28708'
+        - $ref: '#/components/parameters/parameter-28693'
+        - $ref: '#/components/parameters/parameter-28705'
+        - $ref: '#/components/parameters/parameter-28698'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-DoD-Request-ID:
+              $ref: '#/components/headers/dod-request-id'
+            X-Paging-PageNumber:
+              $ref: '#/components/headers/paging-page-number'
+            X-Paging-TotalPageCount:
+              $ref: '#/components/headers/paging-total-page-count'
+            X-Paging-TotalRecordCount:
+              $ref: '#/components/headers/paging-total-record-count'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/1bcf00be-b782-4f9f-a814-0752b0326ae6-json-response-schema
+            application/xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/1bcf00be-b782-4f9f-a814-0752b0326ae6-xml-response-schema
+              example: >-
+                <?xml version="1.0" encoding="UTF-8"?> <data> <row>
+                <ACCT_BASE_NBR>8-DEMOCSH53JPY</ACCT_BASE_NBR>
+                <ACCT_BUS_TYP_CD>C</ACCT_BUS_TYP_CD>
+                <ACCT_BUS_TYP_NME>CASH</ACCT_BUS_TYP_NME>
+                <ACCT_ID>DEMOSK02US</ACCT_ID> <ACCT_NME>Demo - SK - US DCC
+                Equity</ACCT_NME> <ACCT_STS_TYP>Open</ACCT_STS_TYP>
+                <ALTV_CUR_CD>JPY</ALTV_CUR_CD> <ASOF_TMS>2019-08-26
+                00:00:00</ASOF_TMS> <AVAL_BAL>6136188.61</AVAL_BAL>
+                <BAL_STS_TYP>POSTED</BAL_STS_TYP> <BR_ID>484</BR_ID> <BR_NME>NEW
+                YORK SECURITIES CB</BR_NME> <CASH_TYPE>1</CASH_TYPE>
+                <COB_DATE>2019-08-26</COB_DATE> <EOD_INTRA_IND>2</EOD_INTRA_IND>
+                <GFC_ID>1000123456</GFC_ID> <IOD_UPDATE_TMS>2019-08-26
+                00:00:00</IOD_UPDATE_TMS> <LCL_CUR_CD>JPY</LCL_CUR_CD>
+                <LED_BAL>6136188.61</LED_BAL> <LST_ENTRY_TMS>2019-08-26
+                00:00:00</LST_ENTRY_TMS> <LST_UPD_TMS>2019-08-26
+                00:00:00</LST_UPD_TMS> <OPNG_BAL>6136188.61</OPNG_BAL>
+                <PRNCPL_INC_IND>P</PRNCPL_INC_IND>
+                <TRANS_REF_NBR>46050312345</TRANS_REF_NBR> </row> </data>
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
