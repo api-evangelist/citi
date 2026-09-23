@@ -1,0 +1,628 @@
+openapi: 3.2.0
+info:
+  title: Pix Webhook Cob R API
+  version: 2.8.1
+  description: Update - February 04, 2026
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod
+  description: Servidor de Produção
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+  description: sbox URL
+- url: https://tts.sit.apib2b.citi.com/citiconnect/uat
+  description: Servidor de Homologação
+tags:
+- name: WebhookCobR
+  x-displayName: Gerenciamento de notificações de cobranças recorrentes
+  description: Reúne endpoints para gerenciamento de notificações de cobranças recorrentes por parte do PSP recebedor ao usuário recebedor.
+paths:
+  /webhookcobr:
+    put:
+      tags:
+      - WebhookCobR
+      summary: Configurar Webhook
+      description: Endpoint para configuração do serviço de notificações acerca de cobranças recorrentes. Somente cobranças recorrentes associadas ao usuário recebedor serão notificadas.
+      security:
+      - OAuth2:
+        - webhookcobr.write
+      requestBody:
+        $ref: '#/components/requestBodies/WebhookCobRConfigBody'
+      responses:
+        '200':
+          description: Webhook para notificações.
+        '400':
+          description: Requisição com formato inválido.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problema'
+              examples:
+                exemplo1:
+                  $ref: '#/components/examples/RequisicaoInvalidaWebhookExample1'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '503':
+          $ref: '#/components/responses/ServicoIndisponivel'
+      callbacks:
+        cobr:
+          '{$request.body#/webhookUrl}/cobr':
+            post:
+              description: ''
+              security: []
+              requestBody:
+                $ref: '#/components/requestBodies/WebhookCobRBody'
+              responses:
+                '200':
+                  description: Notificação recebida com sucesso
+      operationId: putWebhookcobr
+      x-operation-id-source: derived
+components:
+  schemas:
+    EndToEndId:
+      type: string
+      title: Id fim a fim da transação
+      description: EndToEndIdentification que transita na PACS002, PACS004 e PACS008
+      pattern: '[a-zA-Z0-9]{32}'
+      minLength: 32
+      maxLength: 32
+    Problema:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
+          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title:
+          type: string
+          description: Descrição resumida do problema.
+          example: Not found
+        status:
+          type: integer
+          description: Código HTTP do status retornado.
+          example: 404
+        detail:
+          type: string
+          description: Descrição completa do problema.
+        correlationId:
+          type: string
+          description: Identificador de correlação do problema para fins de suporte
+        violacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violacao'
+    WebhookCobRSolicitado:
+      type: object
+      required:
+      - webhookUrl
+      title: Webhook Base
+      properties:
+        webhookUrl:
+          type: string
+          title: URL Webhook
+          format: uri
+          example: https://pix.example.com/api/webhookrec/
+    Violacao:
+      type: object
+      title: Violações
+      properties:
+        razao:
+          type: string
+          title: Descrição do erro
+          description: Descrição do erro
+          example: Valor da cobrança não pode ser 0.00
+        propriedade:
+          type: string
+          title: Nome da propriedade
+          description: Nome da propriedade
+          example: cob.chave
+        valor:
+          type: string
+          title: Valor da propriedade
+          description: Valor da propriedade
+          example: 061996671234
+    PixAutomatico:
+      type: object
+      title: Pix
+      required:
+      - txid
+      - endToEndId
+      - valor
+      - horario
+      properties:
+        endToEndId:
+          $ref: '#/components/schemas/EndToEndId'
+        txid:
+          allOf:
+          - $ref: '#/components/schemas/TxId'
+          - pattern: '[a-zA-Z0-9]{1,35}'
+        valor:
+          type: string
+          title: Valor do Pix.
+          pattern: \d{1,10}\.\d{2}
+          description: Valor do Pix.
+        horario:
+          type: string
+          format: date-time
+          title: Horário
+          description: Horário em que o Pix foi processado no PSP.
+        infoPagador:
+          type: string
+          title: Informação livre do pagador
+          maxLength: 140
+        devolucoes:
+          type: array
+          title: Devoluções
+          items:
+            $ref: '#/components/schemas/DevolucaoPixAutomatico'
+    CobRTentativas:
+      type: object
+      title: Histórico de Tentativas da Cobrança Recorrente
+      properties:
+        tentativas:
+          type: array
+          title: Histórico de Tentativas de Cobrança
+          description: Histórico de Tentativas de Cobrança
+          items:
+            type: object
+            required:
+            - dataLiquidacao
+            - tipo
+            - endToEndId
+            - status
+            - atualizacao
+            properties:
+              dataLiquidacao:
+                type: string
+                format: date
+                description: Data da liquidação da cobrança. Trata-se de uma data, no formato `YYYY-MM-DD`, segundo ISO 8601.
+                example: '2023-04-01'
+              tipo:
+                type: string
+                title: Tipo da Tentativa
+                description: Tipo da tentativa da cobrança.
+                enum:
+                - AGND
+                - NTAG
+                - RIFL
+              status:
+                type: string
+                title: Status da Tentativa
+                description: Status da tentativa da cobrança.
+                enum:
+                - SOLICITADA
+                - AGENDADA
+                - PAGA
+                - CANCELADA
+                - REJEITADA
+                - EXPIRADA
+              endToEndId:
+                $ref: '#/components/schemas/EndToEndId'
+              atualizacao:
+                type: array
+                title: Histórico de Status da Tentativa
+                description: Histórico das mudanças de status da tentativa de cobrança.
+                items:
+                  type: object
+                  required:
+                  - status
+                  - data
+                  properties:
+                    status:
+                      type: string
+                      title: Status da Tentativa
+                      description: Status da tentativa da cobrança.
+                      enum:
+                      - SOLICITADA
+                      - AGENDADA
+                      - PAGA
+                      - CANCELADA
+                      - REJEITADA
+                      - EXPIRADA
+                    data:
+                      type: string
+                      format: date-time
+                      description: Data e hora do registro de status atualizado. Respeita RFC 3339.
+              rejeicao:
+                type: object
+                title: Informações sobre a rejeição da tentativa da cobrança
+                required:
+                - codigo
+                - descricao
+                description: Informações sobre a rejeição da tentativa da cobrança
+                properties:
+                  codigo:
+                    type: string
+                    title: Código da rejeição da tentativa
+                    description: Código da rejeição da tentativa. Corresponde ao código de rejeição presente no catálogo de mensagens. Os códigos de rejeição da tentativa `AC05`,`AM09`,`DENC`,`DS27`,`DTED`,`MIDI`,`MSUC`,`NITX`,`RC09` e `DTED` causam a rejeição da cobrança recorrente correspondente.
+                    maxLength: 4
+                    enum:
+                    - AB10
+                    - AC05
+                    - AC06
+                    - AM02
+                    - AM09
+                    - DENC
+                    - DS27
+                    - DTED
+                    - DTNT
+                    - FBRD
+                    - IRNT
+                    - MIDI
+                    - MSUC
+                    - NIEC
+                    - NIPA
+                    - NITX
+                    - QUNT
+                    - RC09
+                    - UDEI
+                  descricao:
+                    type: string
+                    title: Descricao da rejeição
+                    description: Descricao da causa da rejeição
+                    maxLength: 105
+    CobRStatus:
+      type: object
+      title: Status da Cobrança Recorrente
+      properties:
+        status:
+          type: string
+          title: Status do registro da cobrança
+          enum:
+          - CRIADA
+          - ATIVA
+          - CONCLUIDA
+          - EXPIRADA
+          - REJEITADA
+          - CANCELADA
+    DevolucaoPixAutomatico:
+      type: object
+      title: Devolução
+      required:
+      - id
+      - rtrId
+      - valor
+      - horario
+      - status
+      properties:
+        id:
+          $ref: '#/components/schemas/DevolucaoId'
+        rtrId:
+          type: string
+          title: RtrId
+          description: ReturnIdentification que transita na PACS004.
+          example: D12345678202009091000abcde123456
+          pattern: '[a-zA-Z0-9]{32}'
+          minLength: 32
+          maxLength: 32
+        valor:
+          type: string
+          title: Valor a devolver.
+          pattern: \d{1,10}\.\d{2}
+          description: Valor a devolver.
+        natureza:
+          $ref: '#/components/schemas/DevolucaoNaturezaPixAutomatico'
+        descricao:
+          type: string
+          title: Mensagem ao pagador relativa à devolução.
+          maxLength: 140
+          description: O campo `descricao`, opcional, determina um texto a ser apresentado ao pagador contendo informações sobre a devolução. Esse texto será preenchido, na pacs.004, pelo PSP do recebedor, no campo RemittanceInformation. O tamanho do campo na pacs.004 está limitado a 140 caracteres.
+        horario:
+          type: object
+          properties:
+            solicitacao:
+              type: string
+              format: date-time
+              title: Horário de solicitação
+              description: Horário no qual a devolução foi solicitada no PSP.
+            liquidacao:
+              type: string
+              format: date-time
+              title: Horário de liquidacao
+              description: Horário no qual a devolução foi liquidada no PSP.
+        status:
+          type: string
+          title: Status
+          description: Status da devolução.
+          enum:
+          - EM_PROCESSAMENTO
+          - DEVOLVIDO
+          - NAO_REALIZADO
+        motivo:
+          type: string
+          title: Descrição do status.
+          description: '# Status da Devolução
+
+
+            Campo opcional que pode ser utilizado pelo PSP recebedor para detalhar os motivos
+
+            de a devolução ter atingido o status em questão.
+
+            Pode ser utilizado, por exemplo, para detalhar o motivo de a devolução não ter sido realizada.
+
+            '
+          maxLength: 140
+    DevolucaoNaturezaPixAutomatico:
+      type: string
+      title: Natureza da Devolução
+      description: "Indica qual é a natureza da devolução. Uma devolução pode ser relacionada a um Pix comum (com códigos possíveis: `MD06` e `FR01` da pacs.004 e `REFU` da pacs.008). Na ausência deste campo a natureza deve ser interpretada como \nsendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n  - `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum (`MD06`);\n  - `MED_FRAUDE`: quando a devolução ocorre no âmbito do MED (Mecanismo Especial de Devolução) por fundada suspeita de fraude e se refere a um Pix comum (`FR01`).\n  - `MED_PIX_AUTOMATICO`: reembolso total ou parcial ao participante do usuário pagador no âmbito do MED (Mecanismo Especial de Devolução) para o Pix Automático pela utilização de recursos próprios para ressarcimento do usuário pagador.(`REFU`);\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso pode ser: ORIGINAL, MED_PIX_AUTOMATICO ou MED_FRAUDE);\n"
+      enum:
+      - ORIGINAL
+      - MED_PIX_AUTOMATICO
+      - MED_FRAUDE
+    DevolucaoId:
+      type: string
+      title: Id da Devolução
+      description: Id gerado pelo cliente para representar unicamente uma devolução.
+      pattern: '[a-zA-Z0-9]{1,35}'
+    RecId:
+      type: string
+      title: ID Recorrência
+      description: "# Identificador da Recorrência\n\nRegra de formação:\n- RAxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; \"case sensitive\", isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - \"R\":  fixo (1 caractere). \"R\" para a recorrência criada dentro do Pix;\n  - \"A\": identificação da possibilidade de novas tentativas, sendo possíveis os valores \"R\" ou \"N\" (1 caractere). \"R\" caso a recorrência permita novas tentativas de pagamento pós vencimento, ou \"N\" caso não permita novas tentativas.\n  - \"xxxxxxxx\":  identificação do agente que presta serviço para o usuário recebedor que gerou o <Id>, podendo ser: o ISPB do participante direto, o ISPB do participante indireto ou os 8 primeiros dígitos do CNPJ do prestador de serviço de iniciação (8 caracteres numéricos [0-9]);\n  - \"yyyyMMdd\":  data (8 caracteres) de criação da recorrência;\n  - \"kkkkkkkkkkk\": sequencial criado pelo agente que gerou o <Id> (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada \"yyyyMMdd\".\n\nDessa forma, o ID da recorrência deve ser formado de acordo com um dos tipos a seguir:\n- \"RRxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que permite novas tentativas de pagamento pós vencimento; ou\n- \"RNxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que não permite novas tentativas de pagamento pós vencimento.”\n"
+      pattern: '[a-zA-Z0-9]{29}'
+      minLength: 29
+      maxLength: 29
+      example: RR1234567820240115abcdefghijk
+    CobRNotification:
+      type: object
+      title: Cobrança Recorrente Notificada
+      required:
+      - idRec
+      - txid
+      - status
+      - atualizacao
+      description: Dados enviados para criação da cobrança recorrente via API Pix
+      allOf:
+      - type: object
+        properties:
+          idRec:
+            $ref: '#/components/schemas/RecId'
+      - type: object
+        properties:
+          txid:
+            $ref: '#/components/schemas/TxId'
+      - $ref: '#/components/schemas/CobRStatus'
+      - $ref: '#/components/schemas/CobRAtualizacao'
+      - $ref: '#/components/schemas/CobRTentativas'
+      - type: object
+        properties:
+          pix:
+            type: array
+            title: Pix recebidos
+            items:
+              allOf:
+              - $ref: '#/components/schemas/PixAutomatico'
+              - type: object
+                properties:
+                  txid:
+                    allOf:
+                    - $ref: '#/components/schemas/TxId'
+                    - pattern: '[a-zA-Z0-9]{26,35}'
+    CobRAtualizacao:
+      type: object
+      title: Histórico de Atualização da Cobrança Recorrente
+      required:
+      - atualizacao
+      properties:
+        atualizacao:
+          type: array
+          title: Histórico de Status
+          description: Histórico das mudanças de status das cobranças recorrentes.
+          items:
+            type: object
+            required:
+            - status
+            - data
+            properties:
+              status:
+                type: string
+                title: Status da cobrança
+                description: Status da cobrança.
+                enum:
+                - CRIADA
+                - ATIVA
+                - CONCLUIDA
+                - EXPIRADA
+                - REJEITADA
+                - CANCELADA
+              data:
+                type: string
+                format: date-time
+                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
+        encerramento:
+          type: object
+          title: Detalhamento do encerramento da cobrança.
+          oneOf:
+          - type: object
+            properties:
+              cancelamento:
+                type: object
+                title: Informações sobre o cancelamento da cobrança
+                required:
+                - solicitante
+                - codigo
+                - descricao
+                description: Informações sobre o cancelamento da cobrança
+                properties:
+                  solicitante:
+                    type: string
+                    title: Solicitante do cancelamento
+                    enum:
+                    - PSP_PAGADOR
+                    - USUARIO_PAGADOR
+                    - PSP_RECEBEDOR
+                    - USUARIO_RECEBEDOR
+                  codigo:
+                    type: string
+                    title: Código do cancelamento
+                    description: Código do cancelamento. Corresponde ao código de cancelamento presente no catálogo de mensagens.
+                    maxLength: 4
+                    enum:
+                    - ACCT
+                    - BLCK
+                    - CCLD
+                    - FAIL
+                    - OTHR
+                    - SLBD
+                    - SLCR
+                  descricao:
+                    type: string
+                    title: Descricao do cancelamento
+                    description: Descricao da causa do cancelamento
+                    maxLength: 105
+          - type: object
+            properties:
+              rejeicao:
+                type: object
+                title: Informações sobre a rejeição da cobrança
+                required:
+                - codigo
+                - descricao
+                description: Informações sobre a rejeição da cobrança
+                properties:
+                  codigo:
+                    type: string
+                    title: Código da rejeição
+                    description: Código da rejeição. Corresponde ao código de rejeição presente no catálogo de mensagens.
+                    maxLength: 4
+                    enum:
+                    - AB10
+                    - AC05
+                    - AC06
+                    - AM02
+                    - AM09
+                    - DENC
+                    - DS27
+                    - DTED
+                    - DTNT
+                    - FBRD
+                    - IRNT
+                    - MIDI
+                    - MSUC
+                    - NIEC
+                    - NIPA
+                    - NITX
+                    - QUNT
+                    - RC09
+                    - UDEI
+                  descricao:
+                    type: string
+                    title: Descricao da rejeição
+                    description: Descricao da causa da rejeição
+                    maxLength: 105
+    TxId:
+      type: string
+      title: Id da Transação
+      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
+      pattern: '[a-zA-Z0-9]{26,35}'
+      minLength: 26
+      maxLength: 35
+  examples:
+    cobRWebhookBody1:
+      summary: Exemplo de criação de webhook de cobrança recorrente
+      value:
+        webhookUrl: https://usuario.recebedor.com/api/webhookcobr/
+    RequisicaoInvalidaWebhookExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/WebhookOperacaoInvalida
+        title: Webhook inválido.
+        status: 400
+        detail: A presente requisição busca criar um webhook sem respeitar o _schema_ ou, ainda, com sentido semanticamente inválido.
+    AcessoNegadoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    NaoEncontradoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title: Não Encontrado
+        status: 404
+        detail: Entidade não encontrada.
+    ServicoIndisponivelExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+  responses:
+    NaoEncontrado:
+      description: Recurso solicitado não foi encontrado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/NaoEncontradoExample1'
+    AcessoNegado:
+      description: Requisição de participante autenticado que viola alguma regra de autorização.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/AcessoNegadoExample1'
+    ServicoIndisponivel:
+      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/ServicoIndisponivelExample1'
+  requestBodies:
+    WebhookCobRBody:
+      description: Dados para notificação.
+      required: true
+      content:
+        application/json:
+          schema:
+            properties:
+              cobsr:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CobRNotification'
+          example:
+            cobsr:
+            - idRec: RR1234567820240115abcdefghijk
+              txid: 3136957d93134f2184b369e8f1c0729d
+              status: ATIVA
+              atualizacao:
+              - status: ATIVA
+                data: '2024-08-20T12:34:21.300Z'
+              tentativas:
+              - dataLiquidacao: '2024-20-08'
+                tipo: AGND
+                status: SOLICITADA
+                endToEndId: E12345678202406201221abcdef12345
+    WebhookCobRConfigBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WebhookCobRSolicitado'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/cobRWebhookBody1'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            authenticationservices/v1: Grant read-only access to payment initation service

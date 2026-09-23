@@ -1,0 +1,4630 @@
+openapi: 3.2.0
+info:
+  title: Citi Refunds API
+  version: 1.0.0
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  description: 'Operations tagged Refunds across 2 of this provider''s published API definitions: DigitalPaymentsCollectionsv12.yaml, express_payments_api.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod
+  description: production gateway URL
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+  description: sbox URL
+- url: https://tts.sit.apib2b.citi.com/citiconnect/uat
+  description: uat URL
+- url: https://b2b.api.icg.citi.com/citiconnect/prod
+  description: production gateway url
+- url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb
+  description: 'sbox url '
+tags:
+- name: Refunds
+  description: Refunds API
+paths:
+  /digitalpayments/v1/payment-acceptance/refunds:
+    post:
+      tags:
+      - Refunds
+      summary: Initiate An Outgoing Instant Refund Credit Transfer
+      description: Return an incoming payment transaction to the sender using either the "end_to_end_id" and "value_date", or "UETR". The response to a refund transaction is asynchronous, which is either through a GET Refund request or as a push notification via webhook.
+      operationId: refundPayments
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Idempotency-Id'
+      - $ref: '#/components/parameters/Merchant-Refund-Id'
+      - $ref: '#/components/parameters/Post-Country-Code'
+      requestBody:
+        description: Refund Initiation Request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refunds-Request'
+            examples:
+              Brazil Pix Refund Transfer:
+                $ref: '#/components/examples/Brazil-Pix-Refund-Initiation-Request-Example'
+              US Card Refund Transfer:
+                $ref: '#/components/examples/US-Card-Refund-Initiation-Request-Example'
+              US ACH Refund Transfer:
+                $ref: '#/components/examples/US-Ach-Refund-Initiation-Request-Example'
+              India Card Refund Transfer:
+                $ref: '#/components/examples/India-Card-Refund-Initiation-Request-Example'
+              India UPI Refund Transfer:
+                $ref: '#/components/examples/India-Upi-Refund-Initiation-Request-Example'
+              UK Refund Transfer:
+                $ref: '#/components/examples/Uk-Ip-Refund-Initiation-Request-Example'
+              US Ach Return And Reversal:
+                $ref: '#/components/examples/Us-Ach-Retrun-Reversal-Request-Example'
+              US Googlepay Refund Transfer:
+                $ref: '#/components/examples/Googlepay-Refund-Initiation-Request-Example'
+              US Applepay Refund Transfer:
+                $ref: '#/components/examples/Applepay-Refund-Initiation-Request-Example'
+              US Paypal Refund Transfer:
+                $ref: '#/components/examples/Us-Paypal-Refund-Initiation-Request-Example'
+              US PPRO Refund Transfer:
+                $ref: '#/components/examples/PPRO-Refund-Initiation-Request-Example'
+      security:
+      - clientCredentials: []
+      callbacks:
+        payment-refund-success:
+          $ref: '#/components/callbacks/Payment-Refund-Created-Status'
+        payment-refund-failed:
+          $ref: '#/components/callbacks/Payment-Refund-Failed-Status'
+        payment-refund-pending:
+          $ref: '#/components/callbacks/Payment-Refund-Pending-Status'
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment-L0-Refund-Notification'
+              examples:
+                CardPaymentCreatedSucessResponse:
+                  $ref: '#/components/examples/Payment-Refund-Card-Sucess-Response'
+                IndiaCardPaymentCreatedSucessResponse:
+                  $ref: '#/components/examples/India-Payment-Refund-Card-Sucess-Response'
+                PixPaymentCreatedSucessResponse:
+                  $ref: '#/components/examples/Payment-Refund-Pix-Sucess-Response'
+                UpiPaymentCreatedSucessResponse:
+                  $ref: '#/components/examples/Payment-Refund-India-Upi-Sucess-Response'
+                UkPaymentCreatedSucessResponse:
+                  $ref: '#/components/examples/Payment-Refund-Uk-Ip-Sucess-Response'
+                UsAchReturnAndRevesalCreatedSuccessResponse:
+                  $ref: '#/components/examples/Us-Ach-Return-And-Revesal-Success-Response'
+                GooglepayPaymentCreatedSucessResponse:
+                  $ref: '#/components/examples/Googlepay-Refund-Card-Sucess-Response'
+                ApplepayPaymentCreatedSucessResponse:
+                  $ref: '#/components/examples/Applepay-Refund-Card-Sucess-Response'
+                PproPaymentCreatedSucessResponse:
+                  $ref: '#/components/examples/Ppro-Refund-Card-Sucess-Response'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Rate-Limit-Exceeded'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+        default:
+          $ref: '#/components/responses/Internal-Server-Error'
+    get:
+      tags:
+      - Refunds
+      summary: Get refund transaction details
+      description: 'Receive transaction status of the transaction for last 90 days using the additional parameter. End-To-End-Id or UETR or Country-Code or Original Payment UETR is mandatory.
+
+        - For ACH Return & Reversal, you can retrieve transaction details using original_payment_uetr.'
+      operationId: getrefundpaymentstatus
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/End-To-End-Id'
+      - $ref: '#/components/parameters/Country-Code'
+      - $ref: '#/components/parameters/Uetr'
+      - $ref: '#/components/parameters/Original-Payment-Uetr'
+      - $ref: '#/components/parameters/Creation-Date-Time-Start'
+      - $ref: '#/components/parameters/Creation-Date-Time-End'
+      - $ref: '#/components/parameters/Amount'
+      - $ref: '#/components/parameters/Status'
+      - $ref: '#/components/parameters/Offset-Param'
+      - $ref: '#/components/parameters/Limit-Param'
+      security:
+      - clientCredentials: []
+      responses:
+        '200':
+          description: Payment status
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+            result:
+              schema:
+                type: integer
+                minimum: 1
+                maximum: 1000
+                default: 100
+              description: Number of transaction status matching your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refunds-Response'
+              examples:
+                Brazil Pix Refund Transfer:
+                  $ref: '#/components/examples/Payment-Refund-Pix-Sucess-Notification'
+                Card Refund Transfer:
+                  $ref: '#/components/examples/Payment-Refund-Card-Sucess-Notification'
+                India UPI Refund Transfer:
+                  $ref: '#/components/examples/Payment-Refund-India-Upi-Sucess-Notification'
+                Uk PAYBYBANK Refund Transfer:
+                  $ref: '#/components/examples/Payment-Refund-Uk-Sucess-Notification'
+                US ACH RETURN AND REVERSAL:
+                  $ref: '#/components/examples/Us-Ach-Retrun-Reversal-Success-Notification'
+                Googlepay Refund Transfer:
+                  $ref: '#/components/examples/Googlepay-Refund-Card-Sucess-Notification'
+                Applepay Refund Transfer:
+                  $ref: '#/components/examples/Applepay-Refund-Card-Sucess-Notification'
+                Ppro Refund Transfer:
+                  $ref: '#/components/examples/Ppro-Refund-Card-Sucess-Notification'
+        '400':
+          $ref: '#/components/responses/Bad-Get-Request2'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '429':
+          $ref: '#/components/responses/Rate-Limit-Exceeded'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+    servers:
+    - url: https://tts.apib2b.citi.com/citiconnect/prod
+      description: production gateway URL
+    - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+      description: sbox URL
+    - url: https://tts.sit.apib2b.citi.com/citiconnect/uat
+      description: uat URL
+  /digitalpayments/v1/payment-acceptance/refunds/{id}:
+    patch:
+      tags:
+      - Refunds
+      summary: Update a payment with selected payment method
+      description: Update a payment.
+      operationId: refundUpdate
+      parameters:
+      - $ref: '#/components/parameters/Idempotency-Id'
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/Merchant-Post-Id'
+      - $ref: '#/components/parameters/Refund-Patch-Operation'
+      - $ref: '#/components/parameters/Post-Country-Code'
+      requestBody:
+        description: Update a payment with selected payment method.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refund-Update-Request'
+            examples:
+              US Card Refund Update Request:
+                $ref: '#/components/examples/Us-Refund-Update-Request-Example'
+              US Card Refund Cancel Request:
+                $ref: '#/components/examples/Us-Refund-Cancel-Request-Example'
+              US GooglePay Refund Cancel Request:
+                $ref: '#/components/examples/Us-Google-Pay-Refund-Cancel-Request-Example'
+              US ApplePay Refund Cancel Request:
+                $ref: '#/components/examples/Us-Apple-Pay-Refund-Cancel-Request-Example'
+      security:
+      - clientCredentials: []
+      callbacks:
+        refund-cancel-success:
+          $ref: '#/components/callbacks/Refund-Cancel-Success'
+        refund-cancel-failed:
+          $ref: '#/components/callbacks/Refund-Cancel-Failed'
+      responses:
+        '202':
+          $ref: '#/components/responses/Accepted'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Rate-Limit-Exceeded'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+    servers:
+    - url: https://tts.apib2b.citi.com/citiconnect/prod
+      description: production gateway URL
+    - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+      description: sbox URL
+    - url: https://tts.sit.apib2b.citi.com/citiconnect/uat
+      description: uat URL
+  /paymentservices/v1/refunds:
+    post:
+      tags:
+      - Refunds
+      summary: Initiate an outgoing instant refund credit transfer
+      description: Return an incoming payment transaction to the sender using either the “end_to_end_id” and "value_date”, or “UETR”. The response to a refund transaction is asynchronous, which is either through a GET Refund request or as a push notification via webhook.
+      operationId: expressRefundInitiation
+      parameters:
+      - name: client_id
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+      - name: Idempotency-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          maxLength: 128
+        example: a44cbb60-6de4-4edb-9a7a-123414bba3bb
+        description: "Your unique identification for a POST request \n - Maximum length is 128. \n-  CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      requestBody:
+        required: true
+        description: Return an incoming payment transaction to the sender using either the “end_to_end_id” and "value_date”, or “UETR”. The response to a refund transaction is asynchronous, which is either through a GET Refund request or as a push notification via webhook.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refunds-Initiation'
+            examples:
+              TH Refund Transfer:
+                $ref: '#/components/examples/Th-Refund-Initiation-Request-Example'
+              BR Refund Transfer:
+                $ref: '#/components/examples/Br-Refund-Initiation-Request-Example'
+              US Refund Transfer:
+                $ref: '#/components/examples/Us-Refund-Initiation-Request-Example'
+              SEPA Refund Transfer:
+                $ref: '#/components/examples/SEPA-Refund-Initiation-Request-Example'
+      security:
+      - oAuth2:
+        - paymentservices
+      callbacks:
+        Refund-Notification:
+          $ref: '#/components/callbacks/Refund-Notification'
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            request_id:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refunds'
+              examples:
+                OK:
+                  $ref: '#/components/examples/Refund-Initiation-Response-Example'
+        '400':
+          $ref: '#/components/responses/Bad-Request_2'
+        '401':
+          $ref: '#/components/responses/Unauthorized_2'
+        '404':
+          $ref: '#/components/responses/Not-Found_2'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed_2'
+        '409':
+          $ref: '#/components/responses/Conflict_2'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type_2'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error_2'
+        default:
+          $ref: '#/components/responses/Internal-Server-Error_2'
+    get:
+      tags:
+      - Refunds
+      summary: Inquire for the latest status of refund transations matching additional…
+      description: Get the latest refund transactions statuses initiated through the refund initiation endpoint using matching criteria. Currently, you can get the latest transactions statuses up to 90 days from the refund initiation date. If the latest transactions statuses date is 90+ days, the endpoint responds with HTTP status 404 (not found).
+      operationId: findRefunds
+      parameters:
+      - name: client_id
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+      - name: end_to_end_id
+        in: query
+        description: The end to end ID included in the refund by the sender of the refund
+        schema:
+          $ref: '#/components/schemas/Restricted-Finx-Max-Text_2'
+        examples:
+          refund_transaction_details_1:
+            value: 1L00IF2BCWUZF09
+      - name: original_payment_uetr
+        in: query
+        description: The unique ‘UETR’ reference assigned to the original incoming credit on your account for which a refund was initiated. If multiple refunds were initiated against an incoming credit, the response API will include all these refunds
+        schema:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+        examples:
+          refund_transaction_details_1:
+            value: 0c4fb98b-d77a-4468-96bb-0c88b3b8f75a
+      - name: creation_date_time_start
+        in: query
+        description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n - Start of date time, generated by CitiConnect API, when CitiConnect API accepted a refund initiation after validation"
+        schema:
+          $ref: '#/components/schemas/Iso-Normalised-Date-Time'
+        examples:
+          refund_transaction_details_1:
+            value: '2022-09-13T08:23:49.114Z'
+      - name: creation_date_time_end
+        in: query
+        description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n - end of date time, generated by CitiConnect API, when CitiConnect API accepted a refund initiation after validation"
+        schema:
+          $ref: '#/components/schemas/Iso-Normalised-Date-Time'
+        examples:
+          refund_transaction_details_1:
+            value: '2022-09-13T08:23:49.114Z'
+      - name: instructed_amount
+        in: query
+        description: refund amount
+        schema:
+          type: number
+          maximum: 1000000000000000
+        examples:
+          refund_transaction_details_1:
+            value: 73945.27
+      - name: status_code
+        in: query
+        description: ISO 20022 transaction status code
+        schema:
+          type: string
+          enum:
+          - ACCC
+          - ACTC
+          - RJCT
+        examples:
+          refund_transaction_details_1:
+            value: ACCC
+      - $ref: '#/components/parameters/Off-Set-Param'
+      - $ref: '#/components/parameters/Limit-Param'
+      security:
+      - oAuth2:
+        - paymentservices
+      responses:
+        '200':
+          description: Refund status
+          headers:
+            request_id:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+            result:
+              schema:
+                type: integer
+                minimum: 1
+                maximum: 1000
+                default: 100
+              description: Number of transaction status matching your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refunds-Response_2'
+              examples:
+                Ok-ResponseExample:
+                  $ref: '#/components/examples/Ok-Refund-Response-Multiple-Example'
+        '400':
+          $ref: '#/components/responses/Bad-Request_2'
+        '401':
+          $ref: '#/components/responses/Unauthorized_2'
+        '404':
+          $ref: '#/components/responses/Not-Found_2'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed_2'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error_2'
+        default:
+          $ref: '#/components/responses/Internal-Server-Error_2'
+    servers:
+    - url: https://b2b.api.icg.citi.com/citiconnect/prod
+      description: production gateway url
+    - url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb
+      description: 'sbox url '
+  /paymentservices/v1/refunds/{refund_id}:
+    get:
+      tags:
+      - Refunds
+      summary: Inquire for the latest status of a transaction using refund_id
+      description: '"Get the latest refund transaction status initiated through the refund initiation endpoint. Currently, you can get the latest transaction status up to 90 days from the refund initiation date. If the latest transaction status date is 90+ days, the endpoint responds with HTTP status 404 (not found)"'
+      operationId: findRefundById
+      parameters:
+      - name: client_id
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+      - name: refund_id
+        in: path
+        description: 'Unique Refund reference Id, generated during refund initiation and provided to you in the synchronous response to your refund POST request '
+        required: true
+        schema:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+        examples:
+          payment_transaction_details_1:
+            value: 0c4fb98b-d77a-4468-96bb-0c88b3b8f75a
+      security:
+      - oAuth2:
+        - paymentservices
+      responses:
+        '200':
+          description: OK
+          headers:
+            request_id:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refunds'
+              examples:
+                Refund Status - Completed:
+                  $ref: '#/components/examples/Ok-Refund-Response'
+                Refund Status - Rejected:
+                  $ref: '#/components/examples/Ok-Refund-Response-Failed'
+        '400':
+          $ref: '#/components/responses/Bad-Request_2'
+        '401':
+          $ref: '#/components/responses/Unauthorized_2'
+        '404':
+          $ref: '#/components/responses/Not-Found_2'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed_2'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error_2'
+        default:
+          $ref: '#/components/responses/Internal-Server-Error_2'
+    servers:
+    - url: https://b2b.api.icg.citi.com/citiconnect/prod
+      description: production gateway url
+    - url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb
+      description: 'sbox url '
+components:
+  examples:
+    Applepay-Refund-Card-Sucess-Notification:
+      value:
+        method:
+          type: APPLEPAY
+        transaction:
+          id: e2e789654
+          amount: 300
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: SETTLED
+          description: Transaction settled
+          refund_type: P
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+          amount: 29876.98
+          currency_code: USD
+    Us-Ach-Return-And-Reversal-Sucess-Notification:
+      value:
+        transaction:
+          id: refund123
+          value_date: '2025-05-15'
+          amount: 100
+          country_code: US
+          currency_code: USD
+          debit_credit_flag: CR
+          status_date_time: '2022-09-13T08:23:49.114Z'
+          status: SETTLED
+          reference: '25051000001962'
+          reason: Reversal Initiated
+          purpose: Arrears of payment
+          action: REVERSAL
+          clearing_local_code: '26'
+        method:
+          type: ACH
+          ach:
+            sec_code: CCD
+        customer:
+          account:
+            bank_id: CITIN77
+          name: Smith
+          organization_id: ORG123456
+        merchant:
+          account:
+            bank_id: CITIN77
+            name: Carlton
+            virtual_number: '9190800985'
+        original_payment:
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+    India-Payment-Refund-Card-Sucess-Response:
+      value:
+        method:
+          type: CARD
+        transaction:
+          id: e2e789654
+          amount: 300
+          currency_code: INR
+          country_code: IN
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: CREATED
+          description: The transaction has successfully been created
+        order:
+          id: OR993456000
+    Bad-Request-Gateway-Error-Example:
+      value:
+        httpCode: '400'
+        httpMessage: Bad Request
+        moreInformation: please provide valid value for property emailAddress
+    Us-Apple-Pay-Refund-Cancel-Request-Example:
+      value:
+        method:
+          type: APPLEPAY
+        transaction:
+          id: REFUNDID12345
+          target_transaction_id: ccapicardstestmk1771318672
+        order:
+          id: ORD123455
+    Payment-Refund-Uk-Sucess-Notification:
+      value:
+        method:
+          type: IP
+        transaction:
+          id: e2e789654
+          amount: 400
+          currency_code: GBP
+          country_code: UK
+          reason: Product Retured
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:35.655Z'
+          status: SETTLED
+          description: Transaction Settled
+          refund_type: P
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    India-Payment-Refund-Card-Sucess-Notification:
+      value:
+        method:
+          type: CARD
+        transaction:
+          id: e2e789654
+          amount: 300
+          psp_reference: PSP123456
+          currency_code: INR
+          country_code: IN
+          value_date: '2024-05-10'
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          update_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: SUCCESS
+          description: The operation was successfully processed
+          refund_type: P
+        order:
+          id: OR993456000
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          update_time: '2024-05-02T12:44:34.655Z'
+          status: PARTIALLY_REFUNDED
+          refund_order_id: RFD123456
+          total_captured_amount: '799'
+          total_refunded_amount: '300'
+    Payment-Refund-India-Upi-Sucess-Response:
+      value:
+        method:
+          type: UPI
+        transaction:
+          id: e2e789654
+          amount: 400
+          currency_code: INR
+          country_code: IN
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          reason: Refund incoming credit
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: CREATED
+          description: The transaction has successfully been created
+        original_payment:
+          id: a434SKtUaaST
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-01'
+    Us-Ach-Return-And-Reversal-Failed-Notification:
+      value:
+        transaction:
+          id: refund123
+          value_date: '2025-05-15'
+          amount: 100
+          country_code: US
+          currency_code: USD
+          reference: '25051000001962'
+          debit_credit_flag: CR
+          status_date_time: '2022-09-13T08:23:49.114Z'
+          status: FAILED
+          reason: Reversal Initiated
+          purpose: Arrears of payment
+          action: REVERSAL
+          clearing_local_code: '26'
+        method:
+          type: ACH
+          ach:
+            sec_code: CCD
+        customer:
+          account:
+            bank_id: CITIN77
+          name: Smith
+          organization_id: ORG123456
+        merchant:
+          account:
+            bank_id: CITIN77
+            name: Carlton
+            virtual_number: '9190800985'
+        original_payment:
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+    Payment-Refund-Paypal-Sucess-Notification:
+      value:
+        method:
+          type: PAYPAL
+        transaction:
+          id: e2e789654
+          amount: 200
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: SETTLED
+          description: Transaction settled
+          refund_type: P
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: HTTP method is not supported
+          action: Provide valid HTTP method
+          code: CC00001
+    Payment-Refund-Card-Failed-Notification:
+      value:
+        method:
+          type: CARD
+        transaction:
+          id: e2e789654
+          amount: 300
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:35.655Z'
+          status: FAILED
+          description: AC02 - Debtor account is invalid
+          refund_type: P
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+    Applepay-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: APPLEPAY
+        transaction:
+          id: APL123458
+          amount: 310.01
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+    Un-Supported-Media-Type-Gateway-Error-Example:
+      value:
+        httpCode: '415'
+        httpMessage: Unsupported Media Type
+        moreInformation: Unsupported Content-Type
+    Rate-Limit-Exceeded-Gateway-Error-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: Rate Limit exceeded
+    Bad-Request-Get2-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2b921a5ab
+        error_details:
+        - issue: provided value is not within the range for query-param reference
+          action: please provide valid value for query-param reference, size must be between 1 and 128
+          code: VC00012
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: unable to serve your request at this moment
+    Payment-Refund-Pix-Failed-Notification:
+      value:
+        method:
+          type: PIX
+        transaction:
+          id: e2e789654
+          amount: 200
+          currency_code: BRL
+          country_code: BR
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          reason: Refund incoming credit
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:35.655Z'
+          status: FAILED
+          description: AC02 - Debtor account is invalid
+          refund_type: P
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Gateway-Timeout-Gateway-Error-Example:
+      value:
+        httpCode: '504'
+        httpMessage: GATEWAY_TIMEOUT
+        moreInformation: 'Response took longer than timeout: PT50S'
+    Payment-Refund-Ppro-Failed-Notification:
+      value:
+        method:
+          type: ALIPAY
+        transaction:
+          id: e2e789654
+          amount: 300
+          country_code: US
+          psp_reference: PSP123456
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: FAILED
+          reason_code: SCA1234
+          description: Debtor account is invalid
+          refund_type: P
+        order:
+          id: OR993456000
+          amount: 300
+          currency_code: USD
+          status: REFUNDED
+          total_captured_amount: 300
+          total_refunded_amount: 300
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Not-Found-Gateway-Error-Example:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Us-Ach-Retrun-Reversal-Success-Notification:
+      value:
+      - transaction:
+          id: refund123
+          value_date: '2025-05-15'
+          amount: 100
+          country_code: US
+          currency_code: USD
+          debit_credit_flag: CR
+          status_date_time: '2022-09-13T08:23:49.114Z'
+          creation_date_time: '2022-09-12T08:23:49.114Z'
+          status: SETTLED
+          reference: '25051000001962'
+          reason: Reversal Initiated
+          purpose: Arrears of payment
+          action: REVERSAL
+          clearing_local_code: '26'
+        method:
+          type: ACH
+          ach:
+            sec_code: CCD
+        cutomer:
+          account:
+            bank_id: CITIN77
+            number: '123456'
+        merchant:
+          account:
+            bank_id: CITIN77
+        original_payment:
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+    US-Refund-Card-Cancel-Payment-Response-Example:
+      value:
+        transaction:
+          id: INDIA234560
+          type: VOID_REFUND
+          amound: 300.01
+          status: SUCCESS
+          currency_code: USD
+          description: The operation was successfully processed
+          reason_code: SC07324
+          country_code: IN
+          creation_time: '2025-01-17T13:10:23.973Z'
+          update_time: '2025-01-17T13:10:24.351Z'
+        order:
+          id: ORD12345
+          amount: 300.01
+          currency_code: USD
+          creation_time: '2025-01-17T13:10:23.973Z'
+          update_time: '2025-01-17T13:10:24.351Z'
+          status: CANCELLED
+          merchant_amount: 300.01
+          merchant_currency: USD
+          total_auth_amount: 100
+          total_captured_amount: 0
+          total_disbursed_amount: 0
+          total_refunded_amount: 0
+    Us-Paypal-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: PAYPAL
+        transaction:
+          id: APL123458
+          amount: 310.01
+          currency_code: USD
+          country_code: US
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+        - issue: property method.type is mandatory and it cannot be empty
+          action: please provide valid value for property method.type
+          code: VC00010
+    Idempotency-Id-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Idempotency-Id provided is currently being used in another request
+          action: please do not repeat the same request again
+          code: VC00016
+    Payment-Refund-Ppro-Pending-Notification:
+      value:
+        method:
+          type: ALIPAY
+        transaction:
+          id: e2e789654
+          amount: 300
+          country_code: US
+          psp_reference: PSP123456
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: PENDING
+          reason_code: SCA1234
+          description: The operation is currently in progress or pending processing
+          refund_type: P
+        order:
+          id: OR993456000
+          amount: 300
+          currency_code: USD
+          status: REFUNDED
+          total_captured_amount: 300
+          total_refunded_amount: 300
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+          code: CC00004
+    Payment-Refund-Uk-Ip-Sucess-Response:
+      value:
+        method:
+          type: FPS
+        transaction:
+          id: e2e789654
+          amount: 400
+          currency_code: GBP
+          country_code: UK
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          reason: Refund incoming credit
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: CREATED
+          description: The transaction has successfully been created
+        original_payment:
+          id: a434SKtUaaST
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-01'
+    US-Ach-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: ACH
+        transaction:
+          id: e2e123456
+          amount: 300
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+    Us-Ach-Return-And-Revesal-Success-Response:
+      value:
+        transaction:
+          country_code: US
+          id: e2e123456
+          action: REVERSAL
+          reason: Reversal Initiated
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status: CREATED
+          description: The transaction has successfully been created
+        original_payment:
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+        method:
+          type: ACH
+    Payment-Refund-Paypal-Failed-Notification:
+      value:
+        method:
+          type: PAYPAL
+        transaction:
+          id: e2e789654
+          amount: 300
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:35.655Z'
+          status: FAILED
+          description: AC02 - Debtor account is invalid
+          refund_type: P
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: This server could not verify that you are authorized to access the URL
+    Payment-Refund-Pix-Sucess-Response:
+      value:
+        method:
+          type: PIX
+        transaction:
+          id: e2e789654
+          amount: 200
+          currency_code: BRL
+          country_code: BR
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          reason: Refund incoming credit
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: CREATED
+          description: The transaction has successfully been created
+        original_payment:
+          id: a434SKtUaaST
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-01'
+    PPRO-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: ALIPAY
+        transaction:
+          id: APL123458
+          amount: 310.01
+          country_code: US
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Brazil-Pix-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: PIX
+        transaction:
+          id: e2e123456
+          amount: 200
+          currency_code: BRL
+          country_code: BR
+          reason: Product Retured
+        original_payment:
+          id: r434SKtUaaGQ
+          value_date: '2022-10-01'
+    Payment-Refund-Card-Sucess-Response:
+      value:
+        method:
+          type: CARD
+        transaction:
+          id: e2e789654
+          amount: 300
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: CREATED
+          description: The transaction has successfully been created
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Googlepay-Refund-Card-Sucess-Response:
+      value:
+        method:
+          type: GOOGLEPAY
+        transaction:
+          id: e2e789654
+          amount: 300
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: CREATED
+          description: The transaction has successfully been created
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Payment-Refund-India-Upi-Sucess-Notification:
+      value:
+        method:
+          type: UPI
+        transaction:
+          id: e2e789654
+          amount: 400
+          currency_code: INR
+          country_code: IN
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          reason: Refund incoming credit
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: SETTLED
+          description: Transaction settled
+          refund_type: P
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+          amount: 29876.98
+          currency_code: INR
+    Googlepay-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: GOOGLEPAY
+        transaction:
+          id: TRD123458
+          amount: 210.01
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+    Us-Refund-Update-Request-Example:
+      value:
+        method:
+          type: CARD
+        transaction:
+          id: REFUNDID12345
+          target_transaction_id: REFUNDCREATE123
+        order:
+          id: ORD123455
+    Not-Found-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
+    Payment-Refund-Uk-Failed-Notification:
+      value:
+        method:
+          type: IP
+        transaction:
+          id: e2e789654
+          amount: 200
+          currency_code: GBP
+          country_code: UK
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          reason: Refund incoming credit
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:35.655Z'
+          status: FAILED
+          description: AC02 - Debtor account is invalid
+          refund_type: P
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Payment-Refund-Card-Sucess-Notification:
+      value:
+        method:
+          type: CARD
+        transaction:
+          id: e2e789654
+          amount: 300
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: SETTLED
+          description: Transaction settled
+          refund_type: P
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+          amount: 29876.98
+          currency_code: USD
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: please use valid content-type in header
+          code: CC00002
+    Us-Refund-Cancel-Request-Example:
+      value:
+        method:
+          type: CARD
+        transaction:
+          id: REFUNDID12345
+          target_transaction_id: REFUNDCREATE123
+        order:
+          id: ORD123455
+    India-Card-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: CARD
+        transaction:
+          id: e2e123456
+          amount: 300
+          currency_code: INR
+          country_code: IN
+        order:
+          id: OR993456000
+    Uk-Ip-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: FPS
+        transaction:
+          id: e2e123456
+          amount: 400
+          currency_code: GBP
+          country_code: UK
+          reason: Product Retured
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Googlepay-Refund-Card-Sucess-Notification:
+      value:
+        method:
+          type: GOOGLEPAY
+        transaction:
+          id: e2e789654
+          amount: 300
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: SETTLED
+          description: Transaction settled
+          refund_type: P
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+          amount: 29876.98
+          currency_code: USD
+    Us-Google-Pay-Refund-Cancel-Request-Example:
+      value:
+        method:
+          type: GOOGLEPAY
+        transaction:
+          id: REFUNDID12345
+          target_transaction_id: ccapicardstestmk1771318672
+        order:
+          id: ORD123455
+    US-Card-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: CARD
+        transaction:
+          id: e2e123456
+          amount: 300
+          currency_code: USD
+          country_code: US
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+    Payment-Refund-Pix-Sucess-Notification:
+      value:
+        method:
+          type: PIX
+        transaction:
+          id: e2e789654
+          amount: 200
+          currency_code: BRL
+          country_code: BR
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          reason: Refund incoming credit
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: SETTLED
+          description: Transaction settled
+          refund_type: P
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+          amount: 29876.98
+          currency_code: BRL
+    Payment-Refund-Ppro-Sucess-Notification:
+      value:
+        method:
+          type: ALIPAY
+        transaction:
+          id: e2e789654
+          amount: 200
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: SETTLED
+          description: Transaction settled
+          refund_type: P
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Us-Ach-Retrun-Reversal-Request-Example:
+      value:
+        transaction:
+          country_code: US
+          id: e2e123456
+          action: REVERSAL
+          reason: Reversal Initiated
+        method:
+          type: ACH
+        original_payment:
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+    Applepay-Refund-Card-Sucess-Response:
+      value:
+        method:
+          type: GOOGLEPAY
+        transaction:
+          id: e2e789654
+          amount: 300
+          currency_code: USD
+          country_code: US
+          reason: Product Retured
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: CREATED
+          description: The transaction has successfully been created
+        order:
+          id: OR993456000
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Payment-Refund-Upi-Sucess-Notification:
+      value:
+        method:
+          type: UPI
+        transaction:
+          id: e2e789654
+          amount: 400
+          currency_code: INR
+          country_code: IN
+          reason: Product Retured
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:35.655Z'
+          status: SETTLED
+          description: Transaction Settled
+          refund_type: P
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Ppro-Refund-Card-Sucess-Notification:
+      value:
+        method:
+          type: ALIPAY
+        transaction:
+          id: e2e789654
+          amount: 300
+          country_code: US
+          psp_reference: PSP123456
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: SETTLED
+          description: Transaction settled
+          refund_type: P
+        order:
+          id: OR993456000
+          amount: 300
+          currency_code: USD
+          status: REFUNDED
+          total_captured_amount: 300
+          total_refunded_amount: 300
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Payment-Refund-Upi-Failed-Notification:
+      value:
+        method:
+          type: UPI
+        transaction:
+          id: e2e789654
+          amount: 200
+          currency_code: INR
+          country_code: IN
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2024-05-10'
+          reason: Refund incoming credit
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:35.655Z'
+          status: FAILED
+          description: AC02 - Debtor account is invalid
+          refund_type: P
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    India-Upi-Refund-Initiation-Request-Example:
+      value:
+        method:
+          type: UPI
+        transaction:
+          id: e2e123456
+          amount: 400
+          currency_code: INR
+          country_code: IN
+          reason: Product Retured
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Ppro-Refund-Card-Sucess-Response:
+      value:
+        method:
+          type: ALIPAY
+        transaction:
+          id: e2e789654
+          amount: 300
+          country_code: US
+          creation_date_time: '2024-05-02T12:44:34.655Z'
+          status_date_time: '2024-05-02T12:44:36.655Z'
+          status: CREATED
+          description: The transaction has successfully been created
+        original_payment:
+          id: a434SKtUaaST
+          value_date: '2024-05-01'
+    Method-Not-Allowed-Gateway-Error-Example:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Ok-Refund-Response:
+      value:
+        end_to_end_id: r/434SKtUcdGQ
+        refund_id: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+        creation_date_time: '2022-09-13T08:23:49.112Z'
+        value_date: '2022-09-13'
+        instructed_amount: 29876.98
+        instructed_currency: THB
+        status:
+          date_time: '2022-09-13T08:23:49.112Z'
+          code: ACCC
+          description: Completed
+          type: F
+        original_payment:
+          end_to_end_id: r/434SKtUcdGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2022-09-13'
+          instructed_amount: 29876.98
+          instructed_currency: THB
+    Th-Refund-Initiation-Request-Example:
+      value:
+        end_to_end_id: r/434SKtUcdGQ
+        instructed_amount: 2987.96
+        instructed_currency: THB
+        additional_info: Text
+        original_payment:
+          end_to_end_id: r/434SKtUcdGQ
+          value_date: '2022-09-13'
+    Un-Supported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type is invalid
+          action: Provide valid media type
+          code: CC00002
+    Ok-Refund-Response-Multiple-Example:
+      value:
+      - end_to_end_id: r/434SKtUcdGQ
+        refund_id: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+        creation_date_time: '2022-09-13T08:23:49.112Z'
+        value_date: '2022-09-13'
+        instructed_amount: 29876.98
+        instructed_currency: THB
+        status:
+          date_time: '2022-09-13T08:23:49.112Z'
+          code: ACCC
+          description: Completed
+          type: F
+        original_payment:
+          end_to_end_id: r/434SKtUcdGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2022-09-13'
+          instructed_amount: 29876.98
+          instructed_currency: THB
+      - end_to_end_id: r/434SKtUcdGQ
+        refund_id: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+        creation_date_time: '2022-09-13T08:23:49.112Z'
+        value_date: '2022-09-13'
+        instructed_amount: 29900.98
+        instructed_currency: THB
+        status:
+          date_time: '2022-09-13T08:23:49.112Z'
+          code: RJCT
+          description: Rejected
+          type: P
+        reasons:
+        - code: AM02
+          description: Transaction instructed amount is not ≥ 0.01 & ≤ 2,000,000.00
+        original_payment:
+          end_to_end_id: r/434SKtUcdGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2022-09-13'
+          instructed_amount: 29876.98
+          instructed_currency: THB
+    Us-Refund-Initiation-Request-Example:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        instruction_id: 1245hgfdartyu1
+        instructed_amount: 200.01
+        instructed_currency: USD
+        debtor:
+          name: JOHN
+          street_name: street
+          building_number: No16
+          postal_code: '102546'
+          city: New Jer
+          state: New Town
+          country: US
+        ultimate_debtor:
+          street_name: street
+          postal_code: '102546'
+          city: New Jer
+          state: New Town
+          country: US
+        original_payment:
+          end_to_end_id: r/434SKtUaaGQ
+          value_date: '2023-11-01'
+    Refund-Initiation-Response-Example:
+      value:
+        end_to_end_id: r/434SKtUcdGQ
+        refund_id: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+        instructed_amount: 29876.98
+        instructed_currency: THB
+        additional_info: Text
+        status:
+          date_time: '2022-09-13T08:23:49.112Z'
+          code: ACTC
+          description: Accepted
+        original_payment:
+          end_to_end_id: r/434SKtUcdGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2022-09-13'
+    Unauthorized-Example_2:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request is not authorized
+          action: Try again with valid credentials
+          code: CC00007
+    Bad-Request-Example_2:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+        - issue: instructed_amount is missing
+          action: Provide valid instructed_amount
+          code: VC00010
+    Br-Refund-Initiation-Request-Example:
+      value:
+        end_to_end_id: r/434SKtUcd77
+        instructed_amount: 100.01
+        instructed_currency: BRL
+        additional_info: Refund Request
+        original_payment:
+          end_to_end_id: r/434SKtUaaGQ
+          value_date: '2023-10-01'
+    Internal-Server-Error-Example_2:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request was not processed
+          code: CC00004
+    Ok-Refund-Response-Failed:
+      value:
+        end_to_end_id: r/434SKtUcdGQ
+        refund_id: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+        creation_date_time: '2022-09-13T08:23:49.112Z'
+        value_date: '2022-09-13'
+        instructed_amount: 29900.98
+        instructed_currency: THB
+        status:
+          date_time: '2022-09-13T08:23:49.112Z'
+          code: RJCT
+          description: Rejected
+          type: P
+        reasons:
+        - code: AM02
+          description: Transaction instructed refund amount is > total payment amount
+        original_payment:
+          end_to_end_id: r/434SKtUcdGQ
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          value_date: '2022-09-13'
+          instructed_amount: 29876.98
+          instructed_currency: THB
+    SEPA-Refund-Initiation-Request-Example:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        instructed_amount: 200.01
+        instructed_currency: EUR
+        unstructured_remittance_info:
+        - More details of refund
+        return_reason_code: AM05
+        original_payment:
+          end_to_end_id: r/434SKtUaaGQ
+          value_date: '2023-11-01'
+    Duplicate-Payment-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: duplicate request. same request is being processed in another request
+          action: please do not repeat the same request again
+          code: VC00017
+  schemas:
+    Refund-Update-Request:
+      type: object
+      title: Refund update request
+      required:
+      - transaction
+      - method
+      properties:
+        method:
+          $ref: '#/components/schemas/Refund-Method-Update'
+        transaction:
+          $ref: '#/components/schemas/Refund-Transaction-Update'
+        order:
+          $ref: '#/components/schemas/Refund-Order-Update'
+      additionalProperties: false
+      description: Payment Update Request
+    Error-Response:
+      type: object
+      title: Error Response
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+        error_details:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Gateway-Error-Response:
+      type: object
+      title: GatewayErrorResponse
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+    Card-Refund-Response:
+      title: card
+      description: Card Method Response
+      properties:
+        brand:
+          description: "The brand name used to describe the card that is recognized and accepted globally. For many major card types this will match the scheme name. In some markets, a card may also be co-branded with a local brand that is recognized and accepted within its country/region of origin (see card.localBrand).You may use this information to support surcharging decisions. This information is gathered from 3rd party sources and may not be accurate in all circumstances. \n- For Card transaction, card.brand parameter is mandatory"
+          enum:
+          - AMEX
+          - CHINA_UNIONPA
+          - DINERS_CLUB
+          - DISCOVER
+          - JCB
+          - LOCAL_BRAND_ONLY
+          - MAESTRO
+          - MASTERCARD
+          - RUPAY
+          - UATP
+          - UNKNOWN
+          - VISA
+          example: AMEX
+          type: string
+          title: brand
+        scheme:
+          description: "The organization that owns a card brand and defines operating regulations for its use. The card scheme also controls authorization and settlement of card transactions among issuers and acquirers. \n- For Card transaction, card.scheme parameter is mandatory"
+          enum:
+          - AMEX
+          - CHINA_UNIONPA
+          - DINERS_CLUB
+          - DISCOVER
+          - JCB
+          - LOCAL_BRAND_ONLY
+          - MAESTRO
+          - MASTERCARD
+          - RUPAY
+          - UATP
+          - UNKNOWN
+          - VISA
+          example: AMEX
+          type: string
+          title: scheme
+        funding_method:
+          description: "The method used by the payer to provide the funds for the payment.You may use this information to support surcharging decisions. This information is gathered from 3rd party sources and may not be accurate in all circumstances. \n- For Card transaction, card.funding_method parameter is mandatory"
+          enum:
+          - CHARGE
+          - CREDIT
+          - DEBIT
+          - UNKNOWN
+          example: CHARGE
+          type: string
+          title: funding_method
+        stored_on_file:
+          description: This parameter only applies if you collect card details from your payer, store them, and either you or your payer use the stored credentials for subsequent payments.
+          enum:
+          - NOT_STORED
+          - STORED
+          - TO_BE_STORED
+          example: NOT_STORED
+          type: string
+          title: stored_on_file
+    Response:
+      title: Response
+      description: Response
+      properties:
+        acquirer_code:
+          description: Indicates success or failure of the transaction registration. A value of 0 (zero) indicates success, and a value of 99 indicates failure.
+          example: ACQ7894561
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: acquirer_code
+        acquirer_message:
+          description: An additional message indicating the success or failure of the transaction registration. If the registration was successful, this parameter contains the value Data Received. If the registration failed, this parameter contains the value Data Not Receive.
+          example: MSG12345
+          maxLength: 255
+          minLength: 1
+          type: string
+          title: acquirer_message
+        card_holder_verification:
+          $ref: '#/components/schemas/avs'
+    Refund-Order-Update:
+      title: Refund Order Update
+      properties:
+        id:
+          description: "A unique identifier for this order to distinguish it from any other order you create. \n- For CARD/GOOGLEPAY/APPLEPAY transactions, order.id parameter is mandatory"
+          example: OR123456789
+          maxLength: 50
+          minLength: 1
+          type: string
+          title: id
+      type: object
+    Payment-Response:
+      type: object
+      title: Payment Response
+      properties:
+        id:
+          type: string
+          maxLength: 128
+          description: Unique reference number
+          example: pay02052023456r
+          title: id
+        status:
+          type: string
+          maxLength: 10
+          description: The transaction has successfully been created.
+          enum:
+          - CREATED
+          example: CREATED
+          title: status
+        description:
+          type: string
+          maxLength: 200
+          description: more information about the status
+          example: The transaction has successfully been created
+          title: description
+    Card-Refund-Update-Notification:
+      title: card
+      description: Card refund update Response
+      properties:
+        number:
+          description: The account number of the payer's account used for the payment. On requests, provide the number in the form that you receive it (as explained below). On responses, the gateway populates it with a form that the payer would recognize.
+          example: PA123456789
+          maxLength: 23
+          minLength: 9
+          type: string
+          title: number
+        expiry_month:
+          description: Two-digit month in which the payment card expires.
+          example: '01'
+          type: string
+          pattern: ^(0?[1-9]|1[0-2])$
+          title: expiry_month
+        expiry_year:
+          description: Four-digit year in which the payment card expires.
+          type: string
+          pattern: ^[0-9]{2,2}$
+          example: '25'
+          title: expiry_year
+        encryption:
+          description: The encryption framework used for the payment details received by the gateway.
+          enum:
+          - DEVICE
+          - DIGITAL_WALLET
+          - DUKPT
+          example: DEVICE
+          type: string
+          title: encryption
+        device:
+          $ref: '#/components/schemas/Device-Response'
+        device_specific:
+          $ref: '#/components/schemas/Device-Specific-Response'
+    Refund-Method:
+      title: Method
+      type: object
+      required:
+      - type
+      properties:
+        type:
+          description: "Method specified by the customer for the transaction \n- Provide PIX for brazil QR creation \n- Provide CARD for CARD transactions \n- Provide UPI for India UPI transactions \n- Provide FPS for UK transactions \n- Provide PAYPAL for PAYPAL transactions \n- Provide ACH for US Return & Reversal \n- Provide GOOGLEPAY for GOOGLEPAY transactions \n- Provide APPLEPAY for APPLEPAY transactions"
+          type: string
+          enum:
+          - PIX
+          - CARD
+          - UPI
+          - FPS
+          - ACH
+          - PAYPAL
+          - GOOGLEPAY
+          - APPLEPAY
+          - AFTERPAY
+          - AMAZON_PAY
+          - BITPAY
+          - BIZUM
+          - ALIPAY
+          - TRUSTLY
+          - BLIK
+          - BLIK_BNPL
+          - CASH_APP
+          - DOKU_WALLET
+          - EPS
+          - ESTONIAN_BANKS
+          - VERKKOPANKKI
+          - FLOAPAY
+          - FPX
+          - GOPAY
+          - IDEAL
+          - INDOMARET
+          - INDONESIAN_BANKS
+          - JENIUS_PAY
+          - KREDIVO
+          - LATVIAN_BANKS
+          - LINK_AJA
+          - LITHUANIAN_BANKS
+          - MBWAY
+          - MULTIBANCO
+          - OVO_WALLET
+          - PAYSAFECARD
+          - P24
+          - SATISPAY
+          - SCALAPAY
+          - SKRILL
+          - SWISH
+          - THAIBANKS
+          - TWINT
+          - WERO
+          - ZIP
+          - BANCOMATPAY
+          - DRAGONPAY
+          - MYBANK
+          - ALFAMART
+          - PAYU
+          - BANCONTACT
+          - STABLECOINS
+          - OXXO_PAY
+          example: PIX
+          title: type
+    Refunds-Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/Payment-Refund-Notification'
+    Refund-Update-Notification:
+      type: object
+      title: Refund Update Notification
+      properties:
+        method:
+          $ref: '#/components/schemas/Refund-Update-Method'
+        transaction:
+          $ref: '#/components/schemas/Refund-Update-Transaction'
+        order:
+          $ref: '#/components/schemas/Refund-Update-Order'
+    Refund-Update-Order:
+      type: object
+      title: Refund-Notification Order
+      properties:
+        id:
+          description: A unique identifier for this order to distinguish it from any other order you create.
+          example: OR123456789
+          maxLength: 40
+          minLength: 1
+          type: string
+          title: id
+        amount:
+          description: The total amount for the order
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: amount
+        creation_date_time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created"
+          example: '2022-09-13T08:23:49.114Z'
+          title: creation_date_time
+        update_time:
+          type: string
+          format: date-time
+          description: "Indicates the date and time the gateway considers the order to have last been updated GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created "
+          example: '2022-09-13T08:23:49.114Z'
+          title: update_time
+        reference:
+          description: An optional identifier for the orderFor example, a shopping cart number, an order number, or an invoice number.
+          example: REPAY789541
+          maxLength: 200
+          minLength: 1
+          type: string
+          title: reference
+        invoice_number:
+          description: The invoice number you issued for this order
+          example: INV789541
+          maxLength: 25
+          minLength: 1
+          type: string
+          title: invoice_number
+        currency_code:
+          description: ISO 4217 Currency Code for instance  USD/GBP/EUR
+          enum:
+          - USD
+          example: USD
+          type: string
+          title: currency_code
+        merchant_amount:
+          description: The total amount for the order in order.merchantCurrency units.
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: merchant_amount
+        merchant_currency:
+          description: ' The currency in which you priced your inventory for this order, expressed as an ISO 4217 alpha codeISO 4217 Currency Code for instance  USD/GBP/EUR '
+          enum:
+          - USD
+          example: USD
+          type: string
+          title: merchant_currency
+        status:
+          type: string
+          maxLength: 30
+          description: "Order Status, following status you will receive in response \n- AUTHENTICATED - The payer was successfully authenticated. \n- AUTHENTICATION_INITIATED - Payer authentication has been initiated but not completed. \n- AUTHENTICATION_NOT_NEEDED - Payer authentication was not performed as it was not needed. \n- AUTHENTICATION_UNSUCCESSFUL - Payer authentication was not able to be successfully completed. \n- AUTHORIZED - The payment has been authorized successfully but the authorized amount has not yet been captured, in part, full, or excess. \n- CANCELLED - The initial transaction for this order has been voided successfully. \n- CAPTURED - The authorized amount for this order, in full or excess, has been captured successfully. \n- CHARGEBACK_PROCESSED - A Chargeback has been processed against this order. \n- DISPUTED - The payment has been disputed and is under investigation. A request for information has been received or a chargeback is pending. \n- EXCESSIVELY_REFUNDED - The payment has been captured in part, full, or excess, but the captured amount in excess has been refunded successfully. \n- FAILED - The payment has not been successful. \n- FUNDING - The order transfers money to or from the merchant, without the involvement of a payer. For example, recording monthly merchant service fees from the payment service provider. \n- INITIATED - A browser payment that has successfully been initiated for this order. No payment has yet been made. \n- PARTIALLY_CAPTURED - The authorized amount for this order, in part, has been captured successfully. \n- PARTIALLY_REFUNDED - The payment has been captured in part, full, or excess, but the captured amount in part has been refunded successfully. \n- REFUNDED - The payment has been captured in part, full, or excess, but the captured amount in full has been refunded successfully. \n- REFUND_REQUESTED - A refund against captured amounts on this order has been requested but not executed. Requires further action to approve the refund. \n- VERIFIED - The card details for this order have successfully been verified. No payment has yet been initiated or made. \n- DISBURSED - The order amount has successfully been disbursed to the payer."
+          example: AUTHENTICATED
+          title: status
+        total_auth_amount:
+          description: The amount that has been successfully authorized for this order.
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: total_auth_amount
+        total_captured_amount:
+          description: The amount that has been successfully captured for this order.
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: total_captured_amount
+        total_disbursed_amount:
+          description: 'The amount that has been successfully captured for this order. '
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: total_disbursed_amount
+        total_refunded_amount:
+          description: The amount that has been successfully captured for this order.
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: total_refunded_amount
+    Original-Initial-Payment:
+      type: object
+      title: Original payment
+      description: "Either populate UETR OR (id AND value_date) for the refund to be processed \n- For Brazil PIX, India UPI and UK FPS refund payment, original_payment object is mandatory"
+      properties:
+        id:
+          description: The original payment transaction identification
+          example: pay02052023456r
+          maxLength: 128
+          minLength: 1
+          type: string
+          title: id
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: "UUID v4 format unique end-to-end transaction reference. \n- For ACH Return & Reversal, this parameter is mandatory."
+          title: uetr
+        value_date:
+          type: string
+          format: date
+          description: Format YYYY-MM-DD Date in local time zone (e.g., EST for a United States RTP network transaction) when Citi's transaction processing application starts processing a transaction
+          title: value_date
+    Refund-Order-Status:
+      title: Order
+      properties:
+        id:
+          description: "A unique identifier for this order to distinguish it from any other order you create. \n- For Card transaction, order.id parameter is mandatory"
+          example: OR123456789
+          maxLength: 40
+          minLength: 1
+          type: string
+          title: id
+        creation_date_time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- For Card transaction, order.creation_date_time parameter is mandatory"
+          example: '2022-09-13T08:23:49.114Z'
+          title: creation_date_time
+        update_time:
+          type: string
+          format: date-time
+          description: "Indicates the date and time the gateway considers the order to have last been updated GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- For Card transaction, order.update_time parameter is mandatory"
+          example: '2022-09-13T08:23:49.114Z'
+          title: update_time
+        amount:
+          description: "The total amount for the order. \n- For Card transaction, order.amount parameter is mandatory"
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: amount
+        currency_code:
+          description: "ISO 4217 Currency Code for instance  USD/GBP/EUR \n- For Card transaction, order.currency_code parameter is mandatory"
+          enum:
+          - USD
+          - INR
+          example: USD
+          type: string
+          title: currency_code
+        merchant_amount:
+          description: "The total amount for the order in order.merchantCurrency units. \n- For Card transaction, order.merchant_amount parameter is mandatory"
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: merchant_amount
+        merchant_currency:
+          description: " The currency in which you priced your inventory for this order, expressed as an ISO 4217 alpha codeISO 4217 Currency Code for instance  USD/GBP/EUR \n- order.merchant_currency parameter is mandatory for all transaction type creation \n- For Card transaction, order.merchant_currency parameter is mandatory"
+          enum:
+          - USD
+          - INR
+          example: USD
+          type: string
+          title: merchant_currency
+        reference:
+          description: An optional identifier for the orderFor example, a shopping cart number, an order number, or an invoice number.
+          example: REPAY789541
+          maxLength: 200
+          minLength: 1
+          type: string
+          title: reference
+        refund_order_id:
+          description: Refund order ID
+          example: REPAY789541
+          maxLength: 200
+          minLength: 1
+          type: string
+          title: refund_order_id
+        status:
+          type: string
+          maxLength: 30
+          description: "Order Status, following status you will receive in response \n- AUTHENTICATED - The payer was successfully authenticated. \n- AUTHENTICATION_INITIATED - Payer authentication has been initiated but not completed. \n- AUTHENTICATION_NOT_NEEDED - Payer authentication was not performed as it was not needed. \n- AUTHENTICATION_UNSUCCESSFUL - Payer authentication was not able to be successfully completed. \n- AUTHORIZED - The payment has been authorized successfully but the authorized amount has not yet been captured, in part, full, or excess. \n- CANCELLED - The initial transaction for this order has been voided successfully. \n- CAPTURED - The authorized amount for this order, in full or excess, has been captured successfully. \n- CHARGEBACK_PROCESSED - A Chargeback has been processed against this order. \n- DISPUTED - The payment has been disputed and is under investigation. A request for information has been received or a chargeback is pending. \n- EXCESSIVELY_REFUNDED - The payment has been captured in part, full, or excess, but the captured amount in excess has been refunded successfully. \n- FAILED - The payment has not been successful. \n- FUNDING - The order transfers money to or from the merchant, without the involvement of a payer. For example, recording monthly merchant service fees from the payment service provider. \n- INITIATED - A browser payment that has successfully been initiated for this order. No payment has yet been made. \n- PARTIALLY_CAPTURED - The authorized amount for this order, in part, has been captured successfully. \n- PARTIALLY_REFUNDED - The payment has been captured in part, full, or excess, but the captured amount in part has been refunded successfully. \n- REFUNDED - The payment has been captured in part, full, or excess, but the captured amount in full has been refunded successfully. \n- REFUND_REQUESTED - A refund against captured amounts on this order has been requested but not executed. Requires further action to approve the refund. \n- VERIFIED - The card details for this order have successfully been verified. No payment has yet been initiated or made. \n- DISBURSED - The order amount has successfully been disbursed to the payer."
+          example: AUTHENTICATED
+          title: status
+        total_auth_amount:
+          description: "The amount that has been successfully authorized for this order. \n- For Card transaction, order.total_auth_amount parameter is mandatory"
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: total_auth_amount
+        total_captured_amount:
+          description: "The amount that has been successfully captured for this order. \n- For Card transaction, order.total_captured_amount parameter is mandatory"
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: total_captured_amount
+        total_refunded_amount:
+          description: "The amount that has been successfully captured for this order. \n- For Card transaction, order.total_refunded_amount parameter is mandatory"
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: total_refunded_amount
+    Device-Specific-Response:
+      title: Device
+      description: Device Specific Response
+      properties:
+        number:
+          description: The payer's account number associated with a digital payment method.
+          example: PA123456789
+          maximum: 19
+          minimum: 9
+          type: number
+          title: number
+        expiry_month:
+          description: Two-digit month in which the device specific expires.
+          example: '01'
+          type: string
+          pattern: ^(0?[1-9]|1[0-2])$
+          title: expiry_month
+        expiry_year:
+          description: Year from the expiry date of the device specific account number.
+          type: string
+          pattern: ^[0-9]{2,2}$
+          example: '25'
+          title: expiry_year
+    Refund-Method-Status:
+      title: Method
+      type: object
+      required:
+      - type
+      properties:
+        type:
+          description: "Method specified by the customer for the transaction \n- Provide PIX for brazil QR creation \n- Provide CARD for CARD transactions \n- Provide UPI for India UPI transactions \n- Provide FPS for UK transactions \n- Provide PAYPAL for PAYPAL transactions \n- Provide ACH for US Return & Reversal \n- Provide GOOGLEPAY for GOOGLEPAY transactions \n- Provide APPLEPAY for APPLEPAY transactions"
+          type: string
+          enum:
+          - PIX
+          - CARD
+          - UPI
+          - FPS
+          - ACH
+          - PAYPAL
+          - GOOGLEPAY
+          - APPLEPAY
+          - AFTERPAY
+          - AMAZON_PAY
+          - BITPAY
+          - BIZUM
+          - ALIPAY
+          - TRUSTLY
+          - BLIK
+          - BLIK_BNPL
+          - CASH_APP
+          - DOKU_WALLET
+          - EPS
+          - ESTONIAN_BANKS
+          - VERKKOPANKKI
+          - FLOAPAY
+          - FPX
+          - GOPAY
+          - IDEAL
+          - INDOMARET
+          - INDONESIAN_BANKS
+          - JENIUS_PAY
+          - KREDIVO
+          - LATVIAN_BANKS
+          - LINK_AJA
+          - LITHUANIAN_BANKS
+          - MBWAY
+          - MULTIBANCO
+          - OVO_WALLET
+          - PAYSAFECARD
+          - P24
+          - SATISPAY
+          - SCALAPAY
+          - SKRILL
+          - SWISH
+          - THAIBANKS
+          - TWINT
+          - WERO
+          - ZIP
+          - BANCOMATPAY
+          - DRAGONPAY
+          - MYBANK
+          - ALFAMART
+          - PAYU
+          - BANCONTACT
+          - STABLECOINS
+          - OXXO_PAY
+          example: PIX
+          title: type
+        card:
+          $ref: '#/components/schemas/Card-Refund-Response'
+        ach:
+          title: refund-ach
+          type: object
+          description: ACH pay operation
+          properties:
+            sec_code:
+              description: "Identifies the Standard Entry Class (SEC) code to be sent to the issuer. \n- This parameter is optional for ACH Return & Reversal."
+              minLength: 1
+              maxLength: 3
+              type: string
+              example: CCD
+              title: sec_code
+    Acquirer-Request:
+      title: acquirer
+      description: acquirer
+      properties:
+        transaction_id:
+          description: Identifier used by the acquirer to identify the transaction. This identifier may be used by the acquirer in settlement reports.
+          example: ACQ7894561
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: transaction_id
+    Refund-Update-Transaction:
+      type: object
+      title: Refund Update transaction notification
+      properties:
+        id:
+          description: Unique Transaction identification provided by the merchant during transaction canellation/void
+          example: pay02052023456r
+          maxLength: 128
+          minLength: 1
+          type: string
+          title: id
+        amount:
+          description: Transaction amount
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: amount
+        country_code:
+          description: Country code
+          enum:
+          - BR
+          - IN
+          - GB
+          - US
+          example: BR
+          type: string
+          title: country_code
+        currency_code:
+          description: ISO 4217 Currency Code for instance  USD/GBP/EUR
+          enum:
+          - USD
+          example: USD
+          type: string
+          title: currency_code
+        status:
+          type: string
+          maxLength: 20
+          description: "Transaction Status, following status you will receive in response \n- CREATED - The transaction has successfully been created \n- PENDING - Transaction pending action from customer \n- AUTHORIZED - Authorization approved \n- CAPTURED - Transaction fully captured \n- CAPTURED_PARTIALLY - Transaction partially captured \n- CANCELLED - Transaction cancelled \n- DECLINED - Transaction declined by the payment processor \n- REJECTED - Request rejected after business logic check \n- SYSTEM_ERROR- Internal system error occurred processing the transaction \n- FAILED - Transaction failed for invalid payload \n- SETTLED - Transaction settled \n- SUCCESS - The operation was successfully processed \n- UNKNOWN - The result of the operation is unknown"
+          example: SUCCESS
+          title: status
+        description:
+          type: string
+          maxLength: 256
+          description: "Transaction Status, following status you will receive in response \n- CREATED - The transaction has successfully been created \n- PENDING - Transaction pending action from customer \n- AUTHORIZED - Authorization approved \n- CAPTURED - Transaction fully captured \n- CAPTURED_PARTIALLY - Transaction partially captured  \n- CANCELLED - Transaction cancelled \n- DECLINED - Transaction declined by the payment processor \n- REJECTED - Request rejected after business logic check \n- SYSTEM_ERROR- Internal system error occurred processing the transaction \n- FAILED - Transaction failed for invalid payload \n- SETTLED - Transaction settled \n- SUCCESS - The operation was successfully processed \n- UNKNOWN - The result of the operation is unknown"
+          example: Transaction declined by the payment processor
+          title: description
+        redirect_url:
+          type: string
+          maxLength: 500
+          description: The URL to which you must redirect the payer's browser to complete the payment when using the payment provider's website.
+          example: https://greenzone-api.uat.nam.nsroot.net/api/notification
+          title: redirect_url
+        creation_date_time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created \n- For ACH PAY and Verify transaction, order.creation_date_time parameter is mandatory \n- For Brazil PIX, this parameter is mandatory"
+          example: '2022-09-13T08:23:49.114Z'
+          title: creation_date_time
+        update_time:
+          type: string
+          format: date-time
+          description: "Indicates the date and time the gateway considers the order to have last been updated GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created \n- For ACH PAY and Verify transaction, order.update_time parameter is mandatory"
+          example: '2022-09-13T08:23:49.114Z'
+          title: update_time
+        psp_reference:
+          type: string
+          maxLength: 36
+          minLength: 1
+          description: "Payment session id generated by Banked (third party system). Will be present in case of link creation being successful \n - For UK PAYBYBANK Creation payment_session_field parameter is mandatory for success link creation."
+          example: PAY1234567
+          title: psp_reference
+        type:
+          description: Indicates the type of action performed on the order.
+          enum:
+          - AUTHENTICATION
+          - AUTHORIZATION
+          - AUTHORIZATION_UPDATE
+          - CAPTURE
+          - CHARGEBACK
+          - DISBURSEMENT
+          - FUNDING
+          - PAYMENT
+          - REFUND
+          - REFUND_REQUEST
+          - VERIFICATION
+          - VOID_AUTHORIZATION
+          - VOID_CAPTURE
+          - VOID_PAYMENT
+          - VOID_REFUND
+          example: VERIFICATION
+          type: string
+          title: type
+        reference:
+          description: An optional identifier for this transaction
+          example: REPAY789541
+          maxLength: 250
+          minLength: 1
+          type: string
+          title: reference
+        authorization_code:
+          description: Value generated by the issuing bank in response to a proposal to transfer funds
+          example: AUTH123456
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: authorization_code
+        acquirer:
+          $ref: '#/components/schemas/Acquirer-Request'
+        terminal:
+          description: Identifier used by the acquirer to identify the transaction. This identifier may be used by the acquirer in settlement reports.
+          example: ACQ7894561
+          maxLength: 16
+          minLength: 1
+          type: string
+          title: terminal
+        retrieval_reference_number:
+          description: When a transaction registration succeeds, the value of this parameter contains the 44-digit number that was used to create the bar code on the Boleto slip. This bar code can then be scanned by the vendor if a payer elects to pay Boleto at a registered location.
+          example: ACQ7894561
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: retrieval_reference_number
+        reason_code:
+          description: "Transaction rejection Code \n- For Brazil PIX, this parameter is mandatory with max length 4, expected values are ACCT, BLCK, CCLD, FAIL, OTHR, SLBD & SLCR"
+          example: SC0020
+          maxLength: 10
+          minLength: 1
+          type: string
+          title: reason_code
+        authorization_response:
+          $ref: '#/components/schemas/Authorization-Response'
+        response:
+          $ref: '#/components/schemas/Response'
+        receipt:
+          description: When a transaction registration succeeds, the value of this parameter contains the 44-digit number that was used to create the bar code on the Boleto slip. This bar code can then be scanned by the vendor if a payer elects to pay Boleto at a registered location.
+          example: MSG12345
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: receipt
+        additional_response_data:
+          description: A 47-digit number the payer can use to make a Boleto payment.When a transaction registration succeeds, the value of this parameter contains the 44-digit number that was used to create the bar code on the Boleto slip. This bar code can then be scanned by the vendor if a payer elects to pay Boleto at a registered location.If the transaction registration fails, this parameter contains an error code and a description in key-value pair format.
+          example: MSG12345
+          maxLength: 4000
+          minLength: 1
+          type: string
+          title: additional_response_data
+        status_date_time:
+          format: date-time
+          type: string
+          description: "Date & Time when Payer bank provided their response GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- This parameter is mandatory for Brazil PIX"
+          example: '2022-09-13T08:23:49.114Z'
+          title: status_date_time
+    Refund-L0-Method-Status:
+      title: Method
+      type: object
+      required:
+      - type
+      properties:
+        type:
+          description: "Method specified by the customer for the transaction \n- Provide PIX for brazil QR creation \n- Provide CARD for CARD transactions \n- Provide UPI for India UPI transactions \n- Provide FPS for UK transactions \n- Provide PAYPAL for PAYPAL transactions \n- Provide ACH for US Return & Reversal \n- Provide GOOGLEPAY for GOOGLEPAY transactions \n- Provide APPLEPAY for APPLEPAY transactions"
+          type: string
+          enum:
+          - PIX
+          - CARD
+          - UPI
+          - FPS
+          - ACH
+          - PAYPAL
+          - GOOGLEPAY
+          - APPLEPAY
+          - AFTERPAY
+          - AMAZON_PAY
+          - BITPAY
+          - BIZUM
+          - ALIPAY
+          - TRUSTLY
+          - BLIK
+          - BLIK_BNPL
+          - CASH_APP
+          - DOKU_WALLET
+          - EPS
+          - ESTONIAN_BANKS
+          - VERKKOPANKKI
+          - FLOAPAY
+          - FPX
+          - GOPAY
+          - IDEAL
+          - INDOMARET
+          - INDONESIAN_BANKS
+          - JENIUS_PAY
+          - KREDIVO
+          - LATVIAN_BANKS
+          - LINK_AJA
+          - LITHUANIAN_BANKS
+          - MBWAY
+          - MULTIBANCO
+          - OVO_WALLET
+          - PAYSAFECARD
+          - P24
+          - SATISPAY
+          - SCALAPAY
+          - SKRILL
+          - SWISH
+          - THAIBANKS
+          - TWINT
+          - WERO
+          - ZIP
+          - BANCOMATPAY
+          - DRAGONPAY
+          - MYBANK
+          - ALFAMART
+          - PAYU
+          - BANCONTACT
+          - STABLECOINS
+          - OXXO_PAY
+          example: PIX
+          title: type
+        card:
+          $ref: '#/components/schemas/Card-Refund-Response'
+    Authorization-Refund-Response:
+      title: Authorization Refund Response
+      description: Authorization Response
+      properties:
+        stan:
+          description: The System Trace Audit Number is assigned by a transaction originator to assist in identifying a Card Transaction.The trace number remains unchanged for the life of the Card Transaction.
+          example: AUD345
+          maxLength: 6
+          minLength: 1
+          type: string
+          title: stan
+        merchant_advice_code:
+          description: This parameter contains data returned by the issuer or card network to clearly communicate to merchants the reason for declining a MasterCard or Visa transaction Merchants can use this information to determine the best action to take.
+          example: '2'
+          maxLength: 2
+          minLength: 1
+          type: string
+          title: merchant_advice_code
+        pos_entry_mode:
+          description: The POS Entry Mode provided to Discover (JCB (US Domestic only), and Diners) for the authorization
+          example: '2'
+          maxLength: 4
+          minLength: 1
+          type: string
+          title: pos_entry_mode
+        return_aci:
+          description: The ACI (Authorization Characteristics Indicator) returned by the issuer
+          example: '1'
+          maxLength: 1
+          minLength: 1
+          type: string
+          title: return_aci
+        avscode:
+          description: The acquirer AVS response code generated by the card issuing institution
+          example: '1'
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: avscode
+        commercial_card_indicator:
+          description: Indicates the type of commercial card as returned by the card issuer
+          example: '1'
+          maxLength: 1
+          minLength: 1
+          type: string
+          title: commercial_card_indicator
+        date:
+          type: string
+          description: "The local date, in MMDD format, on which the transaction occurred. \n- Format MMDD"
+          title: date
+          example: '0530'
+        financial_network_code:
+          description: Indicates the code of the financial network that was used to process the transaction with the issuer.
+          example: '1'
+          maxLength: 3
+          minLength: 1
+          type: string
+          title: financial_network_code
+        financial_network_date:
+          type: string
+          format: date
+          description: "The date for the Authorization as returned by the scheme. \n- Format YYYY-MM-DD"
+          title: financial_network_date
+          example: 05-30
+        pos_data:
+          description: Indicates the code of the financial network that was used to process the transaction with the issuer.
+          example: '1'
+          maxLength: 13
+          minLength: 1
+          type: string
+          title: pos_data
+        processing_code:
+          description: Identifies the type of Card Transaction sent to Card Acceptor.
+          example: '1'
+          maxLength: 6
+          minLength: 1
+          type: string
+          title: processing_code
+        response_code:
+          description: The response code which indicates the status of the transaction.
+          example: '1'
+          maxLength: 3
+          minLength: 1
+          type: string
+          title: response_code
+        time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created \n- For US RFP this parameter is mandatory"
+          example: '2022-09-13T08:23:49.114Z'
+          title: time
+        transaction_identifier:
+          description: The unique identifier for the transaction returned by the issuer.
+          example: '1'
+          maxLength: 30
+          minLength: 1
+          type: string
+          title: transaction_identifier
+    avs:
+      title: avs
+      description: avs
+      properties:
+        acquirer_code:
+          description: The acquirer AVS response code generated by the card issuing institution.
+          example: DE1245678945123
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: acquirer_code
+        gateway_code:
+          description: The address verification result generated to indicate whether the address data supplied matches the data held by the cardholder's issuing bank
+          enum:
+          - ADDRESS_MATCH
+          - ADDRESS_ZIP_MATCH
+          - NAME_ADDRESS_MATCH
+          - NAME_MATCH
+          - NAME_ZIP_MATCH
+          - NOT_AVAILABLE
+          - NOT_REQUESTED
+          - NOT_VERIFIED
+          - NO_MATCH
+          - SERVICE_NOT_AVAILABLE_RETRY
+          - SERVICE_NOT_SUPPORTED
+          - ZIP_MATCH
+          example: ADDRESS_MATCH
+          type: string
+          title: gateway_code
+    Refund-Transaction-Status:
+      title: Transaction
+      required:
+      - id
+      - country_code
+      properties:
+        id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: "Unique Transaction identification provided by the merchant during transaction refund creation. \n- This parameter is mandatory for all payment type."
+          example: pay02052023456r
+          title: id
+        amount:
+          description: "Transaction amount \n - For Brazil QR Creation decimal values are mandatory for transaction.amount and it must have 2 digits \n - For Brazil QR Creation maxmium amount limit is 9999999999.99 and transaction.amount parameter is mandatory \n- For Card transaction, transaction.amount parameter is mandatory and allowed max 2 decimal after dot. \n- This parameter is optional for ACH Return & Reversal."
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: amount
+        reason_code:
+          description: 'Transaction rejection Code.
+
+            - This parameter is optional for ACH Return & Reversal.'
+          example: SC0020
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: reason_code
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+          title: uetr
+          example: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+        value_date:
+          type: string
+          format: date
+          description: "Date in local time zone (e.g., EST for a United States RTP network transaction) when Citi's transaction processing application starts processing a transaction in format YYYY-MM-DD. \n- This parameter is optional for ACH Return & Reversal."
+          title: value_date
+          example: '2024-05-30'
+        currency_code:
+          description: "ISO 4217 Currency Code for instance  USD/GBP/EUR/INR \n- transaction.currency_code parameter is mandatory for all transaction type creation"
+          enum:
+          - BRL
+          - USD
+          - INR
+          - GBP
+          - EUR
+          - CAD
+          - HKD
+          - AUD
+          - SGD
+          - DKK
+          - NOK
+          - SEK
+          - PLN
+          - IDR
+          - MYR
+          - THB
+          - CHF
+          - PHP
+          - CZK
+          example: BRL
+          type: string
+          title: currency_code
+        country_code:
+          description: "Country code \n- For ACH Return & Reversal, this parameter is mandatory."
+          enum:
+          - US
+          - BR
+          - IN
+          - GB
+          - TH
+          - AU
+          - CA
+          - MX
+          - DE
+          - NL
+          - IE
+          - IT
+          - FR
+          - ES
+          - HK
+          - SG
+          - NZ
+          - DK
+          - 'NO'
+          - SE
+          - SW
+          - BE
+          - FI
+          - CH
+          - CZ
+          - AT
+          - PT
+          example: US
+          type: string
+          title: country_code
+        reason:
+          description: "Cancellation/adjustment reason. \n- This parameter is optional for ACH Return & Reversal."
+          example: REPAY
+          maxLength: 140
+          minLength: 1
+          type: string
+          title: reason
+        psp_reference:
+          type: string
+          maxLength: 36
+          minLength: 1
+          description: Payment session id
+          example: PAY1234567
+          title: psp_reference
+        retrieval_reference_number:
+          description: When a transaction registration succeeds, the value of this parameter contains the 44-digit number that was used to create the bar code on the Boleto slip. This bar code can then be scanned by the vendor if a payer elects to pay Boleto at a registered location.
+          example: ACQ7894561
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: retrieval_reference_number
+        network_id:
+          description: Transaction identification generated by the network (clearing)
+          example: NET123456
+          maxLength: 128
+          minLength: 1
+          type: string
+          title: network_id
+        creation_date_time:
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ)- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created \n- For ACH Return & Reversal, this parameter is optional (only for enquiry & intermediary notification)."
+          example: '2024-05-02T12:44:34.655Z'
+          type: string
+          format: date-time
+          title: creation_date_time
+        status:
+          type: string
+          maxLength: 20
+          description: "Transaction Status, following status you will receive in response \n- CREATED - The transaction has successfully been created \n- FAILED - Transaction failed for invalid payload/ Transaction failed \n- SETTLED - Transaction settled \n- PENDING - The operation is currently in progress or pending processing/ Transaction is in-progress \n- SUCCESS - The operation was successfully processed \n- UNKNOWN - The result of the operation is unknown"
+          example: SETTLED
+          title: status
+        description:
+          type: string
+          maxLength: 200
+          description: "Transaction Status, following status you will receive in response \n- FAILED - Transaction failed for invalid payload/ Transaction failed \n- PENDING - The operation is currently in progress or pending processing/ Transaction is in-progress \n- SETTLED - Transaction settled \n- SUCCESS - The operation was successfully processed (e.g., \n- AM03 -Method instructed currency is invalid (not in ISO 4217 format or value) \n- AM02 -Instructed amount is not ≥ 0.01 & ≤ 2,000,000.00.\n- AC02 -Debtor account is invalid \n- CH03 -Value date is in the future \n- CH04 -Value date is in the past \n- CH20 -Value-added tax (VAT) amount format is invalid \n- CH21 -Bill identification 1 is mandatory for a bill payment,Bill identification 2 and 3 are conditional for a bill payment \n- BE23 -Creditor mobile number (proxy identification) format is invalid \n- NARR -Creditor name maximum length is 50 )"
+          example: Transaction settled
+          title: description
+        status_date_time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time of transaction status \n- This parameter is optional for ACH Return & Reversal."
+          title: status_date_time
+        refund_type:
+          type: string
+          description: Refund Status P - Partial Refund F - Full Refund
+          enum:
+          - P
+          - F
+          title: refund_type
+        authorization_response:
+          $ref: '#/components/schemas/Authorization-Refund-Response'
+        acquirer:
+          $ref: '#/components/schemas/Acquirer-Refund-Response'
+        response:
+          $ref: '#/components/schemas/Response'
+        acquirer_code:
+          description: Indicates success or failure of the transaction registration. A value of 0 (zero) indicates success, and a value of 99 indicates failure.
+          example: ACQ7894561
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: acquirer_code
+        reference:
+          description: "An optional identifier for this transaction \n- This parameter is optional for ACH Return & Reversal."
+          example: REPAY789541
+          maxLength: 250
+          minLength: 1
+          type: string
+          title: reference
+        terminal:
+          description: Identifier used by the acquirer to identify the transaction. This identifier may be used by the acquirer in settlement reports.
+          example: ACQ7894561
+          maxLength: 16
+          minLength: 1
+          type: string
+          title: terminal
+        update_time:
+          type: string
+          format: date-time
+          description: Indicates the date and time the gateway considers the order to have last been updated GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ)
+          example: '2022-09-13T08:23:49.114Z'
+          title: update_time
+        acquirer_message:
+          description: An additional message indicating the success or failure of the transaction registration. If the registration was successful, this parameter contains the value Data Received. If the registration failed, this parameter contains the value Data Not Received.
+          example: MSG12345
+          maxLength: 255
+          minLength: 1
+          type: string
+          title: acquirer_message
+        refund_authorization:
+          description: "This parameter is used to indicate that you want the gateway to authorize the Refund with the issuer before submitting it to the acquirer. \n - The transaction.refund_authorization parameter is optional for Card transaction."
+          enum:
+          - Y
+          - N
+          example: Y
+          type: string
+          title: refund_authorization
+        clearing_local_code:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: "Reason local Clearing codes (e.g.0000,0080,0081,0082,0083,0084,1100 and etc.).Additional status code received from the local clearing which does not follow ISO standards but will on some occasions provide additional insights. Codes will vary by country and will be published on our developer portal \n- For UK it is an optional parameter with max length 4 \n- For US FedNow, it is an optional parameter with max length 4 \n- refer to FPS Error Code excel file for complete list of response codes and descriptions. \n- This parameter is optional for ACH Return and Reversal."
+          example: 008T
+          title: clearing_local_code
+        rrn:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: A unique reference generated by the acquirer for a specific merchant interaction The reference may be used when contacting the acquirer about a specific transaction
+          example: 008T
+          title: rrn
+        stan:
+          maxLength: 999999
+          minLength: 1
+          type: string
+          description: The System Trace Audit Number (STAN) for the transaction The STAN is a unique trace number assigned by the gateway to identify the transaction message sent to the acquirer. It remains unchanged for the life of the transaction.
+          example: '667799'
+          title: stan
+        authorization_code:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: Value generated by the issuing bank in response to a proposal to transfer funds
+          example: '667'
+          title: authorization_code
+        source:
+          description: "Indicates the channel through which you received authorization for the payment for this order from the payer. \n- CALL_CENTRE Transaction conducted via a call centre. \n- CARD_PRESENT Transaction where the card is presented to the merchant. \n- INTERNET Transaction conducted over the Internet. \n- MAIL_ORDER Transaction received by mail. \n- MERCHANT Transaction initiated by you based on an agreement with the payer. For example, a recurring payment, installment payment, or account top-up. \n- MOTO Transaction received by mail or telephone. \n- PAYER_PRESENT Transaction where a non-card payment method is presented to the Merchant. \n- TELEPHONE_ORDER Transaction received by telephone.\n- VOICE_RESPONSE Transaction conducted by a voice/DTMF recognition system."
+          enum:
+          - CALL_CENTRE
+          - CARD_PRESENT
+          - INTERNET
+          - MAIL_ORDER
+          - MERCHANT
+          - MOTO
+          - PAYER_PRESENT
+          - TELEPHONE_ORDER
+          - VOICE_RESPONSE
+          example: PAYER_PRESENT
+          type: string
+          title: source
+        debit_credit_flag:
+          type: string
+          enum:
+          - CR
+          - DR
+          description: "Indicates if transaction is debit or credit \n- This parameter is optional for ACH Return & Reversal."
+          title: debit_credit_flag
+        action:
+          description: "Indicates if this request is for Return or Reversal \n- This parameter is optional for ACH Return & Reversal."
+          enum:
+          - RETURN
+          - REVERSAL
+          example: RETURN
+          type: string
+          title: action
+        purpose:
+          description: "Purpose of transaction. \n- This parameter is optional for ACH Return & Reversal."
+          minLength: 1
+          maxLength: 100
+          type: string
+          example: AWS Market
+          title: purpose
+    Error-Detail:
+      type: object
+      title: Error Detail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+    Authorization-Response:
+      title: Authorization-Response
+      description: Authorization Response
+      properties:
+        stan:
+          description: The System Trace Audit Number is assigned by a transaction originator to assist in identifying a Card Transaction.The trace number remains unchanged for the life of the Card Transaction.
+          example: AUD345
+          maxLength: 6
+          minLength: 1
+          type: string
+          title: stan
+        merchant_advice_code:
+          description: This parameter contains data returned by the issuer or card network to clearly communicate to merchants the reason for declining a MasterCard or Visa transaction Merchants can use this information to determine the best action to take.
+          example: '2'
+          maxLength: 2
+          minLength: 1
+          type: string
+          title: merchant_advice_code
+        pos_entry_mode:
+          description: The POS Entry Mode provided to Discover (JCB (US Domestic only), and Diners) for the authorization
+          example: '2'
+          maxLength: 4
+          minLength: 1
+          type: string
+          title: pos_entry_mode
+        return_aci:
+          description: The ACI (Authorization Characteristics Indicator) returned by the issuer
+          example: '1'
+          maxLength: 1
+          minLength: 1
+          type: string
+          title: return_aci
+        avscode:
+          description: The acquirer AVS response code generated by the card issuing institution
+          example: '1'
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: avscode
+        commercial_card_indicator:
+          description: Indicates the type of commercial card as returned by the card issuer
+          example: '1'
+          maxLength: 3
+          minLength: 1
+          type: string
+          title: commercial_card_indicator
+        date:
+          type: string
+          description: "The local date, in MMDD format, on which the transaction occurred. \n- Format MMDD"
+          title: date
+          example: '0530'
+        financial_network_code:
+          description: Indicates the code of the financial network that was used to process the transaction with the issuer.
+          example: '1'
+          maxLength: 3
+          minLength: 1
+          type: string
+          title: financial_network_code
+        financial_network_date:
+          type: string
+          format: date
+          description: "The date for the Authorization as returned by the scheme. \n- Format YYYY-MM-DD"
+          example: '2024-05-30'
+          title: financial_network_date
+        pos_data:
+          description: Indicates the specific card information conditions for capture that are available when the card transaction occurs at point of service.
+          example: '1'
+          maxLength: 13
+          minLength: 3
+          type: string
+          title: pos_data
+        processing_code:
+          description: Identifies the type of Card Transaction sent to Card Acceptor
+          example: '1'
+          maxLength: 6
+          minLength: 1
+          type: string
+          title: processing_code
+        response_code:
+          description: The response code which indicates the status of the transaction
+          example: '1'
+          maxLength: 3
+          minLength: 1
+          type: string
+          title: response_code
+        time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created \n- For US RFP this parameter is mandatory"
+          example: '2022-09-13T08:23:49.114Z'
+          title: time
+        transaction_identifier:
+          description: The unique identifier for the transaction returned by the issuer.
+          example: '1'
+          maxLength: 30
+          minLength: 1
+          type: string
+          title: transaction_identifier
+    Refund-Update-Method:
+      type: object
+      title: Refund-Notification Method
+      properties:
+        card:
+          $ref: '#/components/schemas/Card-Refund-Update-Notification'
+        type:
+          description: Method specified by the customer for the transaction
+          type: string
+          enum:
+          - CARD
+          - GOOGLEPAY
+          - APPLEPAY
+          example: CARD
+          title: type
+    Refund-Transaction-Update:
+      type: object
+      title: Refund Transaction Update
+      required:
+      - id
+      properties:
+        id:
+          description: "Unique Transaction identification provided by the merchant during  transaction update  \n- For CARD/GOOGLEPAY/APPLEPAY transactions, transaction.id parameter is mandatory and allowed maxmium length is 40."
+          example: pay02052023456r
+          maxLength: 128
+          minLength: 1
+          type: string
+          title: id
+        reference:
+          description: "Transaction additional information. \n- For Brazil PIX Cancellation, this parameter is mandatory with min length 26 & mmax length 35 and input should be same as unique identifier (transaction.id) given during PIX Initiation"
+          example: REPAY
+          maxLength: 250
+          minLength: 1
+          type: string
+          title: reference
+        currency_code:
+          type: string
+          enum:
+          - USD
+          description: "ISO 4217 Currency Code for instance  USD/GBP/EUR. \n- For CARD/GOOGLEPAY/APPLEPAY transactions, transaction.currency_code parameter is mandatory"
+          example: USD
+          title: currency_code
+        country_code:
+          description: "The order country. \n- For CARD/GOOGLEPAY/APPLEPAY transactions, transaction.country_code parameter is mandatory"
+          enum:
+          - US
+          example: US
+          type: string
+          title: country_code
+        reason:
+          description: 'Cancellation/refund/adjustment reason. '
+          example: REPAY
+          maxLength: 140
+          minLength: 1
+          type: string
+          title: reason
+        target_transaction_id:
+          description: The identifier for the transaction you wish to refund, That is the {transactionId} URL parameter for REST and the transaction.id parameter for NVP.
+          example: T123456789
+          maxLength: 128
+          minLength: 1
+          type: string
+          title: target_transaction_id
+        correlation_id:
+          description: A transient identifier for the request, that can be used to match the response to the request.
+          example: TEFG123456
+          maxLength: 128
+          minLength: 1
+          type: string
+          title: correlation_id
+    Restricted-Finx-Max-Text:
+      maxLength: 35
+      minLength: 1
+      pattern: ^(?!\s*$).+
+      type: string
+      description: "Specifies a character string with a maximum length of 35 characters limited to character set X, that is, a-z A-Z / - ? : ( ) . , ‘ + . \n - For Brazil refund request, end_to_end_id parameter is mandatory and should be of length 35 "
+      title: Restricted-Finx-Max-Text
+    Original-Payment:
+      type: object
+      title: Original payment
+      description: Either populate UETR OR (end_to_end_id AND value_date) for the refund to be processed
+      properties:
+        id:
+          description: The original payment transaction identification
+          example: pay02052023456r
+          maxLength: 128
+          minLength: 1
+          type: string
+          title: id
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: "UUID v4 format unique end-to-end transaction reference. \n- This parameter is mandatory for ACH Return & Reversal."
+          title: uetr
+        value_date:
+          type: string
+          format: date
+          description: Format YYYY-MM-DD Date in local time zone (e.g., EST for a United States RTP network transaction) when Citi's transaction processing application starts processing a transaction
+          title: value_date
+        amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000000
+          description: "Instructed amount \n - Thailand PromptPay - Maximum amount is 2000000.00 \n - United States - Maximum amount is 1000000.00"
+          title: amount
+        currency_code:
+          description: ISO 4217 code for the transaction instructed amount currency
+          type: string
+          enum:
+          - INR
+          - USD
+          - BRL
+          - GBP
+          title: currency_code
+    Refund-Customer-Status:
+      type: object
+      title: Customer
+      properties:
+        name:
+          description: "Customer name \n- This parameter is optional for US ACH Return and Reversal"
+          maxLength: 140
+          minLength: 1
+          type: string
+          example: Stewart
+          title: name
+        organization_id:
+          description: "Customer Organization Id/ Legal Entity as provided at the time of payment request \n- This parameter is optional for US ACH Return and Reversal"
+          example: ORG123456
+          maxLength: 35
+          minLength: 1
+          type: string
+          title: organization_id
+        account:
+          title: refund customer account
+          description: Account Details
+          properties:
+            bank_id:
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: "Customer bank's network identification \n- This parameter is optional for US ACH Return and Reversal"
+              example: CITIIN77
+              title: bank_id
+    Refund-Merchant-Status:
+      type: object
+      title: Merchant
+      properties:
+        account:
+          title: refund merchant account
+          description: Account Details
+          properties:
+            bank_id:
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: "Merchant bank's network identification \n- This parameter is optional for US ACH Return and Reversal"
+              example: CITIIN77
+              title: bank_id
+            name:
+              maxLength: 70
+              minLength: 1
+              type: string
+              description: "Merchant's Account Name \n- This parameter is optional for US ACH Return and Reversal"
+              title: name
+            virtual_number:
+              maxLength: 40
+              minLength: 1
+              type: string
+              description: "Customer's virtual account number \n- This parameter is optional for US ACH Return and Reversal"
+              example: '1122334455'
+              title: number
+        organization_id:
+          description: Merchant Organization Id
+          example: ORG123456
+          maxLength: 35
+          minLength: 1
+          type: string
+          title: organization_id
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Merchant Name
+          title: name
+    Refund-L0-Transaction-Status:
+      title: Transaction
+      required:
+      - id
+      - country_code
+      properties:
+        id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: "Unique Transaction identification provided by the merchant during transaction refund creation. \n- For ACH Return & Reversal, this parameter is mandatory."
+          example: pay02052023456r
+          title: id
+        amount:
+          description: "Transaction amount \n - For Brazil QR Creation decimal values are mandatory for transaction.amount and it must have 2 digits \n - For Brazil QR Creation maxmium amount limit is 9999999999.99 and transaction.amount parameter is mandatory \n- For CARD Capture operation transaction.amount parameter is mandatory and allowed max 2 decimal after dot."
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: amount
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+          title: uetr
+          example: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+        reason_code:
+          description: Transaction rejection Code
+          example: SC0020
+          maxLength: 100
+          minLength: 1
+          type: string
+          title: reason_code
+        value_date:
+          type: string
+          format: date
+          description: "Date in local time zone (e.g., EST for a United States RTP network transaction) when Citi's transaction processing application starts processing a transaction \n- Format YYYY-MM-DD"
+          title: value_date
+          example: '2024-05-30'
+        currency_code:
+          description: "ISO 4217 Currency Code for instance  USD/GBP/EUR/INR \n- transaction.currency_code parameter is mandatory for all transaction type creation"
+          enum:
+          - BRL
+          - USD
+          - INR
+          - GBP
+          - EUR
+          - CAD
+          - HKD
+          - AUD
+          - SGD
+          - DKK
+          - NOK
+          - SEK
+          - PLN
+          - IDR
+          - MYR
+          - THB
+          - CHF
+          - PHP
+          - CZK
+          example: BRL
+          type: string
+          title: currency_code
+        country_code:
+          description: "Country code \n- For ACH Return & Reversal, this parameter is mandatory."
+          enum:
+          - US
+          - BR
+          - IN
+          - GB
+          - TH
+          - AU
+          - CA
+          - MX
+          - DE
+          - NL
+          - IE
+          - IT
+          - FR
+          - ES
+          - HK
+          - SG
+          - NZ
+          - DK
+          - 'NO'
+          - SE
+          - SW
+          - BE
+          - FI
+          - CH
+          - CZ
+          - AT
+          - PT
+          example: US
+          type: string
+          title: country_code
+        reason:
+          description: "Cancellation/adjustment reason. \n- For ACH Return & Reversal, this parameter is optional."
+          example: REPAY
+          maxLength: 140
+          minLength: 1
+          type: string
+          title: reason
+        creation_date_time:
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ)- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created \n- For ACH Return & Reversal, this parameter is mandatory."
+          example: '2024-05-02T12:44:34.655Z'
+          type: string
+          format: date-time
+          title: creation_date_time
+        status:
+          type: string
+          maxLength: 20
+          description: "Transaction Status, following status you will receive in response \n- CREATED - The transaction has successfully been created"
+          example: CREATED
+          title: status
+        description:
+          type: string
+          maxLength: 200
+          description: "Transaction Status, following status you will receive in response \n- CREATED - The transaction has successfully been created"
+          example: The transaction has successfully been created
+          title: description
+        status_date_time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time of transaction status"
+          title: status_date_time
+        action:
+          description: "Indicates if this request is for Return or Reversal \n - For ACH Return & Reversal, this is a mandatory parameter"
+          enum:
+          - RETURN
+          - REVERSAL
+          type: string
+          example: RETURN
+          title: action
+    Refunds-Request:
+      type: object
+      title: Refunds-Request
+      required:
+      - method
+      - transaction
+      properties:
+        method:
+          $ref: '#/components/schemas/Refund-Method'
+        transaction:
+          $ref: '#/components/schemas/Refund-Transaction'
+        order:
+          $ref: '#/components/schemas/Refund-Order'
+        original_payment:
+          $ref: '#/components/schemas/Original-Initial-Payment'
+    Refund-Order:
+      title: ' Refund Order'
+      properties:
+        id:
+          description: "A unique identifier for this order to distinguish it from any other order you create. \n- The order.id parameter is optional for Card transaction and its mandatory"
+          example: OR123456789
+          maxLength: 40
+          minLength: 1
+          type: string
+          title: id
+        reference:
+          description: "An optional identifier for the orderFor example, a shopping cart number, an order number, or an invoice number.  \n - The order.reference parameter is optional for Card transaction and allowed maxlength is 200"
+          example: REPAY
+          maxLength: 250
+          minLength: 1
+          type: string
+          title: reference
+    Payment-Refund-Notification:
+      type: object
+      title: Payment Refund Notification
+      required:
+      - method
+      - transaction
+      properties:
+        method:
+          $ref: '#/components/schemas/Refund-Method-Status'
+        transaction:
+          $ref: '#/components/schemas/Refund-Transaction-Status'
+        order:
+          $ref: '#/components/schemas/Refund-Order-Status'
+        original_payment:
+          $ref: '#/components/schemas/Original-Payment'
+        customer:
+          $ref: '#/components/schemas/Refund-Customer-Status'
+        merchant:
+          $ref: '#/components/schemas/Refund-Merchant-Status'
+    Device-Response:
+      title: Device Response
+      description: Device Response
+      properties:
+        cryptogram_format:
+          description: The format of the cryptogram provided for the digital payment.
+          enum:
+          - 3DSECURE
+          - EMV
+          example: EMV
+          type: string
+          title: cryptogram_format
+    Acquirer-Refund-Response:
+      title: Acquirer Refund Response
+      type: object
+      description: Acquirer
+      properties:
+        transaction_id:
+          description: Identifier used by the acquirer to identify the transaction This identifier may be used by the acquirer in settlement reports.
+          example: AQ1234567
+          maxLength: 40
+          minLength: 1
+          type: string
+          title: transaction_id
+        batch:
+          description: The processor's identifier for the settlement batch Provided only if the transaction was settled by batch.
+          example: AQ1234567
+          maxLength: 2147483647
+          minLength: 1
+          type: string
+          title: batch
+        date:
+          description: The date the transaction was processed, as returned by the acquirer Not returned by most acquirers
+          example: '4455'
+          maxLength: 4000
+          minLength: 1
+          type: string
+          title: date
+        id:
+          description: The ID for the acquirer used to process the transaction
+          example: ID124455
+          maxLength: 40
+          minLength: 1
+          type: string
+          title: id
+        settlement_date:
+          type: string
+          format: date
+          description: The date the acquirer expects the funds to be transferred to (in the case of payments) or from (in the case of refunds) the merchant's account The date is defined in the acquirer's time zone (see transaction.acquirer.timeZone).
+          example: '2022-09-07'
+          title: settlement_date
+        time_zone:
+          type: string
+          format: date-time
+          description: GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ)
+          example: '2022-09-13T08:23:49.114Z'
+          title: time_zone
+    Payment-L0-Refund-Notification:
+      type: object
+      title: Payment Initial Refund Notification
+      required:
+      - method
+      - transaction
+      properties:
+        method:
+          $ref: '#/components/schemas/Refund-L0-Method-Status'
+        transaction:
+          $ref: '#/components/schemas/Refund-L0-Transaction-Status'
+        order:
+          $ref: '#/components/schemas/Refund-Order'
+        original_payment:
+          $ref: '#/components/schemas/Original-Initial-Payment'
+    Refund-Transaction:
+      title: Transaction
+      required:
+      - id
+      - country_code
+      properties:
+        id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: "Unique Transaction identification provided by the merchant during refund transaction creation. \n - For IN UPI transaction.id allowed max length is 16 \n - For Brazil PIX transaction.id allowed min and max length is 35 \n - For Card transaction, transaction.id allowed maxlength is 40 \n- For ACH Return & Reversal, this parameter is mandatory with max length 35."
+          example: pay02052023456r
+          title: id
+        amount:
+          description: "Transaction amount \n - For Brazil refund payment, decimal values are mandatory for transaction.amount and it must have 2 digits \n - For Brazil refund payment, transaction maxmium amount limit is 9999999999.99 and transaction.amount parameter is mandatory \n- For Card refund payment, transaction.amount parameter is mandatory and allowed max 2 decimal after dot. \n- For India UPI refund payment, transaction.amount parameter is mandatory and allowed minimum amount is 1 and maximum amount is 200000.00. \n- For UK FPS refund payment, transaction.amount parameter is mandatory and allowed minimum amount is 0.01 and maximum amount is 1MM."
+          example: 200
+          maximum: 1000000000000000000
+          minimum: 0.01
+          type: number
+          title: amount
+        reference:
+          description: "Transaction additional information.  \n - The transaction.reference parameter is optional for Card transaction and allowed maxlength is 40"
+          example: REPAY
+          maxLength: 250
+          minLength: 1
+          type: string
+          title: reference
+        currency_code:
+          description: "ISO 4217 Currency Code for instance  USD/GBP/EUR/INR \n- For Brazil PIX, India UPI, UK FPS and Card refund payment, transaction.currency_code parameter is mandatory."
+          enum:
+          - BRL
+          - USD
+          - INR
+          - GBP
+          - EUR
+          - CAD
+          - HKD
+          - AUD
+          - SGD
+          - DKK
+          - NOK
+          - SEK
+          - PLN
+          - IDR
+          - MYR
+          - THB
+          - CHF
+          - PHP
+          - CZK
+          example: BRL
+          type: string
+          title: currency_code
+        country_code:
+          description: Country code
+          enum:
+          - US
+          - BR
+          - IN
+          - GB
+          - TH
+          - AU
+          - CA
+          - MX
+          - DE
+          - NL
+          - IE
+          - IT
+          - FR
+          - ES
+          - HK
+          - SG
+          - NZ
+          - DK
+          - 'NO'
+          - SE
+          - SW
+          - BE
+          - FI
+          - CH
+          - CZ
+          - AT
+          - PT
+          example: US
+          type: string
+          title: country_code
+        reason:
+          description: "Cancellation/adjustment reason. \n - The transaction.reason parameter is optional for Card transaction. \n- For ACH Return & Reversal, this parameter is optional with max length 44."
+          example: REPAY
+          maxLength: 140
+          minLength: 1
+          type: string
+          title: reason
+        refund_authorization:
+          description: "This parameter is used to indicate that you want the gateway to authorize the Refund with the issuer before submitting it to the acquirer. \n - The transaction.refund_authorization parameter is optional for Card transaction."
+          enum:
+          - Y
+          - N
+          example: Y
+          type: string
+          title: refund_authorization
+        action:
+          description: "Indicates if this request is for Return or Reversal \n - For US ACH Return & Reversal, this is a mandatory parameter."
+          enum:
+          - RETURN
+          - REVERSAL
+          example: RETURN
+          type: string
+          title: action
+    Refund-Method-Update:
+      type: object
+      title: Refund Method Update
+      required:
+      - type
+      properties:
+        type:
+          description: "Method specified by the customer for the transaction  \n- For CARD,GOOGLEPAY and APPLEPAY Void/Cancel operation method.type parameter is mandatory \n- Provide GOOGLEPAY for GOOGLE PAY transactions \n- Provide APPLEPAY for APPLE PAY transactions \n- Provide CARD for CARD transactions "
+          type: string
+          enum:
+          - CARD
+          - GOOGLEPAY
+          - APPLEPAY
+          example: CARD
+          title: type
+    Original-Payment_2:
+      type: object
+      title: OriginalPayment
+      description: Either populate uetr OR (end_to_end_id AND value_date) for the refund to be processed
+      properties:
+        end_to_end_id:
+          $ref: '#/components/schemas/Restricted-Finx-Max-Text_2'
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+          title: uetr
+        value_date:
+          type: string
+          format: date
+          description: Format YYYY-MM-DD Date in local time zone (e.g., EST for a United States RTP network transaction) when Citi's transaction processing application starts processing a transaction
+          title: value_date
+        instructed_amount:
+          type: number
+          readOnly: true
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Instructed amount \n - Thailand PromptPay - Maximum amount is 2000000.00 \n - United States - Maximum amount is 1000000.00 \n - SEPA - Maximum amount is 1000000.00"
+          title: instructed_amount
+        instructed_currency:
+          description: ISO 4217 code for the transaction instructed amount currency
+          type: string
+          readOnly: true
+          enum:
+          - THB
+          - USD
+          - BRL
+          - EUR
+          - JPY
+          title: instructed_currency
+    Iso-Normalised-Date-Time:
+      type: string
+      format: date-time
+      description: an ISODateTime whereby all timezoned dateTime values are UTC.
+      title: IsoNormalisedDateTime
+    Refunds-Initiation:
+      type: object
+      title: Refunds
+      required:
+      - instructed_amount
+      - instructed_currency
+      - original_payment
+      - end_to_end_id
+      properties:
+        end_to_end_id:
+          $ref: '#/components/schemas/Restricted-Finx-Max-Text_2'
+        instruction_id:
+          type: string
+          description: "Instruction id on return payment \n- For Thailand PromptPay refunds.instruction_id field is not applicable \n- For Brazil refunds.instruction_id field is not applicable \n- For United States refunds.instruction_id field is optional \n- For SEPA refunds.instruction_id field is not applicable"
+          minLength: 1
+          maxLength: 35
+          title: instruction_id
+        value_date:
+          type: string
+          readOnly: true
+          format: date
+          description: "Date in local time zone (e.g., EST for a United States RTP network transaction) when Citi's transaction processing application starts processing a transaction \n- Format YYYY-MM-DD"
+          title: value_date
+        instructed_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Instructed amount can be either full original transaction amount or partial amount \n - Thailand PromptPay - Maximum amount is 2000000.00 \n - United States - Maximum amount is 1000000.00"
+          title: instructed_amount
+        instructed_currency:
+          description: ISO 4217 code for the transaction instructed amount currency
+          type: string
+          enum:
+          - THB
+          - BRL
+          - USD
+          - EUR
+          - AUD
+          title: instructed_currency
+        additional_info:
+          type: string
+          maxLength: 140
+          minLength: 1
+          description: "Additional or remittance information \n- For Thailand PromptPay - Maximum length is 40 \n- For United States refunds.additional_info field is not applicable \n- For Brazil refunds.additional_info field is optional \n- For SEPA, refunds.additional_info field is not applicable"
+          title: additional_info
+        unstructured_remittance_info:
+          type: array
+          description: "Unstructured remitance information \n - For TH refunds.unstructured_remittance_info field is not applicable \n - For US refunds.unstructured_remittance_info field is optional - Maximum length is 140 and single instance is allowed \n- For Brazil refunds.unstructured_remittance_info field is not applicable \n - For SEPA refunds.unstructured_remittance_info field is optional - Maximum length is 140 and single instance is allowed"
+          items:
+            $ref: '#/components/schemas/Unstructured'
+          title: unstructured_remittance_info
+        return_reason_code:
+          description: "Reason code to initiate the refund \n - For TH refunds.return_reason_code field is not applicable \n - For US refunds.return_reason_code field is not applicable \n- For Brazil refunds.return_reason_code field is not applicable \n- For SEPA refunds.return_reason_code field is mandatory \n- For AU, applicable retun reason codes are AM05, AM09, BE05, CUST, FOCR, MD05, NARR \n- BE05  -Beneficiary does not recognize the remitter. \n- AC01  -Remitter sent the transaction to the wrong account. \n- AM02  -Transaction amount is higher than expected. \n- AM06  -Transaction amount is lower than expected. \n- AM03  -Transaction currency is incorrect. \n- AG01  -Transaction information is insufficient for reconciliation. \n- AM05  -Transaction is a duplicate. \n- MS01  -Other \n- AM09  -Transaction amount is wrong. \n- CUST  -Requested by customer. \n- FOCR  -Following cancellation request. \n- MD05  -Collection not due. \n- NARR  -Narrative from client"
+          type: string
+          enum:
+          - BE05
+          - AC01
+          - AM02
+          - AM03
+          - AM05
+          - AM06
+          - AG01
+          - MS01
+          - AM09
+          - CUST
+          - FOCR
+          - MD05
+          - NARR
+          title: return_reason_code
+        return_reason_description:
+          type: string
+          maxLength: 105
+          minLength: 1
+          description: "Reason description to initiate the refund \n- For AU, return reason description is mandatory if return reason code is NARR"
+          title: return_reason_description
+        debtor:
+          $ref: '#/components/schemas/Debtor-Refund'
+        ultimate_debtor:
+          $ref: '#/components/schemas/Ultimate-Debtor-Refund'
+        original_payment:
+          $ref: '#/components/schemas/Original-Payment_2'
+      description: Refund status notification / inquiry response
+    Refunds-Response_2:
+      type: array
+      items:
+        $ref: '#/components/schemas/Refunds'
+      maxItems: 1000
+    Refund-Reasons:
+      type: array
+      title: RefundReasons
+      items:
+        $ref: '#/components/schemas/Reason'
+    Error-Response_2:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        error_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Detail_2'
+          title: error_details
+          xml:
+            name: Errordetails
+    Refunds:
+      type: object
+      title: Refunds
+      required:
+      - instructed_amount
+      - instructed_currency
+      - original_payment
+      - end_to_end_id
+      properties:
+        end_to_end_id:
+          $ref: '#/components/schemas/Restricted-Finx-Max-Text_2'
+        instruction_id:
+          type: string
+          description: "Instruction id on return payment \n- For Thailand PromptPay refunds.instruction_id field is not applicable \n- For Brazil refunds.instruction_id field is not applicable \n- For United States refunds.instruction_id field is optional \n- For SEPA refunds.instruction_id field is not applicable"
+          minLength: 1
+          maxLength: 35
+          title: instruction_id
+        refund_id:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+          title: refund_id
+        creation_date_time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ)- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created"
+          title: creation_date_time
+        network_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: "Transaction identification generated by the network (clearing) \n- For Thailand PromptPay refunds.network_id field is not applicable \n- For Brazil refunds.network_id field is optional \n- For United States refunds.network_id field is not applicable \n- For SEPA refunds.network_id field is not applicable"
+          title: network_id
+        value_date:
+          type: string
+          format: date
+          description: "Date in local time zone (e.g., EST for a United States RTP network transaction) when Citi's transaction processing application starts processing a transaction \n- Format YYYY-MM-DD"
+          title: value_date
+        instructed_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Instructed amount can be either full original transaction amount or partial amount \n - Thailand PromptPay - Maximum amount is 2000000.00 \n - United States - Maximum amount is 1000000.00"
+          title: instructed_amount
+        instructed_currency:
+          description: ISO 4217 code for the transaction instructed amount currency
+          type: string
+          enum:
+          - THB
+          - BRL
+          - USD
+          - EUR
+          - AUD
+          title: instructed_currency
+        additional_info:
+          type: string
+          maxLength: 140
+          minLength: 1
+          description: "Additional or remittance information \n- For Thailand PromptPay - Maximum length is 40 \n- For United States refunds.additional_info field is not applicable \n- For Brazil refunds.additional_info field is optional \n- For SEPA refunds.additional_info field is not applicable"
+          title: additional_info
+        unstructured_remittance_info:
+          type: array
+          description: "Unstructured remitance information \n - For TH refunds.unstructured_remittance_info field is not applicable \n - For US refunds.unstructured_remittance_info field is optional - Maximum length is 140 and single instance is allowed \n- For Brazil refunds.unstructured_remittance_info field is not applicable  \n - For SEPA refunds.unstructured_remittance_info field is optional - Maximum length is 140 and single instance is allowed"
+          items:
+            $ref: '#/components/schemas/Unstructured'
+          title: unstructured_remittance_info
+        return_reason_code:
+          description: "Reason code to initiate the refund \n - For TH refunds.return_reason_code field is not applicable \n - For US refunds.return_reason_code field is not applicable \n- For Brazil refunds.return_reason_code field is not applicable \n- For SEPA refunds.return_reason_code field is mandatory \n- For AU, applicable retun reason codes are AM05, AM09, BE05, CUST, FOCR, MD05, NARR \n- BE05  -Beneficiary does not recognize the remitter. \n- AC01  -Remitter sent the transaction to the wrong account. \n- AM02  -Transaction amount is higher than expected. \n- AM06  -Transaction amount is lower than expected. \n- AM03  -Transaction currency is incorrect. \n- AG01  -Transaction information is insufficient for reconciliation. \n- AM05  -Transaction is a duplicate. \n- MS01  -Other \n- AM09  -Transaction amount is wrong. \n- CUST  -Requested by customer. \n- FOCR  -Following cancellation request. \n- MD05  -Collection not due. \n- NARR  -Narrative from client"
+          type: string
+          enum:
+          - BE05
+          - AC01
+          - AM02
+          - AM03
+          - AM05
+          - AM06
+          - AG01
+          - MS01
+          - AM09
+          - CUST
+          - FOCR
+          - MD05
+          - NARR
+          title: return_reason_code
+        return_reason_description:
+          type: string
+          maxLength: 105
+          minLength: 1
+          description: "Reason description to initiate the refund \n- For AU, return reason description is mandatory if return reason code is NARR"
+          title: return_reason_description
+        status:
+          $ref: '#/components/schemas/Refund-Status'
+        reasons:
+          $ref: '#/components/schemas/Refund-Reasons'
+        debtor:
+          $ref: '#/components/schemas/Debtor-Refund'
+        ultimate_debtor:
+          $ref: '#/components/schemas/Ultimate-Debtor-Refund'
+        original_payment:
+          $ref: '#/components/schemas/Original-Payment_2'
+      description: Refund status notification / inquiry response
+    Ultimate-Debtor-Refund:
+      type: object
+      title: UltimateDebtorRefund
+      properties:
+        name:
+          minLength: 1
+          maxLength: 140
+          type: string
+          description: "Name of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.name field is optional \n- For Thailand ultimatedebtor.name field is not applicable \n- For Brazil ultimatedebtor.name field is not applicable \n- For SEPA ultimate_debtor.name field is not applicable"
+          title: name
+        street_name:
+          minLength: 1
+          maxLength: 70
+          type: string
+          description: "Street Name of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.street_name field is optional \n- For Thailand ultimatedebtor.street_name field is not applicable \n- For Brazil ultimatedebtor.street_name field is not applicable \n- For SEPA ultimate_debtor.street_name field is not applicable"
+          title: street_name
+        building_number:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: "Building number of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.building_number field is optional \n- For Thailand ultimatedebtor.building_number field is not applicable \n- For Brazil ultimatedebtor.building_number field is not applicable \n- For SEPA ultimate_debtor.building_number field is not applicable"
+          title: building_number
+        postal_code:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: "Postal code of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.postal_code field is optional\n- For Thailand ultimatedebtor.postal_code field is not applicable \n- For Brazil ultimatedebtor.postal_code field is not applicable \n- For SEPA ultimate_debtor.postal_code field is not applicable"
+          title: postal_code
+        city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: "City of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.city field is optional \n- For Thailand ultimatedebtor.city field is not applicable \n- For Brazil ultimatedebtor.city field is not applicable \n- For SEPA ultimate_debtor.city field is not applicable"
+          title: city
+        state:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: "State of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.state field is optional \n- For Thailand ultimatedebtor.state field is not applicable \n- For Brazil ultimatedebtor.state field is not applicable \n- For SEPA ultimate_debtor.state field is not applicable"
+          title: state
+        country:
+          type: string
+          description: "Country of Ultimate Debtor to be passed for Refund payment  \n- For United States ultimate_debtor.country field is optional \n- For Thailand ultimatedebtor.country field is not applicable \n- For Brazil ultimatedebtor.country field is not applicable \n- For SEPA ultimate_debtor.country field is not applicable"
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        address_lines:
+          type: array
+          minItems: 1
+          maxItems: 7
+          description: "Ultimate Debtor Address lines which is array of 7 lines and each line has maximum 70 characters which is to be passed for Refund payment  \n- For United States ultimate_debtor.address_lines field is optional \n- For Thailand ultimatedebtor.address_lines field is not applicable \n- For Brazil ultimatedebtor.address_lines field is not applicable \n- For SEPA ultimate_debtor.address_lines field is not applicable"
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+    Error-Detail_2:
+      type: object
+      title: ErrorDetail
+      xml:
+        name: Errordetail
+      properties:
+        issue:
+          xml:
+            name: issue
+          type: string
+          maxLength: 200
+          description: more details about the issue
+          title: issue
+        action:
+          xml:
+            name: action
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          title: action
+        code:
+          xml:
+            name: code
+          type: string
+          maxLength: 8
+          description: unique code representing the issue
+          title: code
+    Debtor-Refund:
+      type: object
+      title: DebtorRefund
+      properties:
+        name:
+          minLength: 1
+          maxLength: 140
+          type: string
+          description: "Name of Debtor to be passed for Refund payment \n- For United States debtor.name field is mandatory for decision code IPAY and PECR \n- For Thailand debtor.name field is not applicable \n- For Brazil debtor.name field is not applicable \n- For SEPA debtor.name field is not applicable"
+          title: name
+        street_name:
+          minLength: 1
+          maxLength: 70
+          type: string
+          description: "Street Name of Debtor to be passed for Refund payment \n- For United States debtor.street_name field is optional \n- For Thailand debtor.street_name field is not applicable \n- For Brazil debtor.street_name field is not applicable \n- For SEPA debtor.street_name field is not applicable"
+          title: street_name
+        building_number:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: "Building number of Debtor to be passed for Refund payment \n- For United States debtor.building_number field is optional \n- For Thailand debtor.building_number field is not applicable \n- For Brazil debtor.building_number field is not applicable \n- For SEPA debtor.building_number field is not applicable"
+          title: building_number
+        postal_code:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: "Postal code of Debtor to be passed for Refund payment \n- For United States debtor.postal_code field is optional \n- For Thailand debtor.postal_code field is not applicable \n- For Brazil debtor.postal_code field is not applicable \n- For SEPA debtor.postal_code field is not applicable"
+          title: postal_code
+        city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: "City of Debtor to be passed for Refund payment \n- For United States debtor.city field is optional \n- For Thailand debtor.city field is not applicable \n- For Brazil debtor.city field is not applicable \n- For SEPA debtor.city field is not applicable"
+          title: city
+        state:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: "State of Debtor to be passed for Refund payment \n- For United States debtor.state field is optional \n- For Thailand debtor.state field is not applicable \n- For Brazil debtor.state field is not applicable \n- For SEPA debtor.state field is not applicable"
+          title: state
+        country:
+          type: string
+          description: "Country of Debtor to be passed for Refund payment \n- For United States debtor.country field is optional \n- For Thailand debtor.country field is not applicable \n- For Brazil debtor.country field is not applicable \n- For SEPA debtor.country field is not applicable"
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        address_lines:
+          type: array
+          minItems: 1
+          maxItems: 7
+          description: "Debtor Address lines which is array of 7 lines and each line has maximum 70 characters which is to be passed for Refund payment \n- For United States debtor.address_lines field is optional \n- For Thailand debtor.address_lines field is not applicable \n- For Brazil debtor.address_lines field is not applicable \n- For SEPA debtor.address_lines field is not applicable"
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+    Unstructured:
+      type: string
+      maxLength: 140
+      minLength: 1
+      description: Unstructured remitance information
+      title: Unstructured
+    Reason:
+      type: object
+      title: Reason
+      properties:
+        code:
+          type: string
+          description: "Reason codes (e.g., AM03,AM02,AC02,CH03,CH04,CH20,CH21,BE23,NARR and etc.) \n- refer to validation_code_description excel file for complete list of response codes and descriptions"
+          title: code
+        description:
+          type: string
+          description: "Reason code description (e.g., \n- AM03 -Method instructed currency is invalid (not in ISO 4217 format or value) \n- AM02 -Instructed amount is not ≥ 0.01 & ≤ 2,000,000.00.\n- AC02 -Debtor account is invalid \n- CH03 -Value date is in the future \n- CH04 -Value date is in the past \n- CH20 -Value-added tax (VAT) amount format is invalid \n- CH21 -Bill identification 1 is mandatory for a bill payment,Bill identification 2 and 3 are conditional for a bill payment \n- BE23 -Creditor mobile number (proxy identification) format is invalid \n- NARR -Creditor name maximum length is 50 )\n- refer to validation_code_description excel file for complete list of response codes and descriptions"
+          title: description
+        non_iso_code:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: "Reason local Clearing codes (e.g.0000,0080,0081,0082,0083,0084,1100 and etc.).Additional status code received from the local clearing which does not follow ISO standards but will on some occasions provide additional insights. Codes will vary by country (where applicable) and will be published on our developer portal \n- For UK it is an optional field with max length 4 \n- For SEPA IDP it is an optional field \n- For US, this field is optional \n- For SEPA, it is an optional field"
+          title: non_iso_code
+    Restricted-Finx-Max-Text_2:
+      maxLength: 35
+      minLength: 1
+      pattern: ^(?!\s*$).+
+      type: string
+      description: "Specifies a character string with a maximum length of 35 characters limited to character set X, that is, a-z A-Z / - ? : ( ) . , ‘ + .  \n- If client_id + end_to_end_id combination is duplicate within 90 days, payment will be rejected \n - Thailand Max length 12 \n - United State Max length 35 \n - IN IMPS Max length 16 \n - UK FPS Max length is 18 \n - Brazil Max length is 35 \n - IN UPI Max length 16 \n - For US WIRE/ACH, Max length is 16 and allowed value is AlphaNumeric (A-Z and 0-9) \n - For SEPA and SEPA IDP Max length is 35 \n - Japan Max length 35. It allows only upper alphabet characters A-Z and accepts special characters as follows . , () -"
+      title: Restricted-Finx-Max-Text
+    Refund-Status:
+      type: object
+      title: RefundStatus
+      required:
+      - date_time
+      - code
+      - description
+      properties:
+        date_time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time of transaction status"
+          title: date_time
+        code:
+          type: string
+          description: ISO 20022 transaction status code
+          enum:
+          - ACCC
+          - ACTC
+          - RJCT
+          title: code
+        description:
+          type: string
+          description: "Status code description \n- ACTC - Accepted \n- ACCC - Completed \n- RJCT - Rejected"
+          title: description
+        type:
+          type: string
+          description: Refund Status P - Partial Refund F - Full Refund
+          enum:
+          - P
+          - F
+          title: type
+    Address:
+      type: string
+      maxLength: 70
+      minLength: 1
+      maxItems: 7
+      description: Address
+      title: Address
+  responses:
+    Bad-Request:
+      description: Bad Request
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Service-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+    Rate-Limit-Exceeded:
+      description: Rate Limit Exceeded
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Rate-Limit-Exceeded-Gateway-Error-Example:
+              $ref: '#/components/examples/Rate-Limit-Exceeded-Gateway-Error-Example'
+    Gateway-Timeout:
+      description: Gateway Timeout
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Gateway-Timeout-Gateway-Error-Example:
+              $ref: '#/components/examples/Gateway-Timeout-Gateway-Error-Example'
+    Conflict:
+      description: Conflict
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Service-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
+    Accepted:
+      description: Accepted
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+        Merchant-Id:
+          schema:
+            type: string
+          description: The unique identifier issued to you by your payment provider
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payment-Response'
+    Unauthorized:
+      description: Unauthorized
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Bad-Get-Request2:
+      description: Bad Get Request
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Get2-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+    Not-Found:
+      description: Not Found
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Service-Error-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unsupported-Media-Type-Service-Error-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+            Unsupported-Media-Type-Gateway-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Gateway-Error-Example'
+    Bad-Request_2:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response_2'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example_2'
+    Unauthorized_2:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response_2'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example_2'
+    Not-Found_2:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response_2'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Conflict_2:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response_2'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+            Duplicate-Payment-Conflict-Example:
+              $ref: '#/components/examples/Duplicate-Payment-Conflict-Example'
+    Method-Not-Allowed_2:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response_2'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type_2:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response_2'
+          examples:
+            Un-Supported-Media-Type-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Example'
+    Internal-Server-Error_2:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response_2'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example_2'
+  callbacks:
+    Payment-Refund-Created-Status:
+      /payment-refund-success:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Apim-Guid'
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Payment-Refund-Notification'
+                examples:
+                  USCardPaymentCreatedSucessNotification:
+                    $ref: '#/components/examples/Payment-Refund-Card-Sucess-Notification'
+                  IndiaCardPaymentCreatedSucessNotification:
+                    $ref: '#/components/examples/India-Payment-Refund-Card-Sucess-Notification'
+                  PixPaymentCreatedSucessNotification:
+                    $ref: '#/components/examples/Payment-Refund-Pix-Sucess-Notification'
+                  IndiaUpiPaymentCreatedSucessNotification:
+                    $ref: '#/components/examples/Payment-Refund-Upi-Sucess-Notification'
+                  USPaymentCreatedSucessNotification:
+                    $ref: '#/components/examples/Payment-Refund-Uk-Sucess-Notification'
+                  USAchReturnAndReversalSuccessNotification:
+                    $ref: '#/components/examples/Us-Ach-Return-And-Reversal-Sucess-Notification'
+                  USPaypalPaymentCreatedSucessNotification:
+                    $ref: '#/components/examples/Payment-Refund-Paypal-Sucess-Notification'
+                  USPproPaymentCreatedSucessNotification:
+                    $ref: '#/components/examples/Payment-Refund-Ppro-Sucess-Notification'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    Refund-Cancel-Failed:
+      /refund-cancel-failed:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          - $ref: '#/components/parameters/Apim-Guid'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Refund-Update-Notification'
+                examples:
+                  US Refund Card Cancel Payment Response:
+                    $ref: '#/components/examples/US-Refund-Card-Cancel-Payment-Response-Example'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    Payment-Refund-Failed-Status:
+      /payment-refund-failed:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Apim-Guid'
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Payment-Refund-Notification'
+                examples:
+                  CardPaymentCreatedFailedNotification:
+                    $ref: '#/components/examples/Payment-Refund-Card-Failed-Notification'
+                  PixPaymentCreatedFailedNotification:
+                    $ref: '#/components/examples/Payment-Refund-Pix-Failed-Notification'
+                  UpiPaymentCreatedFailedNotification:
+                    $ref: '#/components/examples/Payment-Refund-Upi-Failed-Notification'
+                  UkPaymentCreatedFailedNotification:
+                    $ref: '#/components/examples/Payment-Refund-Uk-Failed-Notification'
+                  UsAchReturnAndReversalFailedNotification:
+                    $ref: '#/components/examples/Us-Ach-Return-And-Reversal-Failed-Notification'
+                  PaypalPaymentCreatedFailedNotification:
+                    $ref: '#/components/examples/Payment-Refund-Paypal-Failed-Notification'
+                  PproPaymentCreatedFailedNotification:
+                    $ref: '#/components/examples/Payment-Refund-Ppro-Failed-Notification'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    Payment-Refund-Pending-Status:
+      /payment-refund-pending:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Apim-Guid'
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Payment-Refund-Notification'
+                examples:
+                  PproPaymentCreatedFailedNotification:
+                    $ref: '#/components/examples/Payment-Refund-Ppro-Pending-Notification'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    Refund-Cancel-Success:
+      /refund-cancel-success:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          - $ref: '#/components/parameters/Apim-Guid'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Refund-Update-Notification'
+                examples:
+                  US Refund Card Cancel Payment Response:
+                    $ref: '#/components/examples/US-Refund-Card-Cancel-Payment-Response-Example'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    Refund-Notification:
+      /refund-notification:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name_2'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Refunds'
+                examples:
+                  Refund Status - Completed:
+                    $ref: '#/components/examples/Ok-Refund-Response'
+                  Refund Status - Rejected:
+                    $ref: '#/components/examples/Ok-Refund-Response-Failed'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+  parameters:
+    Client-Id:
+      in: query
+      name: client_id
+      required: true
+      description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+      schema:
+        type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 9a10a5d6-63d4-4885-b6bd-19e79629496d
+    End-To-End-Id:
+      name: id
+      in: query
+      description: The end to end ID included in the refund by the sender of the refund
+      schema:
+        $ref: '#/components/schemas/Restricted-Finx-Max-Text'
+      example: 1L00IF2BCWUZF09
+    Offset-Param:
+      in: query
+      name: offset
+      required: false
+      schema:
+        type: integer
+        default: 0
+      description: Payment status inquiry result page you want Citi to respond to you with
+    Refund-Patch-Operation:
+      in: header
+      name: Operation
+      required: false
+      description: API operation
+      schema:
+        type: string
+        enum:
+        - CANCEL
+        description: API operation
+        example: CANCEL
+    Merchant-Post-Id:
+      name: Merchant-Id
+      in: header
+      required: false
+      description: "Your unique Merchant Identification number \n - Merchant ID header parameter is mandatory for payment methods - PIX (Brazil QR creation), CARD, BOLETO, PPRO, GOOGLEPAY, APPLEPAY, FPS and PAYPAL. \n- Merchant ID header parameter is not applicable for payment methods - ACH and RTP."
+      schema:
+        type: string
+        maxLength: 40
+        minLength: 1
+        description: Your unique Merchant Identification number
+      example: M123456987
+    Status:
+      name: status
+      in: query
+      schema:
+        type: string
+        enum:
+        - SETTLED
+        - CREATED
+        - FAILED
+        - SUCCESS
+      description: ISO 20022 transaction status code
+      example: SETTLED
+    Limit-Param:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        maximum: 1000
+        minimum: 1
+        default: 100
+      description: "Limit you want Citi to apply to your payment status inquiry results \n- Maximum value is 1,000."
+    Country-Code:
+      name: country_code
+      in: query
+      schema:
+        type: string
+        enum:
+        - BR
+        - IN
+      description: Country code
+      example: IN
+    Merchant-Refund-Id:
+      name: Merchant-Id
+      in: header
+      required: false
+      description: "Your unique Merchant Identification number \n- Merchant ID header parameter is mandatory for payment methods - PIX, CARD. \n- Merchant ID header parameter is not applicable for payment methods - UPI and FPS."
+      schema:
+        type: string
+        maxLength: 40
+        minLength: 1
+        description: Your unique Merchant Identification number
+      example: M123456987
+    Creation-Date-Time-Start:
+      name: creation_date_time_start
+      in: query
+      schema:
+        type: string
+        format: date-time
+      description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n - Start of date time, generated by CitiConnect API, when CitiConnect API accepted a refund initiation after validation"
+      example: '2022-09-13T08:23:49.114Z'
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Event Type
+      schema:
+        type: string
+    Event-Name:
+      name: Event-Name
+      in: header
+      required: true
+      description: Event Type
+      schema:
+        type: string
+    Amount:
+      name: amount
+      in: query
+      schema:
+        type: number
+        maximum: 100000000000000
+      description: amount
+      example: 73945.27
+    Idempotency-Id:
+      name: Idempotency-Id
+      in: header
+      required: true
+      description: "Your unique identification for a POST request \n - Maximum length is 128. \n-  CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database."
+      schema:
+        type: string
+        maxLength: 128
+        description: "Your unique identification for a POST request \n - Maximum length is 128. \n-  CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      example: a44cbb60-6de4-4edb-9a7a-123414bba3bb
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Your unique End To End identification
+      schema:
+        type: string
+        maxLength: 128
+        minLength: 1
+        description: Your unique End To End identification
+      example: abc-pay-123
+    Creation-Date-Time-End:
+      name: creation_date_time_end
+      in: query
+      schema:
+        type: string
+        format: date-time
+      description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n - end of date time, generated by CitiConnect API, when CitiConnect API accepted a refund initiation after validation"
+      example: '2022-09-13T08:23:49.114Z'
+    Apim-Guid:
+      name: Apim-Guid
+      in: header
+      required: true
+      description: Your unique Apim-Guid
+      schema:
+        type: string
+        maxLength: 52
+        minLength: 1
+        description: Your unique Apim-Guid
+        example: na-apimgwgtds04~4a98cbc5-d813-4e65-bc81-d70f0f87f6ec
+    Original-Payment-Uetr:
+      name: Original_Payment_Uetr
+      in: query
+      description: The unique ‘UETR’ reference assigned to the original incoming credit on your account for which a refund was initiated. If multiple refunds were initiated against an incoming credit, the response API will include all these refunds
+      schema:
+        type: string
+        pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+        description: The unique ‘UETR’ reference assigned to the original incoming credit on your account for which a refund was initiated. If multiple refunds were initiated against an incoming credit, the response API will include all these refunds
+        example: 0c4fb98b-d77a-4468-96bb-0c88b3b8f75a
+    Post-Country-Code:
+      name: Country-Code
+      in: header
+      schema:
+        type: string
+        maxLength: 2
+        minLength: 2
+        description: Country Code
+      example: IN
+    Uetr:
+      name: uetr
+      in: query
+      schema:
+        type: string
+        pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+      description: Unique end-to-end transaction reference
+      example: 0c4fb98b-d77a-4468-96bb-0c88b3b8f75a
+    Event-Name_2:
+      name: Event-Name
+      in: header
+      required: true
+      description: Event Name
+      schema:
+        type: string
+    Off-Set-Param:
+      in: query
+      name: offset
+      required: false
+      schema:
+        type: integer
+        default: 0
+      description: Payment status inquiry result page you want Citi to respond to you with
+  headers:
+    Request-Id:
+      schema:
+        type: string
+      description: Citi's unique identification for your request
+  securitySchemes:
+    clientCredentials:
+      description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
+
+
+        '
+    oAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            authenticationservices/v1: Grant read-only access to payment initation service
+x-refined-from:
+- DigitalPaymentsCollectionsv12.yaml
+- express_payments_api.yaml

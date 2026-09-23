@@ -1,0 +1,476 @@
+openapi: 3.2.0
+info:
+  title: PayerID Management Services Payer ID Update Accountsand…
+  description: CitiConnectAPI service enable straight-through processing (STP) for Payer ID management functionality where client ERP system can invoke API request for Payer ID management functionalities.
+  version: 1.0.3
+  contact:
+    name: CitiConnect API Team
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod
+  description: production gateway url
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+  description: sandbox url
+security:
+- oAuth2:
+  - /authenticationservices/v1
+tags:
+- name: PayerIdUpdateAccountsandCurrencies
+  description: PayerID Update accounts and currencies API has an ability to update accounts and currency details of the given Payer ID.
+paths:
+  /receivablesservices/v1/payerids/{payerid-number}/accounts:
+    put:
+      tags:
+      - PayerIdUpdateAccountsandCurrencies
+      summary: Update Account/Instruction Currency Values
+      description: This endpoint can update accounts and currency details of a particular Payer ID.
+      operationId: payerIdUpdateAccount
+      servers:
+      - url: https://tts.apib2b.citi.com/citiconnect/prod
+        description: production gateway url
+      parameters:
+      - in: path
+        name: payerid-number
+        required: true
+        description: Unique identification number assigned to payers and beneficiaries for incoming payments.
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 35
+      - $ref: '#/components/parameters/ClientId'
+      requestBody:
+        description: Describes the payer ID account details to be updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payer-ID-Update-Accounts-Request'
+            examples:
+              PayerIDUpdateAccountRequestExample:
+                $ref: '#/components/examples/Payer-ID-Update-Accounts-Request-Example'
+      responses:
+        '202':
+          $ref: '#/components/responses/OKResponseForUpdateAccount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeOrRequestedResourceNotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+      callbacks:
+        asynchronous-accounts-currency-update-push-notification:
+          $ref: '#/components/callbacks/PayerIdAccountsAndCurrencyUpdatePushNotification'
+components:
+  schemas:
+    Payer-ID-Account:
+      required:
+      - client_account
+      - branch_code
+      - instruction_currencies
+      type: object
+      title: Payer-ID-Account
+      properties:
+        client_account:
+          type: string
+          title: client_account
+          minLength: 1
+          maxLength: 35
+          description: The client's account.
+        branch_code:
+          type: string
+          title: branch_code
+          minLength: 3
+          maxLength: 4
+          description: Citi's Internal branch code.
+        instruction_currencies:
+          type: array
+          title: instruction_currencies
+          uniqueItems: true
+          minItems: 1
+          maxItems: 30
+          description: The 3-character ISO currency code. It is a payment currency, for example, 'EUR' or 'GBP'.
+          items:
+            $ref: '#/components/schemas/Instruction-Currency'
+    Instruction-Currency:
+      type: string
+      title: Instruction-Currency
+      pattern: ^[A-Z]{3}$
+      description: The 3-character ISO currency code. It is a payment currency, for example, 'EUR' or 'GBP'.
+    Payer-ID-Update-Accounts-Request:
+      required:
+      - country_code
+      - accounts
+      type: object
+      title: Payer-ID-Update-Accounts-Request
+      properties:
+        country_code:
+          type: string
+          title: country_code
+          pattern: ^[A-Z]{2}$
+          description: 'The ISO country code specifying which country the account is held with. For example, if we receive a request for Germany, then the county code is ''DE'', for France, the country code is ''FR''. The list of allowed country codes are: <br>''DE'' - Germany<br> ''FR'' - France<br> ''GB'' - Great Britain<br>''IE'' - Ireland<br>''NL'' - Netherlands<br>''US'' - United States<br>''CA'' - Canada<br> ''HK'' - Hong Kong<br> ''SG'' - Singapore<br>''AU'' - Australia<br>''NZ'' - New Zealand<br>''LU'' - Luxembourg'
+        accounts:
+          type: array
+          title: accounts
+          minItems: 1
+          maxItems: 30
+          description: Identification of account parameter under which client account, branch code, or instruction currency to be displayed. Instruction currency cannot be same for different client account numbers in a single request.
+          items:
+            $ref: '#/components/schemas/Payer-ID-Account'
+    Payer-ID-Error-Detail:
+      type: object
+      title: Payer-ID-Error-Detail
+      properties:
+        issue:
+          type: string
+          title: issue
+          description: More information about the issue.
+          maxLength: 150
+        action:
+          type: string
+          title: action
+          description: The corrective action to be taken to resolve the issue.
+          maxLength: 150
+        code:
+          type: string
+          title: code
+          description: Error category that provides more details on error types.
+          maxLength: 10
+    Errors:
+      required:
+      - error_code
+      - error_description
+      type: object
+      title: Errors
+      properties:
+        error_code:
+          title: error_code
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: 'Specifies the error code for the rejected activation request sent in an asynchronous response. Error codes will have the following values: `V005`<br>`V002`<br>`PI1001`<br>`RR10`<br>`PI1003`<br>`PI1004`<br>`PI1005`<br>`PI1006`<br>`PI1007`<br>`AC04`<br>`AC06`<br>`MD07`<br>`BLKD`<br>`REST`'
+        error_description:
+          title: error_description
+          minLength: 1
+          maxLength: 500
+          type: string
+          description: Specifies the error description of the rejected activation request sent in an asynchronous response. Error description for each each error codes will have following descriptions as <br> `V005 - Invalid combination of input parameters {Country code}{Branch code}`<br>`V002 - Please provide valid value for {payerid_number} or Please provide valid value for Action`<br>`PI1001 - PYID is already active`<br>`RR10 - Invalid Character Set`<br>`PI1002 - PYID Activation request is already in progress`<br>`PI1003 - Payer ID XXXXXXXXX is being processed`<br>`PI1004 - Client account has not been onboarded`<br>`PI1005 - Payer ID XXXXXXXXX could not be activated. Please contact your Client Executive`<br>`PI1006 - Payer ID XXXXXXXXX is under compliance review and has been temporarily deactivated. Please contact your Client Executive for further assistance`<br>`PI1007 - Payer ID XXXXXXXXX could not be activated. Please contact your Client Executive`<br>`AC04 - ClosedAccountNumber`<br>`AC06 - BlockedAccount`<br>`MD07 - EndCustomerDeceased`<br>`BLKD - Blocked`<br>`REST - Restricted`
+    Payer-ID-Update-Account-Response:
+      required:
+      - status_code
+      - status_description
+      - request_id
+      type: object
+      title: Payer-ID-Update-Account-Response
+      properties:
+        status_code:
+          type: string
+          title: status_code
+          maxLength: 20
+          description: Status of the request sent as synchronous response to client. Status code will have value as `PIPND`.
+        status_description:
+          type: string
+          title: status_description
+          maxLength: 500
+          description: Incoming request acknowledgement message, an example is, `Payer ID Maintenance request is in-progress.`
+        request_id:
+          type: string
+          title: request_id
+          maxLength: 32
+          description: Auto-generated unique identification assigned to the incoming request.
+    Payer-ID-Errors:
+      type: object
+      title: Payer-ID-Errors
+      properties:
+        ref_id:
+          type: string
+          title: ref_id
+          description: Unique identifier which can be used to track your request.
+        error_details:
+          type: array
+          title: error_details
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Payer-ID-Error-Detail'
+    Payer-ID-Update-Accounts-Push-Notification:
+      required:
+      - country_code
+      - request_id
+      - payerid_number
+      - status_code
+      - status_description
+      type: object
+      title: Payer-ID-Update-Accounts-Push-Notification
+      properties:
+        country_code:
+          title: country_code
+          type: string
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          description: The ISO country code.
+        action:
+          title: action
+          type: string
+          maxLength: 20
+          description: Indicates the action of the payer ID. Possible value is 'UPDATE_ACCOUNTS'.
+        request_id:
+          title: request_id
+          type: string
+          maxLength: 32
+          description: Auto-generated unique identification assigned for the incoming request.
+        payerid_number:
+          title: payerid_number
+          type: string
+          maxLength: 35
+          description: Unique identification number assigned for payers and beneficiaries for incoming payments.
+        status_code:
+          title: status_code
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: Status code sent in asynchronous push notification responses. Status code will have values such as 'PIRJ','PIAC','PIPND'.
+        status_description:
+          title: status_description
+          type: string
+          maxLength: 500
+          description: 'Detailed status description sent in asynchronous push notification responses. Status description will have the following values: <br>`PIRJ` - Payer Id Creation Rejected<br> `PIAC` - Payer ID Creation Successful<br>`PIPND` - Payer ID Activation In Progress`'
+        accounts:
+          title: accounts
+          type: array
+          minItems: 1
+          maxItems: 30
+          description: The account parameter under which client account, branch code, or instruction currency is to be displayed. Instruction currency cannot be same for different client account numbers in a single request.
+          items:
+            $ref: '#/components/schemas/Payer-ID-Account'
+        errors:
+          title: errors
+          type: array
+          items:
+            $ref: '#/components/schemas/Errors'
+  parameters:
+    ClientId:
+      name: client_id
+      in: query
+      description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for OAuth token generation.
+      required: true
+      schema:
+        type: string
+        example: 898918181818181aczta
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            UnauthorizedExample:
+              $ref: '#/components/examples/Unauthorized-Example'
+    MethodNotAllowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            MethodNotAllowedExample:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            InternalServerErrorExample:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+    UnsupportedMediaTypeOrRequestedResourceNotFound:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            UnsupportedMediaTypeExample:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+            RequestedResourceNotFound:
+              $ref: '#/components/examples/Requested-Resource-Not-Found'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            BadRequestExample:
+              $ref: '#/components/examples/Bad-Request-Example'
+    OKResponseForUpdateAccount:
+      description: Accepted
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Update-Account-Response'
+          examples:
+            OKResponseExampleForActivation:
+              $ref: '#/components/examples/OK-Response-Activation-Success-Example'
+            OKResponseExampleForDeactivation:
+              $ref: '#/components/examples/OK-Response-Deactivation-Success-Example'
+  examples:
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: Please use valid credentials to access this functionality.
+          code: CC00007
+    Bad-Request-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: country_code is mandatory and it cannot be empty
+          action: please provide valid value for property country_code.
+          code: VC00002
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Method not supported
+          action: Please use valid HTTP verb.
+          code: CC00001
+    Requested-Resource-Not-Found:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Resource that you are searching was not found.
+          action: Please use valid resource details.
+          code: CC00006
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Unable to serve your request at this moment
+          action: Please refer the prescribed action in error for a resolution of this error.
+          code: CC00004
+    Payer-ID-Update-Accounts-Request-Example:
+      value:
+        country_code: HK
+        accounts:
+        - client_account: '10953312'
+          branch_code: '600'
+          instruction_currencies:
+          - GBP
+          - INR
+        - client_account: '10823200'
+          branch_code: '600'
+          instruction_currencies:
+          - ANY
+    Payer-ID-Update-Accounts-Push-Notification-Example:
+      value:
+        country_code: GB
+        payerid_number: GB06CITI18500870909337
+        action: UPDATE_ACCOUNTS
+        request_id: eec8de9d-f6c5-4af2-89c2-f9b3erX7
+        accounts:
+        - client_account: '77777'
+          branch_code: '600'
+          instruction_currencies:
+          - HKD
+          - EUR
+          - GBP
+        - client_account: '45678'
+          branch_code: '600'
+          instruction_currencies:
+          - KWD
+          - USD
+        - client_account: '66666'
+          branch_code: '600'
+          instruction_currencies:
+          - JPY
+          - BHD
+        status_code: PIAC
+        status_description: Updation Successful
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: Please use valid content-type in the header.
+          code: CC00002
+    Payer-ID-Update-Partial-Accounts-Error-Push-Notification-Example:
+      value:
+        country_code: GB
+        payerid_number: GB06CITI18500870909337
+        action: UPDATE_ACCOUNTS
+        request_id: eec8de9d-f6c5-4af2-89c2-f9b3erX7
+        accounts:
+        - client_account: '77777'
+          branch_code: '600'
+          instruction_currencies:
+          - HKD
+          - EUR
+          - GBP
+        - client_account: '45678'
+          branch_code: '600'
+          instruction_currencies:
+          - KWD
+          - USD
+        - client_account: '66666'
+          branch_code: '600'
+          instruction_currencies:
+          - JPY
+          - BHD
+        status_code: PIRJ
+        status_description: Updation UnSuccessful
+        errors:
+        - error_code: PI1009
+          error_description: Dormant Account 77777
+        - error_code: REST
+          error_description: Restricted account 45678
+        - error_code: AC06
+          error_description: 'Blocked Account 66666 '
+    OK-Response-Deactivation-Success-Example:
+      value:
+        status_code: PIPND
+        status_description: Payer ID maintenance request is in progress.
+        request_id: 9801bac6a4c74662ae78136bd4eba422
+    OK-Response-Activation-Success-Example:
+      value:
+        status_code: PIPND
+        status_description: PayerID maintenance request is In progress.
+        request_id: 9801bac6a4c74662ae78136bd4eba422
+  callbacks:
+    PayerIdAccountsAndCurrencyUpdatePushNotification:
+      /asynchronous-accounts-currency-update-push-notification:
+        patch:
+          summary: Asynchronous Accounts Currency Update Push Notification
+          description: This callback describes asynchronous push notifications schema definition and examples for update accounts and currency.
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Payer-ID-Update-Accounts-Push-Notification'
+                examples:
+                  OKUpdateAccountsResponseExample:
+                    $ref: '#/components/examples/Payer-ID-Update-Accounts-Push-Notification-Example'
+                  NotOKUpdateAccountsResponseExample:
+                    $ref: '#/components/examples/Payer-ID-Update-Partial-Accounts-Error-Push-Notification-Example'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Grant read-only access to receivable services

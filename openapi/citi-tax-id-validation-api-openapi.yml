@@ -1,0 +1,269 @@
+openapi: 3.2.0
+info:
+  description: Beneficiary validation API is used to search/validate the Account details of the beneficiary with the use of Credit Account Number or Proxy Details.
+  title: Self Services Tax ID Validation API
+  version: 3.0.0
+  x-ibm-name: selfservices
+servers:
+- url: https://$(catalog.host)/selfservices/v3
+security:
+- clientCredentials: []
+tags:
+- name: Tax ID validation
+  description: API to validate taxId status
+paths:
+  /taxid/validation:
+    post:
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxIdValidationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxIdErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxIdErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxIdErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxIdErrorResponse'
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxIdErrorResponse'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxIdErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxIdErrorResponse'
+      operationId: validateTaxIdDetails
+      summary: This API has the ability to check status of the given taxId as well as the…
+      tags:
+      - Tax ID validation
+      description: 'TaxId validation API has the ability to valdate status of the given taxId and other eligibility information in Json format. This functionality can be access with following input fields tax id, tax id name, country code and other optional details.
+
+
+        Content-Type : application/json.
+
+        Authorization : The OAuth Token prefixed with Bearer and space in between.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaxIdValidationRequest'
+        description: contains consumer id's and other optional to validate the status
+        required: true
+components:
+  schemas:
+    TaxIdErrorResponse:
+      properties:
+        errors:
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          type: array
+        http_code:
+          title: http_code
+          description: Http Status code
+          format: int32
+          maxLength: 3
+          type: integer
+        ref_id:
+          title: ref_id
+          description: Unique ID for the Transaction
+          maxLength: 60
+          type: string
+        status:
+          title: status
+          description: Status of the Transaction SUCCESS/FAILURE
+          maxLength: 20
+          type: string
+      type: object
+    TaxIdValidationRequest:
+      description: contains consumer id's and other optional  to validate the status
+      properties:
+        additional_info:
+          additionalProperties:
+            type: string
+          description: It is generic place holder object, it allows any generic key and value pairs
+          type: object
+        country_code:
+          description: indicates the tax_id's country
+          pattern: ^[A-Z]{2}$
+          type: string
+        tax_id:
+          description: tax_id is the personal identification number given by the regulator body
+          pattern: ^[A-Z a-z]{5}[0-9]{4}[A-Z a-z]{1}$
+          type: string
+        tax_id_name:
+          description: tax_id_name is the name maintained under personal identification number given by the regulator body
+          maxLength: 200
+          minLength: 1
+          type: string
+      required:
+      - country_code
+      - tax_id
+      - tax_id_name
+      type: object
+    ErrorDetail:
+      properties:
+        code:
+          description: Unique ID for the error code
+          maxLength: 7
+          type: string
+        issue:
+          title: issue
+          description: more details about the  issue
+          maxLength: 200
+          type: string
+        action:
+          title: action
+          description: corrective action to be taken to resolve above issue
+          maxLength: 350
+          type: string
+      type: object
+    TaxIdValidationResponse:
+      description: contains taxId stautus and other details
+      properties:
+        additional_info:
+          additionalProperties:
+            type: string
+          description: it is generic place holder object, it contains all other optional fields
+          type: object
+        request_status:
+          title: request_status
+          description: Indicates the taxId validation request status either SUCCESS/FAILURE/REJECT
+          maxLength: 10
+          minLength: 1
+          type: string
+        tax_id:
+          title: tax_id
+          description: tax_id is the personal identification number given by the regulator body
+          pattern: ^[A-Z a-z]{5}[0-9]{4}[A-Z a-z]{1}$
+          type: string
+        tax_id_status:
+          title: tax_id_status
+          description: tax_id_status describes the taxId present status
+          maxLength: 100
+          minLength: 1
+          type: string
+      required:
+      - request_status
+      - tax_id
+      - tax_id_status
+      type: object
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          scopes: {}
+          tokenUrl: https://tts.apib2b.citi.com/tts/cards/api/v1/oauth2/token
+      description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
+
+
+        '
+x-components: {}
+x-ibm-configuration:
+  enforced: true
+  testable: true
+  phase: realized
+  cors:
+    enabled: false
+  properties:
+    PanValidation:
+      value: https://self-support-services-dev-168554.nam.nsroot.net/v3
+      description: ''
+      encoded: false
+    hostName:
+      value: https://beneficiary-dev-168554.nam.nsroot.net
+      description: ''
+      encoded: false
+  catalogs:
+    SIT5:
+      properties:
+        hostName: https://beneficiary-dev-168554.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-dev-168554.nam.nsroot.net/v3
+    PTE:
+      properties:
+        hostName: https://beneficiary-pte-168554.cloudgsl.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-pte-168554.nam.nsroot.net/v3
+    UAT1:
+      properties:
+        hostName: https://beneficiary-uat-168554.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-uat-168554.nam.nsroot.net/v3
+    UAT2:
+      properties:
+        hostName: https://beneficiary-uat-168554.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-uat-168554.nam.nsroot.net/v3
+    Sandbox:
+      properties:
+        hostName: https://beneficiary-cte-168554.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-cte-168554.nam.nsroot.net/v3
+    prod:
+      properties:
+        hostName: https://beneficiary-168554.cloudgsl.nam.nsroot.net/v3
+        PanValidation: https://self-support-services-168554.cloudgsl.nam.nsroot.net/v3
+  assembly:
+    execute:
+    - operation-switch:
+        title: operation-switch
+        case:
+        - operations:
+          - getBeneficiaryDetails
+          execute:
+          - proxy:
+              title: proxy
+              timeout: 60
+              verb: keep
+              cache-response: protocol
+              cache-ttl: 900
+              version: 1.0.0
+              target-url: $(hostName)$(api.operation.path)
+              tls-profile: icg-tts-ic
+        - operations:
+          - validateTaxIdDetails
+          execute:
+          - proxy:
+              title: proxy
+              timeout: 60
+              verb: keep
+              cache-response: protocol
+              cache-ttl: 900
+              version: 1.0.0
+              target-url: $(PanValidation)$(api.operation.path)
+              tls-profile: icg-tts-ic
+        otherwise: []
+        version: 1.0.0
+    - activity-log:
+        title: activity-log
+        content: header
+        error-content: header
+        version: 1.0.0
+    catch: []

@@ -1,0 +1,195 @@
+openapi: 3.2.0
+info:
+  description: CitiConnect Request To Pay provides access to multiple request-to-pay functionalities to trigger payments or access details related to user accounts.
+  version: ''
+  title: Request To Pay Collection API
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod/requesttopayservice/v1
+  description: production gateway URL
+- url: https://tts.apib2b.citi.com/citiconnect/sb/requesttopayservice/v1
+  description: ' sandbox gateway URL'
+security:
+- clientCredentials: []
+tags:
+- name: Collection
+paths:
+  /collection/inquiry:
+    get:
+      summary: Collection/Inquiry
+      description: 'CitiConnect Request To Pay: Collection Inquiry allows users to retrieve the requested status of a collection by submitting input field values such as Service Reference Number, Message Creation Date and Time, End to End ID, Instructed Amount and Currency.
+
+
+        Content-Type : Supports “application/xml” or “application/json” :
+
+        Authorization : The OAuth Token prefixed with “Bearer” and space in between. :
+
+        MsgId : Service Reference No. :
+
+        MsgCreDtTm : The date and time at which the message was created. :
+
+        EndToEndId : EndToEndId or the mt100refNo :
+
+        InstdAmt : Instructed Amount. Amount of money to be moved between the debtor and creditor, before deduction of charges, expressed in the currency as ordered by the initiating party. :
+
+        InstdAmtCCY : Currency related to the payment :'
+      responses:
+        '200':
+          description: 200 OK
+      security:
+      - clientCredentials:
+        - /authenticationservices/v1
+      tags:
+      - Collection
+      operationId: getCollectionInquiry
+      x-operation-id-source: derived
+  /collection/responseinitiation:
+    post:
+      summary: Response Collection
+      description: 'CitiConnect Request To Pay: Response Collection allows users to create successful collection requests. Users can obtain intermediate status updates through CitiConnect® Request to Pay: Collection Inquiry for the latest status of the transaction.
+
+
+        Content-Type : Supports “application/xml” :
+
+        payloadType : Support “urn:iso:std:iso:20022:tech:xsd:pain.014.001.07” :
+
+        Authorization : The OAuth Token prefixed with “Bearer” and space in between. :
+
+        paymentBase64 : ISOXML V7 (pain.014.001.07) file has to be converted to Base64 format and passed in tag. :
+
+        request : The request follows ISOXML V7 (pain.014.001.07) standards. :'
+      responses:
+        '200':
+          description: 200 OK
+      security:
+      - clientCredentials: []
+      tags:
+      - Collection
+      operationId: postCollectionResponseinitiation
+      x-operation-id-source: derived
+  /collection/requestinitiation:
+    post:
+      summary: Collection Request
+      description: 'CitiConnect Request To Pay: Collection Request allows users to create successful collection requests. Users can obtain the intermediate status updates through CitiConnect® Collection Inquiry.
+
+
+        Content-Type : Supports “application/xml” or “application/json” :
+
+        payloadType : Support “urn:iso:std:iso:20022:tech:xsd:pain.013.001.07” :
+
+        Authorization : The OAuth Token prefixed with “Bearer” and space in between. :
+
+        paymentBase64 : ISOXML V7 (pain.013.001.07) file has to be converted to Base64 format and passed in tag. :
+
+        request : The request follows ISOXML (pain.013.001.07) standards. :'
+      responses:
+        '200':
+          description: 200 OK
+      security:
+      - clientCredentials: []
+      tags:
+      - Collection
+      operationId: postCollectionRequestinitiation
+      x-operation-id-source: derived
+  /collection/initiation:
+    post:
+      summary: Collection/Initiation
+      description: 'CitiConnect Request To Pay Collection Initiation allows users to create successful collection initiation requests to payee accounts. Users can obtain the intermediate status through CitiConnect® Request To Pay: Transaction Inquiry for real-time status updates for the transaction.
+
+
+        Content-Type : Supports “application/json” :
+
+        Authorization : The OAuth Token prefixed with “Bearer” and space in between. :
+
+        ClientId : Client Id of the Merchant/Citi Customer :
+
+        SecretKey : Secret Key Sent by Merchant/Citi Customer :
+
+        TxnRefNo : Unique Txn Ref No by Citi Customer/Merchant
+
+        (unique in last 7 days for respective Client ID) :
+
+        TimeStamp : Message time and date(YYYY-MM-DD''T''HH:MM:SS''+or-''ZZ:ZZ
+
+        ZZ:ZZ = UTC Time Offset) sent by Citi Customer/Merchant
+
+        (Part of APIheader tag) :
+
+        CountryCode : Country code for API :
+
+        OrderNo : Order No. sent by Citi Customer :
+
+        ExpValue : Expiry value in minutes sent by Citi Customer
+
+        Value should be >=2 and PayeeVPA : Citi Customer Virtual Address
+
+        (Must Contain ''@citi'') :
+
+        PayeeAcNo : Citi Customer Account Number :
+
+        PayerVPA : Payer/Buyer Virtual Address :
+
+        Amount : Transaction Amount
+
+        Value should be >= 0 and Currency : Transaction Currency
+
+        (Should be INR) :
+
+        ValueDate : Value date sent by Citi Customer (YYYY-MM-DD) :
+
+        Remarks : Order summary description :'
+      parameters:
+      - name: Content-Type
+        in: header
+        description: application/json
+        required: false
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: true
+        schema:
+          type: string
+      - name: ClientId
+        in: header
+        description: Client identity
+        required: false
+        schema:
+          type: string
+      - name: TxnRefNo
+        in: header
+        description: Transaction reference number
+        required: false
+        schema:
+          type: string
+      - name: CountryCode
+        in: header
+        description: Country code
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 200 OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Request payload
+      tags:
+      - Collection
+      operationId: postCollectionInitiation
+      x-operation-id-source: derived
+components:
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          scopes: {}
+          tokenUrl: https://tts.apib2b.citi.com/citiconnect/prod/requesttopayservice/v1/validate/address/authenticationservices/v1/oauth/token
+      description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
+
+
+        '

@@ -1,0 +1,847 @@
+openapi: 3.2.0
+info:
+  title: PayerID Management Services Payer ID Inquiry API
+  description: CitiConnectAPI service enable straight-through processing (STP) for Payer ID management functionality where client ERP system can invoke API request for Payer ID management functionalities.
+  version: 1.0.3
+  contact:
+    name: CitiConnect API Team
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod
+  description: production gateway url
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+  description: sandbox url
+security:
+- oAuth2:
+  - /authenticationservices/v1
+tags:
+- name: PayerIdInquiry
+  description: PayerID Inquiry API has an ability to Inquiry API has an ability to inquire statuses of a single payer ID or assignee ID.
+paths:
+  /receivablesservices/v1/payerids/inquiry:
+    post:
+      tags:
+      - PayerIdInquiry
+      summary: Inquire About Statuses of a Single Payer ID or Assignee ID
+      description: Inquiry endpoint to inquire about the statuses of a single payer ID or assignee ID.
+      operationId: payerIdInquiry
+      servers:
+      - url: https://tts.apib2b.citi.com/citiconnect/prod
+        description: production gateway url
+      parameters:
+      - $ref: '#/components/parameters/ClientId'
+      requestBody:
+        description: Describes the status of payer ID or Assignee ID. Either of payer ID or Assignee ID or Merchant block should be passed.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Inquiry-Request'
+            examples:
+              PayerIDRequestExample:
+                $ref: '#/components/examples/Payer-ID-Inquiry-Request-Example'
+              AssigneeIDRequestExample:
+                $ref: '#/components/examples/Assignee-ID-Inquiry-Request-Example'
+              MerchantRequestExample:
+                $ref: '#/components/examples/Merchant-Inquiry-Request-Example'
+      responses:
+        '200':
+          description: OK
+          headers:
+            request_id:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inquiry-Response'
+              examples:
+                PayerID Inquiry Active Response:
+                  $ref: '#/components/examples/PayerID-Inquiry-Active-Response'
+                AssigneeID Inquiry Active Response:
+                  $ref: '#/components/examples/AssigneeID-Inquiry-Active-Response'
+                PayerID Inquiry Deactivate Response:
+                  $ref: '#/components/examples/PayerID-Inquiry-Deactivate-Response'
+                PayerID Inquiry Reserved Response:
+                  $ref: '#/components/examples/PayerID-Inquiry-Reserved-Response'
+                PayerID Inquiry Error Response:
+                  $ref: '#/components/examples/PayerID-Inquiry-Error-Response'
+                AssigneeID Inquiry Error Response:
+                  $ref: '#/components/examples/AssigneeID-Inquiry-Error-Response'
+                AssigneeID Inquiry Deleted Response:
+                  $ref: '#/components/examples/AssigneeID-Inquiry-Deleted-Response'
+                Merchant Inquiry Active Response:
+                  $ref: '#/components/examples/Merchant-Inquiry-Active-Response'
+                Merchant Inquiry Deleted Response:
+                  $ref: '#/components/examples/Merchant-Inquiry-Deleted-Response'
+                Merchant Inquiry Error Response:
+                  $ref: '#/components/examples/Merchant-Inquiry-Error-Response'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeOrRequestedResourceNotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+components:
+  schemas:
+    Instruction-Currency:
+      type: string
+      title: Instruction-Currency
+      pattern: ^[A-Z]{3}$
+      description: The 3-character ISO currency code. It is a payment currency, for example, 'EUR' or 'GBP'.
+    Merchant-Economic-Id:
+      title: Merchant-Economic-Id
+      minLength: 1
+      maxLength: 50
+      type: string
+      description: Merchant economic id based on the merchant's country.
+    Merchant-Details-Inquiry:
+      title: Merchant-Details-Inquiry
+      allOf:
+      - $ref: '#/components/schemas/Payer-ID-Address-Details-Inquiry'
+      - type: object
+        title: allOf
+        properties:
+          party_type_details:
+            $ref: '#/components/schemas/Party-Type-Details'
+          name_1:
+            title: name_1
+            minLength: 1
+            maxLength: 300
+            type: string
+            description: LastName Or CompanyName for 'sole trader', include the last name for 'company', include the company name.
+          name_2:
+            title: name_2
+            minLength: 1
+            maxLength: 300
+            type: string
+            description: For 'sole trader', include the first name for 'company', leave blank or include second line of company name.
+          date:
+            title: date
+            type: string
+            format: date
+            description: Sole trader's date of birth or a company's date of incorporation. This parameter is in fixed 10-digit format (YYYY-MM-DD) as per ISO format.
+          tax_identifier:
+            title: tax_identifier
+            minLength: 1
+            maxLength: 200
+            type: string
+            description: Merchant tax identifier based on the merchant's country.
+          economic_id:
+            $ref: '#/components/schemas/Merchant-Economic-Id'
+          website:
+            title: website
+            minLength: 1
+            maxLength: 500
+            type: string
+            description: Merchant's profile, website, or storefront.
+    Beneficiary-Economic-Id:
+      title: Beneficiary-Economic-Id
+      minLength: 1
+      maxLength: 50
+      type: string
+      description: Beneficiary economic id based on the beneficiary's country.
+    Inquiry-Response:
+      required:
+      - request_id
+      - country_code
+      type: object
+      title: Inquiry-Response
+      properties:
+        request_id:
+          type: string
+          title: request_id
+          maxLength: 96
+          description: Auto-generated unique identification assigned for the incoming request.
+        country_code:
+          $ref: '#/components/schemas/Country-Code'
+        payerid_details:
+          $ref: '#/components/schemas/Payer-ID-Details-Sync-Response'
+        merchant:
+          $ref: '#/components/schemas/Merchant-Details-Sync-Response'
+        beneficiary:
+          title: beneficiaries
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Beneficiary-Details-Sync-Response'
+        error_details:
+          title: error_details
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Details'
+    Payer-ID-Details-Sync-Response:
+      type: object
+      title: Payer-ID-Details-Sync-Response
+      properties:
+        payerid_number:
+          title: payerid_number
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: Unique number assigned to payers and beneficiaries to identify incoming payments.
+        status:
+          title: status
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: Status of the payer ID.
+        reason:
+          title: reason
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Payer ID status reason.
+        account_details:
+          title: account_details
+          type: array
+          maxItems: 20
+          description: Identification of account parameter under which the client account, branch code, and instruction currency are to be displayed. Instruction currency cannot be the same for different client account numbers in a single request.
+          items:
+            $ref: '#/components/schemas/Account-Inquiry'
+    Inquiry-Request:
+      required:
+      - country_code
+      type: object
+      title: Inquiry-Request
+      properties:
+        country_code:
+          type: string
+          title: country_code
+          pattern: ^[A-Z]{2}$
+          description: 'The ISO country code specifying which country the account is held with. For example, if we receive a request for Germany, then the county code is ''DE'', for France, the country code is ''FR''. The list of allowed country codes are: <br>''DE'' - Germany<br> ''FR'' - France<br> ''GB'' - Great Britain<br>''IE'' - Ireland<br>''NL'' - Netherlands<br>''US'' - United States<br>''CA'' - Canada<br> ''HK'' - Hong Kong<br> ''SG'' - Singapore<br>''AU'' - Australia<br>''NZ'' - New Zealand<br>''LU'' - Luxembourg<br> ''VN'' - Vietnam<br> ''BR'' - Brazil<br> ''JP'' - Japan'
+        payerid_number:
+          title: payerid_number
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: Unique number assigned for payers and beneficiaries to identify incoming payments. Please provide either the `payerid_number` or the `assignee_id`.
+        assignee_id:
+          type: string
+          title: assignee_id
+          minLength: 1
+          maxLength: 100
+          description: Assignee ID expected from client for upfront sanction screening and activation of Payer ID number. Please provide either payerid_number or assignee_id.
+        merchant:
+          $ref: '#/components/schemas/Merchant-Details-Inquiry'
+    Payer-ID-Address-Details-Inquiry:
+      type: object
+      title: Payer-ID-Address-Details-Inquiry
+      properties:
+        address:
+          minLength: 1
+          maxLength: 500
+          type: string
+          title: address
+          description: Identification of merchant/beneficiary address.
+        zipcode:
+          minLength: 1
+          maxLength: 45
+          type: string
+          title: zipcode
+          description: Identification of merchant/beneficiary zip code.
+        city:
+          minLength: 1
+          maxLength: 150
+          type: string
+          title: city
+          description: Identification of merchant/beneficiary city.
+        state:
+          minLength: 1
+          maxLength: 150
+          type: string
+          title: state
+          description: Identification of merchant/beneficiary state.
+        country_code:
+          minLength: 1
+          maxLength: 20
+          title: country_code
+          type: string
+          description: Identification of country code. Country code specifying which country the account is held with.
+    Country-Code:
+      title: Country-Code
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: 'The ISO country code specifying which country where the account is held with. For example, if we receive a request for Germany, then the county code is ''DE'', for France, the country code is ''FR''. The list of allowed country codes are: <br>''DE'' - Germany<br> ''FR'' - France<br> ''GB'' - Great Britain<br>''IE'' - Ireland<br>''NL'' - Netherlands<br>''US'' - United States<br>''CA'' - Canada<br> ''HK'' - Hong Kong<br> ''SG'' - Singapore<br>''AU'' - Australia<br>''NZ'' - New Zealand<br>''LU'' - Luxembourg<br> ''VN'' - Vietnam'
+    Beneficiary-Details-Sync-Response:
+      title: Beneficiary-Details-Sync-Response
+      allOf:
+      - $ref: '#/components/schemas/Payer-ID-Address-Details-Inquiry'
+      - type: object
+        title: allOf
+        properties:
+          beneficiary_id:
+            title: beneficiary_id
+            minLength: 1
+            maxLength: 35
+            type: string
+            description: Unique ID given for beneficiary.
+          last_name:
+            title: last_name
+            minLength: 1
+            maxLength: 300
+            type: string
+            description: Identification of beneficiary owner's last name.
+          middle_name:
+            title: middle_name
+            minLength: 1
+            maxLength: 300
+            type: string
+            description: Identification of beneficiary owner's middle name.
+          first_name:
+            title: first_name
+            minLength: 1
+            maxLength: 300
+            type: string
+            description: Identification of beneficiary owner's first name.
+          dob:
+            title: dob
+            type: string
+            format: date
+            description: Identification of beneficiary owner's date of birth. It is in fixed 10-digit format (YYYY-MM-DD) as per ISO date format.
+          tax_identifier:
+            title: tax_identifier
+            minLength: 1
+            maxLength: 200
+            type: string
+            description: The beneficiary owner's tax identifier.
+          economic_id:
+            $ref: '#/components/schemas/Beneficiary-Economic-Id'
+    Party-Type-Details:
+      title: Party-Type-Details
+      type: string
+      enum:
+      - C
+      - S
+      description: Account party type details. Allowed account part type values are:<br> <br>`S` - sole trader, which is an enterprise owned or run by a single person. <br>`C` - a company that is owned by an organization or business entity
+    Payer-ID-Error-Detail:
+      type: object
+      title: Payer-ID-Error-Detail
+      properties:
+        issue:
+          type: string
+          title: issue
+          description: More information about the issue.
+          maxLength: 150
+        action:
+          type: string
+          title: action
+          description: The corrective action to be taken to resolve the issue.
+          maxLength: 150
+        code:
+          type: string
+          title: code
+          description: Error category that provides more details on error types.
+          maxLength: 10
+    Merchant-Details-Sync-Response:
+      title: Merchant-Details-Sync-Response
+      allOf:
+      - $ref: '#/components/schemas/Merchant-Details-Inquiry'
+      - type: object
+        title: allOf
+        properties:
+          assignee_id:
+            title: assignee_id
+            type: string
+            description: Assignee ID for upfront sanction screening and activation of Payer ID number.
+            minLength: 1
+            maxLength: 100
+          assignee_id_status:
+            title: assignee_id_status
+            type: string
+            description: Specifies the status of assignee ID.
+            minLength: 1
+            maxLength: 35
+          assignee_id_reason:
+            title: assignee_id_reason
+            type: string
+            description: Specifies the reason for the deactivation of an assignee ID.
+            minLength: 1
+            maxLength: 255
+    Account-Inquiry:
+      required:
+      - client_account
+      - branch_code
+      - instruction_currencies
+      type: object
+      title: Account-Inquiry
+      properties:
+        client_account:
+          title: client_account
+          type: string
+          minLength: 1
+          maxLength: 20
+          description: Specifies client's account mapped to the Payer ID.
+        branch_code:
+          title: branch_code
+          type: string
+          minLength: 3
+          maxLength: 4
+          description: Citi Internal branch code
+        instruction_currencies:
+          title: instruction_currencies
+          type: array
+          pattern: ^[A-Z]{3}(?:,[A-Z]{3}){0,300}$
+          description: The 3-character ISO currency code.
+          items:
+            $ref: '#/components/schemas/Instruction-Currency'
+        client_segment:
+          title: client_segment
+          type: string
+          enum:
+          - Corporate
+          - PI
+          - Bank
+          description: Segmentation of clients based on 'Corporate', 'PI', 'Bank'
+        usecase_of_payerid:
+          title: usecase_of_payerid
+          type: string
+          enum:
+          - Reconciliation
+          - Funding
+          - Sales
+          - Multi-party
+          - Sales,Funding
+          - Multi-party,Funding
+          - Sales,Multi-party
+          - Sales,Multi-party,Funding
+          description: Use case description of payer ID.
+    Error-Details:
+      type: object
+      title: Error-Details
+      properties:
+        code:
+          type: string
+          title: code
+          description: Error category that provides more information about error types.
+          maxLength: 7
+        issue:
+          type: string
+          title: issue
+          description: Information about the issue.
+          maxLength: 200
+        action:
+          type: string
+          title: action
+          description: The corrective action to be taken to resolve the issue.
+          maxLength: 350
+    Payer-ID-Errors:
+      type: object
+      title: Payer-ID-Errors
+      properties:
+        ref_id:
+          type: string
+          title: ref_id
+          description: Unique identifier which can be used to track your request.
+        error_details:
+          type: array
+          title: error_details
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Payer-ID-Error-Detail'
+  parameters:
+    ClientId:
+      name: client_id
+      in: query
+      description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for OAuth token generation.
+      required: true
+      schema:
+        type: string
+        example: 898918181818181aczta
+  examples:
+    PayerID-Inquiry-Error-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f6
+        country_code: GB
+        error_details:
+        - code: VC00012
+          issue: Invalid value provided for Payer ID DE43502109007000000011
+          action: Please provide the valid Payer ID Number for Inquiry
+    Assignee-ID-Inquiry-Request-Example:
+      value:
+        country_code: UK
+        assignee_id: DE0000000000091568US
+    AssigneeID-Inquiry-Error-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f0
+        country_code: GB
+        error_details:
+        - code: PI1034
+          issue: Invalid value provided for assignee_id DE0000000000091547US
+          action: Please provide a valid value for assignee ID Number
+    Merchant-Inquiry-Deleted-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f3
+        country_code: DE
+        merchant:
+          assignee_id: DE0000000000091597US
+          assignee_id_status: DELETED
+          assignee_id_reason: Assignee ID DE0000000000091597US moved to Deleted status due to Confirmed match during Online screening
+          party_type_details: S
+          name_1: ZZZ
+          name_2: YYY
+          address: ZZZ, 123
+          zipcode: '1234573'
+          city: ABCDEFHG
+          state: ZZZ
+          country_code: DE
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+    Merchant-Inquiry-Error-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f0
+        country_code: IE
+        error_details:
+        - code: PI1044
+          issue: Multiple records found for the provided Merchant Block Data
+          action: Please refine the search criteria of the Merchant Block Data for Inquiry
+    Merchant-Inquiry-Active-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f6
+        country_code: IE
+        merchant:
+          assignee_id: DE0000000000091587US
+          assignee_id_status: ACTIVE
+          party_type_details: C
+          name_1: ZZZ
+          name_2: YYY
+          address: ZZZ, 123
+          zipcode: '1234573'
+          city: ABCDEFHG
+          state: ZZZ
+          country_code: IE
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - last_name: YYY
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '56787534'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-02-28'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+        - last_name: VVVD
+          middle_name: EWEWE
+          first_name: JHGFDE
+          address: DAN STREET 123
+          zipcode: '8067865'
+          city: RTYUI
+          state: KKKK
+          country_code: GB
+          dob: '2020-02-28'
+          tax_identifier: '12345476'
+          economic_id: '2312345678'
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: Please use valid credentials to access this functionality.
+          code: CC00007
+    Payer-ID-Inquiry-Request-Example:
+      value:
+        country_code: HK
+        payerid_number: DE43502109007000000017
+    AssigneeID-Inquiry-Deleted-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f3
+        country_code: GB
+        merchant:
+          assignee_id: DE0000000000091547US
+          assignee_id_status: DELETED
+          assignee_id_reason: Assignee ID DE0000000000091547US moved to Deleted status due to Confirmed match during Online screening
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: '1234573'
+          city: ABCDEFHG
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+    AssigneeID-Inquiry-Active-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f6
+        country_code: GB
+        merchant:
+          assignee_id: DE0000000000091567US
+          assignee_id_status: ACTIVE
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: '1234573'
+          city: ABCDEFHG
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - last_name: YYY
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '56787534'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-02-28'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+        - last_name: VVVD
+          middle_name: EWEWE
+          first_name: JHGFDE
+          address: DAN STREET 123
+          zipcode: '8067865'
+          city: RTYUI
+          state: KKKK
+          country_code: GB
+          dob: '2020-02-28'
+          tax_identifier: '12345476'
+          economic_id: '2312345678'
+    Bad-Request-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: country_code is mandatory and it cannot be empty
+          action: please provide valid value for property country_code.
+          code: VC00002
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Method not supported
+          action: Please use valid HTTP verb.
+          code: CC00001
+    Requested-Resource-Not-Found:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Resource that you are searching was not found.
+          action: Please use valid resource details.
+          code: CC00006
+    PayerID-Inquiry-Reserved-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f0
+        country_code: GB
+        payerid_number: DE43502109007000000018
+        status: RESERVED
+        account_details:
+        - client_account: '10953312'
+          branch_code: '600'
+          instruction_currencies:
+          - GBP
+          - INR
+          client_segment: PI
+          usecase_of_payerid: Sales
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Unable to serve your request at this moment
+          action: Please refer the prescribed action in error for a resolution of this error.
+          code: CC00004
+    Merchant-Inquiry-Request-Example:
+      value:
+        country_code: DE
+        merchant:
+          party_type_details: S
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: '1234573'
+          city: ABCDEFHG
+          state: XXX
+          country_code: DE
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+    PayerID-Inquiry-Active-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f4
+        country_code: GB
+        payerid_details:
+          payerid_number: DE43502109007000000018
+          status: ACTIVE
+          reason: Client
+          account_details:
+          - client_account: '10953312'
+            branch_code: '600'
+            instruction_currencies:
+            - GBP
+            - INR
+            client_segment: PI
+            usecase_of_payerid: Sales
+        merchant:
+          assignee_id: DE0000000000091567US
+          assignee_id_status: ACTIVE
+          party_type_details: C
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: '1234573'
+          city: ABCDEFHG
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - beneficiary_id: '888888'
+          last_name: YYY
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '56787534'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-02-28'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+        - beneficiary_id: '999999'
+          last_name: VVVD
+          middle_name: EWEWE
+          first_name: JHGFDE
+          address: DAN STREET 123
+          zipcode: '8067865'
+          city: RTYUI
+          state: KKKK
+          country_code: GB
+          dob: '2020-02-28'
+          tax_identifier: '12345476'
+          economic_id: '2312345678'
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: Please use valid content-type in the header.
+          code: CC00002
+    PayerID-Inquiry-Deactivate-Response:
+      value:
+        request_id: 180496fb-a181-4e05-b31c-0e9726fed2f7
+        country_code: GB
+        payerid_number: DE43502109007000000017
+        status: DEACTIVATED
+        reason: Payer ID DE43502109007000000017 deactivated due to potential match during batch screening.
+        account_details:
+        - client_account: '10953312'
+          branch_code: '600'
+          instruction_currencies:
+          - GBP
+          - INR
+          client_segment: PI
+          usecase_of_payerid: Sales
+        merchant:
+          assignee_id: DE0000000000091567US
+          assignee_id_status: DEACTIVATED
+          assignee_id_reason: Assignee ID DE0000000000091568US deactivated due to potential match during batch screening.
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: '1234573'
+          city: ABCDEFHG
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - last_name: YYY
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '56787534'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-02-28'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+        - last_name: VVVD
+          middle_name: EWEWE
+          first_name: JHGFDE
+          address: DAN STREET 123
+          zipcode: '8067865'
+          city: RTYUI
+          state: KKKK
+          country_code: GB
+          dob: '2020-02-28'
+          tax_identifier: '12345476'
+          economic_id: '2312345678'
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            UnauthorizedExample:
+              $ref: '#/components/examples/Unauthorized-Example'
+    MethodNotAllowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            MethodNotAllowedExample:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    UnsupportedMediaTypeOrRequestedResourceNotFound:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            UnsupportedMediaTypeExample:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+            RequestedResourceNotFound:
+              $ref: '#/components/examples/Requested-Resource-Not-Found'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            BadRequestExample:
+              $ref: '#/components/examples/Bad-Request-Example'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            InternalServerErrorExample:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Grant read-only access to receivable services

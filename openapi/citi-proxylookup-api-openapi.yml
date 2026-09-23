@@ -1,0 +1,283 @@
+openapi: 3.2.0
+info:
+  title: Additional Payment Services Proxylookup API
+  description: The Additional Payment Services API allows users to get access to transaction, account and branch related information in real-time, providing transparency and control to the user over the transaction lifecycle.
+  version: ''
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod/selfservices/v1
+  description: production gateway url
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/selfservices/v1
+  description: sbox url
+security:
+- clientCredentials: []
+tags:
+- name: Proxylookup
+paths:
+  /proxylookup:
+    post:
+      summary: Proxy Lookup
+      description: 'CitiConnect Token Validation Proxy Lookup allows users to verify ahead of time whether an account is valid and active, preventing account errors. This feature will validate the status of a Zelle Token for recipients subscribed to the Zelle network to determine their account status and ability to receive funds.
+
+
+        Content-Type : header : Supports “application/xml” or “application/json”
+
+        Authorization : header : The OAuth Token prefixed with “Bearer” and space in between.
+
+        Debitor Account number : body : Debtor Account number
+
+        Country Code : body : Country Code
+
+        Proxy Type : body : Proxy Type
+
+        Proxy Value : body : Proxy Value
+
+        MOBN : :
+
+        EMAL : :'
+      parameters:
+      - name: client_id
+        in: query
+        description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for oauth token generation
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Supports application/json.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/ProxyLookupRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyLookupRequest'
+        required: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ProxyLookupSuccessResponse'
+              example:
+                creditorName: VIRUPAKSHI
+                proxyStatus: active
+                proxyValue: '1555555070'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyLookupSuccessResponse'
+              example:
+                creditorName: VIRUPAKSHI
+                proxyStatus: active
+                proxyValue: '1555555070'
+        '400':
+          description: error response
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ProxyLookupErrorResponse'
+              example:
+                errorDescription: Country code should be US
+                resultStatus: FAILURE280
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyLookupErrorResponse'
+              example:
+                errorDescription: Country code should be US
+                resultStatus: FAILURE
+        '401':
+          description: Unauthorized
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Response'
+              example:
+                correlationId: na-apimgwgtds04~3a0543eb-354f-4f1e-a112-f9b3ee2799e1
+                statusCode: '401'
+                statusMessage: Unauthorized
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+              example:
+                correlationId: na-apimgwgtds04~3a0543eb-354f-4f1e-a112-f9b3ee2799e1
+                statusCode: '401'
+                statusMessage: Unauthorized
+        '405':
+          description: Method Not Allowed
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Response'
+              example:
+                correlationId: na-apimgwgtds04~3a0543eb-354f-4f1e-a112-f9b3ee2799e1
+                statusCode: '405'
+                statusMessage: Method not Allowed
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+              example:
+                correlationId: na-apimgwgtds04~3a0543eb-354f-4f1e-a112-f9b3ee2799e1
+                statusCode: '405'
+                statusMessage: Method not Allowed
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Response'
+              example:
+                correlationId: na-apimgwgtds04~5b23641f-5e2d-b7bf-f9b3ee27cf2f
+                statusCode: '415'
+                statusMessage: Unsupported Media Type
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+              example:
+                correlationId: na-apimgwgtds04~3a0543eb-354f-4f1e-a112-f9b3ee2799e1
+                statusCode: '415'
+                statusMessage: Unsupported Media Type
+        '500':
+          description: Internal Server Error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Response'
+              example:
+                correlationId: na-apimgwgtds04~3a0543eb-354f-4f1e-a112-f9b3ee2799e1
+                statusCode: '500'
+                statusMessage: INTERNAL_SERVER_ERROR
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+              example:
+                correlationId: na-apimgwgtds04~3a0543eb-354f-4f1e-a112-f9b3ee2799e1
+                statusCode: '500'
+                statusMessage: INTERNAL_SERVER_ERROR
+      x-codegen-request-body-name: Request Body
+      tags:
+      - Proxylookup
+      operationId: postProxylookup
+      x-operation-id-source: derived
+components:
+  schemas:
+    ProxyLookupRequest:
+      required:
+      - countrycode
+      - debitaccount
+      - proxyType
+      - proxyValue
+      type: object
+      properties:
+        countrycode:
+          pattern: ^[A-Z]{2}$
+          type: string
+          description: Country Code should be US
+          xml:
+            name: CtryCd
+        debitaccount:
+          maxLength: 10
+          minLength: 0
+          type: string
+          description: Debitor Account number
+          xml:
+            name: DbtrAcct
+        proxyType:
+          maxLength: 10
+          minLength: 0
+          type: string
+          description: Proxy Type should be either MOBN/EMAL
+          xml:
+            name: Prxytp
+        proxyValue:
+          maxLength: 10
+          minLength: 0
+          type: string
+          description: Proxy Value should be Mobile Number/Email
+          xml:
+            name: Prxyval
+      description: Object representing Token Validation Request
+    Response:
+      type: object
+      properties:
+        correlationId:
+          type: string
+          description: input request tracking unique id
+        statusCode:
+          type: string
+          description: error status code
+        statusMessage:
+          type: string
+          description: message providing information about error
+      description: Object representing response for error scenario
+    ProxyLookupSuccessResponse:
+      required:
+      - creditorName
+      - proxyStatus
+      - proxyValue
+      type: object
+      properties:
+        creditorName:
+          maxLength: 10
+          minLength: 0
+          type: string
+          description: Beneficiary Name
+          xml:
+            name: CdtrNm
+        proxyStatus:
+          maxLength: 10
+          minLength: 0
+          type: string
+          description: Displays the Token status
+          xml:
+            name: ProxyStatus
+        proxyValue:
+          maxLength: 10
+          minLength: 0
+          type: string
+          description: User Given Proxy Value should be either  Mobile Number/Email
+          xml:
+            name: ProxyVal
+      description: Object representing token validation response
+    ProxyLookupErrorResponse:
+      required:
+      - errorDescription
+      - resultStatus
+      type: object
+      properties:
+        errorDescription:
+          maxLength: 100
+          minLength: 0
+          type: string
+          description: Gives the error description in detail
+          xml:
+            name: RsnDesc
+        resultStatus:
+          maxLength: 10
+          minLength: 0
+          type: string
+          description: Gives the status whether Success/Failure
+          xml:
+            name: RsnCd
+      description: Object representing token validation error response
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
+
+
+        '
+      flows:
+        clientCredentials:
+          tokenUrl: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/authenticationservices/v1/oauth/token
+          scopes: {}
+x-original-swagger-version: '2.0'

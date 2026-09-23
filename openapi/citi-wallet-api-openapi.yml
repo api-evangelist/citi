@@ -1,0 +1,955 @@
+openapi: 3.2.0
+info:
+  title: Gateway Services Wallet API
+  description: Self onboarding services for merchants to register on the platform, create wallets, and perform withdrawals or payouts to their designated settlement and external beneficiary accounts.
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+servers:
+- url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+  description: production gateway url
+- url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb/gatewayservices
+  description: sbox url
+security:
+- oAuth2:
+  - /authenticationservices/v1
+tags:
+- name: Wallet
+  description: Wallet management and balance operations
+paths:
+  /merchants/v1/wallets/activation:
+    post:
+      summary: Activate wallet for virtual accounts
+      description: Use this endpoint to apply for Virtual Accounts (VAs) to start sending/receiving funds. You can only apply for VAs when the kyc_status of your account is APPROVED.
+      operationId: activateWallet
+      servers:
+      - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Idempotency-Id'
+      - $ref: '#/components/parameters/Merchant-Id'
+      - $ref: '#/components/parameters/Country-Code'
+      requestBody:
+        required: true
+        description: This section holds the request parameters for virtual account activation.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Wallet-Activation-Request'
+            examples:
+              wallet-activation-request:
+                $ref: '#/components/examples/Wallet-Activation-Request-Example'
+      responses:
+        '200':
+          description: This section holds the successful response for virtual account activation.
+          headers:
+            apim-guid:
+              $ref: '#/components/headers/Apim-Guid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sync-Response'
+              examples:
+                wallet-activation-response:
+                  $ref: '#/components/examples/Wallet-Activation-Response-Example'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+      callbacks:
+        walletActivationWebhook:
+          '{$notificationURL}':
+            post:
+              summary: Wallet activation webhook notification
+              description: Webhook notification sent when a wallet activation status changes.
+              operationId: walletActivationWebhookNotification
+              tags:
+              - Wallet
+              parameters:
+              - $ref: '#/components/parameters/Event-Type'
+              - $ref: '#/components/parameters/Event-Name'
+              - $ref: '#/components/parameters/Apim-Guid'
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/Webhook-Wallet-Activation'
+                    examples:
+                      Wallet-Activation-Available-Webhook-Example:
+                        $ref: '#/components/examples/Wallet-Activation-Available-Webhook-Example'
+                      Wallet-Activation-Closed-Webhook-Example:
+                        $ref: '#/components/examples/Wallet-Activation-Closed-Webhook-Example'
+                      wallet-activation-Declined-webhook:
+                        $ref: '#/components/examples/Wallet-Activation-Declined-Webhook-Example'
+              responses:
+                '200':
+                  description: Webhook received successfully.
+  /merchants/v1/wallets/balances:
+    get:
+      summary: Get wallet balances
+      description: Retrieve available and related wallet account balance information for the specified merchant and account filters, enabling reconciliation, reporting, and operational funding decisions.
+      operationId: getWalletBalances
+      servers:
+      - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Merchant-Id'
+      - $ref: '#/components/parameters/Currency-Code'
+      - $ref: '#/components/parameters/Country-Code'
+      - $ref: '#/components/parameters/Virtual-Account-Id'
+      responses:
+        '200':
+          description: This section holds the virtual balances.
+          headers:
+            apim-guid:
+              $ref: '#/components/headers/Apim-Guid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Get-Wallet-Balances'
+              examples:
+                get-wallet-balances-response:
+                  $ref: '#/components/examples/Get-Wallet-Balances-Response-Example'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+  /merchants/v1/wallets:
+    get:
+      summary: Get wallet status
+      description: Check the status of virtual accounts using the virtual_account_id returned from wallet activation, and review account state details needed to determine operational readiness and lifecycle stage.
+      operationId: getWallet
+      servers:
+      - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Merchant-Id'
+      - $ref: '#/components/parameters/Country-Code'
+      - $ref: '#/components/parameters/Virtual-Account-Id'
+      responses:
+        '200':
+          description: This section holds the successful response for virtual account status inquiry.
+          headers:
+            apim-guid:
+              $ref: '#/components/headers/Apim-Guid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Get-Wallet-Activation-Response'
+              examples:
+                get-wallet-response:
+                  $ref: '#/components/examples/Get-Wallet-Response-Example'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+components:
+  examples:
+    Un-Supported-Media-Type-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: please use valid content-type in header
+          code: CC00002
+    Wallet-Activation-Request-Example:
+      value:
+        currency_code: USD
+        bank_country_code: US
+    Too-Many-Requests-Gateway-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: Rate Limit exceeded
+    Wallet-Activation-Response-Example:
+      value:
+        status_details:
+          status: PENDING
+          message: Request is accepted successfully and wallet activation is in progress
+    Wallet-Activation-Available-Webhook-Example:
+      value:
+        virtual_account_id: 59b746f1-8fcc-4801-8b90-b0204140a462
+        virtual_account_number: '73380000000304551'
+        account:
+          type: CHECKING
+          holder_name: 北京创新科技有限公司
+          currency_code: USD
+        bank:
+          name: Citibank
+          code: '006'
+          branch_number: '01'
+          city: New York
+          address_line: 111 Wall Street, New York, New York 10043, United States
+          postal_code: '10043'
+          country_code: US
+          routing_number: 031100209
+          swift_code: GEOORUMMXXX
+        status: AVAILABLE
+        merchant_id: 205dff66-ff47-4d72-82ac-865dbe909040
+    Unauthorized-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+    Internal-Server-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+          code: CC00004
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: Internal Server Error
+    Bad-Request-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+        - issue: record that you are searching is not found
+          action: resend the request with valid values
+          code: VC00003
+    Not-Found-Gateway-Error-Example:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Bad-Request-Gateway-Error-Example:
+      value:
+        httpCode: '400'
+        httpMessage: Bad Request
+        moreInformation: please provide valid value for request
+    Method-Not-Allowed-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+        - issue: Method not supported
+          action: Method not supported for this endpoint, please use valid http verb
+          code: CC00001
+    Wallet-Activation-Declined-Webhook-Example:
+      value:
+        virtual_account_id: 3e5061de-f232-49f5-bef6-71bcaf6431fb
+        virtual_account_number: '73380000000304607'
+        account:
+          currency_code: USD
+        status: DECLINED
+        message: as CITI requested
+        merchant_id: 91eb2008-bee1-4bb9-84ea-e9f372a76e95
+    Service-Unavailable-Gateway-Example:
+      value:
+        httpCode: '503'
+        httpMessage: Service is temporarily unavailable
+        moreInformation: Retry the request after some time
+    Forbidden-Service-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - code: CC00008
+          issue: User does not have privilege to access this functionality.
+          action: Please reach out to support team to enable this feature.
+    Un-Supported-Media-Type-Gateway-Error-Example:
+      value:
+        httpCode: '415'
+        httpMessage: Unsupported Media Type
+        moreInformation: Unsupported Content-Type application/octet-stream
+    Wallet-Activation-Closed-Webhook-Example:
+      value:
+        virtual_account_id: 3e5061de-f232-49f5-bef6-71bcaf6431fb
+        virtual_account_number: '73380000000304607'
+        account:
+          currency_code: USD
+        status: CLOSED
+        message: as CITI requested
+        merchant_id: 91eb2008-bee1-4bb9-84ea-e9f372a76e95
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: The server could not verify that you are authorized to access the URL
+    Get-Wallet-Balances-Response-Example:
+      value:
+      - virtual_account_id: ec689822-9864-4c4d-9d68-222467627901
+        account_type: BALANCE_ACCOUNT
+        currency_code: USD
+        available_amount: 399.35
+    Method-Not-Allowed-Gateway-Error-Example:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Get-Wallet-Response-Example:
+      value:
+      - virtual_account_id: R200801012359590001
+        virtual_account_number: '38879371'
+        virtual_account_status: AVAILABLE
+        message: Virtual account status is available
+        account:
+          type: CHECKING
+          iban: SE1498203030437006071356
+          holder_name: Carol Parisian
+          currency_code: HNL
+        bank:
+          name: CITI Bank HongKong Branch
+          code: '37'
+          branch_number: '690'
+          city: South Devyn
+          address_line: Apt. 883
+          postal_code: '605826'
+          country_code: SO
+          routing_number: '687869237'
+          swift_code: BETFSJGNJ8F
+          sort_code: '430391'
+  schemas:
+    Wallet-Activation:
+      title: WalletActivation
+      type: object
+      description: Response body containing wallet activation details and virtual account information.
+      properties:
+        virtual_account_id:
+          $ref: '#/components/schemas/Virtual-Account-Id'
+        virtual_account_number:
+          type: string
+          title: virtual_account_number
+          description: Bank account number.
+          minLength: 1
+          maxLength: 64
+          example: '38879371'
+        account:
+          $ref: '#/components/schemas/Virtual-Account'
+        bank:
+          $ref: '#/components/schemas/Bank'
+    Get-Wallet-Activation-Response:
+      title: GetWalletActivationResponse
+      description: Response body containing wallet and virtual account information.
+      type: array
+      items:
+        $ref: '#/components/schemas/Get-Wallet-Activation'
+    Merchant-Id:
+      type: string
+      description: Unique identifier generated by Citi for each seller. Seller to use this id for the further functional calls.
+      title: merchant_id
+      minLength: 1
+      maxLength: 36
+      example: ec689822-9864-4c4d-9d68-222467627901
+    Bank:
+      title: Bank
+      type: object
+      description: This field contains the detailed information of bank.
+      properties:
+        name:
+          allOf:
+          - $ref: '#/components/schemas/Name'
+          - description: Bank name.
+            minLength: 1
+            maxLength: 255
+            example: CITI Bank HongKong Branch
+        code:
+          type: string
+          title: code
+          description: Domestic bank code in the bank_location.
+          minLength: 1
+          maxLength: 32
+          example: '37'
+        branch_number:
+          type: string
+          title: branch_number
+          description: Domestic branch code/ associate bank number in the bank_location.
+          minLength: 1
+          maxLength: 32
+          example: '690'
+        city:
+          type: string
+          title: city
+          description: The city where the bank is located.
+          minLength: 1
+          maxLength: 128
+          example: South Devyn
+        address_line:
+          type: string
+          title: address_line
+          description: The bank's detailed address.
+          minLength: 1
+          maxLength: 256
+          example: Apt. 883
+        postal_code:
+          type: string
+          title: postal_code
+          description: Bank's postal or ZIP code.
+          minLength: 1
+          maxLength: 16
+          example: '605826'
+        country_code:
+          allOf:
+          - $ref: '#/components/schemas/Country-Code'
+          title: country_code
+          description: Country code.
+        routing_number:
+          type: string
+          title: routing_number
+          description: North American bank code.
+          minLength: 1
+          maxLength: 64
+          example: '687869237'
+        swift_code:
+          type: string
+          title: swift_code
+          description: SWIFT code.
+          minLength: 1
+          maxLength: 64
+          example: BETFSJGNJ8F
+        sort_code:
+          type: string
+          title: sort_code
+          description: UK bank sort code (6 digits).
+          minLength: 1
+          maxLength: 32
+          example: '430391'
+    Virtual-Account-Id:
+      type: string
+      title: Virtual-Account-Id
+      description: Account ID for a specific virtual account.
+      minLength: 1
+      maxLength: 36
+      example: R200801012359590001
+    Status-Details:
+      title: StatusDetails
+      description: Status Details.
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        message:
+          $ref: '#/components/schemas/Message'
+    Virtual-Account:
+      title: VirtualAccount
+      type: object
+      description: This field contains the detailed information of account.
+      properties:
+        type:
+          type: string
+          title: type
+          description: Account type.
+          enum:
+          - SAVINGS
+          - CURRENT
+          - CHECKING
+          example: CHECKING
+        iban:
+          type: string
+          title: iban
+          description: EU international bank account number.
+          minLength: 1
+          maxLength: 32
+          example: SE1498203030437006071356
+        holder_name:
+          type: string
+          title: holder_name
+          description: Account holder's name. Normally equal to your account name. Note that some banks may return payment service provider in this field.
+          minLength: 1
+          maxLength: 256
+          example: Carol Parisian
+        currency_code:
+          allOf:
+          - $ref: '#/components/schemas/Currency-Code'
+          title: currency_code
+          description: Account currency code.
+          example: HNL
+    Status:
+      type: string
+      description: Status of the request.
+      title: status
+      minLength: 1
+      maxLength: 64
+    Get-Wallet-Activation:
+      title: GetWalletActivation
+      description: Response body containing wallet activation details and virtual account information.
+      allOf:
+      - $ref: '#/components/schemas/Wallet-Activation'
+      - type: object
+        properties:
+          status:
+            allOf:
+            - $ref: '#/components/schemas/Status'
+            title: status
+            description: The status of wallet activation. PENDING - account is pending; AVAILABLE - account is available to be used; DECLINED - account application rejected; SUSPENDED - account is frozen; CLOSED - account is no longer available.
+          message:
+            $ref: '#/components/schemas/Message'
+    Amount:
+      type: number
+      title: amount
+      description: Amount in currency.
+      minimum: 0.01
+      maximum: 10000000000000
+      example: 1000
+    Name:
+      type: string
+      title: name
+      minLength: 1
+      maxLength: 128
+      example: SHASHANK VIJAYSHANKAR TIWARI
+    Country-Code:
+      type: string
+      title: country_code
+      pattern: ^[A-Z]{2,2}$
+      description: Country code.
+      example: CN
+    Wallet-Activation-Request:
+      title: WalletActivationRequest
+      type: object
+      description: Notification for wallet activation status update.
+      required:
+      - currency_code
+      - bank_country_code
+      properties:
+        currency_code:
+          allOf:
+          - $ref: '#/components/schemas/Currency-Code'
+          title: currency_code
+          description: The currency code for the virtual account.
+          example: USD
+        bank_country_code:
+          allOf:
+          - $ref: '#/components/schemas/Country-Code'
+          title: bank_country_code
+          description: The country code of the bank issuing the virtual account.
+    Currency-Code:
+      type: string
+      title: currency_code
+      description: The currency code in the transaction.
+      pattern: ^[A-Z]{3}$
+      example: USD
+    Service-Error-Response:
+      title: ServiceErrorResponse
+      type: object
+      required:
+      - ref_id
+      - error_details
+      properties:
+        ref_id:
+          type: string
+          maxLength: 120
+          description: Unique ID for the Transaction
+          title: ref_id
+          example: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+          type: array
+          description: List of error details
+          title: error_details
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Webhook-Wallet-Activation:
+      title: WebhookWalletActivation
+      description: Wallet activation notification for the status update.
+      allOf:
+      - $ref: '#/components/schemas/Wallet-Activation'
+      - $ref: '#/components/schemas/Common-Error-Response'
+      - type: object
+        title: Webhook-Wallet-Activation
+    Gateway-Error-Response:
+      type: object
+      title: GatewayErrorResponse
+      required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+          example: Bad Request
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: moreInformation
+          example: please provide valid value for request
+    Error-Detail:
+      type: object
+      title: ErrorDetail
+      properties:
+        issue:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: more details about the issue
+          title: issue
+          example: property emailAddress is mandatory and it cannot be empty
+        action:
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          title: action
+          example: please provide valid value for property emailAddress
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: unique code representing the issue
+          title: code
+          example: VC00010
+    Wallet-Balance-Item:
+      title: WalletBalanceItem
+      type: object
+      description: Balance information for a single account.
+      properties:
+        virtual_account_id:
+          $ref: '#/components/schemas/Virtual-Account-Id'
+        account_type:
+          type: string
+          title: account_type
+          description: Either BALANCE_ACCOUNT or TEMP_ACCOUNT.
+          enum:
+          - BALANCE_ACCOUNT
+          - TEMP_ACCOUNT
+          example: BALANCE_ACCOUNT
+        currency_code:
+          allOf:
+          - $ref: '#/components/schemas/Currency-Code'
+          title: currency_code
+          description: Currency of the balance.
+          example: USD
+        available_amount:
+          allOf:
+          - $ref: '#/components/schemas/Amount'
+          title: available_amount
+          description: Balance of the account and currency.
+    Sync-Response:
+      title: SyncResponse
+      type: object
+      description: Acknowledgement.
+      properties:
+        status_details:
+          $ref: '#/components/schemas/Status-Details'
+    Common-Error-Response:
+      title: CommonErrorResponse
+      description: Details of error in the request.
+      type: object
+      properties:
+        merchant_id:
+          $ref: '#/components/schemas/Merchant-Id'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status'
+          description: Status description. <br> Certification Webhook - Allowed values are APPROVED, DECLINED, RFI_PENDING. <br> Wallet Activation Webhook - Allowed values are AVAILABLE - account is available to be used; DECLINED - account application rejected; SUSPENDED - account is frozen; CLOSED - account is no longer available. <br> Link Account Webhook - Allowed values are AVAILABLE and DECLINED <br> Payment Webhook - Allowed values are SUCCESS, REJECTED. <br> Inbound Webhook - Allowed values is SUCCESS. <br> Transaction Reporting - PENDING, SUCCESS, REJECTED.
+        message:
+          $ref: '#/components/schemas/Message'
+    Get-Wallet-Balances:
+      title: GetWalletBalances
+      type: array
+      description: Response body containing wallet balance information.
+      items:
+        $ref: '#/components/schemas/Wallet-Balance-Item'
+    Message:
+      type: string
+      description: Description of the status.
+      title: message
+      minLength: 1
+      maxLength: 500
+      example: Request is in-progress
+  responses:
+    Gateway-Timeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+    Too-Many-Requests:
+      description: Too Many Requests - Rate limit exceeded. Retry after the specified time.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Too-Many-Requests-Gateway-Example:
+              $ref: '#/components/examples/Too-Many-Requests-Gateway-Example'
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            title: Bad-Request-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Bad-Request-Service-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Service-Error-Example'
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            title: Unauthorized-Response
+            oneOf:
+            - $ref: '#/components/schemas/Service-Error-Response'
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Service-Error-Example'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            title: Method-Not-Allowed-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
+            Method-Not-Allowed-Service-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Service-Error-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            title: Unsupported-Media-Type-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Un-Supported-Media-Type-Gateway-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Gateway-Error-Example'
+            Un-Supported-Media-Type-Service-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Service-Error-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            title: Internal-Server-Error-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Internal-Server-Service-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Service-Error-Example'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Forbidden-Service-Example:
+              $ref: '#/components/examples/Forbidden-Service-Example'
+    Service-Unavailable:
+      description: Service Unavailable - The server is temporarily unable to  handle the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Service-Unavailable-Gateway-Example:
+              $ref: '#/components/examples/Service-Unavailable-Gateway-Example'
+  parameters:
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Type of event (e.g., CERTIFICATION, WALLET_ACTIVATION, LINK_ACCOUNT, PAYMENT, INBOUND, RFI).
+      schema:
+        type: string
+        title: event-type
+        minLength: 1
+        maxLength: 64
+        example: Webhook
+    Apim-Guid:
+      in: header
+      name: Apim-Guid
+      description: Unique system generated reference number generated by   Citi. Refer to this number in case of any discrepancy reporting to a Citi representative.
+      schema:
+        type: string
+        maxLength: 128
+        minLength: 1
+        title: Apim-Guid
+      required: true
+      example: na-apimgwgtds04~4a98cbc5-d813-4e65-bc81-d70f0f87f6ec
+    Client-Id:
+      in: query
+      name: client_id
+      description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding.
+      schema:
+        type: string
+        title: Client-Id
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+        minimum: 1
+        maximum: 128
+      required: true
+    Event-Name:
+      name: Event-Name
+      in: header
+      description: Name of event (e.g., PAYOUT, PAYIN).
+      schema:
+        type: string
+        title: event-name
+        minLength: 1
+        maxLength: 64
+        example: Payout
+    Country-Code:
+      in: header
+      name: Country-Code
+      description: Marketplace's country code.
+      schema:
+        pattern: ^[A-Z]{2,2}$
+        type: string
+        title: Country-Code
+        example: US
+      required: true
+    Merchant-Id:
+      in: header
+      name: Merchant-Id
+      description: CITI generated Merchant ID during merchant creation.
+      schema:
+        type: string
+        title: Merchant-Id
+        minLength: 1
+        maxLength: 36
+        example: ec689822-9864-4c4d-9d68-22246762901
+      required: true
+    Currency-Code:
+      name: currency_code
+      in: query
+      required: false
+      description: Query the balance for a specific currency code.
+      schema:
+        type: string
+        title: currency_code
+        pattern: ^[A-Z]{3}$
+      example: USD
+    Idempotency-Id:
+      in: header
+      name: Idempotency-Id
+      description: "Your unique identification for a POST request \n - Maximum length is 128. \n-CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      schema:
+        type: string
+        title: Idempotency-Id
+        minLength: 1
+        maxLength: 128
+        example: a44cbb606de4edb9a7a123414bba3bb
+      required: true
+    Virtual-Account-Id:
+      name: virtual_account_id
+      in: query
+      description: The unique ID returned when you call wallet activation.
+      schema:
+        type: string
+        title: virtual_account_id
+        minLength: 1
+        maxLength: 36
+        example: R200801012359590001
+  headers:
+    Apim-Guid:
+      description: Unique system generated reference number generated by   Citi. Refer to this number in case of any discrepancy reporting to a Citi representative.
+      schema:
+        type: string
+        maxLength: 128
+        minLength: 1
+        title: Apim-Guid
+      required: true
+      example: na-apimgwgtds04~4a98cbc5-d813-4e65-bc81-d70f0f87f6ec
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://b2b.api.icg.citi.com/authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Access to marketplace management APIs

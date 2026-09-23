@@ -1,0 +1,561 @@
+openapi: 3.2.0
+info:
+  title: Pix Webhook API
+  version: 2.8.1
+  description: Update - February 04, 2026
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod
+  description: Servidor de Produção
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+  description: sbox URL
+- url: https://tts.sit.apib2b.citi.com/citiconnect/uat
+  description: Servidor de Homologação
+tags:
+- name: Webhook
+  x-displayName: Gerenciamento de notificações
+  description: Reúne endpoints para gerenciamento de notificações por parte do PSP recebedor ao usuário recebedor.
+paths:
+  /webhook/{chave}:
+    parameters:
+    - name: chave
+      in: path
+      required: true
+      schema:
+        type: string
+        title: Chave DICT do recebedor
+        maxLength: 77
+    put:
+      tags:
+      - Webhook
+      summary: Configurar o Webhook Pix
+      description: 'Endpoint para configuração do serviço de notificações acerca de Pix recebidos.
+
+        Somente Pix associados a um txid serão notificados.'
+      security:
+      - OAuth2:
+        - webhook.write
+      requestBody:
+        $ref: '#/components/requestBodies/WebhookConfigBody'
+      responses:
+        '200':
+          description: Webhook para notificações acerca de Pix recebidos associados a um txid.
+        '400':
+          description: Requisição com formato inválido.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problema'
+              examples:
+                exemplo1:
+                  $ref: '#/components/examples/RequisicaoInvalidaWebhookExample1'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '503':
+          $ref: '#/components/responses/ServicoIndisponivel'
+      callbacks:
+        listaPix:
+          '{$request.body#/webhookUrl}/pix':
+            post:
+              description: 'O callback deve ser acionado sempre que um ou mais Pix associados a um txid forem recebidos
+
+                pelo usuário recebedor e desde que a chave associada ao Pix em questão esteja
+
+                associada a um webhook cadastrado.
+
+
+                O callback também deve ser acionado sempre que uma devolução associada a um Pix
+
+                associado a um txid atinja um status final: `DEVOLVIDO` ou `NAO_REALIZADO`.
+
+
+                O SLA específico a ser definido no contexto dos acionamento dos callbacks fica a
+
+                cargo de cada PSP recebedor. Orienta-se, no entanto, que o SLA seja definido dentro
+
+                de um limite razoável tendo em vista que a expectativa é que o callback seja um aviso "on-line" da
+
+                ocorrência do pagamento.
+
+
+                No contexto da estratégia específica de SLA de cada PSP recebedor, é possível agrupar
+
+                Pix associados a uma mesma chave para economizar acionamentos múltiplos.
+
+                Este serviço está protegido por uma camada de autenticação mTLS. Para maiores detalhes,
+
+                verificar o [Manual de padrões para iniciação do Pix](https://www.bcb.gov.br/estabilidadefinanceira/pix).
+
+                '
+              security: []
+              requestBody:
+                $ref: '#/components/requestBodies/WebhookPixBody'
+              responses:
+                '200':
+                  description: Notificação recebida com sucesso
+      operationId: putWebhookByChave
+      x-operation-id-source: derived
+components:
+  schemas:
+    EndToEndId:
+      type: string
+      title: Id fim a fim da transação
+      description: EndToEndIdentification que transita na PACS002, PACS004 e PACS008
+      pattern: '[a-zA-Z0-9]{32}'
+      minLength: 32
+      maxLength: 32
+    Problema:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
+          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title:
+          type: string
+          description: Descrição resumida do problema.
+          example: Not found
+        status:
+          type: integer
+          description: Código HTTP do status retornado.
+          example: 404
+        detail:
+          type: string
+          description: Descrição completa do problema.
+        correlationId:
+          type: string
+          description: Identificador de correlação do problema para fins de suporte
+        violacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violacao'
+    WebhookSolicitado:
+      type: object
+      required:
+      - webhookUrl
+      title: Webhook
+      properties:
+        webhookUrl:
+          type: string
+          format: uri
+          example: https://pix.example.com/api/webhook/
+    PixValorOriginal:
+      type: object
+      properties:
+        original:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor original
+              description: Valor original do Pix.
+              pattern: \d{1,10}\.\d{2}
+    PixValorDesconto:
+      type: object
+      properties:
+        desconto:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo a desconto.
+              description: Valor do desconto.
+              pattern: \d{1,10}\.\d{2}
+    PixValorTroco:
+      type: object
+      properties:
+        troco:
+          type: object
+          required:
+          - valor
+          - modalidadeAgente
+          - prestadorDoServicoDeSaque
+          properties:
+            valor:
+              type: string
+              title: Valor do Troco Pix
+              description: Valor do Troco Pix.
+              pattern: \d{1,10}\.\d{2}
+            modalidadeAgente:
+              type: string
+              title: Modalidade do Agente
+              description: '##### Modalidade do Agente
+
+                <table><tr><th>SIGLA</th><th>Descrição</th></tr><tr><td>AGTEC</td><td>Agente Estabelecimento Comercial</td></tr><tr><td>AGTOT</td><td>Agente Outra Espécie de Pessoa Jurídica ou Correspondente no País</td></tr></table>
+
+                '
+              enum:
+              - AGTEC
+              - AGTOT
+            prestadorDoServicoDeSaque:
+              type: string
+              title: Facilitador de Serviço de Saque
+              pattern: \d{8}
+              description: ISPB do Facilitador de Serviço de Saque
+    Violacao:
+      type: object
+      title: Violações
+      properties:
+        razao:
+          type: string
+          title: Descrição do erro
+          description: Descrição do erro
+          example: Valor da cobrança não pode ser 0.00
+        propriedade:
+          type: string
+          title: Nome da propriedade
+          description: Nome da propriedade
+          example: cob.chave
+        valor:
+          type: string
+          title: Valor da propriedade
+          description: Valor da propriedade
+          example: 061996671234
+    Devolucao:
+      type: object
+      title: Devolução
+      required:
+      - id
+      - rtrId
+      - valor
+      - horario
+      - status
+      properties:
+        id:
+          $ref: '#/components/schemas/DevolucaoId'
+        rtrId:
+          type: string
+          title: RtrId
+          description: ReturnIdentification que transita na PACS004.
+          example: D12345678202009091000abcde123456
+          pattern: '[a-zA-Z0-9]{32}'
+          minLength: 32
+          maxLength: 32
+        valor:
+          type: string
+          title: Valor a devolver.
+          pattern: \d{1,10}\.\d{2}
+          description: Valor a devolver.
+        natureza:
+          $ref: '#/components/schemas/DevolucaoNatureza'
+        descricao:
+          type: string
+          title: Mensagem ao pagador relativa à devolução.
+          maxLength: 140
+          description: O campo `descricao`, opcional, determina um texto a ser apresentado ao pagador contendo informações sobre a devolução. Esse texto será preenchido, na pacs.004, pelo PSP do recebedor, no campo RemittanceInformation. O tamanho do campo na pacs.004 está limitado a 140 caracteres.
+        horario:
+          type: object
+          properties:
+            solicitacao:
+              type: string
+              format: date-time
+              title: Horário de solicitação
+              description: Horário no qual a devolução foi solicitada no PSP.
+            liquidacao:
+              type: string
+              format: date-time
+              title: Horário de liquidacao
+              description: Horário no qual a devolução foi liquidada no PSP.
+        status:
+          type: string
+          title: Status
+          description: Status da devolução.
+          enum:
+          - EM_PROCESSAMENTO
+          - DEVOLVIDO
+          - NAO_REALIZADO
+        motivo:
+          type: string
+          title: Descrição do status.
+          description: '# Status da Devolução
+
+
+            Campo opcional que pode ser utilizado pelo PSP recebedor para detalhar os motivos
+
+            de a devolução ter atingido o status em questão.
+
+            Pode ser utilizado, por exemplo, para detalhar o motivo de a devolução não ter sido realizada.
+
+            '
+          maxLength: 140
+    PixValorAbatimento:
+      type: object
+      properties:
+        abatimento:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo a abatimento.
+              description: Valor do abatimento.
+              pattern: \d{1,10}\.\d{2}
+    DevolucaoNatureza:
+      type: string
+      title: Natureza da Devolução
+      description: "Indica qual é a natureza da devolução. Uma devolução pode ser relacionada a um Pix comum (com códigos possíveis: `MD06`, `BE08` e `FR01` da pacs.004 e `REFU` da pacs.008), \nou a um Pix de Saque ou Troco (com códigos possíveis:  `MD06` e `SL02` da pacs.004). Na ausência deste campo a natureza deve ser interpretada como \nsendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n  - `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum ou ao valor da compra em um Pix Troco (`MD06`);\n  - `RETIRADA`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix Saque ou ao valor do troco em um Pix Troco (`SL02`);\n  - `MED_OPERACIONAL`: quando a devolução ocorre no âmbito do MED por motivo de falha operacional e se refere a um Pix comum (`BE08`);\n  - `MED_FRAUDE`: quando a devolução ocorre no âmbito do MED por fundada suspeita de fraude e se refere a um Pix comum (`FR01`).\n  - `MED_PIX_AUTOMATICO`: reembolso total ou parcial ao participante do usuário pagador no âmbito do MED (Mecanismo Especial de Devolução) para o Pix Automático pela utilização de recursos próprios para ressarcimento do usuário pagador.(`REFU`);\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso pode ser: ORIGINAL, MED_OPERACIONAL ou MED_FRAUDE);\n- Pix Saque: o valor da devolução é limitado ao valor da retirada (a natureza nesse caso deve ser: RETIRADA); e\n- Pix Troco: o valor da devolução é limitado ao valor relativo à compra ou ao troco:\n  - Quando a devolução for referente à compra, o valor limita-se ao valor da compra (a natureza nesse caso deve ser ORIGINAL); e\n  - Quando a devolução for referente ao troco, o valor limita-se ao valor do troco (a natureza nesse caso deve ser RETIRADA).\n"
+      enum:
+      - ORIGINAL
+      - RETIRADA
+      - MED_OPERACIONAL
+      - MED_FRAUDE
+      - MED_PIX_AUTOMATICO
+    PixValorMulta:
+      type: object
+      properties:
+        multa:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo a multa.
+              description: Valor da multa.
+              pattern: \d{1,10}\.\d{2}
+    PixValorSaque:
+      type: object
+      properties:
+        saque:
+          type: object
+          required:
+          - valor
+          - modalidadeAgente
+          - prestadorDoServicoDeSaque
+          properties:
+            valor:
+              type: string
+              title: Valor do Saque Pix
+              description: Valor do Saque Pix.
+              pattern: \d{1,10}\.\d{2}
+            modalidadeAgente:
+              type: string
+              title: Modalidade do Agente
+              description: '##### Modalidade do Agente
+
+                <table><tr><th>SIGLA</th><th>Descrição</th></tr><tr><td>AGTEC</td><td>Agente Estabelecimento Comercial</td></tr><tr><td>AGTOT</td><td>Agente Outra Espécie de Pessoa Jurídica ou Correspondente no País</td></tr><tr><td>AGPSS</td><td>Agente Facilitador de Serviço de Saque (<b>ATENÇÃO</b>: no mapeamento para o campo ''modalidadeAgente'', da pacs.008, esse valor deve ser substituído por <b>AGFSS</b>)</td></tr></table>
+
+                '
+              enum:
+              - AGTEC
+              - AGTOT
+              - AGPSS
+            prestadorDoServicoDeSaque:
+              type: string
+              title: Facilitador de Serviço de Saque
+              pattern: \d{8}
+              description: ISPB do Facilitador de Serviço de Saque
+    PixValorJuros:
+      type: object
+      properties:
+        juros:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo aos juros.
+              description: Valor dos juros.
+              pattern: \d{1,10}\.\d{2}
+    DevolucaoId:
+      type: string
+      title: Id da Devolução
+      description: Id gerado pelo cliente para representar unicamente uma devolução.
+      pattern: '[a-zA-Z0-9]{1,35}'
+    Pix:
+      type: object
+      title: Pix
+      required:
+      - endToEndId
+      - valor
+      - horario
+      properties:
+        endToEndId:
+          $ref: '#/components/schemas/EndToEndId'
+        txid:
+          allOf:
+          - $ref: '#/components/schemas/TxId'
+          - pattern: '[a-zA-Z0-9]{1,35}'
+        valor:
+          type: string
+          title: Valor do Pix.
+          pattern: \d{1,10}\.\d{2}
+          description: Valor do Pix.
+        componentesValor:
+          type: object
+          title: Informações sobre o valor do Pix
+          description: "O objetivo dessa estrutura é explicar os elementos de composição do valor do Pix, incluindo informações sobre as multas, juros, descontos e abatimentos quando o Pix for relativo a cobranças com vencimento.\n\nRegras da estrutura:\n- O `valor` do Pix é igual a: \n  - (`original.valor` + `saque.valor` + `troco.valor`) + `multa.valor` + `juros.valor` – `abatimento.valor` – `desconto.valor`\n  considerando-se apenas os campos que estiverem presentes para cada tipo de cobrança pago.\n- As estruturas `saque` e `troco` só serão retornadas quando o Pix for relativo a um Pix Saque ou Pix Troco, respectivamente, e \nas demais estruturas (`juros`, `multa`, `abatimento` e `desconto`) só serão pertinentes aos Pix de pagamentos das cobranças com vencimento.\n- Não pode haver simultaneamente uma subsestrutura do tipo `saque` e outra do tipo `troco`;\n- Não há restrição na ordem das subestruturas.\n\nPara o caso de um Pix Saque pode-se retornar `original` com valor=0.00 (zero) uma vez que a soma será respeitada, ou pode-se omitir a \nsubestrutura original. No caso de um Pix Troco ou de um pagamento de cobrança com vencimento a subsestrutura `original` vai sempre estar \npresente.\n\n#### Exemplos válidos:\nExemplo de preenchimentos válidos. \n\n- **Pix para pagamento de cobrança imediata (sem saque ou troco).**\n  ```\n  ...\n  \"componentesValor\": {\n    \"original\": {\n      \"valor\": \"100.00\"\n    } \n  }\n  ...\n  ```\n- **Pix Saque.**\n  ```\n  ...\n  \"componentesValor\": {\n    \"saque\": {\n      \"valor\": \"100.00\",\n      \"modalidadeAgente\": \"AGPSS\",\n      \"prestadorDeServicoDeSaque\": \"12345678\"\n    } \n  }\n  ...\n  ```\n- **Pix para pagamento de cobrança imediata com saque (pode vir original.valor=0.00).**\n  ```\n  ...\n  \"componentesValor\": {\n    \"original\": {\n      \"valor\": \"0.00\"\n    },\n    \"saque\": {\n      \"valor\": \"100.00\",\n      \"modalidadeAgente\": \"AGPSS\",\n      \"prestadorDeServicoDeSaque\": \"12345678\"\n    } \n  }\n  ...\n  ```\n- **Pix Troco.**\n  ```\n  ...\n  \"componentesValor\": {\n    \"original\": {\n      \"valor\": \"80.00\"\n    },\n    \"troco\": {\n      \"valor\": \"20.00\",\n      \"modalidadeAgente\": \"AGTEC\",\n      \"prestadorDeServicoDeSaque\": \"12345678\"\n    } \n  }\n  ...\n  ```\n- **Pix para pagamento de cobrança imediata com troco (ordem não importa).**\n  ```\n  ...\n  \"componentesValor\": {\n    \"troco\": {\n      \"valor\": \"20.00\",\n      \"modalidadeAgente\": \"AGTEC\",\n      \"prestadorDeServicoDeSaque\": \"12345678\"\n    },\n    \"original\": {\n      \"valor\": \"80.00\"\n    }\n  }\n  ...\n  ```\n- **Pix para pagamento de cobrança com vencimento de R$100,00 considerando-se um atraso de 2 dias a uma multa de 3% e juros de 1% ao dia. O `valor` do Pix será R$105,00.**\n  ```\n  ...\n  \"componentesValor\": {\n    \"original\": {\n      \"valor\": \"100.00\"\n    },\n    \"multa\": {\n      \"valor\": \"3.00\"\n    },\n    \"juros\": {\n      \"valor\": \"2.00\"\n    }\n  }\n  ...\n  ```            \n#### Exemplos inválidos:\nExemplos, não exaustivos, de preenchimentos inválidos.\n- **`original.valor` maior que 0.00 (zero) e `saque` juntos**\n  ```\n  ...\n  \"componentesValor\": {\n    \"original\": {\n      \"valor\": \"80.00\"\n    },\n    \"saque\": {\n      \"valor\": \"20.00\",\n      \"modalidadeAgente\": \"AGPSS\",\n      \"prestadorDeServicoDeSaque\": \"12345678\"\n    } \n  }\n  ...\n  ```\n- **dois elementos de `saque`**\n  ```\n  ...\n  \"componentesValor\": [\n    \"saque\": {\n      \"valor\": \"20.00\",\n      \"modalidadeAgente\": \"AGPSS\",\n      \"prestadorDeServicoDeSaque\": \"12345678\"\n    },\n    \"saque\": {\n      \"valor\": \"10.00\",\n      \"modalidadeAgente\": \"AGPSS\",\n      \"prestadorDeServicoDeSaque\": \"12345678\"\n    } \n  ]\n  ...\n  ```\n- **saque e troco simultaneamente**\n  ```\n  ...\n  \"componentesValor\": {\n    \"original\": {\n      \"valor\": \"60.00\"\n    },\n    \"saque\": {\n      \"valor\": \"20.00\",\n      \"modalidadeAgente\": \"AGPSS\",\n      \"prestadorDeServicoDeSaque\": \"12345678\"\n    },\n    \"troco\": {\n      \"valor\": \"20.00\",\n      \"modalidadeAgente\": \"AGTEC\",\n      \"prestadorDeServicoDeSaque\": \"12345678\"\n    } \n  }\n  ...\n  ```"
+          anyOf:
+          - $ref: '#/components/schemas/PixValorOriginal'
+          - $ref: '#/components/schemas/PixValorSaque'
+          - $ref: '#/components/schemas/PixValorTroco'
+          - $ref: '#/components/schemas/PixValorJuros'
+          - $ref: '#/components/schemas/PixValorMulta'
+          - $ref: '#/components/schemas/PixValorAbatimento'
+          - $ref: '#/components/schemas/PixValorDesconto'
+        chave:
+          type: string
+          title: Chave DICT do recebedor
+          description: '# Formato do campo chave
+
+
+            * Campo chave do recebedor conforme atribuído na respectiva PACS008.
+
+            * Os tipos de chave podem ser: telefone, e-mail, cpf/cnpj ou EVP.
+
+            * O formato das chaves pode ser encontrado na seção "Formatação das chaves do DICT no BR Code" do [Manual de Padrões para iniciação do Pix](https://www.bcb.gov.br/estabilidadefinanceira/pix).
+
+            '
+          maxLength: 77
+        horario:
+          type: string
+          format: date-time
+          title: Horário
+          description: Horário em que o Pix foi processado no PSP.
+        infoPagador:
+          type: string
+          title: Informação livre do pagador
+          maxLength: 140
+        devolucoes:
+          type: array
+          title: Devoluções
+          items:
+            $ref: '#/components/schemas/Devolucao'
+    TxId:
+      type: string
+      title: Id da Transação
+      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
+      pattern: '[a-zA-Z0-9]{26,35}'
+      minLength: 26
+      maxLength: 35
+  examples:
+    pixWebhook1:
+      summary: Exemplo de Webhook Pix 1
+      value:
+        endToEndId: E12345678202009091221kkkkkkkkkkk
+        txid: c3e0e7a4e7f1469a9f782d3d4999343c
+        valor: '110.00'
+        horario: '2020-09-09T20:15:00.358Z'
+        infoPagador: 0123456789
+        devolucoes:
+          id: 123ABC
+          rtrId: D12345678202009091221abcdf098765
+          valor: '10.00'
+          horario:
+            solicitacao: '2020-09-09T20:15:00.358Z'
+          status: EM_PROCESSAMENTO
+    webhookBody1:
+      summary: Exemplo de configuração de Webhook 1
+      value:
+        webhookUrl: https://pix.example.com/api/webhook/
+    RequisicaoInvalidaWebhookExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/WebhookOperacaoInvalida
+        title: Webhook inválido.
+        status: 400
+        detail: A presente requisição busca criar um webhook sem respeitar o _schema_ ou, ainda, com sentido semanticamente inválido.
+    pixWebhook2:
+      summary: Exemplo de Webhook Pix 2
+      value:
+        endToEndId: E87654321202009091221dfghi123456
+        txid: 971122d8f37211eaadc10242ac120002
+        valor: '110.00'
+        horario: '2020-09-09T20:15:00.358Z'
+        infoPagador: 0123456789
+    AcessoNegadoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    NaoEncontradoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title: Não Encontrado
+        status: 404
+        detail: Entidade não encontrada.
+    ServicoIndisponivelExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+  responses:
+    NaoEncontrado:
+      description: Recurso solicitado não foi encontrado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/NaoEncontradoExample1'
+    AcessoNegado:
+      description: Requisição de participante autenticado que viola alguma regra de autorização.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/AcessoNegadoExample1'
+    ServicoIndisponivel:
+      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/ServicoIndisponivelExample1'
+  requestBodies:
+    WebhookPixBody:
+      description: Dados para notificação dos Pix.
+      required: true
+      content:
+        application/json:
+          schema:
+            properties:
+              pix:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pix'
+                example:
+                - allOf:
+                  - $ref: '#/components/examples/pixWebhook1/value'
+                - allOf:
+                  - $ref: '#/components/examples/pixWebhook2/value'
+    WebhookConfigBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WebhookSolicitado'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/webhookBody1'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            authenticationservices/v1: Grant read-only access to payment initation service

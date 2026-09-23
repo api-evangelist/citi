@@ -1,0 +1,568 @@
+openapi: 3.2.0
+info:
+  title: Gateway Services Merchant Creation API
+  description: Self onboarding services for merchants to register on the platform, create wallets, and perform withdrawals or payouts to their designated settlement and external beneficiary accounts.
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+servers:
+- url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+  description: production gateway url
+- url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb/gatewayservices
+  description: sbox url
+security:
+- oAuth2:
+  - /authenticationservices/v1
+tags:
+- name: MerchantCreation
+  description: Merchant onboarding and management operations
+paths:
+  /merchants/v1/onboard:
+    post:
+      tags:
+      - MerchantCreation
+      summary: Create merchant
+      description: This endpoint allows you to create or onboard a merchant on the Payment Service Provider platform, validate onboarding data, and receive a merchant identifier for downstream service requests.
+      operationId: merchantCreation
+      servers:
+      - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Idempotency-Id'
+      - $ref: '#/components/parameters/Country-Code'
+      requestBody:
+        required: true
+        description: This request body contains the necessary merchant details for creating a new merchant entity in PSP.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Merchant-Onboarding-Request'
+            examples:
+              Merchant-Creation-For-Enterprise-Request:
+                $ref: '#/components/examples/Merchant-Creation-For-Enterprise-Request-Example'
+      responses:
+        '200':
+          description: This response body will return the unique identifier for the newly created merchant along with status.
+          headers:
+            apim-guid:
+              $ref: '#/components/headers/Apim-Guid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Merchant-Onboarding-Response'
+              examples:
+                merchant_creation_success_response:
+                  $ref: '#/components/examples/Merchant-Creation-Success-Response-Example'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+    get:
+      summary: Get Merchant ID
+      description: Use the partner user ID on your platform to look up the merchant ID on the payment service provider platform (the merchant_id returned when you create a merchant).
+      operationId: getMerchantId
+      servers:
+      - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      tags:
+      - MerchantCreation
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Country-Code'
+      - $ref: '#/components/parameters/Partner-User-Id'
+      responses:
+        '200':
+          description: Merchant ID retrieved successfully.
+          headers:
+            apim-guid:
+              $ref: '#/components/headers/Apim-Guid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Get-Merchant-Onboarding'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+components:
+  examples:
+    Un-Supported-Media-Type-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: please use valid content-type in header
+          code: CC00002
+    Unauthorized-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+    Internal-Server-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+          code: CC00004
+    Bad-Request-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+        - issue: record that you are searching is not found
+          action: resend the request with valid values
+          code: VC00003
+    Not-Found-Gateway-Error-Example:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Bad-Request-Gateway-Error-Example:
+      value:
+        httpCode: '400'
+        httpMessage: Bad Request
+        moreInformation: please provide valid value for request
+    Too-Many-Requests-Gateway-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: Rate Limit exceeded
+    Method-Not-Allowed-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+        - issue: Method not supported
+          action: Method not supported for this endpoint, please use valid http verb
+          code: CC00001
+    Merchant-Creation-For-Enterprise-Request-Example:
+      value:
+        partner_user_id: '24564524'
+        contact_number: '9234567890'
+        contact_prefix: '91'
+        email: abc@test.com
+    Service-Unavailable-Gateway-Example:
+      value:
+        httpCode: '503'
+        httpMessage: Service is temporarily unavailable
+        moreInformation: Retry the request after some time
+    Forbidden-Service-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - code: CC00008
+          issue: User does not have privilege to access this functionality.
+          action: Please reach out to support team to enable this feature.
+    Un-Supported-Media-Type-Gateway-Error-Example:
+      value:
+        httpCode: '415'
+        httpMessage: Unsupported Media Type
+        moreInformation: Unsupported Content-Type application/octet-stream
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: The server could not verify that you are authorized to access the URL
+    Method-Not-Allowed-Gateway-Error-Example:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: Internal Server Error
+    Merchant-Creation-Success-Response-Example:
+      value:
+        merchant_id: ec689822-9864-4c4d-9d68-222467627901
+        status_details:
+          status: SUCCESS
+          message: Merchant creation is success
+  schemas:
+    Merchant-Id:
+      type: string
+      description: Unique identifier generated by Citi for each seller. Seller to use this id for the further functional calls.
+      title: merchant_id
+      minLength: 1
+      maxLength: 36
+      example: ec689822-9864-4c4d-9d68-222467627901
+    Status-Details:
+      title: StatusDetails
+      description: Status Details.
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        message:
+          $ref: '#/components/schemas/Message'
+    Get-Merchant-Onboarding:
+      title: GetMerchantOnboarding
+      description: Response for Get Merchant Onboarding.
+      allOf:
+      - $ref: '#/components/schemas/Common-Merchant-Onboarding-Request'
+      - type: object
+        required:
+        - merchant_id
+        properties:
+          merchant_id:
+            $ref: '#/components/schemas/Merchant-Id'
+    Status:
+      type: string
+      description: Status of the request.
+      title: status
+      minLength: 1
+      maxLength: 64
+    Merchant-Onboarding-Response:
+      title: MerchantOnboardingResponse
+      description: Response parameters for Merchant Onboarding Response.
+      type: object
+      properties:
+        merchant_id:
+          $ref: '#/components/schemas/Merchant-Id'
+        status_details:
+          $ref: '#/components/schemas/Status-Details'
+    Service-Error-Response:
+      title: ServiceErrorResponse
+      type: object
+      required:
+      - ref_id
+      - error_details
+      properties:
+        ref_id:
+          type: string
+          maxLength: 120
+          description: Unique ID for the Transaction
+          title: ref_id
+          example: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+          type: array
+          description: List of error details
+          title: error_details
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Merchant-Onboarding-Request:
+      title: MerchantOnboardingRequest
+      description: Request parameters for Merchant Onboarding Request.
+      allOf:
+      - $ref: '#/components/schemas/Common-Merchant-Onboarding-Request'
+      - type: object
+        required:
+        - partner_user_id
+        properties:
+          partner_user_id:
+            $ref: '#/components/schemas/Partner-User-Id'
+    Partner-User-Id:
+      type: string
+      description: Partner user identifier for seller from your system.
+      title: partner_user_id
+      minLength: 1
+      maxLength: 50
+      example: '1323436'
+    Gateway-Error-Response:
+      type: object
+      title: GatewayErrorResponse
+      required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+          example: Bad Request
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: moreInformation
+          example: please provide valid value for request
+    Error-Detail:
+      type: object
+      title: ErrorDetail
+      properties:
+        issue:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: more details about the issue
+          title: issue
+          example: property emailAddress is mandatory and it cannot be empty
+        action:
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          title: action
+          example: please provide valid value for property emailAddress
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: unique code representing the issue
+          title: code
+          example: VC00010
+    Common-Merchant-Onboarding-Request:
+      title: CommonMerchantOnboardingRequest
+      description: Request parameters for Merchant Onboarding Request.
+      type: object
+      required:
+      - contact_number
+      - contact_prefix
+      - email
+      properties:
+        contact_number:
+          type: string
+          description: Contact number of the merchant.
+          title: contact number
+          minLength: 1
+          maxLength: 32
+          example: '9234567890'
+        contact_prefix:
+          type: string
+          description: Country code of the contact number.
+          title: contact_prefix
+          minLength: 1
+          maxLength: 32
+          example: '+91'
+        email:
+          type: string
+          description: The email address of the merchant. It should always be in lower case.
+          title: email
+          minLength: 1
+          maxLength: 64
+          example: abc@yahoo.com
+    Message:
+      type: string
+      description: Description of the status.
+      title: message
+      minLength: 1
+      maxLength: 500
+      example: Request is in-progress
+  headers:
+    Apim-Guid:
+      description: Unique system generated reference number generated by   Citi. Refer to this number in case of any discrepancy reporting to a Citi representative.
+      schema:
+        type: string
+        maxLength: 128
+        minLength: 1
+        title: Apim-Guid
+      required: true
+      example: na-apimgwgtds04~4a98cbc5-d813-4e65-bc81-d70f0f87f6ec
+  responses:
+    Too-Many-Requests:
+      description: Too Many Requests - Rate limit exceeded. Retry after the specified time.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Too-Many-Requests-Gateway-Example:
+              $ref: '#/components/examples/Too-Many-Requests-Gateway-Example'
+    Gateway-Timeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            title: Bad-Request-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Bad-Request-Service-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Service-Error-Example'
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            title: Unauthorized-Response
+            oneOf:
+            - $ref: '#/components/schemas/Service-Error-Response'
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Service-Error-Example'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            title: Method-Not-Allowed-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
+            Method-Not-Allowed-Service-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Service-Error-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            title: Unsupported-Media-Type-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Un-Supported-Media-Type-Gateway-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Gateway-Error-Example'
+            Un-Supported-Media-Type-Service-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Service-Error-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            title: Internal-Server-Error-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Internal-Server-Service-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Service-Error-Example'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Forbidden-Service-Example:
+              $ref: '#/components/examples/Forbidden-Service-Example'
+    Service-Unavailable:
+      description: Service Unavailable - The server is temporarily unable to  handle the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Service-Unavailable-Gateway-Example:
+              $ref: '#/components/examples/Service-Unavailable-Gateway-Example'
+  parameters:
+    Client-Id:
+      in: query
+      name: client_id
+      description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding.
+      schema:
+        type: string
+        title: Client-Id
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+        minimum: 1
+        maximum: 128
+      required: true
+    Country-Code:
+      in: header
+      name: Country-Code
+      description: Marketplace's country code.
+      schema:
+        pattern: ^[A-Z]{2,2}$
+        type: string
+        title: Country-Code
+        example: US
+      required: true
+    Partner-User-Id:
+      name: partner_user_id
+      in: query
+      required: true
+      description: The unique seller identifier of your system.
+      schema:
+        type: string
+        title: partner_user_id
+        minLength: 1
+        maxLength: 50
+      example: PartnerUserID1234
+    Idempotency-Id:
+      in: header
+      name: Idempotency-Id
+      description: "Your unique identification for a POST request \n - Maximum length is 128. \n-CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      schema:
+        type: string
+        title: Idempotency-Id
+        minLength: 1
+        maxLength: 128
+        example: a44cbb606de4edb9a7a123414bba3bb
+      required: true
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://b2b.api.icg.citi.com/authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Access to marketplace management APIs

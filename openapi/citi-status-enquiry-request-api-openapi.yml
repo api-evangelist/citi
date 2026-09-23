@@ -1,0 +1,222 @@
+openapi: 3.2.0
+info:
+  description: Cards disputes APIs to initiate a dispute case creation request and to inquire the dispute case status
+  version: 1.0.0
+  title: cards-disputes_1-0-0 Status Enquiry request API
+  x-ibm-name: cards-disputes_1-0-0
+  contact:
+    name: GLOBAL Commercial Cards API Production support
+    email: dl.icg.global.commercial.cards.digital.production.support@imcap.ap.ssmb.com
+servers:
+- url: https://tts.apib2b.citi.com/tts/cards/disputes
+  description: Base URL for the API
+- url: https://tts.apib2b.citi.com/tts/apac/cards/disputes
+  description: Base URL for the APAC API
+tags:
+- name: Status Enquiry request
+  description: Operations related to dispute status enquiry
+paths:
+  /v1/status:
+    get:
+      summary: To get status of a dispute by passing the Acquirer Reference Number or Case ID
+      operationId: getDisputeStatus
+      security:
+      - ClientCredentials: []
+      tags:
+      - Status Enquiry request
+      parameters:
+      - name: Content-Type
+        in: header
+        description: The MIME type of the body of the request (used with POST and PUT requests). Always pass application/json.
+        schema:
+          type: string
+        required: false
+      - name: req-sys-id
+        in: header
+        description: Client Unique id to identify the particular request.
+        schema:
+          type: string
+        required: true
+      - name: country
+        in: header
+        description: 'Country code in ISO 3166 alpha-3 format.. <br>`Example`: USA(United States of America), SGP(Singapore), PHL(Philippines), THA(Thailand)'
+        schema:
+          type: string
+        required: true
+      - name: region
+        in: header
+        description: 'Region of the client. <br>`Example`: NAM,APAC, EMEA, LATAM, INDIA'
+        schema:
+          type: string
+        required: true
+      - name: Authorization
+        in: header
+        description: '</br>Request should contain Authorization header OAuth  <br> **OAuth:** <br> Request contains a header field in the form of Authorization: Bearer (access_token), where access_token is generated using the OAuth url <br>
+
+          `Example` : Bearer AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4</br>'
+        schema:
+          type: string
+        required: true
+      - name: acquirerReferenceNumber
+        in: query
+        example: '12345678912123456789123'
+        description: The Acquirer Reference Number of the transaction on which the dispute case was created
+        schema:
+          type: string
+        required: false
+      - name: caseId
+        in: query
+        example: '12345678912'
+        description: The Dispute case ID that was sent back to the client as part of the final response webhook post dispute case creation
+        schema:
+          type: string
+        required: false
+      responses:
+        '200':
+          description: <table><tr><td>Code</td><td>Details</td></tr><tr><tr><td>ChargeBackStatusEnquiryResponse</td><td>Success response for getting the status</td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChargeBackStatusEnquiryResponse'
+        '400':
+          description: <table><tr><td>InvalidChargeBackStatusEnquiryResponse</td><td>Bad request</td></tr></tr><tr><td>DISP140</td><td>Client Group corporate number is not available</td></tr><tr><td>DISP141</td><td>Invalid Case ID or ARN</td></tr><tr><td>DISP142</td><td>Either acquirerReferenceNumber or caseId is mandatory. Kindly provide acquirerReferenceNumber or caseId</td></tr><tr><td>DISP143</td><td>Either acquirerReferenceNumber or caseId is only accepted but not both. Kindly provide acquirerReferenceNumber or caseId</td></tr><tr><td>DISP144</td><td>caseId expected minimum length is 11 and can be only alphanumeric</td></tr><tr><td>DISP145</td><td>acquirerReferenceNumber expected minimum length is 23 and expected maximum length is 24 and can be of only digits</td></tr><tr><td>DISP146</td><td>No record found for given caseId</td></tr><tr><td>DISP147</td><td>No record found for given acquirerReferenceNumber</td></tr><tr><td>DISP148</td><td>Invalid caseId</td></tr><tr><td>DISP149</td><td>Invalid acquirerReferenceNumber</td></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidChargeBackStatusEnquiryResponse'
+        '401':
+          description: <table><tr><td>UnAuthorizedResponse</td><td>UnAuthorized request.</td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnAuthorizedResponse'
+        '500':
+          description: <table><tr><td>InternalServerErrorResponse</td><td></tr><tr><td>GRC0015</td><td>We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments</td><table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerErrorResponse'
+components:
+  schemas:
+    UnAuthorizedResponse:
+      properties:
+        httpCode:
+          title: httpCode
+          description: error code to be sent to the Client
+          type: string
+          example: '401'
+          maxLength: 10
+          minLength: 1
+        httpMessage:
+          title: httpMessage
+          description: error message to be sent to the Client
+          type: string
+          example: Unauthorized
+          maxLength: 255
+          minLength: 1
+        moreInformation:
+          description: more details related to the error to be sent to the Client
+          type: string
+          example: Access Denied
+          maxLength: 255
+          minLength: 1
+    ChargeBackStatusEnquiryResponse:
+      properties:
+        acquirerReferenceNumber:
+          title: acquirerReferenceNumber
+          description: Acquirer Reference Number of the disputed transaction
+          type: string
+          example: '123456789123456789123456'
+          maxLength: 24
+          minLength: 23
+        cases:
+          description: List of cases
+          type: array
+          items:
+            $ref: '#/components/schemas/Cases'
+      required:
+      - acquirerReferenceNumber
+    InternalServerErrorResponse:
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Errors'
+    Errors:
+      title: Errors
+      properties:
+        errorCode:
+          example: ErrorCode
+          type: string
+          description: 'ErrorCode * `DISP140` * `DISP141` * `DISP142` * `DISP143` * `DISP144` * `DISP145` * `DISP146` * `DISP147` * `DISP148` * `DISP149`
+
+            '
+        errorDescription:
+          example: ErrorDescription
+          description: 'The error description that corresponds to error code when there is any error occurred while retrieving the transaction. * `DISP140` - Client Group corporate number is not onboarded * `DISP141` - Case ID or ARN doesn''t belong to client * `DISP142` - Either acquirerReferenceNumber or caseId is mandatory. Kindly provide acquirerReferenceNumber or caseId * `DISP143` - Either acquirerReferenceNumber or caseId is only accepted but not both. Kindly provide acquirerReferenceNumber or caseId * `DISP144` - Case ID expected length is 11 and can be only alphanumeric * `DISP145` - acquirerReferenceNumber expected minimum length is 23 and expected maximum length is 24 and can be of only digits * `DISP146` - No record found for given caseId * `DISP147` - No record found for given acquirerReferenceNumber * `DISP148` - Invalid caseId * `DISP149` - Invalid acquirerReferenceNumber
+
+            '
+          type: string
+    CaseDetails:
+      description: The object containing the individual case status to be sent back to the client
+      title: CaseDetails
+      properties:
+        caseId:
+          description: Case Number generated in ADS
+          type: string
+          example: '12345678912'
+          maxLength: 11
+          minLength: 11
+        statusDescription:
+          description: Case status description. Possible values - OP - Open; CP - Awaiting Information from Cardholder; CR - Cancelled / Rejected; CM - Closed in favour of bank; CC - Closed in favour of cardholder
+          type: string
+          example: CC - Closed in favour of cardholder
+          maxLength: 250
+        statusAsOnDate:
+          description: This is the Date Timestamp that the status was last updated. This is in the GMT timezone with format YYYYMMDD HH:MM:SS:MMM
+          type: string
+          example: YYYYMMDD HH:MM:SS:MMM
+      required:
+      - caseId
+      - statusAsOnDate
+    Cases:
+      properties:
+        caseDetails:
+          $ref: '#/components/schemas/CaseDetails'
+        reasonCode:
+          description: Reason code against the dispute request
+          type: string
+          example: DuplicateProcessing
+        requestId:
+          description: This is the request that was used by the client at the time of case creation
+          type: string
+          example: '123456789123456789123456789123456789'
+          maxLength: 36
+          minLength: 36
+        trackingId:
+          title: trackingId
+          description: This is the api-sys-id that was used at the time of dispute case creation request
+          type: string
+          example: '123456789123456789123456789123456789'
+          maxLength: 36
+          minLength: 36
+      required:
+      - caseDetails
+      - disputeReason
+      - requestID
+      - trackingID
+    InvalidChargeBackStatusEnquiryResponse:
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Errors'
+  securitySchemes:
+    ClientCredentials:
+      type: oauth2
+      description: ''
+      flows:
+        clientCredentials:
+          tokenUrl: https://tts.apib2b.citi.com/api/oauth2/token
+          scopes:
+            /api: ''

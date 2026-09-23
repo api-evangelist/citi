@@ -1,0 +1,1592 @@
+openapi: 3.2.0
+info:
+  title: CCAPI Payments(JSON) Validations API
+  description: Update - March 31, 2026
+  version: 1.0.0
+servers:
+- url: https://b2b.api.icg.citi.com/citiconnect/prod
+  description: production gateway url
+- url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb
+  description: 'sbox url '
+tags:
+- name: Validations API
+  description: API services to support beneficiary/bank validation initiation
+paths:
+  /addonservices/v1/validations:
+    post:
+      tags:
+      - Validations API
+      summary: Validating the beneficiary/bank details
+      description: This endpoint allows you to validate beneficiary/bank details with the use of combination of parameters
+      operationId: expressBeneficiaryValidation
+      parameters:
+      - name: client_id
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+      - name: Idempotency-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          maxLength: 128
+        example: a44cbb606de4edb9a7a123414bba3bb
+        description: "Your unique identification for a POST request \n - Maximum length is 128. \n-  CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      requestBody:
+        required: true
+        description: This endpoint allows you to validate beneficiary/bank details with the use of combination of parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Validation-Request'
+            examples:
+              UK Bank Availability Validation:
+                $ref: '#/components/examples/UK-Bank-Availability-Validation-Request'
+              UK Bank Reachability Validation:
+                $ref: '#/components/examples/UK-Bank-Reachability-Validation-Request'
+              UK Beneficiary Validation:
+                $ref: '#/components/examples/UK-Beneficiary-Validation-Request'
+              SEPA VoP Beneficiary Validation:
+                $ref: '#/components/examples/SEPA-VoP-Validation-Request'
+              US EWS Beneficiary Validation:
+                $ref: '#/components/examples/US-EWS-Beneficiary-Validation-Request'
+              IN PAN Validation:
+                $ref: '#/components/examples/IN-PAN-Validation-Request'
+              Card Validation:
+                $ref: '#/components/examples/Card-Validation-Request'
+              IN AADHAR Validation:
+                $ref: '#/components/examples/IN-PAN-Validation-Request'
+      security:
+      - clientCredentials: []
+      responses:
+        '200':
+          description: OK
+          headers:
+            request_id:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation-Response'
+              examples:
+                UK Bank Availability Success Response:
+                  $ref: '#/components/examples/UK-Bank-Availability-Success-Response'
+                UK Bank Availability Reject Response:
+                  $ref: '#/components/examples/UK-Bank-Availability-Reject-Response'
+                UK Bank Reachability Success Response:
+                  $ref: '#/components/examples/UK-Bank-Reachability-Success-Response'
+                UK Bank Reachability Reject Response:
+                  $ref: '#/components/examples/UK-Bank-Reachability-Reject-Response'
+                UK Final Beneficiary Validation Positive Response:
+                  $ref: '#/components/examples/UK-Final-Beneficiary-Validation-Positive-Response'
+                UK Final Beneficiary Validation Negative Response:
+                  $ref: '#/components/examples/UK-Final-Beneficiary-Validation-Negative-Response'
+                SEPA VoP Validation Success Response:
+                  $ref: '#/components/examples/SEPA-VoP-Validation-Success-Response'
+                SEPA VoP Validation Reject Response:
+                  $ref: '#/components/examples/SEPA-VoP-Validation-Reject-Response'
+                US EWS Final Beneficiary Validation Response:
+                  $ref: '#/components/examples/US-EWS-Final-Beneficiary-Validation-Response'
+                IN PAN Final Validation Response:
+                  $ref: '#/components/examples/IN-PAN-Final-Validation-Response'
+                IN AADHAR Validation:
+                  $ref: '#/components/examples/IN-AADHAR-Final-Validation-Response'
+                Card validation Success Response:
+                  $ref: '#/components/examples/Card-Validation-Success-Response'
+                Card validation Currency Reject Response:
+                  $ref: '#/components/examples/Card-Validation-Currency-Reject-Response'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        default:
+          $ref: '#/components/responses/Internal-Server-Error'
+components:
+  examples:
+    UK-Final-Beneficiary-Validation-Positive-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          account: '927393445'
+          name: Leo
+          bank_id: FGHJ0989
+          address_lines:
+          - ABCD#WERT
+          street_name: 1515 3rd Street
+          building_number: A1234
+          postal_code: '94158'
+          city: Manchester
+          state: Leeds
+          country: GB
+          birth_date: '1950-09-26'
+          home_phone_number: 92-80808009
+          document:
+            entity: PERSONAL
+            type: CCPT
+            number: M7891234
+            state: Dublin
+        method:
+          country: GB
+          method: BANKACCOUNT
+          type: Ownership
+        response:
+          type: HR
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          validation_risk_score: HIGH
+          account:
+            number_validation: MATCH
+            name_validation: MATCH
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+    UK-Bank-Reachability-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          bank_id: '12345678'
+        method:
+          country: GB
+          method: BIC
+          type: REACHABILITY
+          scheme: FPS
+    SEPA-VoP-Validation-Reject-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        end_to_end_id: r/434SKtUcdGT
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          iban: IE29AIBK93189078345678
+          name: Leo Shir
+        method:
+          country: IE
+          method: IBAN
+          type: Ownership
+          penny_test: PENNY
+        response:
+          type: RT
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          validation_risk_score: HIGH
+          account:
+            number_validation: MISMATCH
+            name_validation: MATCH
+        status:
+          code: RJCT
+          description: Rejected
+          date_time: '2024-09-10T08:23:49.112Z'
+        reasons:
+          code: AC01
+          description: Invalid Account Number
+    SEPA-VoP-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        end_to_end_id: r/434SKtUcdGT
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          iban: IE29AIBK93189078345678
+          name: Leo Shir
+        method:
+          country: IE
+          method: IBAN
+          type: Ownership
+          penny_test: PENNY
+    Un-Supported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type is invalid
+          action: Provide valid media type
+          code: CC00002
+    IN-AADHAR-Final-Validation-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '31216787'
+          name: RAM
+        creditor:
+          name: Leo
+          father_name: Moss
+          national_id: 1236
+          birth_date: '1950-09-26'
+          document:
+            type: TXID
+            number: WERHJ9012B
+        method:
+          country: IN
+          method: ID
+          type: TAXID
+          reasons:
+            code: 1
+            description: EXISTING AND VALID
+          response:
+            type: HR
+            data_date_time: '2023-09-10T08:23:49.112Z'
+            txid:
+              number_validation: MATCH
+              name_validation: MATCH
+              father_name_validation: MATCH
+              date_of_birth_validation: MATCH
+              status: E
+              seeding_status: Y
+              national_id_validation: MATCH
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+    Card-Validation-Success-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        method:
+          method: CARD
+          type: AVAILABILITY
+        creditor:
+          card:
+            number: '5000333641352301'
+        response:
+          Type: HR
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          card:
+            number_validation: MATCH
+            receiving_eligibility: Y
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request is not authorized
+          action: Try again with valid credentials
+          code: CC00007
+    UK-Bank-Availability-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          bank_id: '12345678'
+        method:
+          country: GB
+          method: BIC
+          type: AVAILABILITY
+          scheme: FPS
+    SEPA-VoP-Validation-Success-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        end_to_end_id: r/434SKtUcdGT
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          iban: IE29AIBK93189078345678
+          name: Leo Shir
+        method:
+          country: IE
+          method: IBAN
+          type: Ownership
+          penny_test: PENNY
+        response:
+          type: RT
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          validation_risk_score: UNKNOWN
+          account:
+            number_validation: MATCH
+            name_validation: MATCH
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+    UK-Bank-Availability-Success-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          bank_id: '12345678'
+        method:
+          country: GB
+          method: BIC
+          type: AVAILABILITY
+          scheme: FPS
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+        response:
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          bank:
+            is_reachable: Y
+            reachability_data_type: HR
+            is_available: Y
+            availability_data_type: RT
+    Card-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          id: '100360001'
+        method:
+          method: CARD
+          type: Ownership
+        creditor:
+          card:
+            number: '5000333641352301'
+            currency: USD
+    Card-Validation-Currency-Reject-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        method:
+          method: CARD
+          type: AVAILABILITY
+        creditor:
+          card:
+            number: '5000333641352301'
+        response:
+          Type: HR
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          card:
+            number_validation: MATCH
+            receiving_eligibility: N
+        status:
+          code: RJCT
+          description: Rejected
+          date_time: '2024-09-10T08:23:49.112Z'
+        reasons:
+          code: CURRENCY_NOT_SUPPORTED
+          description: Currency is not supported for the account
+    US-EWS-Final-Beneficiary-Validation-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          account: '927393445'
+          name: Leo
+          bank_id: 098908979
+          address_lines:
+          - ABCD#WERT
+          postal_code: '94158'
+          city: San Francisco
+          state: CA
+          country: US
+          birth_date: '1950-09-26'
+          home_phone_number: '+928080807'
+        method:
+          country: US
+          method: BANKACCOUNT
+          type: Ownership
+        response:
+          type: HR
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          validation_risk_score: UNKNOWN
+          account:
+            number_validation: MATCH
+            name_validation: MATCH
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+    UK-Beneficiary-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          account: '927393445'
+          name: Leo
+          bank_id: FGHJ0989
+          address_lines:
+          - ABCD#WERT
+          street_name: 1515 3rd Street
+          building_number: A1234
+          postal_code: '94158'
+          city: Manchester
+          state: Leeds
+          country: GB
+          birth_date: '1950-09-26'
+          home_phone_number: 92-80808009
+          document:
+            entity: PERSONAL
+            type: CCPT
+            number: M7891234
+            state: Dublin
+        method:
+          country: GB
+          method: BANKACCOUNT
+          type: Ownership
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: HTTP method is not supported
+          action: Provide valid HTTP method
+          code: CC00001
+    Idempotency-Id-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Idempotency-Id provided is currently being used in another request
+          action: please do not repeat the same request again
+          code: VC00016
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+        - issue: instructed_amount is missing
+          action: Provide valid instructed_amount
+          code: VC00010
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request was not processed
+          code: CC00004
+    Not-Found-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
+    IN-PAN-Final-Validation-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        creditor:
+          document:
+            number: WERHJ9012B
+        method:
+          method: ID
+          type: TAXID
+        response:
+          type: HR
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          txid:
+            number_validation: MATCH
+            name_validation: MATCH
+            father_name_validation: MATCH
+            date_of_birth_validation: MATCH
+            status: E
+            seeding_status: Y
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+          creation_date_time: '2023-05-02T08:23:49.554Z'
+    UK-Final-Beneficiary-Validation-Negative-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          account: '927393445'
+          name: Leo
+          bank_id: FGHJ0989
+          address_lines:
+          - ABCD#WERT
+          street_name: 1515 3rd Street
+          building_number: A1234
+          postal_code: '94158'
+          city: Manchester
+          state: Leeds
+          country: GB
+          birth_date: '1950-09-26'
+          home_phone_number: 92-80808009
+          document:
+            entity: PERSONAL
+            type: CCPT
+            number: M7891234
+            state: Dublin
+        method:
+          country: GB
+          method: BANKACCOUNT
+          type: Ownership
+        response:
+          type: HR
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          validation_risk_score: HIGH
+          account:
+            number_validation: MATCH
+            name_validation: MISMATCH
+        status:
+          code: RJCT
+          description: Rejected
+          date_time: '2024-09-10T08:23:49.112Z'
+        reasons:
+          code: AG01
+          description: Account Transaction Forbidden
+    UK-Bank-Availability-Reject-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          bank_id: '12345678'
+        method:
+          country: GB
+          method: BIC
+          type: AVAILABILITY
+          scheme: FPS
+        status:
+          code: RJCT
+          description: Rejected
+          date_time: '2024-09-10T08:23:49.112Z'
+        reasons:
+          code: CNOR
+          description: Creditor bank is not registered under this BIC in the CSM
+        response:
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          bank:
+            is_reachable: N
+            reachability_data_type: HR
+            is_available: N
+            availability_data_type: RT
+    US-EWS-Beneficiary-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          account: '927393445'
+          name: Leo
+          bank_id: 098908979
+          address_lines:
+          - CD#WERT
+          postal_code: '94158'
+          city: San Francisco
+          state: CA
+          country: US
+          birth_date: '1950-09-26'
+          home_phone_number: '+928080807'
+        method:
+          country: US
+          method: BANKACCOUNT
+          type: Ownership
+    IN-PAN-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          name: Leo
+          father_name: Moss
+          birth_date: '1950-09-26'
+          document:
+            type: TXID
+            number: WERHJ9012B
+        method:
+          country: IN
+          method: ID
+          type: TAXID
+    UK-Bank-Reachability-Reject-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          bank_id: '12345678'
+        method:
+          country: GB
+          method: BIC
+          type: REACHABILITY
+          scheme: FPS
+        status:
+          code: RJCT
+          description: Rejected
+          date_time: '2024-09-10T08:23:49.112Z'
+        reasons:
+          code: CNOR
+          description: Creditor bank is not registered under this BIC in the CSM
+        response:
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          bank:
+            is_reachable: N
+            reachability_data_type: HR
+    UK-Bank-Reachability-Success-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          bank_id: '12345678'
+        method:
+          country: GB
+          method: BIC
+          type: REACHABILITY
+          scheme: FPS
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+        response:
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          bank:
+            is_reachable: Y
+            reachability_data_type: HR
+    Duplicate-Payment-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: duplicate request. same request is being processed in another request
+          action: please do not repeat the same request again
+          code: VC00017
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+            Duplicate-Payment-Conflict-Example:
+              $ref: '#/components/examples/Duplicate-Payment-Conflict-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Un-Supported-Media-Type-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  schemas:
+    Validation-Response:
+      type: object
+      title: ValidationResponse
+      properties:
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+          title: uetr
+        end_to_end_id:
+          type: string
+          description: "Client provided reference number. \n - For SEPA VoP, this parameter is optional with max length 35 \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is not applicable \n - For Global Mastercard validation, this parameter is not applicable"
+          minLength: 1
+          maxLength: 35
+          title: end_to_end_id
+        debtor:
+          type: object
+          title: debtor_response
+          properties:
+            account:
+              type: string
+              description: "Bank account held with CITI \n - For UK bank availability/reachability, this parameter is optional and max length is 40 \n - For US EWS, this parameter is optional and max length is 40 \n - For UK, this parameter is optional and max length is 40 \n - For IN PAN, this parameter is optional and max length is 40  \n - For SEPA VoP, this parameter is optional and max length is 40 \n - For Global Mastercard Validation this parameter is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: account
+            name:
+              type: string
+              description: "Debtor Account Name.\n - For UK bank availability/reachability, this parameter is optional and max length is 140 \n - For US EWS, this parameter is optional and max length is 140 \n - For UK, this parameter is optional and max length is 140 \n - For IN PAN, this parameter is optional and max length is 140 \n - For SEPA VoP, this parameter is optional and max length is 140 \n - For Global Mastercard Validation, this parameter is not applicable"
+              minLength: 1
+              maxLength: 140
+              title: name
+        creditor:
+          type: object
+          title: creditor_response
+          properties:
+            bank_id:
+              type: string
+              description: "Receiving Financial Institution BIC.\n - For UK bank availability/reachability, this parameter is conditional and the condition is if method.method= NC, SORTCODE, BIC then this parameter should be present. If method.method = NC/SORTCODE, then length should be exactly 6. If method.method = BIC, then length should be 8 or 11  \n - For US EWS, this parameter is mandatory and length should be 9 if routing/clearing code is populated \n - For UK, this parameter is mandatory and length should be exactly 6 or 8 or 11 characters \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              minLength: 1
+              maxLength: 35
+              title: bank_id
+            iban:
+              type: string
+              description: "Creditor IBAN number  \n - For UK bank availability/reachability, this parameter is conditional with max length 22.Condition is if method.method= IBAN then this parameter should be present \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is conditional and max length is 22.Condition is if method.method= IBAN then this parameter should be present.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is mandatory and max length is 40 \n - For Global Mastercard Validation, this parameter is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: iban
+            account:
+              type: string
+              description: "Creditor Account Number. \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is conditional and max length is 17.Condition is if method.method= BANKACCOUNT then this parameter should be present.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For UK, this parameter is conditional and max length is 17.Condition is if method.method= BANKACCOUNT then this parameter should be present.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: account
+            name:
+              type: string
+              description: "Creditor Account Name. \n - For UK bank availability/reachability, this parameter is not applicable\n - For US EWS, this parameter is mandatory and max length is 87. Please provide first middle(if any) last name in this sequence with spaces \n - For UK, this parameter is optional and max length is 140. Please provide first middle(if any) last name in this sequence with spaces \n - For IN PAN, this parameter is mandatory and max length is 85. Please provide first middle(if any) last name in this sequence with spaces \n - For SEPA VoP, this parameter is mandatory and max length is 70. \n - For Global Mastercard Validation, this parameter is not applicable"
+              minLength: 1
+              maxLength: 140
+              title: name
+            father_name:
+              type: string
+              description: "Creditor' Father's Name.\n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is optional and max length is 75. Please provide first middle(if any) last name in this sequence with spaces \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable "
+              minLength: 1
+              maxLength: 140
+              title: father_name
+            proxy_id:
+              type: string
+              description: "Creditor Proxy ID \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              minLength: 1
+              maxLength: 255
+              title: proxy_id
+            wallet:
+              type: string
+              description: "Creditor wallet details \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: wallet
+            address_lines:
+              type: array
+              description: "Creditor's address lines \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional and allowed 2 lines with each line max length of 40 \n - For UK, this parameter is optional and allowed 2 lines with each line max length of 40 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              items:
+                $ref: '#/components/schemas/Address'
+              title: address_lines
+            street_name:
+              maxLength: 70
+              minLength: 1
+              type: string
+              description: "Creditor's street_name \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is optional with max length 70 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: street_name
+            building_number:
+              maxLength: 16
+              minLength: 1
+              type: string
+              description: "Creditor's building_number \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is optional with max length 16 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: building_number
+            postal_code:
+              maxLength: 16
+              minLength: 1
+              type: string
+              description: "Creditor's postal_code \n - For UK bank availability/reachability, this parameter is not applicable\n - For US EWS, this parameter is optional with max length 10 \n - For UK, this parameter is optional with max length 16 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: postal_code
+            city:
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: "Creditor's city \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional with max length 25 \n - For UK, this parameter is optional with max length 35 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: city
+            state:
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: "Creditor's state \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional with max length 2 \n - For UK, this parameter is optional with max length 35 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: state
+            country:
+              type: string
+              description: "Creditor's country \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional with max length 2 \n - For UK, this parameter is optional with max length 2 \n - For SEPA VoP, this parameter is not applicable \n - For IN PAN, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              pattern: ^[A-Z]{2,2}$
+              title: country
+            birth_date:
+              type: string
+              format: date
+              description: "ISO 8601 (YYYY-MM-DD), Creditor's birth date \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional \n - For UK, this parameter is optional \n - For IN PAN, this parameter is optional \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: birth_date
+            home_phone_number:
+              maxLength: 34
+              minLength: 6
+              type: string
+              description: "Creditor's home phone number \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional with max length 10 \n - For UK, this parameter is optional with max length 34 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: home_phone_number
+            work_phone_number:
+              maxLength: 34
+              minLength: 6
+              type: string
+              description: "Creditor's work phone number \n - For UK bank availability/reachability, this parameter is not applicable\n - For US EWS, this parameter is optional with max length 10 \n - For UK, this parameter is optional with max length 34 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: work_phone_number
+            document:
+              type: object
+              title: document_response
+              properties:
+                entity:
+                  type: string
+                  description: "Whether the document belongs to Business or Individual \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n- For UK, this parameter is optional \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable  \n - For Global Mastercard Validation, this parameter is not applicable"
+                  enum:
+                  - BUSINESS
+                  - PERSONAL
+                  title: entity
+                type:
+                  type: string
+                  description: "Whether the document belongs to Business or Individual \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n- For UK, this parameter is optional \n - For SEPA VoP, this parameter is not applicable  \n - For IN PAN, this parameter is optional  \n- Personal Code values \n- ARNU - AlienRegistrationNumber \n- CCPT - PassportNumber \n- CUST - CustomerIdentificationNumber \n- DRLC - DriversLicenseNumber \n- EMPL - EmployeeIdentificationNumber \n- NIDN - NationalIdentityNumber \n- SOSE - SocialSecurityNumber \n- TELE - TelephoneNumber \n- TXID - TaxIdentificationNumber \n- POID - PersonCommercialIdentification \n - Corporate Code values \n- BANK - BankPartyIdentification \n- CBID - Central Bank Identification Number \n- CHID - Clearing Identification Number \n- COID - CountryIdentificationCode \n- CUST - CustomerNumber \n- DUNS - Data Universal Numbering System \n- EMPL - EmployerIdentificationNumber \n- GS1G - GS1GLNIdentifier \n- SREN - SIREN \n- SRET - SIRET \n- TXID - Tax Identification Number  \n - For Global Mastercard Validation, this parameter is not applicable"
+                  enum:
+                  - ARNU
+                  - CCPT
+                  - CUST
+                  - DRLC
+                  - EMPL
+                  - NIDN
+                  - SOSE
+                  - TELE
+                  - TXID
+                  - POID
+                  - BANK
+                  - CBID
+                  - CHID
+                  - COID
+                  - DUNS
+                  - GS1G
+                  - SREN
+                  - SRET
+                  title: type
+                number:
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+                  description: "Creditor's document number \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is optional with max length 35 \n - For IN PAN, this parameter is optional with max length 10  \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+                  title: number
+                state:
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+                  description: "Creditor's document state \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is optional with max length 35 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+                  title: state
+            card:
+              type: object
+              title: card_response
+              properties:
+                number:
+                  maxLength: 34
+                  minLength: 1
+                  type: string
+                  description: "Creditor's card number \n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is mandatory with max length 34"
+                  title: number
+        method:
+          type: object
+          title: method_response
+          properties:
+            country:
+              type: string
+              description: "ISO 3166 Alpha-2 code for the transaction country \n - For UK bank availability/reachability, this parameter is Mandatory with enum Value GB \n- For US EWS, this parameter is Mandatory with enum Value US \n- For UK, this parameter is Mandatory with enum Value GB \n - For IN PAN, this parameter is Mandatory with enum Value IN \n - For SEPA VoP, parameter is Mandatory with enum Value \n - For Global Mastercard Validation, the method.country parameter is optional for World link clients when sending card validation request to CCAPI. if the method.method parameter is classified as card, its is treated as Mastercard Validation by default and the validation logic is applied globally it not restricted to any specific country or region"
+              enum:
+              - GB
+              - US
+              - IN
+              - AT
+              - BE
+              - FI
+              - FR
+              - DE
+              - GR
+              - IE
+              - IT
+              - LU
+              - NL
+              - PT
+              - SK
+              - ES
+              - BG
+              - CZ
+              - DK
+              - HU
+              - 'NO'
+              - PL
+              - RO
+              - SE
+              title: country
+            method:
+              type: string
+              description: Method specified by the debtor for the validation
+              enum:
+              - IBAN
+              - SORTCODE
+              - NC
+              - BIC
+              - BANKACCOUNT
+              - CARD
+              - PAYMENTID
+              - ID
+              title: method
+            type:
+              type: string
+              description: "Message type (e.g., CT for credit transfer, AER for Account Enquiry Request) \n- For US EWS, this parameter is mandatory \n- For UK, this parameter is mandatory \n- For SEPA VoP, this parameter is mandatory \n - For Global Mastercard Validation, this parameter is not applicable  \n- Ownership - Account ownership is limited to validation of correct owner, hence the account number or equivalent (i.e Virtual account) and Name \n- Attributes - Attributes define the properties of the object, for an account the properties should include Status, type of account, status of account, the address of the account  etc. \n- Structure - Structure refers to the mod 97 and the length as per the country of IBAN \n- TAXID -  Validation of individual or corporate tax id/tax documentation\n - REACHABILITY - Bank is reachable on a given network \n- AVAILABILITY - Availability of a bank to receive a particular credit"
+              enum:
+              - REACHABILITY
+              - AVAILABILITY
+              - Structure
+              - Ownership
+              - Attributes
+              - TAXID
+              title: type
+            scheme:
+              type: string
+              description: "Scheme that is a part of validation \n - For UK bank availability/reachability, this parameter is mandatory with value FPS \n- For US EWS, this parameter is not applicable \n- For UK, this parameter is not applicable \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              enum:
+              - FPS
+              - IP
+              - ACH
+              - RTGS
+              title: scheme
+            penny_test:
+              type: string
+              description: "This parameter enables selection of penny or non penny validations \n- Optional for SEPA VoP \n - For Global Mastercard Validation, this parameter is not applicable"
+              enum:
+              - NONPENNY
+              - PENNY
+              title: penny_test
+          required:
+          - method
+          - type
+        status:
+          type: object
+          title: status
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time of transaction status"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 acknowledgement status code
+              enum:
+              - ACCC
+              - RJCT
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- ACCC - Completed \n- RJCT - Rejected"
+              title: description
+          required:
+          - code
+          - description
+          - date_time
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: Reason code
+              maxLength: 40
+              title: code
+            description:
+              type: string
+              description: Reason code description
+              minLength: 1
+              maxLength: 105
+              title: description
+        response:
+          type: object
+          title: response
+          properties:
+            data_date_time:
+              type: string
+              format: date-time
+              description: "Contains the provider datetime else current Datetime in UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n - For UK bank availability/reachability, this parameter is mandatory  \n - For US EWS, this parameter is mandatory \n - For UK, this parameter is mandatory \n - For IN PAN, this parameter is mandatory \n - For SEPA VoP, this parameter is mandatory \n- for Mastercard validation this parameter is mandatory"
+              title: data_date_time
+            type:
+              type: string
+              description: "Validation based on historic or real time data \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is mandatory \n - For UK, this parameter is mandatory \n - For IN PAN, this parameter is mandatory  \n - For SEPA VoP, this parameter is mandatory \n- HR - Validation based on Historic Data in case there is no real time data \n - RT - Validation based on real time data and data source is present \n- ERROR - Erroneous issue \n - For Mastercard validation, this parameter is mandatory"
+              enum:
+              - HR
+              - RT
+              - ERROR
+              title: type
+            validation_risk_score:
+              type: string
+              description: "Risk appetite of utilizing this account. This parameter will be populated only in case of response.type = HR \n - For UK bank availability/reachability, this parameter is not applicable \n - For US, this parameter is conditional \n - For UK, this parameter is conditional \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is optional   \n- HIGH - There is high risk the data subject to validations is inaccurate as per the source. \n- MEDIUM - There is moderate risk the data subject to validations is inaccurate as per the source. \n- LOW- There is Low risk the data subject to validations is inaccurate as per the source. \n- UNKNOWN- The risk is unknown \n - For Global Mastercard Validations, this parameter is not applicable"
+              enum:
+              - HIGH
+              - MEDIUM
+              - LOW
+              - UNKNOWN
+              - NA
+              title: validation_risk_score
+            account:
+              type: object
+              title: account_status
+              properties:
+                number_validation:
+                  type: string
+                  description: "Account validation result \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is conditional \n - For UK, this parameter is conditional \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is mandatory  \n- MATCH - Validation based on account is a match \n - MISMATCH - Validation based on account is a mismatch \n- NA - Validation is not applicable \n - For Global Mastercard validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - NA
+                  title: number_validation
+                name_validation:
+                  type: string
+                  description: "Name validation result\n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is conditional \n - For UK, this parameter is conditional \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is mandatory  \n- MATCH - Validation based on name is a match \n - MISMATCH - Validation based on name is a mismatch \n - PARTIALMATCH - Validation based on name is a partial match \n- NOTCHECKED - Validation not checked \n- NA - Validation is not applicable \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - PARTIALMATCH
+                  - NA
+                  - NOTCHECKED
+                  title: name_validation
+                address_validation:
+                  type: string
+                  description: "Address validation result\n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is conditional \n - For UK, this parameter is conditional \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable  \n- MATCH - Validation based on address is a match \n - MISMATCH - Validation based on address is a mismatch \n - PARTIALMATCH - Validation based on address is a partial match \n- NOTCHECKED - Validation not checked \n- NA - Validation is not applicable \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - PARTIALMATCH
+                  - NA
+                  - NOTCHECKED
+                  title: address_validation
+                phone_validation:
+                  type: string
+                  description: "Phone number validation result\n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is conditional \n - For UK, this parameter is conditional \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n- MATCH - Validation based on phone number is a match \n - MISMATCH - Validation based on phone number is a mismatch \n - PARTIALMATCH - Validation based on phone number is a partial match \n- NOTCHECKED - Validation not checked \n- NA - Validation is not applicable \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - PARTIALMATCH
+                  - NA
+                  - NOTCHECKED
+                  title: phone_validation
+            iban:
+              type: object
+              title: iban_status
+              properties:
+                structure_validation:
+                  type: string
+                  description: "IBAN mod 97 structure validation \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is conditional \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable  \n- MATCH - Validation based on mod 97 is a match \n - MISMATCH - Validation based on mod 97 is a mismatch \n- NOTCHECKED - Validation not checked \n- NA - Validation is not applicable \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - NA
+                  - NOTCHECKED
+                  title: structure_validation
+            txid:
+              type: object
+              title: txid_status
+              properties:
+                number_validation:
+                  type: string
+                  description: "Document number validation result\n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is conditional \n - For SEPA VoP, this parameter is not applicable  \n- MATCH - Validation based on document number is a match \n - MISMATCH - Validation based on document number is a mismatch \n- NA - Validation is not applicable \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - NA
+                  title: number_validation
+                name_validation:
+                  type: string
+                  description: "Document name validation result \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is conditional \n - For SEPA VoP, this parameter is not applicable \n- MATCH - Validation based on document name is a match \n - MISMATCH - Validation based on document name is a mismatch \n- NA - Validation is not applicable \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - NA
+                  title: name_validation
+                father_name_validation:
+                  type: string
+                  description: "Document father's name validation result\n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is conditional \n - For SEPA VoP, this parameter is not applicable \n- MATCH - Validation based on document father's name is a match \n - MISMATCH - Validation based on document father's name is a mismatch \n- NA - Validation is not applicable \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - NA
+                  title: father_name_validation
+                date_of_birth_validation:
+                  type: string
+                  description: "Date of birth validation result\n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is conditional  \n - For SEPA VoP, this parameter is not applicable \n- MATCH - Validation based on date of birth is a match \n - MISMATCH - Validation based on date of birth is a mismatch \n- NA - Validation is not applicable \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - NA
+                  title: date_of_birth_validation
+                status:
+                  type: string
+                  description: "Status of the tax id document \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is conditional \n - For SEPA VoP, this parameter is not applicable  \n- E- EXISTING AND VALID \n- F - Marked as Fake \n- X - Marked as Deactivated \n- D - Deleted \n- N - Record (PAN) Not Found in Income Tax Department (ITD) Database/Invalid PAN \n- EA - Existing and Valid but event marked as Amalgamation in ITD database \n- EC - Existing and Valid but event marked as Acquisition in ITD database \n- ED - Existing and Valid but event marked as Death in ITD database \n- EI - Existing and Valid but event marked as Dissolution in ITD database \n- EL - Existing and Valid but event marked as Liquidated in ITD database \n- EM - Existing and Valid but event marked as Merger in ITD database \n- EP - Existing and Valid but event marked as Partition in ITD database \n- ES - Existing and Valid but event marked as Split in ITD database \n- EU - Existing and Valid but event marked as Under Liquidation in ITD database \n- NA - Validation is not applicable \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - E
+                  - F
+                  - X
+                  - D
+                  - N
+                  - EA
+                  - EC
+                  - ED
+                  - EI
+                  - EL
+                  - EM
+                  - EP
+                  - ES
+                  - EU
+                  - NA
+                  title: status
+                seeding_status:
+                  type: string
+                  description: "Seeding status from underlying services \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is conditional \n - For SEPA VoP, this parameter is not applicable  \n- Y – Operative PAN \n- R - Inoperative PAN \n- NA -For all non-Individual PAN \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - Y
+                  - R
+                  - NA
+                  title: seeding_status
+                national_id_validation:
+                  type: string
+                  description: "National identification validation result\n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is conditional \n - For SEPA VoP, this parameter is not applicable  \n- MATCH - Validation based on aadhar digits matched \n - MISMATCH - Validation based on if aadhar digits is a mismatch \n- NA - Aadhar digits were not received in response from tech backend \n - For Global Mastercard Validations, this parameter is not applicable"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - NA
+                  title: national_id_validation
+            bank:
+              type: object
+              title: bank_status
+              properties:
+                is_reachable:
+                  type: string
+                  description: "Whether the bank is a part of the scheme (reachable) or not \n- Y - Bank is reachable \n - N - Bank is not reachable/not checked"
+                  enum:
+                  - Y
+                  - N
+                  title: is_reachable
+                is_available:
+                  type: string
+                  description: "Whether the bank is a current online (available) or not \n- Y - Bank is available \n - N - Bank is not available/ not checked"
+                  enum:
+                  - Y
+                  - N
+                  title: is_available
+                reachability_data_type:
+                  type: string
+                  default: HR
+                  description: "Validation based on historic or real time data \n- HR - Validation based on Historic Data in case there is no real time data \n - RT - Validation based on real time data and data source is present \n- ERROR - Erroneous issue "
+                  enum:
+                  - HR
+                  - RT
+                  - ERROR
+                  title: reachability_data_type
+                availability_data_type:
+                  type: string
+                  default: RT
+                  description: "Validation based on historic or real time data \n- HR - Validation based on Historic Data in case there is no real time data \n - RT - Validation based on real time data and data source is present \n- ERROR - Erroneous issue "
+                  enum:
+                  - HR
+                  - RT
+                  - ERROR
+                  title: availability_data_type
+            card:
+              type: object
+              title: card_status
+              properties:
+                number_validation:
+                  type: string
+                  description: "Card number validation result\n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is not applicable  \n- MATCH - Validation based on card number is a match \n - MISMATCH - Validation based on card number is a mismatch \n- NA - Validation is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard validations, this parameter is mandatory"
+                  enum:
+                  - MATCH
+                  - MISMATCH
+                  - NA
+                  title: number_validation
+                receiving_eligibility:
+                  type: string
+                  description: "Whether the Creditor Mastercard is eligible to received funds before initiating the payment  \n- Y - The creditor Mastercard is eligible to receive the payment \n - N - The creditor Mastercard is not eligible to receive the payment \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is not applicable \n - For Global Mastercard Validation this parameter is Mandatory with enum Y/N \n - For SEPA VoP, this parameter is not applicable"
+                  enum:
+                  - Y
+                  - N
+                  title: receiving_eligibility
+      required:
+      - uetr
+      - method
+      - status
+    Validation-Request:
+      type: object
+      title: ValidationRequest
+      required:
+      - method
+      properties:
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+          title: uetr
+        end_to_end_id:
+          type: string
+          description: "Client provided reference number. \n - For Single Euro Payments Area Verification of Payee (SEPA VoP), this parameter is mandatory with max length 35 if method.penny_test = PENNY \n - For UK bank availability/reachability, this parameter is not applicable \n - For US Early Warning System (EWS), this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+          minLength: 1
+          maxLength: 35
+          title: end_to_end_id
+        debtor:
+          type: object
+          title: debtor_request
+          properties:
+            account:
+              type: string
+              description: "Bank account held with CITI \n - For UK bank availability/reachability, this parameter is mandatory and max length is 40 \n - For US EWS, this parameter is mandatory and max length is 40 \n - For UK, this parameter is mandatory and max length is 40 \n - For IN PAN, this parameter is mandatory and max length is 40 \n- For SEPA VoP, this parameter is mandatory and max length is 40 \n - For Global Mastercard Validation this parameter is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: account
+            name:
+              type: string
+              description: "Debtor Account Name.\n - For UK bank availability/reachability, this parameter is optional and max length is 140 \n - For US EWS, this parameter is optional and max length is 140 \n - For UK, this parameter is optional and max length is 140 \n - For IN PAN, this parameter is optional and max length is 140 \n - For Global Mastercard Validation this parameter is not applicable \n - For SEPA VoP, this parameter is optional and max length is 140"
+              minLength: 1
+              maxLength: 140
+              title: name
+            id:
+              type: string
+              description: "Debtor ID  \n - For UK bank availability/reachability, this parameter is not applicable\n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable\n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is Mandatory and max length is 40 and for Global Mastercard Validation CCAPI will pass the world link client id under the id parameter"
+              minLength: 1
+              maxLength: 40
+              title: id
+        creditor:
+          type: object
+          title: creditor_request
+          properties:
+            bank_id:
+              type: string
+              description: "Receiving Financial Institution BIC.\n - For UK bank availability/reachability, this parameter is conditional and the condition is if method.method= NC, SORTCODE, BIC then this parameter should be present. If method.method = NC/SORTCODE, then length should be exactly 6. If method.method = BIC, then length should be 8 or 11  \n - For US EWS, this parameter is mandatory and length should be 9 if routing/clearing code is populated \n - For UK, this parameter is mandatory and length should be exactly 6 or 8 or 11 characters \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              minLength: 1
+              maxLength: 35
+              title: bank_id
+            iban:
+              type: string
+              description: "Creditor IBAN number  \n - For UK bank availability/reachability, this parameter is conditional with max length 22.Condition is if method.method= IBAN then this parameter should be present \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is conditional and max length is 22.Condition is if method.method= IBAN then this parameter should be present.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is mandatory and max length is 40 \n - For Global Mastercard Validation this parameter is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: iban
+            account:
+              type: string
+              description: "Creditor Account Number. \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is conditional and max length is 17.Condition is if method.method= BANKACCOUNT then this parameter should be present \n - For UK, this parameter is conditional and max length is 17.Condition is if method.method= BANKACCOUNT then this parameter should be present.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: account
+            name:
+              type: string
+              description: "Creditor Account Name. \n - For UK bank availability/reachability, this parameter is not applicable\n - For US EWS, this parameter is mandatory and max length is 87. Please provide first middle(if any) last name in this sequence with spaces \n - For UK, this parameter is mandatory and max length is 140. Please provide first middle(if any) last name in this sequence with spaces \n - For IN PAN, this parameter is mandatory and max length is 85. Please provide first middle(if any) last name in this sequence with spaces \n - For Global Mastercard Validation this parameter is not applicable \n - For SEPA VoP, this parameter is mandatory and max length is 70. Please provide first middle(if any) last name in this sequence with spaces"
+              minLength: 1
+              maxLength: 140
+              title: name
+            father_name:
+              type: string
+              description: "Creditor' Father's Name \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is optional and max length is 75. Please provide first middle(if any) last name in this sequence with spaces \n - For Global Mastercard Validation this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable"
+              minLength: 1
+              maxLength: 140
+              title: father_name
+            proxy_id:
+              type: string
+              description: "Creditor Proxy ID  \n - For UK bank availability/reachability, this parameter is not applicable\n - For US EWS, this parameter is not applicable \n - For UK, this parameter is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client\n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              minLength: 1
+              maxLength: 255
+              title: proxy_id
+            wallet:
+              type: string
+              description: "Creditor wallet details \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: wallet
+            address_lines:
+              type: array
+              description: "Creditor's address lines \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional and allowed 2 lines with each line max length of 40 \n - For UK, this parameter is optional and allowed 2 lines with each line max length of 40 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              items:
+                $ref: '#/components/schemas/Address'
+              title: address_lines
+            street_name:
+              maxLength: 70
+              minLength: 1
+              type: string
+              description: "Creditor's street_name \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is optional with max length 70 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              title: street_name
+            building_number:
+              maxLength: 16
+              minLength: 1
+              type: string
+              description: "Creditor's building_number \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is optional with max length 16 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              title: building_number
+            postal_code:
+              maxLength: 16
+              minLength: 1
+              type: string
+              description: "Creditor's postal_code \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional with max length 10 \n - For UK, this parameter is optional with max length 16 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard validation, this parameter is not applicable"
+              title: postal_code
+            city:
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: "Creditor's city \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional with max length 25 \n - For UK, this parameter is optional with max length 35 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              title: city
+            state:
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: "Creditor's state \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional with max length 2 \n - For UK, this parameter is optional with max length 35 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: state
+            country:
+              type: string
+              description: "Creditor's country  \n - For UK bank availability/reachability, this parameter is not applicable\n - For US EWS, this parameter is optional with max length 2 \n - For UK, this parameter is optional with max length 2 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              pattern: ^[A-Z]{2,2}$
+              title: country
+            birth_date:
+              type: string
+              format: date
+              description: "ISO 8601 (YYYY-MM-DD), Creditor's birth date \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional \n - For UK, this parameter is optional \n - For IN PAN, this parameter is mandatory \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: birth_date
+            home_phone_number:
+              maxLength: 34
+              minLength: 6
+              type: string
+              description: "Creditor's home phone number \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is optional with max length 10 \n - For UK, this parameter is optional with max length 34 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: home_phone_number
+            work_phone_number:
+              maxLength: 34
+              minLength: 6
+              type: string
+              description: "Creditor's work phone number \n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is optional with max length 10 \n - For UK, this parameter is optional with max length 34 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation this parameter is not applicable"
+              title: work_phone_number
+            document:
+              type: object
+              title: document_request
+              properties:
+                entity:
+                  type: string
+                  description: "Whether the document belongs to Business or Individual \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n- If method.country= GB and method.method = BANKACCOUNT then creditor.document.entity is mandatory parameter \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+                  enum:
+                  - BUSINESS
+                  - PERSONAL
+                  title: entity
+                type:
+                  type: string
+                  description: "Whether the document belongs to Business or Individual \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n- For UK, this parameter is optional \n - For IN PAN, this parameter is mandatory with applicable value  TXID \n- Personal Code values \n- ARNU - AlienRegistrationNumber \n- CCPT - PassportNumber \n- CUST - CustomerIdentificationNumber \n- DRLC - DriversLicenseNumber \n- EMPL - EmployeeIdentificationNumber \n- NIDN - NationalIdentityNumber \n- SOSE - SocialSecurityNumber \n- TELE - TelephoneNumber \n- TXID - TaxIdentificationNumber \n- POID - PersonCommercialIdentification \n - Corporate Code values \n- BANK - BankPartyIdentification \n- CBID - Central Bank Identification Number \n- CHID - Clearing Identification Number \n- COID - CountryIdentificationCode \n- CUST - CustomerNumber \n- DUNS - Data Universal Numbering System \n- EMPL - EmployerIdentificationNumber \n- GS1G - GS1GLNIdentifier \n- SREN - SIREN \n- SRET - SIRET \n- TXID - Tax Identification Number \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+                  enum:
+                  - ARNU
+                  - CCPT
+                  - CUST
+                  - DRLC
+                  - EMPL
+                  - NIDN
+                  - SOSE
+                  - TELE
+                  - TXID
+                  - POID
+                  - BANK
+                  - CBID
+                  - CHID
+                  - COID
+                  - DUNS
+                  - GS1G
+                  - SREN
+                  - SRET
+                  title: type
+                number:
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+                  description: "Creditor's document number \n - For UK bank availability/reachability, this parameter is not applicable \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is optional with max length 35 \n - For IN PAN, this parameter is mandatory with max length 10 \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+                  title: number
+                state:
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+                  description: "Creditor's document state \n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is optional with max length 35 \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+                  title: state
+            card:
+              type: object
+              title: card_request
+              properties:
+                number:
+                  maxLength: 34
+                  minLength: 1
+                  type: string
+                  description: "Creditor's card number \n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is mandatory with max length 34"
+                  title: number
+                currency:
+                  maxLength: 3
+                  minLength: 3
+                  type: string
+                  description: "Creditor's card currency  \n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is conditional with max length 3 when creditor.card.number is populated"
+                  title: currency
+            national_id:
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: "Creditor's national identification \n - For UK bank availability/reachability, this parameter is not applicable  \n - For US EWS, this parameter is not applicable \n - For UK, this parameter is not applicable \n - For IN PAN, this parameter is optional,numeric and with length equal to 4 \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard Validation, this parameter is not applicable"
+              title: national_id
+        method:
+          type: object
+          title: method_request
+          properties:
+            country:
+              type: string
+              description: "ISO 3166 Alpha-2 code for the transaction country \n - For UK bank availability/reachability, this parameter is Mandatory with enum Value GB \n- For US EWS, this parameter is Mandatory with enum Value US \n- For UK, this parameter is Mandatory with enum Value GB \n - For IN PAN, this parameter is Mandatory with enum Value IN \n - For SEPA VoP, this parameter is Mandatory with enum Value \n - For Global Mastercard Validation, the method.country parameter is optional for World link clients when sending card validation request to CCAPI. if the method.method parameter is classified as card, its is treated as Mastercard Validation by default and the validation logic is applied globally it not restricted to any specific country or region"
+              enum:
+              - GB
+              - US
+              - IN
+              - AT
+              - BE
+              - FI
+              - FR
+              - DE
+              - GR
+              - IE
+              - IT
+              - LU
+              - NL
+              - PT
+              - SK
+              - ES
+              - BG
+              - CZ
+              - DK
+              - HU
+              - 'NO'
+              - PL
+              - RO
+              - SE
+              title: country
+            method:
+              type: string
+              description: Method specified by the debtor for the validation
+              enum:
+              - IBAN
+              - SORTCODE
+              - NC
+              - BIC
+              - BANKACCOUNT
+              - CARD
+              - PAYMENTID
+              - ID
+              title: method
+            type:
+              type: string
+              description: "Message type (e.g., CT for credit transfer, AER for Account Enquiry Request) \n- For US EWS, this parameter is mandatory \n- For UK, this parameter is mandatory \n- For SEPA VoP, this parameter is mandatory \n- For Global Mastercard Validation, this parameter is mandatory  \n- Ownership - Account ownership is limited to validation of correct owner, hence the account number or equivalent (i.e Virtual account) and Name \n- Attributes - Attributes define the properties of the object, for an account the properties should include Status, type of account, status of account, the address of the account  etc. \n- Structure - Structure refers to the mod 97 and the length as per the country of IBAN \n- TAXID -  Validation of individual or corporate tax id/tax documentation\n - REACHABILITY - Bank is reachable on a given network \n- AVAILABILITY - Availability of a bank to receive a particular credit"
+              enum:
+              - REACHABILITY
+              - AVAILABILITY
+              - Structure
+              - Ownership
+              - Attributes
+              - TAXID
+              title: type
+            scheme:
+              type: string
+              description: "Scheme that is a part of validation \n - For UK bank availability/reachability, this parameter is mandatory with value FPS \n- For US EWS, this parameter is not applicable \n- For UK, this parameter is not applicable \n - For IN PAN, this parameter is not applicable \n - For SEPA VoP, this parameter is not applicable \n - For Global Mastercard validation, this parameter is not applicable"
+              enum:
+              - FPS
+              - IP
+              - ACH
+              - RTGS
+              title: scheme
+            penny_test:
+              type: string
+              description: "This parameter enables selection of penny or non penny validations \n- Optional for SEPA VoP"
+              enum:
+              - NONPENNY
+              - PENNY
+              title: penny_test
+          required:
+          - method
+          - type
+    Error-Response:
+      type: object
+      title: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+        error_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+          title: error_details
+    Error-Detail:
+      type: object
+      title: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 200
+          description: more details about the issue
+          title: issue
+        action:
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          title: action
+        code:
+          type: string
+          maxLength: 8
+          description: unique code representing the issue
+          title: code
+    Address:
+      type: string
+      maxLength: 70
+      minLength: 1
+      description: Address
+      title: Address
+  securitySchemes:
+    clientCredentials:
+      description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
+
+
+        '
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            paymentservices: Grant read-only access to payment initiation service
+            selfservices: Grant read-only access to beneficiary validation

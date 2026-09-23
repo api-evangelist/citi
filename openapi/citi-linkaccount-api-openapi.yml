@@ -1,0 +1,1270 @@
+openapi: 3.2.0
+info:
+  title: Gateway Services Link Account API
+  description: Self onboarding services for merchants to register on the platform, create wallets, and perform withdrawals or payouts to their designated settlement and external beneficiary accounts.
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+servers:
+- url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+  description: production gateway url
+- url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb/gatewayservices
+  description: sbox url
+security:
+- oAuth2:
+  - /authenticationservices/v1
+tags:
+- name: LinkAccount
+  description: Account linkage operations for external payments
+paths:
+  /merchants/v1/link-accounts:
+    post:
+      summary: Link external account for payments
+      description: Use this endpoint to verify an external creditor account and receive a creditor_id for successfully validated beneficiaries, so the account can be used in subsequent payout transactions.
+      operationId: linkAccount
+      servers:
+      - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      tags:
+      - LinkAccount
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Merchant-Id'
+      - $ref: '#/components/parameters/Idempotency-Id'
+      - $ref: '#/components/parameters/Country-Code'
+      requestBody:
+        required: true
+        description: This section holds the request parameters used to verify the Creditor.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Link-Account-Request'
+            examples:
+              account-linkage-request:
+                $ref: '#/components/examples/Account-Linkage-Request-Example'
+              Account-Linkage-Request-Example-HK:
+                $ref: '#/components/examples/Account-Linkage-Request-Example-HK'
+              Account-Linkage-Request-Example-CN:
+                $ref: '#/components/examples/Account-Linkage-Request-Example-CN'
+      responses:
+        '200':
+          description: This section holds the successful response for creditor verification.
+          headers:
+            apim-guid:
+              $ref: '#/components/headers/Apim-Guid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sync-Response'
+              examples:
+                account-linkage-response:
+                  $ref: '#/components/examples/Account-Linkage-Response-Example'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+      callbacks:
+        accountLinkageWebhook:
+          '{$notificationURL}':
+            description: This endpoint used to push the status notification for creditor verification.
+            post:
+              summary: Account linkage webhook notification
+              description: Webhook notification sent when an account linkage status changes. This callback is triggered for status updates on linked accounts.
+              operationId: accountLinkageWebhookNotification
+              tags:
+              - Account-Linkage
+              parameters:
+              - $ref: '#/components/parameters/Event-Type'
+              - $ref: '#/components/parameters/Event-Name'
+              - $ref: '#/components/parameters/Apim-Guid'
+              requestBody:
+                description: This section holds the request parameters for creditor verification notification.
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/Webhook-Link-Account'
+                    examples:
+                      Account-Linkage-Available-Webhook-Example:
+                        $ref: '#/components/examples/Account-Linkage-Available-Webhook-Example'
+                      Account-Linkage-Declined-Webhook-Example:
+                        $ref: '#/components/examples/Account-Linkage-Declined-Webhook-Example'
+              responses:
+                '200':
+                  description: Webhook received successfully.
+    get:
+      summary: Get linked account details
+      description: You can use this to check the status of the creditor. Creditor must be verified and have an 'AVAILABLE' status before sending external payments.
+      operationId: getLinkedAccount
+      servers:
+      - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      tags:
+      - LinkAccount
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Merchant-Id'
+      - $ref: '#/components/parameters/Country-Code'
+      - $ref: '#/components/parameters/Creditor-Id'
+      - $ref: '#/components/parameters/Creditor-Partner-User-Id'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Page-No'
+      responses:
+        '200':
+          description: This section holds the successful response for creditor verification inquiry.
+          headers:
+            apim-guid:
+              $ref: '#/components/headers/Apim-Guid'
+            Pagination-Metadata:
+              description: This header contains a JSON object with details about the response. The full schema is available in the 'Pagination-Metadata' schema section below
+              schema:
+                $ref: '#/components/schemas/Pagination-Metadata'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Get-Link-Account-Response'
+              examples:
+                get-account-linkage-response:
+                  $ref: '#/components/examples/Get-Account-Linkage-Response-Example'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+components:
+  examples:
+    Un-Supported-Media-Type-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: please use valid content-type in header
+          code: CC00002
+    Account-Linkage-Declined-Webhook-Example:
+      value:
+        merchant_id: 91eb2008-bee1-4bb9-84ea-e9f372a76e95
+        status: DECLINED
+        creditor_id: ca83c6b2-d357-4dc1-805a-0050e4e10e68
+        message: 客户要求拒绝
+    Unauthorized-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+    Internal-Server-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+          code: CC00004
+    Bad-Request-Gateway-Error-Example:
+      value:
+        httpCode: '400'
+        httpMessage: Bad Request
+        moreInformation: please provide valid value for request
+    Service-Unavailable-Gateway-Example:
+      value:
+        httpCode: '503'
+        httpMessage: Service is temporarily unavailable
+        moreInformation: Retry the request after some time
+    Forbidden-Service-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - code: CC00008
+          issue: User does not have privilege to access this functionality.
+          action: Please reach out to support team to enable this feature.
+    Un-Supported-Media-Type-Gateway-Error-Example:
+      value:
+        httpCode: '415'
+        httpMessage: Unsupported Media Type
+        moreInformation: Unsupported Content-Type application/octet-stream
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: Internal Server Error
+    Not-Found-Gateway-Error-Example:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Account-Linkage-Request-Example-HK:
+      value:
+        creditor_account:
+          holder_type: PERSONAL
+          holder_contact_number: 007 3700 7457
+          number: '4569897132589457'
+          name: 北京科技有限责任公司
+          currency_code: HKD
+          iban: HU58711204120061837086422231
+          document_type: CHINESE_NATIONAL_ID_CARD
+          document_number: CS8899966
+        creditor:
+          type: '00'
+          name: 北京科技有限责任公司
+          contact_number: '9876542154723210'
+          contact_prefix: '91'
+          email: pingpong@pp.com
+          partner_user_id: ece724af-99de-47a5-867c-c707402ac67e
+          address:
+            city: Wan Chai
+            state: Wan Chai District
+            country_code: HK
+            address_line: 150 Kennedy Road, Wan Chai, Wan Chai District, Hong Kong (HKG).
+            street_name: 150 Kennedy Road
+            postal_code: HKG
+        creditor_bank:
+          name: 北京科技有限责任公司
+          code: HSBCHKHH
+          branch_name: The Hongkong and Shanghai Banking Corporation Limited
+          branch_number: '053'
+          swift_code: HSBCHKHH053
+          address:
+            city: Central
+            state: Hong Kong
+            country_code: HK
+            address_line: Central, Hong Kong, HK.
+        file_id: NjSvXYrw3OAyMDI2MDIxMjE1MzExMTkwMjgucG5n.png
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: The server could not verify that you are authorized to access the URL
+    Account-Linkage-Response-Example:
+      value:
+        status_details:
+          status: PENDING
+          message: Request received successfully and the further processing is in-progress
+    Bad-Request-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+        - issue: record that you are searching is not found
+          action: resend the request with valid values
+          code: VC00003
+    Get-Account-Linkage-Response-Example:
+      value:
+      - creditor_id: R202501080950209789
+        creditor_status: AVAILABLE
+        message: Request is in-progress
+        created_time: '2026-01-06T10:56:25Z'
+        creditor_account:
+          holder_type: PERSONAL
+          holder_contact_number: 007 3700 7457
+          number: '703912345678'
+          name: SHASHANK VIJAYSHANKAR TIWARI
+          currency_code: INR
+          iban: HU58711204120061837086422231
+          document_type: CHINESE_RESIDENCE_PERMIT
+          document_number: CS8899966
+          type: CHECKING
+        creditor_bank:
+          name: BANK OF BARODA
+          code: '6'
+          branch_name: THANE BRANCH
+          branch_number: '391'
+          swift_code: CITIINHFXXX
+          routing_number: '6391'
+          ifsc_code: HDFC0000001
+          sort_code: '87'
+          type: RECIPIENT BANK
+          address:
+            city: THANE
+            state: MAHARASHTRA
+            country_code: IN
+            address_line: SUMAN HEIGHTS LODHA HERITAGR NAVNEET NAGAR MAHARASHTRA THANE INDIA
+        creditor:
+          type: '00'
+          name: SHASHANK VIJAYSHANKAR TIWARI
+          contact_number: '9876543210'
+          contact_prefix: '91'
+          email: abc@pp.com
+          address:
+            city: THANE
+            state: MAHARASHTRA
+            country_code: IN
+            address_line: SUMAN HEIGHTS LODHA HERITAGR NAVNEET NAGAR MAHARASHTRA THANE INDIA
+            street_name: ROYAL STREET
+            postal_code: '5110'
+        file_id: 8f7d6e5c-4b3a-2f1d-9e8c-7b6a5d4c3f2e
+    Account-Linkage-Request-Example-CN:
+      value:
+        creditor_account:
+          holder_type: COMPANY
+          holder_contact_number: 007 3700 7457
+          number: '7894561523255'
+          name: 北京创新科技有限公司
+          currency_code: CNY
+          iban: HU58711204120061837086422231
+          document_type: CHINESE_RESIDENCE_PERMIT
+          document_number: CS8899966
+        creditor:
+          type: '00'
+          name: SHASHANK VIJAYSHANKAR TIWARI
+          contact_number: '101457856'
+          contact_prefix: '86'
+          email: pingpong@pp.com
+          creditor_partner_user_id: ece724af-99de-47a5-867c-c707402ac67e
+          address:
+            city: Changpingqu Beijing
+            state: Beijing
+            country_code: CN
+            address_line: 10 West, Shahedonmendajie, Changpingqu Beijing, 102206 Beijing, CHN.
+            street_name: 10 West, Shahedonmendajie
+            postal_code: '102206'
+        creditor_bank:
+          name: BNP PARIBAS (CHINA) LTD
+          code: BNPACNBJ
+          branch_name: BEIJING BRANCH
+          branch_number: XXX
+          swift_code: BNPACNBJXXX
+          address:
+            city: CHAOYANG DISTRICT, BEIJING
+            state: CHAOYANG DISTRICT, BEIJING
+            country_code: CN
+            address_line: BNP PARIBAS (CHINA) LTD (BEIJING BRANCH), UNIT 01-04, 22-26, FLOOR 16, BUILDING 1 JIANGUOMENWAI AVENUE, CHAOYANG DISTRICT, BEIJING, China
+        file_id: NjSvXYrw3OAyMDI2MDIxMjE1MzExMTkwMjgucG5n.png
+    Account-Linkage-Request-Example:
+      value:
+        creditor_account:
+          holder_type: PERSONAL
+          holder_contact_number: 007 3700 7457
+          number: '703912345678'
+          name: SHASHANK VIJAYSHANKAR TIWARI
+          currency_code: INR
+          iban: HU58711204120061837086422231
+          document_type: CHINESE_RESIDENCE_PERMIT
+          document_number: CS8899966
+        creditor:
+          type: '00'
+          name: SHASHANK VIJAYSHANKAR TIWARI
+          contact_number: '9876543210'
+          contact_prefix: '91'
+          email: abc@pp.com
+          partner_user_id: P298UI839KADY381
+          address:
+            city: THANE
+            state: MAHARASHTRA
+            country_code: IN
+            address_line: SUMAN HEIGHTS LODHA HERITAGR NAVNEET NAGAR MAHARASHTRA THANE INDIA
+            street_name: ROYAL STREET
+            postal_code: '5110'
+        creditor_bank:
+          name: BANK OF BARODA
+          code: '6'
+          branch_name: THANE BRANCH
+          branch_number: '391'
+          swift_code: CITIINHFXXX
+          routing_number: '6391'
+          ifsc_code: HDFC0000001
+          sort_code: '87'
+          address:
+            city: THANE
+            state: MAHARASHTRA
+            country_code: IN
+            address_line: SUMAN HEIGHTS LODHA HERITAGR NAVNEET NAGAR MAHARASHTRA THANE INDIA
+        file_id: 8f7d6e5c-4b3a-2f1d-9e8c-7b6a5d4c3f2e
+    Too-Many-Requests-Gateway-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: Rate Limit exceeded
+    Method-Not-Allowed-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+        - issue: Method not supported
+          action: Method not supported for this endpoint, please use valid http verb
+          code: CC00001
+    Method-Not-Allowed-Gateway-Error-Example:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Account-Linkage-Available-Webhook-Example:
+      value:
+        merchant_id: ClientCustomerID1234
+        creditor_id: R202501080950209789
+        status: AVAILABLE
+        message: Creditor is successfully created
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            title: Bad-Request-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Bad-Request-Service-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Service-Error-Example'
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+    Gateway-Timeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            title: Method-Not-Allowed-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
+            Method-Not-Allowed-Service-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Service-Error-Example'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Forbidden-Service-Example:
+              $ref: '#/components/examples/Forbidden-Service-Example'
+    Too-Many-Requests:
+      description: Too Many Requests - Rate limit exceeded. Retry after the specified time.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Too-Many-Requests-Gateway-Example:
+              $ref: '#/components/examples/Too-Many-Requests-Gateway-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            title: Unauthorized-Response
+            oneOf:
+            - $ref: '#/components/schemas/Service-Error-Response'
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Service-Error-Example'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            title: Internal-Server-Error-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Internal-Server-Service-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Service-Error-Example'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            title: Unsupported-Media-Type-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Un-Supported-Media-Type-Gateway-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Gateway-Error-Example'
+            Un-Supported-Media-Type-Service-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Service-Error-Example'
+    Service-Unavailable:
+      description: Service Unavailable - The server is temporarily unable to  handle the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Service-Unavailable-Gateway-Example:
+              $ref: '#/components/examples/Service-Unavailable-Gateway-Example'
+  schemas:
+    Status-Details:
+      title: StatusDetails
+      description: Status Details.
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        message:
+          $ref: '#/components/schemas/Message'
+    Country-Code:
+      type: string
+      title: country_code
+      pattern: ^[A-Z]{2,2}$
+      description: Country code.
+      example: CN
+    Partner-User-Id:
+      type: string
+      description: Partner user identifier for seller from your system.
+      title: partner_user_id
+      minLength: 1
+      maxLength: 50
+      example: '1323436'
+    Gateway-Error-Response:
+      type: object
+      title: GatewayErrorResponse
+      required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+          example: Bad Request
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: moreInformation
+          example: please provide valid value for request
+    Get-Link-Account-Response:
+      title: GetLinkAccountResponse
+      description: Response body containing linked account details.
+      type: array
+      items:
+        $ref: '#/components/schemas/Creditor-Detail'
+    File-Id:
+      type: string
+      description: Unique identifier for the document uploaded.
+      title: file_id
+      minLength: 1
+      maxLength: 128
+      example: '112213'
+    Creditor-Account-Details:
+      title: CreditorAccountDetails
+      type: object
+      description: This section contains the details information of account.
+      properties:
+        holder_type:
+          type: string
+          title: holder_type
+          description: The type of account holder.
+          enum:
+          - PERSONAL
+          - COMPANY
+          example: PERSONAL
+        holder_contact_number:
+          type: string
+          title: holder_contact_number
+          description: The full contact number, including the country code if mobile.
+          minLength: 1
+          maxLength: 32
+          example: 007 3700 7457
+        number:
+          type: string
+          title: number
+          description: Unique account number.
+          minLength: 1
+          maxLength: 64
+          example: '703912345678'
+        name:
+          allOf:
+          - $ref: '#/components/schemas/Name'
+          - description: Name of the account.
+            example: SHASHANK VIJAYSHANKAR TIWARI
+        currency_code:
+          allOf:
+          - $ref: '#/components/schemas/Currency-Code'
+          title: currency_code
+          description: Currency of the account (3-character ISO code).
+          example: INR
+        iban:
+          type: string
+          title: iban
+          description: International Bank Account Number (IBAN). IBAN is not applicable for CN and HK.
+          minLength: 1
+          maxLength: 32
+          example: HU58711204120061837086422231
+        document_type:
+          type: string
+          title: document_type
+          description: Type of identity document (ID). One of the following 00 Chinese national ID card 01 Chinese residence permit 02 Passport 03 ID card of Hong Kong, Macao or Taiwan 04 Residence permit of Hong Kong, Macao and Taiwan 05 Hong Kong and Macao travel permit 06 Other national ID card 07 Other residence permit
+          enum:
+          - CHINESE_NATIONAL_ID_CARD
+          - CHINESE_RESIDENCE_PERMIT
+          - PASSPORT
+          - ID_CARD_OF_HONGKONG_MACAO_OR_TAIWAN
+          - RESIDENCE_PERMIT_OF_HONGKONG_MACAO_AND_TAIWAN
+          - HONGKONG_AND_MACAO_TRAVEL_PERMIT
+          - OTHER_NATIONAL_ID_CARD
+          - OTHER_RESIDENCE_PERMIT
+          example: CHINESE_RESIDENCE_PERMIT
+        document_number:
+          type: string
+          title: document_number
+          description: Account holder's ID number.
+          minLength: 1
+          maxLength: 64
+          example: CS8899966
+    Merchant-Id:
+      type: string
+      description: Unique identifier generated by Citi for each seller. Seller to use this id for the further functional calls.
+      title: merchant_id
+      minLength: 1
+      maxLength: 36
+      example: ec689822-9864-4c4d-9d68-222467627901
+    Webhook-Link-Account:
+      title: WebhookLinkAccount
+      description: Notification for Link account for the status update.
+      allOf:
+      - $ref: '#/components/schemas/Common-Error-Response'
+      - type: object
+        title: Webhook-Link-Account
+        properties:
+          creditor_id:
+            $ref: '#/components/schemas/Creditor-Id'
+    Get-Creditor-Account:
+      title: GetCreditorAccount
+      description: This section contains the details information of bank.
+      allOf:
+      - $ref: '#/components/schemas/Creditor-Account-Details'
+      - type: object
+        title: Get-Creditor-Account
+        properties:
+          type:
+            type: string
+            title: type
+            description: Type of the bank.
+            minLength: 1
+            maxLength: 64
+            example: CHECKING
+    Name:
+      type: string
+      title: name
+      minLength: 1
+      maxLength: 128
+      example: SHASHANK VIJAYSHANKAR TIWARI
+    Creditor:
+      title: Creditor
+      description: This section contains the details information of creditor.
+      allOf:
+      - $ref: '#/components/schemas/Common-Creditor'
+      - type: object
+        title: Common-Creditor
+        required:
+        - type
+        - name
+        - address
+        properties:
+          creditor_partner_user_id:
+            $ref: '#/components/schemas/Partner-User-Id'
+          address:
+            $ref: '#/components/schemas/Creditor-Address'
+    Creditor-Account:
+      title: CreditorAccount
+      description: Creditor Account.
+      allOf:
+      - $ref: '#/components/schemas/Creditor-Account-Details'
+      - type: object
+        title: Creditor-Account'
+        required:
+        - holder_type
+        - number
+        - name
+        - currency_code
+    Get-Creditor:
+      title: GetCreditor
+      description: This section contains the details information of creditor.
+      allOf:
+      - $ref: '#/components/schemas/Common-Creditor'
+      - type: object
+        title: Get-Creditor
+        properties:
+          address:
+            $ref: '#/components/schemas/Creditor-Address-Details'
+    Created-Time:
+      type: string
+      format: date-time
+      description: Date and time of the file created. Pattern YYYY-MM-DDTHH:mm:ssZ
+      title: created_time
+      example: '2026-01-06T10:56:25Z'
+    Creditor-Id:
+      type: string
+      title: creditor_id
+      description: The unique creditor identifier assigned by payment service provider.
+      minLength: 1
+      maxLength: 36
+      example: R202501080950209789
+    Creditor-Detail:
+      title: CreditorDetail
+      type: object
+      description: Response body containing creditor's details.
+      properties:
+        creditor_id:
+          $ref: '#/components/schemas/Creditor-Id'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status'
+          title: status
+          description: The status of creditor validation. PENDING; AVAILABLE; DECLINED
+        message:
+          $ref: '#/components/schemas/Message'
+        created_time:
+          $ref: '#/components/schemas/Created-Time'
+        creditor_account:
+          $ref: '#/components/schemas/Get-Creditor-Account'
+        creditor_bank:
+          $ref: '#/components/schemas/Get-Creditor-Bank'
+        creditor:
+          $ref: '#/components/schemas/Get-Creditor'
+        file_id:
+          $ref: '#/components/schemas/File-Id'
+    Message:
+      type: string
+      description: Description of the status.
+      title: message
+      minLength: 1
+      maxLength: 500
+      example: Request is in-progress
+    Creditor-Bank:
+      title: CreditorBank
+      description: Creditor Bank.
+      allOf:
+      - $ref: '#/components/schemas/Creditor-Bank-Details'
+      - type: object
+        title: Creditor-Bank
+        required:
+        - name
+        - address
+        properties:
+          address:
+            $ref: '#/components/schemas/Address'
+    Link-Account-Request:
+      title: LinkAccountRequest
+      type: object
+      description: Request body for linking an external account for payments.
+      required:
+      - creditor_account
+      - creditor_bank
+      - creditor
+      properties:
+        creditor_account:
+          $ref: '#/components/schemas/Creditor-Account'
+        creditor_bank:
+          $ref: '#/components/schemas/Creditor-Bank'
+        creditor:
+          $ref: '#/components/schemas/Creditor'
+        file_id:
+          $ref: '#/components/schemas/File-Id'
+    Service-Error-Response:
+      title: ServiceErrorResponse
+      type: object
+      required:
+      - ref_id
+      - error_details
+      properties:
+        ref_id:
+          type: string
+          maxLength: 120
+          description: Unique ID for the Transaction
+          title: ref_id
+          example: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+          type: array
+          description: List of error details
+          title: error_details
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Error-Detail:
+      type: object
+      title: ErrorDetail
+      properties:
+        issue:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: more details about the issue
+          title: issue
+          example: property emailAddress is mandatory and it cannot be empty
+        action:
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          title: action
+          example: please provide valid value for property emailAddress
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: unique code representing the issue
+          title: code
+          example: VC00010
+    Creditor-Bank-Details:
+      title: CreditorBankDetails
+      type: object
+      description: This section contains the details information of bank.
+      properties:
+        name:
+          allOf:
+          - $ref: '#/components/schemas/Name'
+          - description: Name of the bank.
+            minLength: 1
+            maxLength: 256
+            example: BANK OF BARODA
+        code:
+          type: string
+          title: code
+          description: Bank code.
+          minLength: 1
+          maxLength: 32
+          example: '6'
+        branch_name:
+          type: string
+          title: branch_name
+          description: Branch name where the account is held.
+          minLength: 1
+          maxLength: 128
+          example: THANE BRANCH
+        branch_number:
+          type: string
+          title: branch_number
+          description: Branch code where the account is held.
+          minLength: 1
+          maxLength: 32
+          example: '391'
+        swift_code:
+          type: string
+          title: swift_code
+          description: SWIFT BIC (Bank Identifier Code).
+          minLength: 1
+          maxLength: 64
+          example: CITIINHFXXX
+        routing_number:
+          type: string
+          title: routing_number
+          description: Routing code.
+          minLength: 1
+          maxLength: 64
+          example: '6391'
+        ifsc_code:
+          type: string
+          title: ifsc_code
+          description: Indian Financial System Code (IFSC).
+          minLength: 1
+          maxLength: 64
+          example: HDFC0000001
+        sort_code:
+          type: string
+          title: sort_code
+          description: Sort code.
+          minLength: 1
+          maxLength: 32
+          example: '87'
+    Sync-Response:
+      title: SyncResponse
+      type: object
+      description: Acknowledgement.
+      properties:
+        status_details:
+          $ref: '#/components/schemas/Status-Details'
+    Common-Error-Response:
+      title: CommonErrorResponse
+      description: Details of error in the request.
+      type: object
+      properties:
+        merchant_id:
+          $ref: '#/components/schemas/Merchant-Id'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status'
+          description: Status description. <br> Certification Webhook - Allowed values are APPROVED, DECLINED, RFI_PENDING. <br> Wallet Activation Webhook - Allowed values are AVAILABLE - account is available to be used; DECLINED - account application rejected; SUSPENDED - account is frozen; CLOSED - account is no longer available. <br> Link Account Webhook - Allowed values are AVAILABLE and DECLINED <br> Payment Webhook - Allowed values are SUCCESS, REJECTED. <br> Inbound Webhook - Allowed values is SUCCESS. <br> Transaction Reporting - PENDING, SUCCESS, REJECTED.
+        message:
+          $ref: '#/components/schemas/Message'
+    Address:
+      title: Address
+      description: Address/
+      allOf:
+      - $ref: '#/components/schemas/Address-Details'
+      - type: object
+        title: Address-Details
+        required:
+        - country_code
+        - city
+        - state
+    Get-Creditor-Bank:
+      title: GetCreditorBank
+      description: This section contains the details information of bank.
+      allOf:
+      - $ref: '#/components/schemas/Creditor-Bank-Details'
+      - type: object
+        title: Get-Creditor-Bank
+        properties:
+          type:
+            type: string
+            title: type
+            description: Type of the bank.
+            minLength: 1
+            maxLength: 64
+            example: RECIPIENT BANK
+          address:
+            $ref: '#/components/schemas/Address-Details'
+    Address-Details:
+      title: AddressDetails
+      type: object
+      description: Address information for the bank.
+      properties:
+        city:
+          type: string
+          title: city
+          description: City.
+          minLength: 1
+          maxLength: 128
+          example: THANE
+        state:
+          type: string
+          title: state
+          description: State.
+          minLength: 1
+          maxLength: 128
+          example: MAHARASHTRA
+        country_code:
+          allOf:
+          - $ref: '#/components/schemas/Country-Code'
+          title: country_code
+          description: Country code.
+        address_line:
+          type: string
+          title: address_line
+          description: Detailed address of the bank.
+          minLength: 1
+          maxLength: 256
+          example: SUMAN HEIGHTS LODHA HERITAGR NAVNEET NAGAR MAHARASHTRA THANE INDIA
+    Creditor-Address-Details:
+      title: CreditorAddressDetails
+      description: Address information for the creditor.
+      allOf:
+      - $ref: '#/components/schemas/Address-Details'
+      - $ref: '#/components/schemas/Partial-Address'
+      - type: object
+        title: Creditor-Address-Details
+    Status:
+      type: string
+      description: Status of the request.
+      title: status
+      minLength: 1
+      maxLength: 64
+    Common-Creditor:
+      title: CommonCreditor
+      type: object
+      description: This section contains the details information of creditor.
+      properties:
+        type:
+          type: string
+          title: type
+          description: Type of creditor.
+          enum:
+          - '00'
+          example: '00'
+        name:
+          allOf:
+          - $ref: '#/components/schemas/Name'
+          - description: Name of the account.
+            example: SHASHANK VIJAYSHANKAR TIWARI
+        contact_number:
+          type: string
+          title: contact_number
+          description: Full contact number.
+          minLength: 1
+          maxLength: 32
+          example: '9876543210'
+        contact_prefix:
+          type: string
+          title: contact_prefix
+          description: International telephone area code.
+          minLength: 1
+          maxLength: 32
+          example: '91'
+        email:
+          type: string
+          title: email
+          description: Email address of the merchant.
+          minLength: 1
+          maxLength: 32
+          example: abc@pp.com
+    Currency-Code:
+      type: string
+      title: currency_code
+      description: The currency code in the transaction.
+      pattern: ^[A-Z]{3}$
+      example: USD
+    Creditor-Address:
+      title: CreditorAddress
+      description: Address information for the creditor.
+      allOf:
+      - $ref: '#/components/schemas/Address-Details'
+      - $ref: '#/components/schemas/Partial-Address'
+      - type: object
+        title: Creditor-Address
+        required:
+        - country_code
+        - city
+        - state
+    Pagination-Metadata:
+      description: '<br> current_page: Current page number<br> total_pages: Total number of pages available for this request<br> page_size: The number of records to display per page<br> has_more: Any more messages or records expected'
+      type: object
+      title: Pagination Metadata
+      properties:
+        current_page:
+          description: Current page number
+          type: integer
+          minimum: 1
+          maximum: 1000
+          example: 1
+          title: current_page
+        total_pages:
+          description: Total number of pages available for this request
+          type: integer
+          minimum: 1
+          maximum: 1000
+          example: 1
+          title: total_pages
+        page_size:
+          description: Number of records to display per page
+          type: integer
+          minimum: 1
+          maximum: 10000
+          example: 1
+          title: page_size
+        has_more:
+          description: Any more messages or records expected
+          type: boolean
+          example: true
+          title: has_more
+      example:
+        current_page: 1
+        total_pages: 10
+        page_size: 100
+        has_more: true
+    Partial-Address:
+      title: PartialAddress
+      description: Address information for the creditor.
+      type: object
+      properties:
+        street_name:
+          type: string
+          title: street_name
+          description: Street name.
+          minLength: 1
+          maxLength: 128
+          example: ROYAL STREET
+        postal_code:
+          type: string
+          title: postal_code
+          description: Postal code.
+          minLength: 1
+          maxLength: 16
+          example: '5110'
+  parameters:
+    Client-Id:
+      in: query
+      name: client_id
+      description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding.
+      schema:
+        type: string
+        title: Client-Id
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+        minimum: 1
+        maximum: 128
+      required: true
+    Creditor-Partner-User-Id:
+      name: creditor_partner_user_id
+      in: query
+      description: The unique creditor identifier of your system.
+      schema:
+        type: string
+        title: creditor_partner_user_id
+        minLength: 1
+        maxLength: 50
+        example: P298UI839KADY381
+    Page-No:
+      name: page_no
+      in: query
+      required: false
+      description: Page number (default- 1).
+      schema:
+        type: integer
+        title: page_no
+        minimum: 1
+        maximum: 5000
+        default: 1
+    Country-Code:
+      in: header
+      name: Country-Code
+      description: Marketplace's country code.
+      schema:
+        pattern: ^[A-Z]{2,2}$
+        type: string
+        title: Country-Code
+        example: US
+      required: true
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Type of event (e.g., CERTIFICATION, WALLET_ACTIVATION, LINK_ACCOUNT, PAYMENT, INBOUND, RFI).
+      schema:
+        type: string
+        title: event-type
+        minLength: 1
+        maxLength: 64
+        example: Webhook
+    Event-Name:
+      name: Event-Name
+      in: header
+      description: Name of event (e.g., PAYOUT, PAYIN).
+      schema:
+        type: string
+        title: event-name
+        minLength: 1
+        maxLength: 64
+        example: Payout
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Number of results per page (default- 50).
+      schema:
+        type: integer
+        title: limit
+        minimum: 1
+        maximum: 100
+        default: 50
+    Idempotency-Id:
+      in: header
+      name: Idempotency-Id
+      description: "Your unique identification for a POST request \n - Maximum length is 128. \n-CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      schema:
+        type: string
+        title: Idempotency-Id
+        minLength: 1
+        maxLength: 128
+        example: a44cbb606de4edb9a7a123414bba3bb
+      required: true
+    Creditor-Id:
+      name: creditor_id
+      in: query
+      description: The unique creditor identifier returned when you call link account.
+      schema:
+        type: string
+        title: creditor_id
+        minLength: 1
+        maxLength: 36
+        example: R202501080950209789
+    Apim-Guid:
+      in: header
+      name: Apim-Guid
+      description: Unique system generated reference number generated by   Citi. Refer to this number in case of any discrepancy reporting to a Citi representative.
+      schema:
+        type: string
+        maxLength: 128
+        minLength: 1
+        title: Apim-Guid
+      required: true
+      example: na-apimgwgtds04~4a98cbc5-d813-4e65-bc81-d70f0f87f6ec
+    Merchant-Id:
+      in: header
+      name: Merchant-Id
+      description: CITI generated Merchant ID during merchant creation.
+      schema:
+        type: string
+        title: Merchant-Id
+        minLength: 1
+        maxLength: 36
+        example: ec689822-9864-4c4d-9d68-22246762901
+      required: true
+  headers:
+    Apim-Guid:
+      description: Unique system generated reference number generated by   Citi. Refer to this number in case of any discrepancy reporting to a Citi representative.
+      schema:
+        type: string
+        maxLength: 128
+        minLength: 1
+        title: Apim-Guid
+      required: true
+      example: na-apimgwgtds04~4a98cbc5-d813-4e65-bc81-d70f0f87f6ec
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://b2b.api.icg.citi.com/authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Access to marketplace management APIs

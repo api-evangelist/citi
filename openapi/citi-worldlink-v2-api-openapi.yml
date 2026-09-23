@@ -1,0 +1,2337 @@
+openapi: 3.2.0
+info:
+  title: WorldLink v2 API
+  description: 'WorldLink is a complete cross-border payment and Foreign-Exchange (FX)
+
+    service that allows you to perform payments in 135 currencies without having
+
+    the need to maintain local currency accounts for each of them.'
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 2.0.0
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod/worldlinkservices
+  description: production gateway url
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/worldlinkservices
+  description: sandbox url
+security:
+- clientCredentials: []
+tags:
+- name: WorldLink v2
+paths:
+  /v2/doddfrank/disclosure:
+    post:
+      tags:
+      - WorldLink v2
+      summary: WorldLink Dodd Frank
+      description: 'CitiConnect WorldLink Dodd Frank allows users to access information for fees, taxes, and delivery dates.
+
+        This information is subsequently provided to consumers on a Dodd Frank 1073 disclosure or receipt.'
+      operationId: doddFrankRequestUsingPOST
+      parameters:
+      - name: client_id
+        in: query
+        description: Unique identifier which is created during the onboarding process.
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Supports \"application/xml\" and \"application/json\".
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Request body for WorldLink Dodd Frank
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/disclosure_request'
+            example:
+              in:
+                clientId: '24884'
+                subEntityId: '0001'
+                destinationCountry: IN
+                destinationState: AK
+                destinationCity: ANCHORAGE
+                bankCode: CITIIN00
+                bankCodeType: B
+                paymentMethod: W
+                paymentCurrency: INR
+                fundingCurrency: USD
+                paymentCurrencyAmount: 100
+                nonSTPFlag: N
+                isBeneDeduct: Y
+                citiPointOfOrigination: US
+                beneDeductFeeType: T
+                estimatePercentile: 95
+                chargeCode: SHA
+                releaseTime: '2026-04-23T16:11:23.000'
+                nostroCountry: AU
+                flagODE: N
+                valueDate: '2026-04-23'
+                flagFutureDated: N
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/disclosure_response'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                correlationId: q2te~bd8e9b8f-d8e5-4a48-ad13-5d1ec8bb32e815587
+                message: Mismatch of WorldLink client ID or client ID is not maintained.
+                status: '400'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Unauthorized
+                httpCode: '401'
+                moreInformation: This server could not verify that you are authorized to access the URL
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Not Found
+                httpCode: '404'
+                moreInformation: No resources match requested URI
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Method Not Allowed
+                httpCode: '405'
+                moreInformation: The method is not allowed for the requested URL
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Unsupported Media Type
+                httpCode: '415'
+                moreInformation: Unsupported Content-Type
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                message: Unable to process your request
+                status: '500'
+                correlationId: q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8312352
+      x-codegen-request-body-name: body
+  /v2/payment/inquiry:
+    post:
+      tags:
+      - WorldLink v2
+      summary: WorldLink Payment Status Inquiry
+      description: CitiConnect WorldLink Payment Status Inquiry allows users to receive information about payments initiated and intermediate processing statuses in real time until the payment is complete.
+      operationId: PaymentStatusInquiries
+      parameters:
+      - name: client_id
+        in: query
+        description: unique identifier which created during onboarding process
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Supports \"application/xml\" and \"application/json\".
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Request Body
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/PaymentInquiryRequest'
+            example: <?xml version="1.0" encoding="UTF-8"?><PaymentInquiryRequest><EndToEndId>WL2020010701</EndToEndId><WLClientID>583700001</WLClientID></PaymentInquiryRequest>
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentInquiryRequest'
+            example:
+              EndToEndId: WL2020010701
+              WLClientID: '583700001'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/paymentStatusInquiryResponse'
+              example: <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><CstmrPmtStsRpt><GrpHdr><MsgId>213276961672</MsgId><CreDtTm>2026-01-13T06:44:05Z</CreDtTm><InitgPty><Nm>BNP SECURITIES SERVICES PRIVATE LIMITED</Nm><Id><PrvtId><Othr><Id>24884</Id></Othr></PrvtId></Id></InitgPty></GrpHdr><OrgnlGrpInfAndSts><OrgnlMsgId>Not Available</OrgnlMsgId><OrgnlMsgNmId>Not Available</OrgnlMsgNmId></OrgnlGrpInfAndSts><OrgnlPmtInfAndSts><OrgnlPmtInfId>Not Applicable</OrgnlPmtInfId><TxInfAndSts><OrgnlInstrId>20JULMPY_0645A</OrgnlInstrId><OrgnlEndToEndId>20JULMPY_0645A</OrgnlEndToEndId><TxSts>ACCP</TxSts><ChrgsInf><Amt Ccy="EUR">0.02</Amt><Pty><FinInstnId><Othr><Id>CitiBank</Id></Othr></FinInstnId></Pty></ChrgsInf><AccptncDtTm>2021-07-27T00:00:00Z</AccptncDtTm><AcctSvcrRef>KL6KFI2UTDVM</AcctSvcrRef><OrgnlTxRef><IntrBkSttlmAmt Ccy="EUR">99.98</IntrBkSttlmAmt><Amt><InstdAmt Ccy="EUR">100</InstdAmt></Amt><IntrBkSttlmDt>2021-07-27</IntrBkSttlmDt><ReqdExctnDt>2021-07-27</ReqdExctnDt><PmtTpInf><SvcLvl><Cd>MPAY</Cd></SvcLvl></PmtTpInf><RmtInf><Ustrd>PAYMENT 1  PAYMENT 2  PAYMENT 3</Ustrd><Strd><RfrdDocAmt><AdjstmntAmtAndRsn><Amt Ccy="USD">0</Amt><Rsn>OFXR</Rsn><AddtlInf>1.1883</AddtlInf></AdjstmntAmtAndRsn><AdjstmntAmtAndRsn><Amt Ccy="USD">0</Amt><Rsn>RMET</Rsn><AddtlInf>B</AddtlInf></AdjstmntAmtAndRsn><AdjstmntAmtAndRsn><Amt Ccy="USD">0</Amt><Rsn>FXDT</Rsn><AddtlInf>2021-07-23 00:00:00.0</AddtlInf></AdjstmntAmtAndRsn><AdjstmntAmtAndRsn><Amt Ccy="USD">0</Amt><Rsn>FAWF</Rsn><AddtlInf>118.83</AddtlInf></AdjstmntAmtAndRsn><AdjstmntAmtAndRsn><Amt Ccy="USD">0</Amt><Rsn>OFXN</Rsn><AddtlInf>I02040</AddtlInf></AdjstmntAmtAndRsn><AdjstmntAmtAndRsn><Amt Ccy="USD">0</Amt><Rsn>BTB1</Rsn><AddtlInf>/ACC/STEP2</AddtlInf></AdjstmntAmtAndRsn><AdjstmntAmtAndRsn><Amt Ccy="USD">0</Amt><Rsn>FAMT</Rsn><AddtlInf>118.83</AddtlInf></AdjstmntAmtAndRsn><AdjstmntAmtAndRsn><Amt Ccy="USD">0</Amt><Rsn>FCCY</Rsn><AddtlInf>USD</AddtlInf></AdjstmntAmtAndRsn><AdjstmntAmtAndRsn><Amt Ccy="USD">0</Amt><Rsn>WLID</Rsn><AddtlInf>248840001</AddtlInf></AdjstmntAmtAndRsn></RfrdDocAmt></Strd></RmtInf><DbtrAgtAcct><Id><Othr><Id>11738569</Id></Othr></Id></DbtrAgtAcct><CdtrAgt><FinInstnId><BIC>CITIFIHXXXX</BIC></FinInstnId></CdtrAgt><Cdtr><Nm>Roger Federer</Nm><Id><OrgId><Othr><Id>20JULMPY_0645A</Id></Othr></OrgId></Id></Cdtr><CdtrAcct><Id><IBAN>FI4571308501080486</IBAN></Id></CdtrAcct></OrgnlTxRef></TxInfAndSts></OrgnlPmtInfAndSts></CstmrPmtStsRpt></Document>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/paymentStatusInquiryResponse'
+              examples:
+                Payment-Status-Inquiry-Response-Json:
+                  $ref: '#/components/examples/Payment-Status-Inquiry-Response-Json'
+        '400':
+          description: Bad Request
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <response><status>400</status><message>Mismatch of WorldLink Client ID or Client ID not maintained</message><correlationId>q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8312198</correlationId></response>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                correlationId: q2te~bd8e9b8f-d8e5-4a48-ad13-5d1ec8bb32e815587
+                message: Mismatch of WorldLink client ID or client ID is not maintained.
+                status: '400'
+        '401':
+          description: Unauthorized
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <errormessage><httpCode>401</httpCode><httpMessage>Invalid OAuth Token</httpMessage><moreInformation>Please use valid OAuth Token</moreInformation></errormessage>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Unauthorized
+                httpCode: '401'
+                moreInformation: This server could not verify that you are authorized to access the URL
+        '404':
+          description: Not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <errormessage><httpCode>404</httpCode><httpMessage>Not Found</httpMessage><moreInformation>No resources match requested URI</moreInformation></errormessage>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Not Found
+                httpCode: '404'
+                moreInformation: No resources match requested URI
+        '405':
+          description: Method Not Allowed
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <errormessage><httpCode>405</httpCode><httpMessage>Method Not Allowed</httpMessage><moreInformation>The method is not allowed for the requested URL</moreInformation></errormessage>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Method Not Allowed
+                httpCode: '405'
+                moreInformation: The method is not allowed for the requested URL
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <errormessage><httpCode>415</httpCode><httpMessage>Unsupported Media Type</httpMessage><moreInformation>Unsupported Content-Type</moreInformation></errormessage>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Unsupported Media Type
+                httpCode: '415'
+                moreInformation: Unsupported Content-Type
+        '500':
+          description: Internal Server Error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <Response><status>500</status><message>Unable to process your request</message><correlationId>q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8312352</correlationId></Response>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                message: Unable to process your request
+                status: '500'
+                correlationId: q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8312352
+      x-codegen-request-body-name: payment_status_inquiries
+  /v2/payment/validation:
+    post:
+      tags:
+      - WorldLink v2
+      summary: WorldLink Payment Upfront Validation
+      description: 'CitiConnect WorldLink Payment Upfront Validation allows you
+
+        to know upfront, the payment rules required to make payments within a certain
+
+        country or currency to avoid transaction rejection post submission.
+
+        This feature will provide the list of fields for a country for which you want
+
+        the payment rules to be applied.
+
+        For example, you can send a request for AU ACH and this API will respond with the rules for AU ACH.
+
+
+        This API is built on PIUID 949 rules which includes fields required for each country
+
+        and for each supported payment method.
+
+
+        **Content Type:** Supports application/xml or application/json.
+
+
+        **Authorization:** The OAuth Token prefixed with Bearer and space in between.
+
+
+        **Request:** Specify all mandatory values in the ISOXML V3 (pain.001.001.03) file at
+
+        a minimum.'
+      operationId: PaymentValidation
+      parameters:
+      - name: client_id
+        in: query
+        description: unique identifier which created during onboarding process
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Supports \"application/xml\" and \"application/json\".
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Contains the required fields of the ISOXML request body. The request body must be Base64 encoded and enclosed within the \<Request>\<paymentBase64> tags.
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/ValidationRequest'
+            example: <?xml version="1.0" encoding="utf-8"?><Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"><CstmrCdtTrfInitn><GrpHdr><MsgId>Wire_SZD_API_1401</MsgId><CreDtTm>2020-02-20T09:30:47</CreDtTm><NbOfTxs>1</NbOfTxs><CtrlSum>200</CtrlSum><InitgPty><Nm>MSA ILE DE FRANCE</Nm><PstlAdr><AdrTp>ADDR</AdrTp><Dept>Dept001</Dept><SubDept>Subdept001</SubDept><StrtNm>street name01</StrtNm><BldgNb>113232370123456</BldgNb><PstCd>7777777</PstCd><TwnNm>townname1townname1townna</TwnNm><CtrySubDvsn>subdivctry01</CtrySubDvsn><Ctry>GB</Ctry></PstlAdr><Id><OrgId><Othr><Id>248840001</Id></Othr></OrgId></Id><CtryOfRes>TR</CtryOfRes><CtctDtls><Nm>Client5</Nm></CtctDtls></InitgPty></GrpHdr><PmtInf><PmtInfId>Wire_SZD_FD_API_1401</PmtInfId><PmtMtd>TRF</PmtMtd><ReqdExctnDt>2020-07-22</ReqdExctnDt><Dbtr><Nm>MSA ILE DE FRANCE</Nm><PstlAdr><AdrTp>ADDR</AdrTp><Dept>Dept001</Dept><StrtNm>street name01</StrtNm><BldgNb>113232370123456</BldgNb><PstCd>7777777</PstCd><TwnNm>townname1</TwnNm><CtrySubDvsn>subdivctry01</CtrySubDvsn><Ctry>SZ</Ctry></PstlAdr></Dbtr><DbtrAcct><Id><Othr><Id>789652</Id></Othr></Id><Ccy>CAD</Ccy></DbtrAcct><DbtrAgt><FinInstnId><BIC>CITICA5AXXX</BIC><Othr><Id>248840001</Id></Othr></FinInstnId></DbtrAgt><CdtTrfTxInf><PmtId><InstrId>SN41741M</InstrId><EndToEndId>SN41741M</EndToEndId></PmtId><PmtTpInf><SvcLvl><Cd>URGP</Cd></SvcLvl><CtgyPurp><Cd>OTHR</Cd></CtgyPurp></PmtTpInf><Amt><InstdAmt Ccy="EUR">200</InstdAmt></Amt><ChrgBr>SHAR</ChrgBr><CdtrAgt><FinInstnId><BIC>SOGEADPPXXX</BIC><Nm>Bene Bank Name</Nm><PstlAdr><StrtNm>Wellsprings Renaissanc</StrtNm><BldgNb>Building No 02</BldgNb><PstCd>71492</PstCd><TwnNm>Newtownships</TwnNm><Ctry>AD</Ctry></PstlAdr></FinInstnId></CdtrAgt><Cdtr><Nm>Rehan</Nm><PstlAdr><AdrTp>HOME</AdrTp><StrtNm>Mumbai</StrtNm><BldgNb>113232123456</BldgNb><Ctry>AD</Ctry></PstlAdr></Cdtr><CdtrAcct><Id><IBAN>AD1200012030200359100100</IBAN></Id></CdtrAcct><RmtInf><Ustrd>12796190145799300</Ustrd></RmtInf></CdtTrfTxInf></PmtInf></CstmrCdtTrfInitn></Document>
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRequest'
+            examples:
+              Payment-Validation-Request-Json:
+                $ref: '#/components/examples/Payment-Validation-Request-Json'
+        required: true
+      responses:
+        '200':
+          description: 200 OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Document'
+              example: <?xml version="1.0" encoding="utf-8"?><Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><CstmrPmtStsRpt><GrpHdr><MsgId>Wire_SZD_API_1401</MsgId><CreDtTm>2020-02-20T09:30:47</CreDtTm><InitgPty><Nm>MSA ILE DE FRANCE</Nm><PstlAdr><AdrTp>ADDR</AdrTp><Dept>Dept001</Dept><SubDept>Subdept001</SubDept><StrtNm>street name01</StrtNm><BldgNb>113232370123456</BldgNb><PstCd>7777777</PstCd><TwnNm>townname1townname1townna</TwnNm><CtrySubDvsn>subdivctry01</CtrySubDvsn><Ctry>GB</Ctry></PstlAdr><Id><OrgId><Othr><Id>248840001</Id></Othr></OrgId></Id><CtryOfRes>TR</CtryOfRes><CtctDtls><Nm>Client5</Nm></CtctDtls></InitgPty></GrpHdr><OrgnlGrpInfAndSts><OrgnlMsgId>Wire_SZD_API_1401</OrgnlMsgId><OrgnlMsgNmId>Pain.001.001.03</OrgnlMsgNmId><OrgnlCreDtTm>2020-02-20T09:30:47</OrgnlCreDtTm><OrgnlNbOfTxs>1</OrgnlNbOfTxs><OrgnlCtrlSum>200</OrgnlCtrlSum></OrgnlGrpInfAndSts><OrgnlPmtInfAndSts><OrgnlPmtInfId>Wire_SZD_FD_API_1401</OrgnlPmtInfId><TxInfAndSts><OrgnlInstrId>SN41741M</OrgnlInstrId><OrgnlEndToEndId>SN41741M</OrgnlEndToEndId><TxSts>ACCP</TxSts><OrgnlTxRef><Amt><InstdAmt Ccy="EUR">200</InstdAmt></Amt><ReqdExctnDt>2020-07-22</ReqdExctnDt><PmtTpInf><SvcLvl><Cd>URGP</Cd></SvcLvl><CtgyPurp><Cd>OTHR</Cd></CtgyPurp></PmtTpInf><PmtMtd>TRF</PmtMtd><RmtInf><Ustrd>12796190145799300</Ustrd></RmtInf><Dbtr><Nm>MSA ILE DE FRANCE</Nm><PstlAdr><AdrTp>ADDR</AdrTp><Dept>Dept001</Dept><StrtNm>street name01</StrtNm><BldgNb>113232370123456</BldgNb><PstCd>7777777</PstCd><TwnNm>townname1</TwnNm><CtrySubDvsn>subdivctry01</CtrySubDvsn><Ctry>SZ</Ctry></PstlAdr></Dbtr><DbtrAcct><Id><Othr><Id>789652</Id></Othr></Id><Ccy>CAD</Ccy></DbtrAcct><DbtrAgt><FinInstnId><BIC>CITICA5AXXX</BIC><Othr><Id>248840001</Id></Othr></FinInstnId></DbtrAgt><CdtrAgt><FinInstnId><BIC>SOGEADPPXXX</BIC><Nm>Bene Bank Name</Nm><PstlAdr><StrtNm>Wellsprings Renaissanc</StrtNm><BldgNb>Building No 02</BldgNb><PstCd>71492</PstCd><TwnNm>Newtownships</TwnNm><Ctry>AD</Ctry></PstlAdr></FinInstnId></CdtrAgt><Cdtr><Nm>Rehan</Nm><PstlAdr><AdrTp>HOME</AdrTp><StrtNm>Mumbai</StrtNm><BldgNb>113232123456</BldgNb><Ctry>AD</Ctry></PstlAdr></Cdtr><CdtrAcct><Id><IBAN>AD1200012030200359100100</IBAN></Id></CdtrAcct></OrgnlTxRef></TxInfAndSts></OrgnlPmtInfAndSts></CstmrPmtStsRpt></Document>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+              examples:
+                Payment-Validation-Response-Json:
+                  $ref: '#/components/examples/Payment-Validation-Response-Json'
+        '400':
+          description: Bad Request
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <response><status>400</status><message>Mismatch of WorldLink Client ID or Client ID not maintained</message><correlationId>q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8312198</correlationId></response>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                correlationId: q2te~bd8e9b8f-d8e5-4a48-ad13-5d1ec8bb32e815587
+                message: Mismatch of WorldLink client ID or client ID is not maintained.
+                status: '400'
+        '401':
+          description: Unauthorized
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <errormessage><httpCode>401</httpCode><httpMessage>Invalid OAuth Token</httpMessage><moreInformation>Please use valid OAuth Token</moreInformation></errormessage>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Unauthorized
+                httpCode: '401'
+                moreInformation: This server could not verify that you are authorized to access the URL
+        '404':
+          description: Not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <errormessage><httpCode>404</httpCode><httpMessage>Not Found</httpMessage><moreInformation>No resources match requested URI</moreInformation></errormessage>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Not Found
+                httpCode: '404'
+                moreInformation: No resources match requested URI
+        '405':
+          description: Method Not Allowed
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <errormessage><httpCode>405</httpCode><httpMessage>Method Not Allowed</httpMessage><moreInformation>The method is not allowed for the requested URL</moreInformation></errormessage>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Method Not Allowed
+                httpCode: '405'
+                moreInformation: The method is not allowed for the requested URL
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <errormessage><httpCode>415</httpCode><httpMessage>Unsupported Media Type</httpMessage><moreInformation>Unsupported Content-Type</moreInformation></errormessage>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                httpMessage: Unsupported Media Type
+                httpCode: '415'
+                moreInformation: Unsupported Content-Type
+        '500':
+          description: Internal Server Error
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example: <Response><status>500</status><message>Unable to process your request</message><correlationId>q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8312352</correlationId></Response>
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error-Message'
+              example:
+                message: Unable to process your request
+                status: '500'
+                correlationId: q2te~8b8b4912-1b37-449a-9e1a-3401d7ab7d8312352
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    PaymentInquiryRequest:
+      required:
+      - EndToEndId
+      - WLClientID
+      type: object
+      properties:
+        EndToEndId:
+          maxLength: 35
+          pattern: '[a-zA-Z0-9&#95;]*'
+          type: string
+          description: Unique identification assigned by the initiating party to clearly identify the transaction. This Identification is passed on, unchanged, throughout the entire end-to-end chain.
+          example: API_2WAY_WIRE_01
+        WLClientID:
+          maxLength: 35
+          pattern: '[a-zA-Z0-9]*'
+          type: string
+          description: Client ID to uniquely identify the transaction along with transaction reference number.
+          example: '000000001'
+        WLRef:
+          maxLength: 12
+          pattern: '[a-zA-Z0-9]*'
+          type: string
+          description: WorldLink generated unique reference number received in WorldLink Payment Initiation response
+          example: KH80FI20GBY4
+        CreDtTm:
+          type: string
+          description: Date when the payment initiation started. The date format is YYYY-MM-DD.
+          format: date
+          example: '2020-09-12'
+        ReqdExctnDt:
+          type: string
+          description: The date that the initiating party requests that the clearing agent process the payment.
+          format: date
+          example: '2017-09-05'
+        InstdAmt:
+          type: object
+          description: This represents the amount of money transferred between the debtor and the creditor before any deduction of charges is made. This is expressed in the currency that is specified by the initiating party.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmountStatusInquiry'
+        EqvtAmt:
+          required:
+          - Amt
+          - CcyOfTrf
+          type: object
+          properties:
+            Amt:
+              type: object
+              description: Amount of money
+              allOf:
+              - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmountStatusInquiry'
+            CcyOfTrf:
+              type: object
+              description: Specifies the currency of the to be transferred amount, which is different from the currency of the debtor's account.
+              allOf:
+              - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+          description: Partner can send either Payment Amount or Equivalent Amount and not both
+      description: Payment Status Inquiries Inputs
+    StatusReason6Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Reason for the status, as published in an external reason code list.
+        Prtry:
+          type: object
+          description: Reason for the status, in a proprietary form.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Specifies the reason for the status report. Either Code or Proprietary field value should be passed on request.
+    AmountType3Choice:
+      type: object
+      properties:
+        EqvtAmt:
+          $ref: '#/components/schemas/EquivalentAmount2'
+        InstdAmt:
+          type: object
+          description: Amount of money to be moved between the debtor and creditor, before deduction of charges, expressed in the currency as ordered by the initiating party.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+      description: Amount of money to be moved between the debtor and creditor, before deduction of charges, expressed in the currency as ordered by the initiating party. Either EqvtAmt or InstdAmt field value should be passed on request.
+    disclosure_request:
+      type: object
+      properties:
+        in:
+          required:
+          - bankCode
+          - bankCodeType
+          - chargeCode
+          - clientId
+          - destinationCountry
+          - estimatePercentile
+          - flagFutureDated
+          - flagODE
+          - fundingCurrency
+          - isBeneDeduct
+          - nonSTPFlag
+          - paymentCurrency
+          - paymentCurrencyAmount
+          - paymentMethod
+          - releaseTime
+          - valueDate
+          - subEntityId
+          - beneDeductFeeType
+          - nostroCountry
+          type: object
+          properties:
+            clientId:
+              maxLength: 5
+              type: string
+              description: WorldLink specific client number if using WorldLink routing.
+            subEntityId:
+              maxLength: 4
+              type: string
+              description: WorldLink Branch (Sub entity number).
+            destinationCountry:
+              maxLength: 2
+              type: string
+              description: Value any country through or to which CITI transfers money via Fed Wire or ACH.
+            destinationState:
+              maxLength: 35
+              type: string
+              description: Destination State. If the full state or province is available it may be passed here. If this is in the database it will return the value, otherwise it will default. This entry is for tax calculation only.
+            destinationCity:
+              maxLength: 35
+              type: string
+              description: Destination City. If the full City is available it may be passed here.  If this is in the database it will return the value, otherwise it will default. This entry is for tax calculation only.
+            bankCode:
+              maxLength: 20
+              type: string
+              description: ID of bank through which money can be sent. This is used in conjunction with Bank Code Type.
+            bankCodeType:
+              maxLength: 1
+              type: string
+              description: This is used in conjunction with Bank Code B-BIC.
+            paymentMethod:
+              maxLength: 1
+              type: string
+              description: As a default pass 'W'ire W (wire), A (ACH), C (Cash)
+            paymentCurrency:
+              maxLength: 3
+              type: string
+              description: Payment currency SWIFT(ISO) code.
+            fundingCurrency:
+              maxLength: 3
+              type: string
+              description: Funding currency SWIFT(ISO) code.
+            paymentCurrencyAmount:
+              type: number
+              description: Decimals dependent on currency number 19,3 .Between 0.00 and 9999999999999999.999
+            nonSTPFlag:
+              maxLength: 1
+              type: string
+              description: This will always default to ‘N’  for straight through processing. Always pass ‘N’.
+            citiPointOfOrigination:
+              maxLength: 2
+              type: string
+              description: Location of Nostro account or US. Allowable Value(2 characters) or space. Not allowed unless bank code is present. This tag may be used if the client is not routing through the WorldLink Omnibus accounts. Use of this value is to be coordinated with the DF Table administrator.
+            isBeneDeduct:
+              maxLength: 1
+              type: string
+              description: Accesses Bene Deduct table if Yes [Y]. Client should pass 'Y' if they know bene deduct fees are being applied.
+              enum:
+              - Y
+              - N
+            beneDeductFeeType:
+              maxLength: 1
+              type: string
+              description: Flat(F) or Tiered(T). Value must be present if Bene Deduct indicator is Y. Spaces or no tag transmitted if Bene Deduct is N.
+              enum:
+              - F
+              - T
+            estimatePercentile:
+              type: integer
+              description: Estimate Percentile (80, 90 or 95) (required in case fee found is estimated, the API will return the appropriate value)
+            chargeCode:
+              maxLength: 3
+              type: string
+              description: 'BEN -- fees charged to beneficiaries
+
+                SHA -- fees shared
+
+                OUR -- Fees by bank/RTP
+
+                '
+            releaseTime:
+              type: string
+              description: 'Time that transactions will be released after the designated hold period. Format: yyyy-mm-ddThh:mm:ss.'
+            nostroCountry:
+              type: string
+              description: Valid two digit country code.
+            flagODE:
+              type: string
+              description: Our Deduct Flag. Both isBeneDeduct and flagODE, can't be Y, at the same time. When flagODE is Y, ChargeCode can't be anything other than OUR
+              enum:
+              - Y
+              - N
+            valueDate:
+              type: string
+              description: Value date for the payment.
+              format: date
+            flagFutureDated:
+              maxLength: 1
+              type: string
+              description: Indicates whether it is future dated transaction.
+              enum:
+              - Y
+              - N
+          example:
+            clientId: '24884'
+            subEntityId: '0001'
+            destinationCountry: IN
+            destinationState: AK
+            destinationCity: ANCHORAGE
+            bankCode: CITIIN00
+            bankCodeType: B
+            paymentMethod: W
+            paymentCurrency: INR
+            fundingCurrency: USD
+            paymentCurrencyAmount: 100
+            nonSTPFlag: N
+            isBeneDeduct: Y
+            citiPointOfOrigination: US
+            estimatePercentile: 95
+            chargeCode: OPT
+            releaseTime: '2019-11-28T16:11:23.000'
+            nostroCountry: AU
+            valueDate: '2019-11-28'
+            flagFutureDated: N
+            flagODE: Y
+            beneDeductFeeType: F
+    ActiveOrHistoricCurrencyAndAmount_SimpleType:
+      maxLength: 18
+      type: string
+      description: 'The number of fractional digits (or minor unit of currency) must comply with ISO 4217. Note: The decimal separator is a dot.A number of monetary units specified in an active or a historic currency where the unit of currency is explicit and compliant with ISO 4217. The number of fractional digits should be 5.'
+    SettlementMethod1Code:
+      type: string
+      description: 'Method used to settle the (batch of) payment instructions. <br><br><b>INDA</b> : Settlement is done by the agent instructed to execute a payment instruction. <br><br><b>INGA</b> : Settlement is done by the agent instructing and forwarding the payment to the next party in the payment chain. <br><br><b>COVE</b> : Settlement is done through a cover payment. <br><br><b>CLRG</b> : Settlement is done through a payment clearing system.'
+      enum:
+      - INDA
+      - INGA
+      - COVE
+      - CLRG
+    CreditorReferenceType1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/DocumentType3Code'
+        Prtry:
+          type: object
+          description: Creditor reference type, in a proprietary form.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Coded or proprietary format creditor reference type. Either Code or Proprietary field value should be passed on request.
+    Max140Text:
+      maxLength: 140
+      minLength: 1
+      type: string
+    Max35Text:
+      maxLength: 35
+      minLength: 1
+      type: string
+    ReferredDocumentInformation3:
+      type: object
+      properties:
+        Nb:
+          type: object
+          description: Unique and unambiguous identification of the referred document.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        RltdDt:
+          type: object
+          description: Date associated with the referred document.
+          allOf:
+          - $ref: '#/components/schemas/ISODate'
+        Tp:
+          $ref: '#/components/schemas/ReferredDocumentType2'
+    StatusReasonInformation8:
+      type: object
+      properties:
+        Orgtr:
+          type: object
+          description: Party that issues the status.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        Rsn:
+          $ref: '#/components/schemas/StatusReason6Choice'
+        AddtlInf:
+          type: array
+          description: Further details on the status reason.
+          items:
+            $ref: '#/components/schemas/Max105Text'
+    DateAndPlaceOfBirth:
+      required:
+      - BirthDt
+      - CityOfBirth
+      - CtryOfBirth
+      type: object
+      properties:
+        BirthDt:
+          type: object
+          description: Date on which a person is born.
+          allOf:
+          - $ref: '#/components/schemas/ISODate'
+        PrvcOfBirth:
+          type: object
+          description: Province where a person was born.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        CityOfBirth:
+          type: object
+          description: City where a person was born.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        CtryOfBirth:
+          type: object
+          description: Country where a person was born.
+          allOf:
+          - $ref: '#/components/schemas/CountryCode'
+      description: Date and place of birth of a person.
+    StructuredRemittanceInformation7:
+      type: object
+      properties:
+        AddtlRmtInf:
+          maxItems: 3
+          type: array
+          description: Additional information, in free text form, to complement the structured remittance information.
+          items:
+            $ref: '#/components/schemas/Max140Text'
+        CdtrRefInf:
+          $ref: '#/components/schemas/CreditorReferenceInformation2'
+        Invcee:
+          type: object
+          description: Identification of the party to whom an invoice is issued, when it is different from the debtor or ultimate debtor.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        Invcr:
+          type: object
+          description: Identification of the organisation issuing the invoice, when it is different from the creditor or ultimate creditor.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        RfrdDocAmt:
+          $ref: '#/components/schemas/RemittanceAmount1'
+        RfrdDocInf:
+          type: array
+          description: Set of elements used to identify the documents referred to in the remittance information.
+          items:
+            $ref: '#/components/schemas/ReferredDocumentInformation3'
+    ActiveOrHistoricCurrencyCode:
+      pattern: '[A-Z]{3,3}'
+      type: string
+    Max15NumericText:
+      pattern: '[0-9]{1,15}'
+      type: string
+    RemittanceAmount1:
+      type: object
+      properties:
+        AdjstmntAmtAndRsn:
+          type: array
+          description: Set of elements used to provide information on the amount and reason of the document adjustment.
+          items:
+            $ref: '#/components/schemas/DocumentAdjustment1'
+        CdtNoteAmt:
+          type: object
+          description: Amount specified for the referred document is the amount of a credit note.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        DscntApldAmt:
+          type: object
+          description: Amount of money that results from the application of an agreed discount to the amount due and payable to the creditor.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        DuePyblAmt:
+          type: object
+          description: Amount specified is the exact amount due and payable to the creditor.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        RmtdAmt:
+          type: object
+          description: Amount of money remitted for the referred document.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        TaxAmt:
+          type: object
+          description: Quantity of cash resulting from the calculation of the tax.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+      description: Set of elements used to provide details on the amounts of the referred document.
+    Max16Text:
+      maxLength: 16
+      minLength: 1
+      type: string
+    MandateRelatedInformation6:
+      type: object
+      properties:
+        MndtId:
+          type: object
+          description: Unique identification, as assigned by the creditor, to unambiguously identify the mandate.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        AmdmntInd:
+          type: boolean
+          description: Indicator notifying whether the underlying mandate is amended or not.
+        AmdmntInfDtls:
+          $ref: '#/components/schemas/AmendmentInformationDetails6'
+        ElctrncSgntr:
+          maxLength: 1025
+          minLength: 1
+          type: string
+          description: Additional security provisions, such as a digital signature, as provided by the debtor.
+        DtOfSgntr:
+          type: string
+          description: Date on which the direct debit mandate has been signed by the debtor.
+          format: date
+        FrstColltnDt:
+          type: string
+          description: Date of the first collection of a direct debit as per the mandate.
+          format: date
+        FnlColltnDt:
+          type: string
+          description: Date of the final collection of a direct debit as per the mandate.
+          format: date
+        Frqcy:
+          $ref: '#/components/schemas/Frequency1Code'
+      description: Set of elements used to provide further details of the mandate signed between the creditor and the debtor.
+    SettlementInformation13:
+      required:
+      - SttlmMtd
+      type: object
+      properties:
+        SttlmMtd:
+          $ref: '#/components/schemas/SettlementMethod1Code'
+        SttlmAcct:
+          type: object
+          description: A specific purpose account used to post debit and credit entries as a result of the transaction.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        InstgRmbrsmntAgtAcct:
+          type: object
+          description: Unambiguous identification of the account of the instructing reimbursement agent account at its servicing agent in the payment chain.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        InstdRmbrsmntAgtAcct:
+          type: object
+          description: Unambiguous identification of the account of the instructed reimbursement agent account at its servicing agent in the payment chain.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        ThrdRmbrsmntAgtAcct:
+          type: object
+          description: Unambiguous identification of the account of the third reimbursement agent account at its servicing agent in the payment chain.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        InstgRmbrsmntAgt:
+          type: object
+          description: Agent through which the instructing agent will reimburse the instructed agent.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        InstdRmbrsmntAgt:
+          type: object
+          description: Agent at which the instructed agent will be reimbursed.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        ThrdRmbrsmntAgt:
+          type: object
+          description: Agent at which the instructed agent will be reimbursed.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        ClrSys:
+          $ref: '#/components/schemas/ClearingSystemIdentification3Choice'
+      description: Specifies the details on how the settlement of the original transaction(s) between the instructing agent and the instructed agent was completed.
+    PaymentTransactionInformation25:
+      type: object
+      properties:
+        StsId:
+          type: object
+          description: Unique identification, as assigned by an instructing party for an instructed party, to unambiguously identify the reported status.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlInstrId:
+          type: object
+          description: Unique identification, as assigned by the original instructing party for the original instructed party, to unambiguously identify the original instruction.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlEndToEndId:
+          type: object
+          description: Unique identification, as assigned by the original initiating party, to unambiguously identify the original transaction.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        TxSts:
+          $ref: '#/components/schemas/TransactionIndividualStatus3Code'
+        StsRsnInf:
+          type: array
+          description: Set of elements used to provide detailed information on the status reason.
+          items:
+            $ref: '#/components/schemas/StatusReasonInformation8'
+        ChrgsInf:
+          type: array
+          description: Provides information on the charges related to the processing of the rejection of the instruction.
+          items:
+            $ref: '#/components/schemas/ChargesInformation5'
+        AccptncDtTm:
+          type: string
+          description: Point in time when the payment order from the initiating party meets the processing conditions of the account servicing agent. This means that the account servicing agent has received the payment order and has applied checks such as authorisation, availability of funds.
+          format: date-time
+        AcctSvcrRef:
+          type: object
+          description: Unique reference, as assigned by the account servicing institution, to unambiguously identify the instruction.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        ClrSysRef:
+          type: object
+          description: Unique reference, as assigned by a clearing system, to unambiguously identify the instruction.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlTxRef:
+          $ref: '#/components/schemas/OriginalTransactionReference13'
+    ClearingSystemMemberIdentification2:
+      required:
+      - MmbId
+      type: object
+      properties:
+        ClrSysId:
+          type: object
+          properties:
+            Cd:
+              maxLength: 5
+              minLength: 1
+              type: string
+              description: It Specifies the clearing system identification code, as published in an external clearing system identification code list.
+            Prtry:
+              type: object
+              description: Identification code for a clearing system, that has not yet been identified in the list of clearing systems.
+              allOf:
+              - $ref: '#/components/schemas/Max35Text'
+          description: Specification of a pre-agreed offering between clearing agents or the channel through which the payment instruction is processed.Either from Code Or Proprietary is required
+        MmbId:
+          type: object
+          description: Identification of a member of a clearing system.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Information used to identify a member within a clearing system.
+    BranchData2:
+      type: object
+      properties:
+        Id:
+          type: object
+          description: Unique and unambiguous identification of a branch of a financial institution.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        Nm:
+          type: object
+          description: Name by which an agent is known and which is usually used to identify that agent.
+          allOf:
+          - $ref: '#/components/schemas/Max140Text'
+        PstlAdr:
+          $ref: '#/components/schemas/PostalAddress6'
+      description: Identifies a specific branch of a financial institution.
+    Max2048Text:
+      maxLength: 2048
+      minLength: 1
+      type: string
+    DocumentType3Code:
+      type: string
+      description: 'Type of creditor reference, in a coded form.<br><br><b>RADM</b> : Document is a remittance advice sent separately from the current transaction. <br><br><b>RPIN</b> : Document is a linked payment instruction to which the current payment instruction is related, for example, in a cover scenario. <br><br><b>FXDR</b> : Document is a pre-agreed or pre-arranged foreign exchange transaction to which the payment transaction refers. <br><br><b>DISP</b> : Document is a dispatch advice. <br><br><b>PUOR</b> : Document is a purchase order <br><br><b>SCOR</b> : Document is a structured communication reference provided by the creditor to identify the referred transaction.'
+      enum:
+      - RADM
+      - RPIN
+      - FXDR
+      - DISP
+      - PUOR
+      - SCOR
+    Priority2Code:
+      type: string
+      description: 'Indicator of the urgency or order of importance that the instructing party would like the instructed party to apply to the processing of the instruction.<br><br><b>HIGH</b> : Priority level is high. <br><br><b>NORM</b> : Priority level is normal.'
+      enum:
+      - HIGH
+      - NORM
+    CreditorReferenceInformation2:
+      type: object
+      properties:
+        Ref:
+          type: object
+          description: Unique reference, as assigned by the creditor, to unambiguously refer to the payment transaction.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        Tp:
+          $ref: '#/components/schemas/CreditorReferenceType2'
+      description: Reference information provided by the creditor to allow the identification of the underlying documents.
+    OrganisationIdentification4:
+      type: object
+      properties:
+        BICOrBEI:
+          pattern: '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
+          type: string
+          description: Code allocated to a financial institution or non financial institution by the ISO 9362 Registration Authority as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".
+        Othr:
+          type: array
+          description: Unique identification of an organisation, as assigned by an institution, using an identification scheme.
+          items:
+            $ref: '#/components/schemas/GenericOrganisationIdentification1'
+      description: Unique and unambiguous way to identify an organisation.
+    GroupHeader36:
+      required:
+      - CreDtTm
+      - MsgId
+      type: object
+      properties:
+        CreDtTm:
+          type: string
+          description: Date and time at which the message was created.
+          format: date-time
+        FwdgAgt:
+          type: object
+          description: Financial institution that receives the instruction from the initiating party and forwards it to the next agent in the payment chain.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        DbtrAgt:
+          type: object
+          description: Financial institution servicing an account for the debtor.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        CdtrAgt:
+          type: object
+          description: Financial institution servicing an account for the creditor.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        InitgPty:
+          type: object
+          description: Party that initiates the status message.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        MsgId:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Point to point reference, as assigned by the instructing party, and sent to the next party in the chain to unambiguously identify the message.
+      description: Set of characteristics shared by all individual transactions included in the message.
+    ValidationRequest:
+      required:
+      - paymentBase64
+      type: object
+      properties:
+        paymentBase64:
+          type: string
+          description: 'paymentBase64: ISO XML V3 (pain.001.001.03) file has to be converted to Base64 format and passed in <Request><paymentBase64> tags. Based on the use case, you should use one of the ISO schema. Use PACS schema for financial institutions and PAIN format for non-financial clients. ISO schema can be refered from below URL
+
+            pain.001.001.03 - https://www.iso20022.org/message/14316/download or #/definitions/Pain001
+
+            '
+          example: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjxEb2N1bWVudCB4bWxuczp4c2k9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4bWxucz0idXJuOmlzbzpzdGQ6aXNvOjIwMDIyOnRlY2g6eHNkOnBhaW4uMDAxLjAwMS4wMyI+DQogIDxDc3RtckNkdFRyZkluaXRuPg0KICAgIDxHcnBIZHI+DQogICAgICA8TXNnSWQ+R0JQMTYxMTE0Njk0ODY5PC9Nc2dJZD4NCiAgICAgIDxDcmVEdFRtPjIwMTctMDYtMDJUMTA6MTc6NTU8L0NyZUR0VG0+DQogICAgICA8TmJPZlR4cz4xPC9OYk9mVHhzPg0KICAgICAgPEN0cmxTdW0+MS4wMDwvQ3RybFN1bT4NCiAgICAgIDxJbml0Z1B0eT4NCiAgICAgICAgPE5tPkh1ZHNvbiBBZHZpc29ycyBFdXJvcGUgTHRkPC9ObT4NCiAgICAgIDwvSW5pdGdQdHk+DQogICAgPC9HcnBIZHI+DQogICAgPFBtdEluZj4NCiAgICAgIDxQbXRJbmZJZD4xNDAxNzQ5OCBGdW5kIFRyYW5zZmVyIERvbWVzdGljPC9QbXRJbmZJZD4NCiAgICAgIDxQbXRNdGQ+VFJGPC9QbXRNdGQ+DQogICAgICA8TmJPZlR4cz4xPC9OYk9mVHhzPg0KICAgICAgPEN0cmxTdW0+MS4wMDwvQ3RybFN1bT4NCiAgICAgIDxQbXRUcEluZj4NCiAgICAgICAgPFN2Y0x2bD4NCiAgICAgICAgICA8Q2Q+VVJHUDwvQ2Q+DQogICAgICAgIDwvU3ZjTHZsPg0KICAgICAgPC9QbXRUcEluZj4NCiAgICAgIDxSZXFkRXhjdG5EdD4yMDE5LTA4LTIwPC9SZXFkRXhjdG5EdD4NCiAgICAgIDxEYnRyPg0KICAgICAgICA8Tm0+Q0lUSUJBTksgRS1CVVNJTkVTUyBFVVIgRFVNIERFTU88L05tPg0KICAgICAgICA8UHN0bEFkcj4NCiAgICAgICAgICA8Q3RyeT5HQjwvQ3RyeT4NCiAgICAgICAgPC9Qc3RsQWRyPg0KICAgICAgICA8SWQ+DQogICAgICAgICAgPE9yZ0lkPg0KICAgICAgICAgICAgPEJJQ09yQkVJPkNJVElHQjJMPC9CSUNPckJFST4NCiAgICAgICAgICA8L09yZ0lkPg0KICAgICAgICA8L0lkPg0KICAgICAgPC9EYnRyPg0KICAgICAgPERidHJBY2N0Pg0KICAgICAgICA8SWQ+DQogICAgICAgICAgPE90aHI+DQogICAgICAgICAgICA8SWQ+MTAwMTIyNjI8L0lkPg0KICAgICAgICAgIDwvT3Rocj4NCiAgICAgICAgPC9JZD4NCiAgICAgICAgPENjeT5VU0Q8L0NjeT4NCiAgICAgIDwvRGJ0ckFjY3Q+DQogICAgICA8RGJ0ckFndD4NCiAgICAgICAgPEZpbkluc3RuSWQ+DQogICAgICAgICAgPEJJQz5DSVRJR0IyTDwvQklDPg0KICAgICAgICAgIDxQc3RsQWRyPg0KICAgICAgICAgICAgPEN0cnk+R0I8L0N0cnk+DQogICAgICAgICAgPC9Qc3RsQWRyPg0KICAgICAgICA8L0Zpbkluc3RuSWQ+DQogICAgICA8L0RidHJBZ3Q+DQogICAgICA8Q2hyZ0JyPkRFQlQ8L0NocmdCcj4NCiAgICAgIDxDZHRUcmZUeEluZj4NCiAgICAgICAgPFBtdElkPg0KICAgICAgICAgIDxFbmRUb0VuZElkPlBBMjAxODIwMTkxMjwvRW5kVG9FbmRJZD4NCiAgICAgICAgPC9QbXRJZD4NCiAgICAgICAgPEFtdD4NCiAgICAgICAgICA8SW5zdGRBbXQgQ2N5PSJVU0QiPjEuMDA8L0luc3RkQW10Pg0KICAgICAgICA8L0FtdD4NCiAgICAgICAgPFVsdG10RGJ0cj4NCiAgICAgICAgICA8SWQ+DQogICAgICAgICAgICA8UHJ2dElkPg0KICAgICAgICAgICAgICA8T3Rocj4NCiAgICAgICAgICAgICAgICA8SWQ+UEFSVElDSVBBTlQgSUQgUE9CTyBVSyBCUjYwMCAwMTIzNDU8L0lkPg0KICAgICAgICAgICAgICAgIDxTY2htZU5tPg0KICAgICAgICAgICAgICAgICAgPFBydHJ5PklOU1Q8L1BydHJ5Pg0KICAgICAgICAgICAgICAgIDwvU2NobWVObT4NCiAgICAgICAgICAgICAgPC9PdGhyPg0KICAgICAgICAgICAgPC9QcnZ0SWQ+DQogICAgICAgICAgPC9JZD4NCiAgICAgICAgPC9VbHRtdERidHI+DQogICAgICAgIDxDZHRyQWd0Pg0KICAgICAgICAgIDxGaW5JbnN0bklkPg0KICAgICAgICAgICAgPEJJQz5DSVRJR0IyTDwvQklDPg0KICAgICAgICAgICAgPENsclN5c01tYklkPg0KICAgICAgICAgICAgICA8TW1iSWQ+MTg1MDA4PC9NbWJJZD4NCiAgICAgICAgICAgIDwvQ2xyU3lzTW1iSWQ+DQogICAgICAgICAgICA8Tm0+Q0lUSUJBTksoSVNPKTwvTm0+DQogICAgICAgICAgICA8UHN0bEFkcj4NCiAgICAgICAgICAgICAgPEN0cnk+R0I8L0N0cnk+DQogICAgICAgICAgICA8L1BzdGxBZHI+DQogICAgICAgICAgPC9GaW5JbnN0bklkPg0KICAgICAgICA8L0NkdHJBZ3Q+DQogICAgICAgIDxDZHRyPg0KICAgICAgICAgIDxObT44MDEwNjQzMTIyWCBYWFhYWFhYWFhYWFhYIFhYWDwvTm0+DQogICAgICAgICAgPFBzdGxBZHI+DQogICAgICAgICAgICA8Q3RyeT5HQjwvQ3RyeT4NCiAgICAgICAgICA8L1BzdGxBZHI+DQogICAgICAgICAgPEN0Y3REdGxzPg0KICAgICAgICAgICAgPE5tPldEVyAzIElOVkVTVE1FTlRTIExJTUlURUQ8L05tPg0KICAgICAgICAgIDwvQ3RjdER0bHM+DQogICAgICAgIDwvQ2R0cj4NCiAgICAgICAgPENkdHJBY2N0Pg0KICAgICAgICAgIDxJZD4NCiAgICAgICAgICA8T3Rocj4NCiAgICAgICAgICAgICAgICAgICA8SWQ+MTAwMTIyNjI8L0lkPg0KICAgICAgICAgICAgICAgICAgPC9PdGhyPg0KICAgICAgICAgIDwvSWQ+DQogICAgICAgIDwvQ2R0ckFjY3Q+DQogICAgICAgIDxSbXRJbmY+DQogICAgICAgICAgPFVzdHJkPlRSMDAyNjM4PC9Vc3RyZD4NCiAgICAgICAgPC9SbXRJbmY+DQogICAgICA8L0NkdFRyZlR4SW5mPg0KICAgIDwvUG10SW5mPg0KICA8L0NzdG1yQ2R0VHJmSW5pdG4+DQo8L0RvY3VtZW50Pg==
+      description: Object representing payment initiation request. ISO schema can be found at https://www.iso20022.org/catalogue-messages/iso-20022-messages-archive?page=4  and select Payments Initiation V03 and Payments Clearing and Settlement V09 then select more and download mdr file for detailed information on schema and  xsd schema definitions.
+      xml:
+        name: Request
+    CreditDebitCode:
+      type: string
+      description: 'Specifies whether the adjustment must be subtracted or added to the total amount.<br><br><b>CRDT</b> : Operation is an increase. <br><br><b>DBIT</b> : Operation is a decrease.'
+      enum:
+      - CRDT
+      - DBIT
+    OriginalPaymentInformation1:
+      required:
+      - OrgnlPmtInfId
+      type: object
+      properties:
+        OrgnlPmtInfId:
+          type: object
+          description: Unique identification, as assigned by the original sending party, to unambiguously identify the original payment information group.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlNbOfTxs:
+          type: object
+          description: Number of individual transactions contained in the original payment information group.
+          allOf:
+          - $ref: '#/components/schemas/Max15NumericText'
+        OrgnlCtrlSum:
+          maxLength: 18
+          type: string
+          description: Total of all individual amounts included in the original payment information group, irrespective of currencies. The number of fractional digits should not be more than 17.
+        PmtInfSts:
+          type: object
+          description: 'Specifies the status of the payment information group.<br><br><b>ACTC</b> : Authentication and syntactical and semantical validation are successful. <br><br><b>RCVD</b> : Payment initiation has been received by the receiving agent. <br><br><b>PART</b> : A number of transactions have been accepted, whereas another number of transactions have not yet achieved ''accepted'' status. <br><br><b>RJCT</b> : Payment initiation or individual transaction included in the payment initiation has been rejected.<br><br><b>PDNG</b> : Payment initiation or individual transaction included in the payment initiation is pending. Further checks and status update will be performed.<br><br><b>ACCP</b> : Preceding check of technical validation was successful. Customer profile check was also successful.<br><br><b>ACSP</b> : All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution.<br><br><b>ACSC</b> : Settlement on the debtor''s account has been completed. Usage : this can be used by the first agent to report to the debtor that the transaction has been completed. Warning : this status is provided for transaction status reasons, not for financial information. It can only be used after bilateral agreement<br><br><b>ACWC</b> : Instruction is accepted but a change will be made, such as date or remittance not sent.'
+          allOf:
+          - $ref: '#/components/schemas/TransactionGroupStatus3Code'
+        StsRsnInf:
+          type: array
+          description: Set of elements used to provide detailed information on the status reason.
+          items:
+            $ref: '#/components/schemas/StatusReasonInformation8'
+        NbOfTxsPerSts:
+          type: array
+          description: Detailed information on the number of transactions for each identical transaction status.
+          items:
+            $ref: '#/components/schemas/NumberOfTransactionsPerStatus3'
+        TxInfAndSts:
+          type: array
+          description: Payment transaction information and status.
+          items:
+            $ref: '#/components/schemas/PaymentTransactionInformation25'
+    OriginalGroupInformation20:
+      required:
+      - OrgnlMsgId
+      - OrgnlMsgNmId
+      type: object
+      properties:
+        OrgnlMsgId:
+          type: object
+          description: Point to point reference, as assigned by the original instructing party, to unambiguously identify the original message.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlMsgNmId:
+          type: object
+          description: Specifies the original message name identifier to which the message refers.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlCreDtTm:
+          type: string
+          description: Date and time at which the original message was created.
+          format: date-time
+        OrgnlNbOfTxs:
+          type: object
+          description: Number of individual transactions contained in the original message.
+          allOf:
+          - $ref: '#/components/schemas/Max15NumericText'
+        OrgnlCtrlSum:
+          maxLength: 18
+          type: string
+          description: Total of all individual amounts included in the original message, irrespective of currencies. The number of fractional digits should not be more than 17.
+        GrpSts:
+          $ref: '#/components/schemas/TransactionGroupStatus3Code'
+        StsRsnInf:
+          type: array
+          description: Set of elements used to provide detailed information on the status reason.
+          items:
+            $ref: '#/components/schemas/StatusReasonInformation8'
+        NbOfTxsPerSts:
+          type: array
+          description: Detailed information on the number of transactions for each identical transaction status.
+          items:
+            $ref: '#/components/schemas/NumberOfTransactionsPerStatus3'
+      description: Original group information concerning the group of transactions, to which the status report message refers to.
+    OrganisationIdentificationSchemeName1Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Specifies the external organisation identification scheme name code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
+        Prtry:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Description for Proprietary
+      description: Name of the identification scheme.Sets of elements to identify a name of the organisation identification scheme. Either Code or Proprietary is required
+    GenericAccountIdentification1:
+      required:
+      - Id
+      type: object
+      properties:
+        Id:
+          maxLength: 34
+          minLength: 1
+          type: string
+          description: Identification assigned by an institution.
+        Issr:
+          type: object
+          description: Entity that assigns the identification.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        SchmeNm:
+          type: object
+          description: Name of the identification scheme.Either Code or Proprietary is required
+          allOf:
+          - $ref: '#/components/schemas/FinancialIdentificationSchemeName1Choice'
+      description: Unique identification of an account, as assigned by the account servicer, using an identification scheme.
+    ContactDetails2:
+      type: object
+      properties:
+        EmailAdr:
+          type: object
+          description: Address for electronic mail (e-mail).
+          allOf:
+          - $ref: '#/components/schemas/Max2048Text'
+        FaxNb:
+          type: object
+          description: Collection of information that identifies a FAX number, as defined by telecom services.
+          allOf:
+          - $ref: '#/components/schemas/PhoneNumber'
+        MobNb:
+          type: object
+          description: Collection of information that identifies a mobile phone number, as defined by telecom services.
+          allOf:
+          - $ref: '#/components/schemas/PhoneNumber'
+        Nm:
+          type: object
+          description: Name by which a party is known and which is usually used to identify that party.
+          allOf:
+          - $ref: '#/components/schemas/Max140Text'
+        NmPrfx:
+          $ref: '#/components/schemas/NamePrefix1Code'
+        Othr:
+          type: object
+          description: Contact details in another form.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        PhneNb:
+          type: object
+          description: Collection of information that identifies a phone number, as defined by telecom services.
+          allOf:
+          - $ref: '#/components/schemas/PhoneNumber'
+      description: Set of elements used to indicate how to contact the party.
+    GenericOrganisationIdentification1:
+      required:
+      - Id
+      type: object
+      properties:
+        Id:
+          maxLength: 35
+          minLength: 1
+          type: string
+        SchmeNm:
+          type: object
+          allOf:
+          - $ref: '#/components/schemas/OrganisationIdentificationSchemeName1Choice'
+        Issr:
+          maxLength: 35
+          minLength: 1
+          type: string
+      description: Unique identification of an organisation, as assigned by an institution, using an identification scheme.
+    DocumentAdjustment1:
+      required:
+      - Amt
+      type: object
+      properties:
+        AddtlInf:
+          type: object
+          description: Provides further details on the document adjustment.
+          allOf:
+          - $ref: '#/components/schemas/Max140Text'
+        Amt:
+          type: object
+          description: Amount of money of the document adjustment.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+        Rsn:
+          type: object
+          description: Specifies the reason for the adjustment.
+          allOf:
+          - $ref: '#/components/schemas/Max4Text'
+    ReferredDocumentType2:
+      required:
+      - CdOrPrtry
+      type: object
+      properties:
+        CdOrPrtry:
+          $ref: '#/components/schemas/ReferredDocumentType1Choice'
+        Issr:
+          type: object
+          description: Identification of the issuer of the reference document type.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Specifies the type of referred document.
+    CashAccount16:
+      required:
+      - Id
+      type: object
+      properties:
+        Ccy:
+          type: object
+          description: Identification of the currency in which the account is held.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        Id:
+          $ref: '#/components/schemas/AccountIdentification4Choice'
+        Nm:
+          type: object
+          description: Name of the account, as assigned by the account servicing institution, in agreement with the account owner in order to provide an additional means of identification of the account.
+          allOf:
+          - $ref: '#/components/schemas/Max70Text'
+        Tp:
+          $ref: '#/components/schemas/CashAccountType2'
+    CashAccountType4Code:
+      type: string
+      description: 'Account type, in a coded form. <br><br><b>CASH</b> : Account used for the payment of cash. <br><br><b>CHAR</b> : Account used for charges if different from the account for payment. <br><br><b>COMM</b> : Account used for commission if different from the account for payment. <br><br><b>TAXE</b> : Account used for taxes if different from the account for payment. <br><br><b>CISH</b> : Account used for payment of income if different from the current cash account. <br><br><b>TRAS</b> : Account used for trading if different from the current cash account. <br><br><b>SACC</b> : Account used to post debit and credit entries, as a result of transactions cleared and settled through a specific clearing and settlement system. <br><br><b>CACC</b> : Account used to post debits and credits when no specific account has been nominated. <br><br><b>SVGS</b> : Account used for savings. <br><br><b>ONDP</b> : Account used for overnight deposits. <br><br><b>MGLD</b> : Account used for a marginal lending facility. <br><br><b>NREX</b> : Account used for non-resident external. <br><br><b>MOMA</b> : Account used for money markets if different from the cash account. <br><br><b>LOAN</b> : Account used for loans. <br><br><b>SLRY</b> : Accounts used for salary payments. <br><br><b>ODFT</b> : Account is used for overdrafts.'
+      enum:
+      - CASH
+      - CHAR
+      - COMM
+      - TAXE
+      - CISH
+      - TRAS
+      - SACC
+      - CACC
+      - SVGS
+      - ONDP
+      - MGLD
+      - NREX
+      - MOMA
+      - LOAN
+      - SLRY
+      - ODFT
+    AmendmentInformationDetails6:
+      type: object
+      properties:
+        OrgnlMndtId:
+          type: object
+          description: Unique identification, as assigned by the creditor, to unambiguously identify the original mandate.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlCdtrSchmeId:
+          type: object
+          description: Original creditor scheme identification that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        OrgnlDbtr:
+          type: object
+          description: Original debtor that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        OrgnlDbtrAcct:
+          type: object
+          description: Original debtor account that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        OrgnlDbtrAgt:
+          type: object
+          description: Original debtor agent that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        OrgnlDbtrAgtAcct:
+          type: object
+          description: Original debtor agent account that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        OrgnlCdtrAgt:
+          type: object
+          description: Original creditor agent that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        OrgnlCdtrAgtAcct:
+          type: object
+          description: Original creditor agent acount that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        OrgnlFnlColltnDt:
+          type: string
+          description: Original final collection date that has been modified.
+          format: date
+        OrgnlFrqcy:
+          $ref: '#/components/schemas/Frequency1Code'
+      description: List of mandate elements that have been modified.
+    CountryCode:
+      pattern: '[A-Z]{2,2}'
+      type: string
+      description: Nation with its own government. The code is checked against the list of country names obtained from the United Nations (ISO 3166, Alpha-2 code).
+    FinancialIdentificationSchemeName1Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Specifies the external financial institution identification scheme name code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
+        Prtry:
+          type: object
+          description: Name of the identification scheme, in a free text form.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Name of the identification scheme. Either Code or Proprietary field value should be passed on request.
+    CashAccountType2:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/CashAccountType4Code'
+        Prtry:
+          type: object
+          description: Nature or use of the account in a proprietary form.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Specifies the nature, or use of the account. Either Code or Proprietary field value should be passed on request.
+    FinancialInstitutionIdentification7:
+      type: object
+      properties:
+        BIC:
+          pattern: '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
+          type: string
+          description: Code allocated to a financial institution by the ISO 9362 Registration Authority as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".
+        ClrSysMmbId:
+          $ref: '#/components/schemas/ClearingSystemMemberIdentification2'
+        Nm:
+          type: object
+          description: Name by which an agent is known and which is usually used to identify that agent.
+          allOf:
+          - $ref: '#/components/schemas/Max140Text'
+        Othr:
+          $ref: '#/components/schemas/GenericFinancialIdentification1'
+        PstlAdr:
+          $ref: '#/components/schemas/PostalAddress6'
+      description: Unique and unambiguous identification of a financial institution, as assigned under an internationally recognised or proprietary identification scheme.
+    Max4Text:
+      maxLength: 4
+      minLength: 1
+      type: string
+    ServiceLevel8Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Specifies the external service level code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
+        Prtry:
+          type: object
+          description: Specifies a pre-agreed service or level of service between the parties, as a proprietary code.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Agreement under which or rules under which the transaction should be processed. Either code or proprietary field values should be sent in request.
+    NamePrefix1Code:
+      type: string
+      description: 'Specifies the terms used to formally address a person.  <br><br><b>DOCT</b> : Title of the person is Doctor or Dr. <br><br><b>MIST</b> : Title of the person is Mister or Mr. <br><br><b>MISS</b> : Title of the person is Miss. <br><br><b>MADM</b> : Title of the person is Madam.'
+      enum:
+      - DOCT
+      - MIST
+      - MISS
+      - MADM
+    ReferredDocumentType1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/DocumentType5Code'
+        Prtry:
+          type: object
+          description: Proprietary identification of the type of the remittance document.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Provides the type details of the referred document. Either Code or Proprietary field value should be passed on request.
+    Document:
+      type: object
+      properties:
+        CstmrPmtStsRpt:
+          $ref: '#/components/schemas/CustomerPaymentStatusReportV03'
+    ClearingSystemIdentification3Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 3
+          minLength: 1
+          type: string
+          description: Infrastructure through which the payment instruction is processed, as published in an external clearing system identification code list.Specifies the cash clearing system, as published in an external cash clearing system code list.
+        Prtry:
+          type: object
+          description: Clearing system identification in a proprietary form.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Specification of a pre-agreed offering between clearing agents or the channel through which the payment instruction is processed. Either Code or Proprietary field value should be passed in request.
+    LocalInstrument2Choice:
+      type: object
+      properties:
+        Cd:
+          type: object
+          description: Specifies the external local instrument code in the format of character string with a maximum length of 35 characters.The list of valid codes is an external code list published separately.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        Prtry:
+          type: object
+          description: Specifies the local instrument, as a proprietary code.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: User community specific instrument. Either Code or Proprietary field value should be passed in request.
+    PersonIdentificationSchemeName1Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Specifies the external person identification scheme name code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
+        Prtry:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Description of Propreitary
+      description: Either Code or Proprietary is required
+    GenericPersonIdentification1:
+      required:
+      - Id
+      type: object
+      properties:
+        Id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Unique and unambiguous identification of a person.
+        Issr:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Entity that assigns the identification.
+        SchmeNm:
+          type: object
+          description: Name of the identification scheme.Sets of elements to identify a name of the identification scheme. Either Code or Proprietary is required
+          allOf:
+          - $ref: '#/components/schemas/PersonIdentificationSchemeName1Choice'
+      description: Unique identification of a person, as assigned by an institution, using an identification scheme.
+    AccountIdentification4Choice:
+      type: object
+      properties:
+        IBAN:
+          $ref: '#/components/schemas/IBAN2007Identifier'
+        Othr:
+          $ref: '#/components/schemas/GenericAccountIdentification1'
+      description: Unique and unambiguous identification for the account between the account owner and the account servicer. Either iban or Othr field value should be passed on request.
+    ChargesInformation5:
+      required:
+      - Amt
+      - Pty
+      type: object
+      properties:
+        Amt:
+          type: object
+          description: Transaction charges to be paid by the charge bearer.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        Pty:
+          type: object
+          description: Party that takes the transaction charges or to which the transaction charges are due.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+    TransactionGroupStatus3Code:
+      type: string
+      description: 'Specifies the status of a group of transactions.<br><br><b>ACTC</b> : Authentication and syntactical and semantical validation are successful. <br><br><b>RCVD</b> : Payment initiation has been received by the receiving agent. <br><br><b>PART</b> : A number of transactions have been accepted, whereas another number of transactions have not yet achieved ''accepted'' status. <br><br><b>RJCT</b> : Payment initiation or individual transaction included in the payment initiation has been rejected.<br><br><b>PDNG</b> : Payment initiation or individual transaction included in the payment initiation is pending. Further checks and status update will be performed.<br><br><b>ACCP</b> : Preceding check of technical validation was successful. Customer profile check was also successful.<br><br><b>ACSP</b> : All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution.<br><br><b>ACSC</b> : Settlement on the debtor''s account has been completed. Usage : this can be used by the first agent to report to the debtor that the transaction has been completed. Warning : this status is provided for transaction status reasons, not for financial information. It can only be used after bilateral agreement<br><br><b>ACWC</b> : Instruction is accepted but a change will be made, such as date or remittance not sent.'
+      enum:
+      - ACTC
+      - RCVD
+      - PART
+      - RJCT
+      - PDNG
+      - ACCP
+      - ACSP
+      - ACSC
+      - ACWC
+    OriginalTransactionReference13:
+      type: object
+      properties:
+        IntrBkSttlmAmt:
+          type: object
+          description: Amount of money moved between the instructing agent and the instructed agent.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        Amt:
+          $ref: '#/components/schemas/AmountType3Choice'
+        IntrBkSttlmDt:
+          type: string
+          description: Date on which the amount of money ceases to be available to the agent that owes it and when the amount of money becomes available to the agent to which it is due.
+          format: date
+        ReqdColltnDt:
+          type: string
+          description: Date on which the creditor requests that the amount of money is to be collected from the debtor.
+          format: date
+        ReqdExctnDt:
+          type: string
+          description: Date at which the initiating party requests the clearing agent to process the payment.
+          format: date
+        CdtrSchmeId:
+          type: object
+          description: Credit party that signs the mandate.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        SttlmInf:
+          $ref: '#/components/schemas/SettlementInformation13'
+        PmtTpInf:
+          $ref: '#/components/schemas/PaymentTypeInformation22'
+        PmtMtd:
+          $ref: '#/components/schemas/PaymentMethod4Code'
+        MndtRltdInf:
+          $ref: '#/components/schemas/MandateRelatedInformation6'
+        RmtInf:
+          $ref: '#/components/schemas/RemittanceInformation5'
+        UltmtDbtr:
+          type: object
+          description: Ultimate party that owes an amount of money to the (ultimate) creditor.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        Dbtr:
+          type: object
+          description: Party that owes an amount of money to the (ultimate) creditor.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        DbtrAcct:
+          type: object
+          description: Unambiguous identification of the account of the debtor to which a debit entry will be made as a result of the transaction.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        DbtrAgt:
+          type: object
+          description: Financial institution servicing an account for the debtor.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        DbtrAgtAcct:
+          type: object
+          description: Unambiguous identification of the account of the debtor agent at its servicing agent in the payment chain.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        CdtrAgt:
+          type: object
+          description: Financial institution servicing an account for the creditor.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        CdtrAgtAcct:
+          type: object
+          description: Unambiguous identification of the account of the creditor agent at its servicing agent to which a credit entry will be made as a result of the payment transaction.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        Cdtr:
+          type: object
+          description: Party to which an amount of money is due.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        CdtrAcct:
+          type: object
+          description: Unambiguous identification of the account of the creditor to which a credit entry will be posted as a result of the payment transaction.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        UltmtCdtr:
+          type: object
+          description: Ultimate party to which an amount of money is due.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+      description: Set of key elements used to identify the original transaction that is being referred to.
+    DocumentType5Code:
+      type: string
+      description: 'Document type in a coded form.<br><br><b>MSIN</b> : Document is an invoice claiming payment for the supply of metered services, for example gas or electricity supplied to a fixed meter. <br><br><b>CNFA</b> : Document is a credit note for the final amount settled for a commercial transaction. <br><br><b>DNFA</b> : Document is a debit note for the final amount settled for a commercial transaction. <br><br><b>CINV</b> :   Document is an invoice. <br><br><b>CREN</b> : Document is a credit note. <br><br><b>DEBN</b> : Document is a debit note. <br><br><b>HIRI</b> : Document is an invoice for the hiring of human resources or renting goods or equipment. <br><br><b>SBIN</b> : Document is an invoice issued by the debtor. <br><br><b>SVGS</b> : Account used for savings. <br><br><b>CMCN</b> : Document is an agreement between the parties, stipulating the terms and conditions of the delivery of goods or services. <br><br><b>SOAC</b> : Document is a statement of the transactions posted to the debtor''s account at the supplier. <br><br><b>DISP</b> : Document is a dispatch advice. <br><br><b>BOLD</b> : Document is a shipping notice. <br><br><b>VCHR</b> : Document is an electronic payment document. <br><br><b>AROI</b> : Document is a payment that applies to a specific source document. <br><br><b>TSUT</b> : Document is a transaction identifier as assigned by the Trade Services Utility.'
+      enum:
+      - MSIN
+      - CNFA
+      - DNFA
+      - CINV
+      - CREN
+      - DEBN
+      - HIRI
+      - SBIN
+      - CMCN
+      - SOAC
+      - DISP
+      - BOLD
+      - VCHR
+      - AROI
+      - TSUT
+    IBAN2007Identifier:
+      pattern: ^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$
+      type: string
+      description: '>- International Bank Account Number (IBAN) - identifier used internationally by financial institutions to uniquely identify the account of a customer. Further specifications of the format and content of the IBAN can be found in the standard ISO 13616 "Banking and related financial services - International Bank Account Number (IBAN)" version 1997-10-01, or later revisions.'
+    Error-Message:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        httpCode:
+          type: string
+        httpMessage:
+          type: string
+        moreInformation:
+          type: string
+      description: Error response body.
+    NumberOfTransactionsPerStatus3:
+      required:
+      - DtldNbOfTxs
+      - DtldSts
+      type: object
+      properties:
+        DtldNbOfTxs:
+          type: object
+          description: Number of individual transactions contained in the message, detailed per status.
+          allOf:
+          - $ref: '#/components/schemas/Max15NumericText'
+        DtldCtrlSum:
+          maxLength: 18
+          type: string
+          description: Total of all individual amounts included in the message, irrespective of currencies, detailed per status. The number of fractional digits should not be more than 17
+        DtldSts:
+          $ref: '#/components/schemas/TransactionIndividualStatus3Code'
+    BranchAndFinancialInstitutionIdentification4:
+      required:
+      - FinInstnId
+      type: object
+      properties:
+        BrnchId:
+          $ref: '#/components/schemas/BranchData2'
+        FinInstnId:
+          $ref: '#/components/schemas/FinancialInstitutionIdentification7'
+    PersonIdentification5:
+      type: object
+      properties:
+        DtAndPlcOfBirth:
+          $ref: '#/components/schemas/DateAndPlaceOfBirth'
+        Othr:
+          type: array
+          description: Unique identification of a person, as assigned by an institution, using an identification scheme.
+          items:
+            $ref: '#/components/schemas/GenericPersonIdentification1'
+      description: Unique and unambiguous identification of a person, for example a passport.
+    CreditorReferenceType2:
+      required:
+      - CdOrPrtry
+      type: object
+      properties:
+        CdOrPrtry:
+          $ref: '#/components/schemas/CreditorReferenceType1Choice'
+        Issr:
+          type: object
+          description: Entity that assigns the credit reference type.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Specifies the type of creditor reference.
+    ActiveOrHistoricCurrencyAndAmount_SimpleTypeStatusInquiry:
+      type: string
+      description: Upto 3 fraction digits allowed
+    ActiveOrHistoricCurrencyAndAmountStatusInquiry:
+      required:
+      - Amt
+      - Ccy
+      type: object
+      properties:
+        Ccy:
+          type: object
+          description: Currency code.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount_SimpleTypeStatusInquiry'
+    PaymentTypeInformation22:
+      type: object
+      properties:
+        InstrPrty:
+          $ref: '#/components/schemas/Priority2Code'
+        ClrChanl:
+          type: string
+          description: 'Specifies the clearing channel to be used to process the payment instruction.<br><br><b>RTGS</b> : Clearing channel is a real-time gross settlement system. <br><br><b>RTNS</b> : Clearing channel is a real-time net settlement system. <br><br><b>MPNS</b> : Clearing channel is a mass payment net settlement system. <br><br><b>BOOK</b> : Payment through internal book transfer.'
+          enum:
+          - RTGS
+          - RTNS
+          - MPNS
+          - BOOK
+        SvcLvl:
+          $ref: '#/components/schemas/ServiceLevel8Choice'
+        LclInstrm:
+          $ref: '#/components/schemas/LocalInstrument2Choice'
+        SeqTp:
+          type: string
+          description: 'Identifies the direct debit sequence, such as first, recurrent, final or one-off.<br><br><b>FRST</b> : First collection of a series of direct debit instructions. <br><br><b>RCUR</b> : Direct debit instruction where the debtor''s authorisation is used for regular direct debit transactions initiated by the creditor. <br><br><b>FNAL</b> : Final collection of a series of direct debit instructions. <br><br><b>OOFF</b> : Direct debit instruction where the debtor''s authorisation is used to initiate one single direct debit transaction.'
+          enum:
+          - FRST
+          - RCUR
+          - FNAL
+          - OOFF
+        CtgyPurp:
+          $ref: '#/components/schemas/CategoryPurpose1Choice'
+      description: Set of elements used to further specify the type of transaction.
+    PostalAddress6:
+      type: object
+      properties:
+        AdrLine:
+          maxItems: 7
+          type: array
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+          items:
+            $ref: '#/components/schemas/Max70Text'
+        AdrTp:
+          type: string
+          description: 'Identifies the nature of the postal address.<br><br><b>ADDR</b> : Address is the complete postal address. <br><br><b>PBOX</b> : Address is a postal office (PO) box. <br><br><b>HOME</b> : Address is the home address. <br><br><b>BIZZ</b> : Address is the business address.<br><br><b>MLTO</b> : Address is the address to which mail is sent.<br><br><b>DLVY</b> : Address is the address to which delivery is to take place.'
+          enum:
+          - ADDR
+          - PBOX
+          - HOME
+          - BIZZ
+          - MLTO
+          - DLVY
+        BldgNb:
+          type: object
+          description: Number that identifies the position of a building on a street.
+          allOf:
+          - $ref: '#/components/schemas/Max16Text'
+        Ctry:
+          $ref: '#/components/schemas/CountryCode'
+        CtrySubDvsn:
+          type: object
+          description: Identifies a subdivision of a country such as state, region, county.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        Dept:
+          type: object
+          description: Identification of a division of a large organisation or building.
+          allOf:
+          - $ref: '#/components/schemas/Max70Text'
+        PstCd:
+          type: object
+          description: Identifier consisting of a group of letters and/or numbers that is added to a postal address to assist the sorting of mail.
+          allOf:
+          - $ref: '#/components/schemas/Max16Text'
+        StrtNm:
+          type: object
+          description: Name of a street or thoroughfare.
+          allOf:
+          - $ref: '#/components/schemas/Max70Text'
+        SubDept:
+          type: object
+          description: Identification of a sub-division of a large organisation or building.
+          allOf:
+          - $ref: '#/components/schemas/Max70Text'
+        TwnNm:
+          type: object
+          description: Name of a built-up area, with defined boundaries, and a local government.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Information that locates and identifies a specific address, as defined by postal services.
+    Frequency1Code:
+      type: string
+      description: 'Original frequency that has been modified.<br><br><b>YEAR</b> : Event takes place every year or once a year. <br><br><b>MNTH</b> : Event takes place every month or once a month. <br><br><b>QURT</b> : Event takes place every three months or four times a year. <br><br><b>MIAN</b> : Event takes place every six months or two times a year.<br><br><b>WEEK</b> : Event takes place once a week. <br><br><b>DAIL</b> : Event takes place every day. <br><br><b>ADHO</b> : Event takes place on request or as necessary. <br><br><b>INDA</b> : Event takes place several times a day.'
+      enum:
+      - YEAR
+      - MNTH
+      - QURT
+      - MIAN
+      - WEEK
+      - DAIL
+      - ADHO
+      - INDA
+    ISODate:
+      type: string
+      format: date
+    PaymentMethod4Code:
+      type: string
+      description: 'Specifies the means of payment that will be used to move the amount of money.<br><br><b>CHK</b> : Written order to a bank to pay a certain amount of money from one person to another person. <br><br><b>TRF</b> : Transfer of an amount of money in the books of the account servicer. <br><br><b>DD</b> : Collection of an amount of money from the debtor''s bank account by the creditor. The amount of money and dates of collections may vary. <br><br><b>TRA</b> : Transfer of an amount of money in the books of the account servicer. An advice should be sent back to the account owner.'
+      enum:
+      - CHK
+      - TRF
+      - DD
+      - TRA
+    CustomerPaymentStatusReportV03:
+      required:
+      - GrpHdr
+      - OrgnlGrpInfAndSts
+      type: object
+      properties:
+        GrpHdr:
+          $ref: '#/components/schemas/GroupHeader36'
+        OrgnlGrpInfAndSts:
+          $ref: '#/components/schemas/OriginalGroupInformation20'
+        OrgnlPmtInfAndSts:
+          type: array
+          description: Information concerning the original payment information, to which the status report message refers.
+          items:
+            $ref: '#/components/schemas/OriginalPaymentInformation1'
+    PartyIdentification32:
+      type: object
+      properties:
+        Nm:
+          type: object
+          description: Name by which a party is known and which is usually used to identify that party.
+          allOf:
+          - $ref: '#/components/schemas/Max140Text'
+        PstlAdr:
+          $ref: '#/components/schemas/PostalAddress6'
+        Id:
+          type: object
+          properties:
+            OrgId:
+              $ref: '#/components/schemas/OrganisationIdentification4'
+            PrvtId:
+              $ref: '#/components/schemas/PersonIdentification5'
+          description: Unique and unambiguous identification of a party. Should pass either OrgId or PrvtId for organisation and private respectively.
+        CtryOfRes:
+          type: object
+          description: Country in which a person resides (the place of a person's home). In the case of a company, it is the country from which the affairs of that company are directed.
+          allOf:
+          - $ref: '#/components/schemas/CountryCode'
+        CtctDtls:
+          $ref: '#/components/schemas/ContactDetails2'
+    ActiveOrHistoricCurrencyAndAmount:
+      required:
+      - Ccy
+      type: object
+      properties:
+        Ccy:
+          type: object
+          description: Currency code. Passed as the tag attribute.The unit of currency is explicit and compliant with ISO 4217
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        $:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount_SimpleType'
+    RemittanceInformation5:
+      type: object
+      properties:
+        Strd:
+          type: array
+          description: Information supplied to enable the matching/reconciliation of an entry with the items that the payment is intended to settle, such as commercial invoices in an accounts' receivable system, in a structured form.
+          items:
+            $ref: '#/components/schemas/StructuredRemittanceInformation7'
+        Ustrd:
+          type: array
+          description: Information supplied to enable the matching/reconciliation of an entry with the items that the payment is intended to settle, such as commercial invoices in an accounts' receivable system, in an unstructured form.
+          items:
+            $ref: '#/components/schemas/Max140Text'
+    GenericFinancialIdentification1:
+      required:
+      - Id
+      type: object
+      properties:
+        Id:
+          type: object
+          description: Unique and unambiguous identification of a person.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        Issr:
+          type: object
+          description: Entity that assigns the identification.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        SchmeNm:
+          $ref: '#/components/schemas/FinancialIdentificationSchemeName1Choice'
+      description: Unique identification of an agent, as assigned by an institution, using an identification scheme.
+    disclosure_response:
+      type: object
+      properties:
+        out:
+          required:
+          - deliveryDate
+          - disclosureDate
+          - feeType
+          - otherFees
+          - returnCode
+          - returnMessage
+          - totalTaxes
+          - uniqueIdentifier
+          type: object
+          properties:
+            disclosureDate:
+              type: string
+              description: The disclosure date. Format => Timestamp > yyyy-mm-dd hh:mm:ss[.fffffffff].
+            otherFees:
+              type: number
+              description: Sum of all fees calculated, including bene deduct. Between 0.00 and 9999999999999999.999
+            feeType:
+              maxLength: 1
+              type: string
+              description: Fee description Actual(A) or Estimate(E).
+              enum:
+              - A
+              - E
+            totalTaxes:
+              type: number
+              description: Sum of all taxes calculated. Between 0.00 and 9999999999999999.999.
+            deliveryDate:
+              type: string
+              description: The calculated delivery date for payment.  Format => Timestamp > yyyy-mm-dd hh:mm:ss[.fffffffff].
+            uniqueIdentifier:
+              maxLength: 15
+              type: string
+              description: API Packet identifier.
+            returnCode:
+              maxLength: 5
+              type: string
+              description: Code to show if API worked.
+            returnMessage:
+              maxLength: 100
+              type: string
+              description: Descriptive message to show if API passed, or the reason for the failure.
+            chargeCodeUsed:
+              maxLength: 3
+              type: string
+              description: Charge code calculated by Dodd-Frank application based on its rules.
+            beneDeductUsed:
+              maxLength: 1
+              type: string
+              description: Bene deduct fee indicator passed in input request field isBeneDeduct.
+            beneDeductFeeTypeUsed:
+              maxLength: 1
+              type: string
+              description: Bene deduct fee type passed in input request field beneDeductFeeType.
+          example:
+            disclosureDate: '2019-25-04T08:13:21.123-05:00'
+            otherFees: 25
+            feeType: E
+            totalTaxes: 2
+            deliveryDate: '2019-25-04T08:13:21.123-05:00'
+            uniqueIdentifier: 000000000810814
+            returnCode: '0'
+            returnMessage: SUCCESS
+            chargeCodeUsed: BEN
+    paymentStatusInquiryResponse:
+      type: string
+      description: 'Base64 encoded string of ISO XML the response follows ISOXML urn:iso:std:iso:20022:tech:xsd:pain.002.001.03   https://www.iso20022.org/message/14361/download or #/definitions/Pain002'
+      format: byte
+      example: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxEb2N1bWVudCB4bWxucz0idXJuOmlzbzpzdGQ6aXNvOjIwMDIyOnRlY2g6eHNkOnBhaW4uMDAyLjAwMS4wMyI+DQoJPENzdG1yUG10U3RzUnB0Pg0KCQk8R3JwSGRyPg0KCQkJPE1zZ0lkPkNJVElCQU5LLzIwMTkxMjExLVBTUi85NDE0MTYxNzc8L01zZ0lkPg0KCQkJPENyZUR0VG0+MjAxOS0xMi0xMVQwNjoyNDo1MjwvQ3JlRHRUbT4NCgkJCTxJbml0Z1B0eT4NCgkJCQk8SWQ+DQoJCQkJCTxPcmdJZD48QklDT3JCRUk+Q0lUSVVTMzM8L0JJQ09yQkVJPjwvT3JnSWQ+DQoJCQkJPC9JZD4NCgkJCTwvSW5pdGdQdHk+DQoJCTwvR3JwSGRyPg0KCQk8T3JnbmxHcnBJbmZBbmRTdHM+DQoJCQk8T3JnbmxNc2dJZD5Nc2dJZGZmZ2g8L09yZ25sTXNnSWQ+DQoJCQk8T3JnbmxNc2dObUlkPnBhaW4uMDA3LjAwMS4wOTwvT3JnbmxNc2dObUlkPg0KCQkJPE9yZ25sQ3JlRHRUbT4yMDE5LTEyLTExVDEyOjAwOjAwPC9PcmdubENyZUR0VG0+DQoJCQk8T3JnbmxOYk9mVHhzPjE8L09yZ25sTmJPZlR4cz4NCgkJPC9PcmdubEdycEluZkFuZFN0cz4NCgkJPE9yZ25sUG10SW5mQW5kU3RzPg0KCQkJPE9yZ25sUG10SW5mSWQ+NDU2ODc5NjwvT3JnbmxQbXRJbmZJZD4NCgkJCTxUeEluZkFuZFN0cz4NCgkJCQk8T3JnbmxFbmRUb0VuZElkPjIwMTkxMjA5Q0lUSVNHUzBCUlQyMTAxNjMwPC9PcmdubEVuZFRvRW5kSWQ+DQoJCQkJPFR4U3RzPkFDVEM8L1R4U3RzPg0KCQkJPC9UeEluZkFuZFN0cz4NCgkJPC9PcmdubFBtdEluZkFuZFN0cz4NCgk8L0NzdG1yUG10U3RzUnB0Pg0KPC9Eb2N1bWVudD4=
+      xml:
+        name: paymentStatusInquiryResponse
+    TransactionIndividualStatus3Code:
+      type: string
+      description: 'Common transaction status for all individual transactions reported.<br><br><b>ACTC</b> : Authentication and syntactical and semantical validation are successful. <br><br><b>RJCT</b> : Payment initiation or individual transaction included in the payment initiation has been rejected.<br><br><b>PDNG</b> : Payment initiation or individual transaction included in the payment initiation is pending. Further checks and status update will be performed.<br><br><b>ACCP</b> : Preceding check of technical validation was successful. Customer profile check was also successful.<br><br><b>ACSP</b> : All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution.<br><br><b>ACSC</b> : Settlement on the debtor''s account has been completed. Usage : this can be used by the first agent to report to the debtor that the transaction has been completed. Warning : this status is provided for transaction status reasons, not for financial information. It can only be used after bilateral agreement<br><br><b>ACWC</b> : Instruction is accepted but a change will be made, such as date or remittance not sent.'
+      enum:
+      - ACTC
+      - RJCT
+      - PDNG
+      - ACCP
+      - ACSP
+      - ACSC
+      - ACWC
+    Max105Text:
+      maxLength: 105
+      minLength: 1
+      type: string
+    EquivalentAmount2:
+      required:
+      - Amt
+      - CcyOfTrf
+      type: object
+      properties:
+        Amt:
+          type: object
+          description: Amount of money to be moved between debtor and creditor, before deduction of charges, expressed in the currency of the debtor's account, and to be moved in a different currency.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CcyOfTrf:
+          type: object
+          description: Specifies the currency of the to be transferred amount, which is different from the currency of the debtor's account.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+      description: Amount of money to be moved between the debtor and creditor, expressed in the currency of the debtor's account, and the currency in which the amount is to be moved.
+    PhoneNumber:
+      pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
+      type: string
+    CategoryPurpose1Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Category purpose, as published in an external category purpose code list.
+        Prtry:
+          type: object
+          description: Category purpose, in a proprietary form.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Specifies the high level purpose of the instruction based on a set of pre-defined categories. Either Code or Proprietary field value should be passed in request.
+    Max70Text:
+      maxLength: 70
+      minLength: 1
+      type: string
+  examples:
+    Payment-Status-Inquiry-Response-Json:
+      value:
+        FxGetDealOperationResponse:
+          FXP588INOperationResponse:
+            FxDealInquiryRsp:
+              Source: APIM
+              WLClntId: '629550001'
+              ContractRef: M16463100879607
+              UserId: XBACBC4
+              ResTime: 2026-04-07-07:39:20
+              PymtCcy: CAD
+              PymtCcyAmt: '145.00'
+              FundCcy: EUR
+              FundCcyAmt: '90.04'
+              Symbol: CADEUR
+              Rate: '0.62100000'
+              BookDate: '20251024'
+              ValueDate: '20251027'
+              DealTs: 2025-10-24-04.02.26.701438
+              FundActTotalLmt: '90.04'
+              FundActAvlLmt: '90.04'
+              FundActEarMrkLmt: '0.00'
+              FundActUtilLmt: '0.00'
+              PymtActTotalLmt: '145.00'
+              PymtActAvlLmt: '145.00'
+              PymtActEarMrkLmt: '0.00'
+              PymtActUtilLmt: '0.00'
+              StatusCode: '000'
+              StatusMsg: '000: Requested deal found'
+    Payment-Validation-Response-Json:
+      value:
+        '@xmlns': urn:iso:std:iso:20022:tech:xsd:pain.002.001.03
+        customer_payment_status_report:
+          group_header:
+            message_identification: Wire_SZD_API_1401
+            creation_date_time: '2020-02-20T09:30:47'
+            initiating_party:
+              name: MSA ILE DE FRANCE
+              postal_address:
+                address_type: ADDR
+                department: Dept001
+                sub_department: Subdept001
+                street_name: street name01
+                building_number: '113232370123456'
+                post_code: '7777777'
+                town_name: townname1townname1townna
+                country_sub_division: subdivctry01
+                country: GB
+              identification:
+                organisation_identification:
+                  other:
+                  - identification: '248840001'
+              country_of_residence: TR
+              contact_details:
+                name: Client5
+          original_group_information_and_status:
+            original_message_identification: Wire_SZD_API_1401
+            original_message_name_identification: Pain.001.001.03
+            original_creation_date_time: '2020-02-20T09:30:47'
+            original_number_of_transactions: '1'
+            original_control_sum: '200'
+          original_payment_information_and_status:
+          - original_payment_information_identification: Wire_SZD_FD_API_1401
+            transaction_information_and_status:
+            - original_instruction_identification: JA2020072235
+              original_end_to_end_identification: JA2020072235
+              transaction_status: RJCT
+              status_reason_information:
+              - additional_information:
+                - Target Account Number IBAN: Field'Target_Account_Number_IBAN' is mandatory.
+              original_transaction_reference:
+                amount:
+                  instructed_amount:
+                    currency: EUR
+                    $: '200'
+                requested_execution_date: '2020-07-22'
+                payment_type_information:
+                  service_level:
+                    code: URGP
+                  category_purpose:
+                    code: OTHR
+                payment_method: TRF
+                remittance_information:
+                  unstructured:
+                  - '12796190145799300'
+                debtor:
+                  name: MSA ILE DE FRANCE
+                  postal_address:
+                    address_type: ADDR
+                    department: Dept001
+                    street_name: street name01
+                    building_number: '113232370123456'
+                    post_code: '7777777'
+                    town_name: townname1
+                    country_sub_division: subdivctry01
+                    country: SZ
+                debtor_account:
+                  identification:
+                    other:
+                      identification: '789652'
+                  currency: CAD
+                debtor_agent:
+                  financial_institution_identification:
+                    bic: CITICA5AXXX
+                    other:
+                      identification: '248840001'
+                creditor_agent:
+                  financial_institution_identification:
+                    bic: SOGEADPPXXX
+                    name: Bene Bank Name
+                    postal_address:
+                      street_name: Wellsprings Renaissanc
+                      building_number: Building No 02
+                      post_code: '71492'
+                      town_name: Newtownships
+                      country: AD
+                creditor:
+                  name: Rehan
+                  postal_address:
+                    address_type: HOME
+                    street_name: Mumbai
+                    building_number: '113232123456'
+                    country: AD
+                creditor_account:
+                  identification:
+                    other:
+                      identification: '14258632545'
+    Payment-Validation-Request-Json:
+      value:
+        '@xmlns': urn:iso:std:iso:20022:tech:xsd:pain.001.001.03
+        customer_credit_transfer_initiation:
+          group_header:
+            message_identification: Wire_SZD_API_1401
+            creation_date_time: '2020-02-20T09:30:47'
+            number_of_transactions: '1'
+            control_sum: '200'
+            initiating_party:
+              name: MSA ILE DE FRANCE
+              postal_address:
+                address_type: ADDR
+                department: Dept001
+                sub_department: Subdept001
+                street_name: street name01
+                building_number: '113232370123456'
+                post_code: '7777777'
+                town_name: townname1townname1townna
+                country_sub_division: subdivctry01
+                country: GB
+              identification:
+                organisation_identification:
+                  other:
+                  - identification: '248840001'
+              country_of_residence: TR
+              contact_details:
+                name: Client5
+          payment_information:
+          - payment_information_identification: Wire_SZD_FD_API_1401
+            payment_method: TRF
+            requested_execution_date: '2020-07-22'
+            debtor:
+              name: MSA ILE DE FRANCE
+              postal_address:
+                address_type: ADDR
+                department: Dept001
+                street_name: street name01
+                building_number: '113232370123456'
+                post_code: '7777777'
+                town_name: townname1
+                country_sub_division: subdivctry01
+                country: SZ
+            debtor_account:
+              identification:
+                other:
+                  identification: '789652'
+              currency: CAD
+            debtor_agent:
+              financial_institution_identification:
+                bic: CITICA5AXXX
+                other:
+                  identification: '248840001'
+            credit_transfer_transaction_information:
+            - payment_identification:
+                instruction_identification: JA2020072233
+                end_to_end_identification: JA2020072233
+              payment_type_information:
+                service_level:
+                  code: URGP
+                category_purpose:
+                  code: OTHR
+              amount:
+                instructed_amount:
+                  currency: EUR
+                  $: '200'
+              charge_bearer: SHAR
+              creditor_agent:
+                financial_institution_identification:
+                  bic: SOGEADPPXXX
+                  name: Bene Bank Name
+                  postal_address:
+                    street_name: Wellsprings Renaissanc
+                    building_number: Building No 02
+                    post_code: '71492'
+                    town_name: Newtownships
+                    country: AD
+              creditor:
+                name: Rehan
+                postal_address:
+                  address_type: HOME
+                  street_name: Mumbai
+                  building_number: '113232123456'
+                  country: AD
+              creditor_account:
+                identification:
+                  iban: AD1200012030200359100100
+              remittance_information:
+                unstructured:
+                - '12796190145799300'
+  securitySchemes:
+    clientCredentials:
+      description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
+
+
+        '
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes: {}

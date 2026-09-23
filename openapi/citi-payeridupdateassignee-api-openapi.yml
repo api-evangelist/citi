@@ -1,0 +1,785 @@
+openapi: 3.2.0
+info:
+  title: PayerID Management Services Payer ID Update Assignee API
+  description: CitiConnectAPI service enable straight-through processing (STP) for Payer ID management functionality where client ERP system can invoke API request for Payer ID management functionalities.
+  version: 1.0.3
+  contact:
+    name: CitiConnect API Team
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod
+  description: production gateway url
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+  description: sandbox url
+security:
+- oAuth2:
+  - /authenticationservices/v1
+tags:
+- name: PayerIdUpdateAssignee
+  description: PayerID Update assignee API has an ability to update, add or remove assignee details of the given Payer ID.
+paths:
+  /receivablesservices/v1/payerids:
+    put:
+      tags:
+      - PayerIdUpdateAssignee
+      summary: Update, Add, or Remove Merchant and Beneficiary Details Associated with a…
+      description: This endpoint can update, add, or remove assignee details of a particular Payer ID.
+      operationId: payerIdUpdateAssigneeDetails
+      servers:
+      - url: https://tts.apib2b.citi.com/citiconnect/prod
+        description: production gateway url
+      parameters:
+      - in: query
+        name: payerid-number
+        description: Unique number assigned for payers and beneficiaries to identify incoming payments. Either of payerid-number or assignee_id is mandatory.
+        schema:
+          type: string
+          maxLength: 35
+      - $ref: '#/components/parameters/ClientId'
+      requestBody:
+        description: Describes the payer ID assignee details for update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payer-ID-Update-Assignee-Request'
+            examples:
+              PayerIDAddRemoveUpdateAssigneeRequestExample:
+                $ref: '#/components/examples/Payer-ID-Add-Remove-Update-Assignee-Request-Example'
+              AssigneeIDAddRemoveUpdateAssigneeRequestExample:
+                $ref: '#/components/examples/Assignee-ID-Add-Remove-Update-Assignee-Request-Example'
+      responses:
+        '202':
+          $ref: '#/components/responses/OkResponseForUpdateAssignee'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeOrRequestedResourceNotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+      callbacks:
+        asynchronous-update-assignee-push-notification-full:
+          $ref: '#/components/callbacks/PayerIDAddRemoveUpdateAssigneePushNotification'
+components:
+  schemas:
+    Merchant-Economic-Id:
+      title: Merchant-Economic-Id
+      minLength: 1
+      maxLength: 50
+      type: string
+      description: Merchant economic id based on the merchant's country.
+    Payer-ID-Update-Assignee-Response:
+      required:
+      - status_code
+      - status_description
+      - request_id
+      type: object
+      title: Payer-ID-Update-Assignee-Response
+      properties:
+        status_code:
+          type: string
+          title: status_code
+          maxLength: 20
+          description: Status of the request sent as synchronous response to client. Status code will have value as `PIPND`.
+        status_description:
+          type: string
+          title: status_description
+          maxLength: 500
+          description: Incoming request acknowledgement message, example as `Payer ID Update assignee request is in-progress`.
+        request_id:
+          type: string
+          title: request_id
+          maxLength: 32
+          description: Auto-generated unique identifier assigned for the incoming request.
+    Assignee-Id-Status:
+      type: string
+      title: Assignee-Id-Status
+      minLength: 1
+      maxLength: 35
+      description: Specifies the status of assignee ID.
+    Beneficiary-Economic-Id:
+      title: Beneficiary-Economic-Id
+      minLength: 1
+      maxLength: 50
+      type: string
+      description: Beneficiary economic id based on the beneficiary's country.
+    Assignee-Id-Reason:
+      type: string
+      title: Assignee-Id-Reason
+      minLength: 1
+      maxLength: 255
+      description: Specifies the reason for the deactivation of an assignee ID.
+    Country-Code:
+      title: Country-Code
+      type: string
+      pattern: ^[A-Z]{2}$
+      description: 'The ISO country code specifying which country where the account is held with. For example, if we receive a request for Germany, then the county code is ''DE'', for France, the country code is ''FR''. The list of allowed country codes are: <br>''DE'' - Germany<br> ''FR'' - France<br> ''GB'' - Great Britain<br>''IE'' - Ireland<br>''NL'' - Netherlands<br>''US'' - United States<br>''CA'' - Canada<br> ''HK'' - Hong Kong<br> ''SG'' - Singapore<br>''AU'' - Australia<br>''NZ'' - New Zealand<br>''LU'' - Luxembourg<br> ''VN'' - Vietnam'
+    Merchant-Details:
+      title: Merchant-Details
+      allOf:
+      - $ref: '#/components/schemas/Payer-ID-Address-Details'
+      - type: object
+        title: allOf
+        properties:
+          name_1:
+            title: name_1
+            minLength: 1
+            maxLength: 140
+            type: string
+            description: The last name or company name. For 'sole trader', include the last name. For 'company', include the company name.
+          name_2:
+            title: name_2
+            minLength: 1
+            maxLength: 140
+            type: string
+            description: For 'sole trader', include the first name. For 'company', leave blank or include the second line of the company name.
+          date:
+            title: date
+            type: string
+            format: date
+            description: The sole trader's date of birth or the identification of the company's date of incorporation. This parameter follows the ISO format and is a fixed 10-digit format (YYYY-MM-DD).
+          tax_identifier:
+            title: tax_identifier
+            minLength: 1
+            maxLength: 35
+            type: string
+            description: The merchant's tax identifier based on country.
+          economic_id:
+            $ref: '#/components/schemas/Merchant-Economic-Id'
+          website:
+            title: website
+            minLength: 1
+            maxLength: 255
+            type: string
+            description: The merchant's profile, website, or storefront.
+    Beneficiary-Details:
+      title: Beneficiary-Details
+      allOf:
+      - $ref: '#/components/schemas/Payer-ID-Address-Details'
+      - type: object
+        title: allOf
+        properties:
+          beneficiary_id:
+            title: beneficiary_id
+            minLength: 1
+            maxLength: 35
+            type: string
+            description: Unique ID for a beneficiary.
+          last_name:
+            title: last_name
+            minLength: 1
+            maxLength: 140
+            type: string
+            description: The beneficiary owner's last name.
+          middle_name:
+            title: middle_name
+            minLength: 1
+            maxLength: 140
+            type: string
+            description: The beneficiary owner's middle name.
+          first_name:
+            title: first_name
+            minLength: 1
+            maxLength: 140
+            type: string
+            description: The beneficiary owner's first name.
+          dob:
+            title: dob
+            type: string
+            format: date
+            description: The beneficiary owner's date of birth. As per ISO format, this parameter is in a fixed 10-digit format (YYYY-MM-DD).
+          tax_identifier:
+            title: tax_identifier
+            minLength: 1
+            maxLength: 35
+            type: string
+            description: The beneficiary owner's tax identifier.
+          economic_id:
+            $ref: '#/components/schemas/Beneficiary-Economic-Id'
+    Party-Type-Details:
+      title: Party-Type-Details
+      type: string
+      enum:
+      - C
+      - S
+      description: Account party type details. Allowed account part type values are:<br> <br>`S` - sole trader, which is an enterprise owned or run by a single person. <br>`C` - a company that is owned by an organization or business entity
+    Payer-ID-Error-Detail:
+      type: object
+      title: Payer-ID-Error-Detail
+      properties:
+        issue:
+          type: string
+          title: issue
+          description: More information about the issue.
+          maxLength: 150
+        action:
+          type: string
+          title: action
+          description: The corrective action to be taken to resolve the issue.
+          maxLength: 150
+        code:
+          type: string
+          title: code
+          description: Error category that provides more details on error types.
+          maxLength: 10
+    Errors:
+      required:
+      - error_code
+      - error_description
+      type: object
+      title: Errors
+      properties:
+        error_code:
+          title: error_code
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: 'Specifies the error code for the rejected activation request sent in an asynchronous response. Error codes will have the following values: `V005`<br>`V002`<br>`PI1001`<br>`RR10`<br>`PI1003`<br>`PI1004`<br>`PI1005`<br>`PI1006`<br>`PI1007`<br>`AC04`<br>`AC06`<br>`MD07`<br>`BLKD`<br>`REST`'
+        error_description:
+          title: error_description
+          minLength: 1
+          maxLength: 500
+          type: string
+          description: Specifies the error description of the rejected activation request sent in an asynchronous response. Error description for each each error codes will have following descriptions as <br> `V005 - Invalid combination of input parameters {Country code}{Branch code}`<br>`V002 - Please provide valid value for {payerid_number} or Please provide valid value for Action`<br>`PI1001 - PYID is already active`<br>`RR10 - Invalid Character Set`<br>`PI1002 - PYID Activation request is already in progress`<br>`PI1003 - Payer ID XXXXXXXXX is being processed`<br>`PI1004 - Client account has not been onboarded`<br>`PI1005 - Payer ID XXXXXXXXX could not be activated. Please contact your Client Executive`<br>`PI1006 - Payer ID XXXXXXXXX is under compliance review and has been temporarily deactivated. Please contact your Client Executive for further assistance`<br>`PI1007 - Payer ID XXXXXXXXX could not be activated. Please contact your Client Executive`<br>`AC04 - ClosedAccountNumber`<br>`AC06 - BlockedAccount`<br>`MD07 - EndCustomerDeceased`<br>`BLKD - Blocked`<br>`REST - Restricted`
+    Payer-ID-Errors:
+      type: object
+      title: Payer-ID-Errors
+      properties:
+        ref_id:
+          type: string
+          title: ref_id
+          description: Unique identifier which can be used to track your request.
+        error_details:
+          type: array
+          title: error_details
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Payer-ID-Error-Detail'
+    Payer-ID-Update-Assignee-Request:
+      required:
+      - country_code
+      - party_type_details
+      type: object
+      title: Payer-ID-Update-Assignee-Request
+      properties:
+        country_code:
+          $ref: '#/components/schemas/Country-Code'
+        assignee_id:
+          type: string
+          title: assignee_id
+          minLength: 1
+          maxLength: 35
+          description: Unique identification number for sanction screening. Either of payerid-number or assignee_id is mandatory.
+        party_type_details:
+          $ref: '#/components/schemas/Party-Type-Details'
+        merchant:
+          $ref: '#/components/schemas/Merchant-Details'
+        beneficiary:
+          title: beneficiaries
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Beneficiary-Details'
+    Payer-ID-Address-Details:
+      type: object
+      title: Payer-ID-Address-Details
+      properties:
+        address:
+          minLength: 1
+          maxLength: 140
+          type: string
+          title: address
+          description: The merchant or beneficiary address.
+        zipcode:
+          minLength: 1
+          maxLength: 16
+          type: string
+          title: zipcode
+          description: The merchant or beneficiary zip code.
+        city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          title: city
+          description: The merchant or beneficiary city.
+        state:
+          minLength: 1
+          maxLength: 35
+          type: string
+          title: state
+          description: The merchant or beneficiary state.
+        country_code:
+          title: Country-Code
+          type: string
+          pattern: ^[A-Z]{2}$
+          description: The ISO country code specifying which country where the account is held with. For example, if we receive a request for Germany, then the county code is 'DE', for France, the country code is 'FR'.
+    Payer-ID-Add-Remove-Update-Assignee-Push-Notification:
+      required:
+      - request_id
+      - country_code
+      - action
+      - status_code
+      - status_description
+      type: object
+      title: Payer-ID-Add-Remove-Update-Assignee-Push-Notification
+      properties:
+        country_code:
+          title: country_code
+          type: string
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          description: The country code.
+        action:
+          title: action
+          type: string
+          maxLength: 20
+          description: 'Indicates the action of the payer ID. Update push notification will the following values: <br>`UPDATE_ASSIGNEE_F`.'
+        request_id:
+          title: request_id
+          type: string
+          maxLength: 32
+          description: Auto-generated unique identifier assigned for the incoming request.
+        payerid_number:
+          title: payerid_number
+          type: string
+          maxLength: 35
+          description: Unique identification number assigned for payers and beneficiaries for incoming payments.
+        assignee_id:
+          type: string
+          title: assignee_id
+          minLength: 1
+          maxLength: 35
+          description: Unique identification number for sanction screening.
+        assignee_id_status:
+          $ref: '#/components/schemas/Assignee-Id-Status'
+        assignee_id_reason:
+          $ref: '#/components/schemas/Assignee-Id-Reason'
+        status_code:
+          title: status_code
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: Status code sent in asynchronous push notification responses. Status code will have values such as <br>'PIRJ' <br>'PIAC' <br>'PIPND'.
+        status_description:
+          title: status_description
+          type: string
+          maxLength: 500
+          description: 'Detailed status description sent in asynchronous push notification responses. Status description will have the following values: <br>`PIRJ` - Payer Id Creation Rejected<br> `PIAC` - Payer ID Creation Successful<br>`PIPND` - Payer ID Activation In Progress`'
+        merchant:
+          $ref: '#/components/schemas/Merchant-Details'
+        beneficiary:
+          title: beneficiary
+          type: array
+          items:
+            $ref: '#/components/schemas/Beneficiary-Details'
+        errors:
+          title: errors
+          type: array
+          items:
+            $ref: '#/components/schemas/Errors'
+  parameters:
+    ClientId:
+      name: client_id
+      in: query
+      description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for OAuth token generation.
+      required: true
+      schema:
+        type: string
+        example: 898918181818181aczta
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            UnauthorizedExample:
+              $ref: '#/components/examples/Unauthorized-Example'
+    MethodNotAllowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            MethodNotAllowedExample:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            InternalServerErrorExample:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+    UnsupportedMediaTypeOrRequestedResourceNotFound:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            UnsupportedMediaTypeExample:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+            RequestedResourceNotFound:
+              $ref: '#/components/examples/Requested-Resource-Not-Found'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Errors'
+          examples:
+            BadRequestExample:
+              $ref: '#/components/examples/Bad-Request-Example'
+    OkResponseForUpdateAssignee:
+      description: Accepted
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Payer-ID-Update-Assignee-Response'
+          examples:
+            OkResponseExampleForUpdateAssigneedetails:
+              $ref: '#/components/examples/OK-Response-Update-Assignee-Success-Example'
+  examples:
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: Please use valid credentials to access this functionality.
+          code: CC00007
+    Assignee-ID-Add-Remove-Update-Assignee-Request-Example:
+      value:
+        country_code: HK
+        assignee_id: GB1234567890123456HK
+        party_type_details: C
+        merchant:
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: '1234573'
+          city: ABCDEFHG
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - beneficiary_id: '123456'
+          last_name: YYY
+          middle_name: ZZZ
+          first_name: HHH
+          address: SAN STREET 878
+          zipcode: '545432678'
+          city: Paris
+          state: PPP
+          country_code: GB
+          dob: '2023-02-28'
+        - beneficiary_id: '888888'
+          last_name: YYY
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '4657898'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-02-28'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+        - last_name: BBB
+          middle_name: JJJ
+          first_name: VVV
+          address: SAN STREET 666
+          zipcode: 09090909
+          city: Barbados
+          state: NJNJ
+          country_code: HK
+          dob: '2020-02-28'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+    Bad-Request-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: country_code is mandatory and it cannot be empty
+          action: please provide valid value for property country_code.
+          code: VC00002
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Method not supported
+          action: Please use valid HTTP verb.
+          code: CC00001
+    Requested-Resource-Not-Found:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Resource that you are searching was not found.
+          action: Please use valid resource details.
+          code: CC00006
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Unable to serve your request at this moment
+          action: Please refer the prescribed action in error for a resolution of this error.
+          code: CC00004
+    Assignee-ID-Update-Assignee-Push-Notification-Error-Example:
+      value:
+        request_id: 9801bac6a4c74662ae78136bd4eba42
+        country_code: GB
+        action: UPDATE_ASSIGNEE_F
+        assignee_id: GB1234567890123456HK
+        assignee_id_status: DEACTIVATED
+        assignee_id_reason: Assignee ID xxx deactivated due to Compliance Review
+        status_code: PIRJ
+        status_description: Updation Unsuccessful
+        party_type_details: C
+        merchant:
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: 1234AOT
+          city: London
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - last_name: YYY
+          beneficiary_id: '123456'
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '9876567'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-01-01'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+        errors:
+        - error_code: PI1008
+          error_description: Incoming Request Content validation failed
+    Assignee-ID-Update-Assignee-Push-Notification-Example:
+      value:
+        request_id: 9801bac6a4c74662ae78136bd4eba42
+        country_code: GB
+        action: UPDATE_ASSIGNEE_F
+        assignee_id: GB1234567890123456HK
+        assignee_id_status: DEACTIVATED
+        assignee_id_reason: Assignee ID xxx deactivated due to Compliance Review
+        status_code: PIAC
+        status_description: Updation Successful
+        party_type_details: C
+        merchant:
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: 1234AOT
+          city: London
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - beneficiary_id: '123456'
+          last_name: YYY
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '9876567'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-01-01'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+    Payer-ID-Add-Remove-Update-Assignee-Push-Notification-Error-Example:
+      value:
+        request_id: 9801bac6a4c74662ae78136bd4eba42
+        country_code: GB
+        action: UPDATE_ASSIGNEE_F
+        payerid_number: GB12345689856423
+        assignee_id: GB1234567890123456GB
+        assignee_id_status: ACTIVE
+        status_code: PIRJ
+        status_description: Updating was unsuccessful
+        party_type_details: C
+        merchant:
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: 1234AOT
+          city: London
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - last_name: YYY
+          beneficiary_id: '123456'
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '9876567'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-01-01'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+        errors:
+        - error_code: PI1008
+          error_description: Incoming request content validation failed.
+    Payer-ID-Add-Remove-Update-Assignee-Request-Example:
+      value:
+        country_code: HK
+        party_type_details: C
+        merchant:
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: '1234573'
+          city: ABCDEFHG
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - beneficiary_id: '123456'
+          last_name: YYY
+          middle_name: ZZZ
+          first_name: HHH
+          address: SAN STREET 878
+          zipcode: '545432678'
+          city: Paris
+          state: PPP
+          country_code: GB
+          dob: '2023-02-28'
+        - beneficiary_id: '888888'
+          last_name: YYY
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '4657898'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-02-28'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+        - last_name: BBB
+          middle_name: JJJ
+          first_name: VVV
+          address: SAN STREET 666
+          zipcode: 09090909
+          city: Barbados
+          state: NJNJ
+          country_code: HK
+          dob: '2020-02-28'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: Please use valid content-type in the header.
+          code: CC00002
+    OK-Response-Update-Assignee-Success-Example:
+      value:
+        status_code: PIPND
+        status_description: Payer ID update assignee request is in progress.
+        request_id: 9801bac6a4c74662ae78136bd4eba462
+    Payer-ID-Add-Remove-Update-Assignee-Push-Notification-Example:
+      value:
+        request_id: 9801bac6a4c74662ae78136bd4eba42
+        country_code: GB
+        action: UPDATE_ASSIGNEE_F
+        payerid_number: GB12345689856423
+        assignee_id: GB1234567890123456GB
+        assignee_id_status: DEACTIVATED
+        assignee_id_reason: Assignee ID xxx deactivated due to Compliance Review
+        status_code: PIAC
+        status_description: Updation Successful
+        party_type_details: C
+        merchant:
+          name_1: XXX
+          name_2: YYY
+          address: XXX, 123
+          zipcode: 1234AOT
+          city: London
+          state: XXX
+          country_code: GB
+          date: '2022-02-28'
+          tax_identifier: '12345678'
+          economic_id: '2312345678'
+          website: http://www.abc.com
+        beneficiary:
+        - beneficiary_id: '123456'
+          last_name: YYY
+          middle_name: ZZZ
+          first_name: AAA
+          address: SAN STREET 123
+          zipcode: '9876567'
+          city: London
+          state: XXX
+          country_code: GB
+          dob: '2022-01-01'
+          tax_identifier: '12345676'
+          economic_id: '2312345678'
+  callbacks:
+    PayerIDAddRemoveUpdateAssigneePushNotification:
+      /asynchronous-update-assignee-push-notification-full:
+        put:
+          description: This callback describes asynchronous push notifications schema definition and examples for update accounts and currency.
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Payer-ID-Add-Remove-Update-Assignee-Push-Notification'
+                examples:
+                  OKPayerIDAddRemoveUpdateAssigneeResponseExample:
+                    $ref: '#/components/examples/Payer-ID-Add-Remove-Update-Assignee-Push-Notification-Example'
+                  NotOKPayerIDAddRemoveUpdateAssigneeResponseExample:
+                    $ref: '#/components/examples/Payer-ID-Add-Remove-Update-Assignee-Push-Notification-Error-Example'
+                  OKAssigneeIDAddRemoveUpdateAssigneeResponseExample:
+                    $ref: '#/components/examples/Assignee-ID-Update-Assignee-Push-Notification-Example'
+                  NotOKAssigneeIDAddRemoveUpdateAssigneeResponseExample:
+                    $ref: '#/components/examples/Assignee-ID-Update-Assignee-Push-Notification-Error-Example'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Grant read-only access to receivable services

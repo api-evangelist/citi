@@ -1,0 +1,1741 @@
+openapi: 3.2.0
+info:
+  title: Citi Accounts API
+  version: '1.0'
+  description: 'Operations tagged Accounts across 4 of this provider''s published API definitions: account_balance_inquiry_api.yaml, citi-statement-transactions-openapi.yaml, citi-transfer-agency-accounts-openapi.yaml, self-service_api.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://tts.apib2b.citi.com/tts/cards
+  description: production gateway URL
+- url: https://tts.sandbox.apib2b.citi.com/tts/cards
+  description: sandbox URL
+- url: https://sit.b2b.api.icg.citi.com/citiconnect/sit5/iis/api/funds/transferagency
+  description: dev gateway url
+- url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb/iis/api/funds/transferagency
+  description: sandbox url
+- url: https://b2b.api.icg.citi.com/citiconnect/prod/iis/api/funds/transferagency
+  description: production gateway url
+- url: https://tts.apib2b.citi.com/citiconnect/prod/selfservices/v1
+  description: production gateway url
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/selfservices/v1
+  description: sbox url
+tags:
+- name: Accounts
+paths:
+  /accounts/v1/balanceInquiry:
+    post:
+      summary: Account Balance Inquiry
+      description: Retrieves account balance information such as the credit or cash limit, current balance, and total usage for various account levels(group, relationship, financial account, or card). Optionally pass a transaction amount in the request to check whether there is available credit for a card transaction.
+      operationId: Account Balance Inquiry
+      parameters:
+      - name: Content-Type
+        in: header
+        description: Supports application/json
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: true
+        schema:
+          type: string
+      - name: client_id
+        in: query
+        required: true
+        description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for oauth token generation
+        schema:
+          type: string
+      - name: Region
+        in: header
+        description: region of the client(APAC/EMEA/NAM)
+        required: true
+        schema:
+          type: string
+      - name: Country
+        in: header
+        description: country of the client
+        required: true
+        schema:
+          type: string
+      - name: Req-Sys-Id
+        in: header
+        description: Client tracking ID
+        required: true
+        schema:
+          type: string
+      - name: key-id
+        in: header
+        description: Client certificate key ID to be provided by TPP
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: <table><tr><td>Code</td><td>Details</td></tr><tr><tr><td>BalInquiryResponse</td><td><table><tr><td>Code</td><td>Details</td></tr><tr><tr><td>BalInquiryResponse</td><td>Success</td></tr></table></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalInquiryResponse'
+        '400':
+          description: <table><tr><td>ResponseCodes400</td><td><table><tr><td>ResponseCode</td><td>Bad Request</td></tr></table></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseCodes400'
+        '500':
+          description: <table><tr><td>ResponseCode500</td><td><table><tr><td>ResponseCodes</td><td>Internal Server Error</td></tr></table></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseCode500'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalInquiryRequest'
+        description: BalInquiryRequest
+        required: true
+      tags:
+      - Accounts
+      security:
+      - clientCredentials: []
+    servers:
+    - url: https://tts.apib2b.citi.com/tts/cards
+      description: production gateway URL
+    - url: https://tts.sandbox.apib2b.citi.com/tts/cards
+      description: sandbox URL
+  /accounts/v1/statement/summary:
+    post:
+      summary: Get All Statements
+      description: This endpoint is used to obtain the summary of statements
+      operationId: All Statements
+      tags:
+      - Accounts
+      parameters:
+      - name: Content-Type
+        in: header
+        description: Supports application/json
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: 'true'
+        schema:
+          type: string
+      - name: client_id
+        in: query
+        required: true
+        description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for oauth token generation
+        schema:
+          type: string
+      - name: Country
+        in: header
+        description: Country of the client
+        required: true
+        schema:
+          type: string
+      - name: Region
+        in: header
+        description: region of the client(APAC/EMEA/NAM)
+        required: true
+        schema:
+          type: string
+      - name: Req-Sys-Id
+        in: header
+        description: Client Tracking ID
+        required: true
+        schema:
+          type: string
+      - name: key-id
+        in: header
+        description: Client certificate key ID to be provided by TPP. Non TPP clients should provide value as 00000000
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: <table><tr><td>Code</td><td>Details</td></tr><tr><tr><td>AccountSummaryInboundResponse</td><td></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountSummaryInboundResponse'
+        '400':
+          description: <table><tr><td>ResponseCodes400</td><td><table><tr><th>Error Code</th><th>Error Description</th></tr><tr><td>EVB1101</td><td>accountNumber is required</td></tr><tr><td>EVB1102</td><td>accountNumber value must be numeric</td></tr><tr><td>EVB1103</td><td>accountNumber must be between 16 and 19 digits</td></tr><tr><td>EVB1117</td><td>Card account number does not belong to the relationship number that has been onboarded for this client ID</td></tr><tr><td>EVB1118</td><td>Card account number does not belong to the group account number that has been onboarded for this client ID</td></tr><tr><td>EVB1119</td><td>Card account number does not belong to the region that has been onboarded for this client ID</td></tr><tr><td>EVB1120</td><td>Invalid accountNumber</td></tr> <tr><td>EVB1130</td><td>Certificate Key Id entered is not valid</td></tr> <tr><td>EVB1131</td><td>Payload signing validation failed.</td></tr> <tr><td>EVB1132</td><td>Group account number has not been onboarded for this client ID and key ID.</td></tr><tr><td>EVC1133</td><td>Certificate Key Id is mandatory</td></tr><tr><td>GRC0002</td><td>Client ID is missing in the request header</td></tr><tr><td>GRC0003</td><td>Invalid JSON Input</td></tr><tr><td>GRC0004</td><td>Region ID is not available in the request</td></tr><tr><td>GRC0005</td><td>Client Tracking ID is missing in the request header</td></tr><tr><td>GRC0007</td><td>Client requested Content Type is not supported</td></tr><tr><td>GRC0010</td><td>Client Tracking ID length should contain a min of 1 character and a max of 36 characters</td></tr><tr><td>GRC0011</td><td>Client ID and/or Country and/or region id is missing in Client Onboard Configuration setup. Contact Citi support.</td></tr><tr><td>GRC0016</td><td>Country code is not available in the request</td></tr></table></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseCodes400'
+        '500':
+          description: <table><tr><td>ResponseCode500</td><td><table><tr><th>Error Code</th><th>Error Description</th></tr><tr><td>GRC0014</td><td>We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments</td></tr></table></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseCode500'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountSummaryInboundRequest'
+        description: AccountSummaryInboundRequest
+        required: true
+      security:
+      - clientCredentials: []
+    servers:
+    - url: https://tts.apib2b.citi.com/tts/cards
+      description: production gateway URL
+    - url: https://tts.sandbox.apib2b.citi.com/tts/cards
+      description: sandbox URL
+  /accounts/v1/statement/transactions:
+    post:
+      summary: Statement Transactions
+      description: This endpoint is used to obtain the transactions for the specified period
+      operationId: Statement Transactions
+      tags:
+      - Accounts
+      parameters:
+      - name: Content-Type
+        in: header
+        description: Supports application/json
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: 'true'
+        schema:
+          type: string
+      - name: client_id
+        in: query
+        required: true
+        description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for oauth token generation
+        schema:
+          type: string
+      - name: Country
+        in: header
+        description: country of the Client
+        required: true
+        schema:
+          type: string
+      - name: Region
+        in: header
+        description: region of the client(APAC/EMEA/NAM)
+        required: true
+        schema:
+          type: string
+      - name: Req-Sys-Id
+        in: header
+        description: Client Tracking ID
+        required: true
+        schema:
+          type: string
+      - name: key-id
+        in: header
+        description: Client certificate key ID to be provided by TPP. Non TPP clients should provide value as 00000000
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: <table><tr><td>Code</td><td>Details</td></tr><tr><tr><td>StatementTransactionsInboundResponse</td><td><table><td>EVB1135</td><td>No transaction data for the dates requested</td></tr></table></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementTransactionsInboundResponse'
+        '400':
+          description: '<table><tr><td>ResponseCodes400</td><td><table><tr><th>Error Code</th><th>Error Description</th></tr><tr><td>EVB1101</td><td>accountNumber is required</td></tr><tr><td>EVB1102</td><td>accountNumber value must be numeric</td></tr><tr><td>EVB1103</td><td>accountNumber must be between 16 and 19 digits</td></tr><tr><td>EVB1117</td><td>Card account number does not belong to the relationship number that has been onboarded for this client ID</td></tr><tr><td>EVB1118</td><td>Card account number does not belong to the group account number that has been onboarded for this client ID</td></tr><tr><td>EVB1119</td><td>Card account number does not belong to the region that has been onboarded for this client ID</td></tr><tr><td>EVB1120</td><td>Invalid accountNumber</td></tr><tr><td>EVB1130</td><td>Certificate Key Id entered is not valid</td></tr><tr><td>EVB1131</td><td>Payload signing validation failed.</td></tr><tr><td>EVB1132</td><td>Group account number has not been onboarded for this client ID and key ID.</td></tr><tr><td>EVC1133</td><td>Certificate Key Id is mandatory</td></tr><tr><td>EVB1121</td><td>statementCycleStartDate is required</td></tr><tr><td>EVB1122</td><td>Invalid statementCycleStartDate format. statementCycleStartDate value must have format: MM/DD/YYYY - M (0,1) |M (0-9) / D (0-3) | D (0-9) / Y (1-9) | Y (0-9) | Y (0-9) | Y (0-9)</td></tr><tr><td>EVB1123</td><td>statementCycleEndDate is required</td></tr><tr><td>EVB1124</td><td>Invalid statementCycleEndDate format. statementCycleEndDate value must have format: MM/DD/YYYY - M (0,1) |M (0-9) / D (0-3) | D (0-9) / Y (1-9) | Y (0-9) | Y (0-9) | Y (0-9)</td></tr><tr><td>EVB1125</td><td>statementCycleStartDate is greater than the statementCycleEndDate</td></tr><tr><td>EVB1126</td><td>Invalid currencyCode</td></tr><tr><td>EVB1127</td><td>currencyCode can have a maximum of 3 characters</td></tr><tr><td>EVB1128</td><td>languageCode can have a maximum of 5 characters</td></tr><tr><td>EVC1134</td><td>The date specified in the startDate or endDate does not exist</td></tr><tr><td>GRC0002</td><td>Client ID is missing in the request header</td></tr><tr><td>GRC0003</td><td>Invalid JSON Input</td></tr><tr><td>GRC0004</td><td>Region ID is not available in the request</td></tr><tr><td>GRC0005</td><td>Client Tracking ID is missing in the request header</td></tr><tr><td>GRC0007</td><td>Client requested Content Type is not supported</td></tr><tr><td>GRC0010</td><td>Client Tracking ID length should contain a min of 1 character and a max of 36 characters</td></tr><tr><td>GRC0016</td><td>Country code is not available in the request</td></tr></table></td></tr></table>'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseCodes400'
+        '500':
+          description: <table><tr><td>ResponseCode500</td><td><table><tr><th>Error Code</th><th>Error Description</th></tr><tr><td>GRC0014</td><td>We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments</td></tr></table></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseCode500'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatementTransactionsInboundRequest'
+        description: StatementTransactionsInboundRequest
+        required: true
+      security:
+      - clientCredentials: []
+    servers:
+    - url: https://tts.apib2b.citi.com/tts/cards
+      description: production gateway URL
+    - url: https://tts.sandbox.apib2b.citi.com/tts/cards
+      description: sandbox URL
+  /accounts/v1/statement/unbilledtxn:
+    post:
+      summary: Unbilled Transactions
+      description: This endpoint is used to obtain unbilled transactions.
+      operationId: Unbilled Transactions
+      tags:
+      - Accounts
+      parameters:
+      - name: Content-Type
+        in: header
+        description: Supports application/json
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: 'true'
+        schema:
+          type: string
+      - name: client_id
+        in: query
+        required: true
+        description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for oauth token generation
+        schema:
+          type: string
+      - name: Country
+        in: header
+        description: country of the client.
+        required: true
+        schema:
+          type: string
+      - name: Region
+        in: header
+        description: region of the client(APAC/EMEA/NAM)
+        required: true
+        schema:
+          type: string
+      - name: Req-Sys-Id
+        in: header
+        description: Client tracking ID
+        required: true
+        schema:
+          type: string
+      - name: key-id
+        in: header
+        description: Client certificate key ID to be provided by TPP. Non TPP clients should provide value as 00000000
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: <table><tr><td>Code</td><td>Details</td></tr><tr><tr><td>UnbilledTransactionsInboundResponse</td><td></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnbilledTransactionsInboundResponse'
+        '400':
+          description: <table><tr><td>ResponseCodes400</td><td><table><tr><th>Error Code</th><th>Error Description</th></tr><tr><td>EVB1101</td><td>accountNumber is required</td></tr><tr><td>EVB1102</td><td>accountNumber value must be numeric</td></tr><tr><td>EVB1103</td><td>accountNumber must be between 16 and 19 digits</td></tr><tr><td>EVB1117</td><td>Card account number does not belong to the relationship number that has been onboarded for this client ID</td></tr><tr><td>EVB1118</td><td>Card account number does not belong to the group account number that has been onboarded for this client ID</td></tr><tr><td>EVB1119</td><td>Card account number does not belong to the region that has been onboarded for this client ID</td></tr><tr><td>EVB1120</td><td>Invalid accountNumber</td></tr><tr><td>EVB1130</td><td>Certificate Key Id entered is not valid</td></tr><tr><td>EVB1131</td><td>Payload signing validation failed.</td></tr><tr><td>EVB1132</td><td>Group account number has not been onboarded for this client ID and key ID.</td></tr><tr><td>EVC1133</td><td>Certificate Key Id is mandatory</td></tr><tr><td>EVB1126</td><td>Invalid currencyCode</td></tr><tr><td>EVB1127</td><td>currencyCode can have a maximum of 3 characters</td></tr><tr><td>EVB1128</td><td>languageCode can have a maximum of 5 characters</td></tr><tr><td>GRC0002</td><td>Client ID is missing in the request header</td></tr><tr><td>GRC0003</td><td>Invalid JSON Input</td></tr><tr><td>GRC0004</td><td>Region ID is not available in the request</td></tr><tr><td>GRC0005</td><td>Client Tracking ID is missing in the request header</td></tr><tr><td>GRC0007</td><td>Client requested Content Type is not supported</td></tr><tr><td>GRC0010</td><td>Client Tracking ID length should contain a min of 1 character and a max of 36 characters</td></tr><tr><td>GRC0011</td><td>Client ID and/or Country and/or region id is missing in Client Onboard Configuration setup. Contact Citi support.</td></tr><tr><td>GRC0016</td><td>Country code is not available in the request</td></tr></table></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseCodes400'
+        '500':
+          description: <table><tr><td>ResponseCode500</td><td><table><tr><th>Error Code</th><th>Error Description</th></tr><tr><td>GRC0014</td><td>We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments</td></tr></table></td></tr></table>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseCode500'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnbilledTransactionsInboundRequest'
+        description: UnbilledTransactionsInboundRequest
+        required: true
+      security:
+      - clientCredentials: []
+    servers:
+    - url: https://tts.apib2b.citi.com/tts/cards
+      description: production gateway URL
+    - url: https://tts.sandbox.apib2b.citi.com/tts/cards
+      description: sandbox URL
+  /v1/accounts/{fundManagerId}:
+    get:
+      tags:
+      - Accounts
+      summary: Access all fund accounts, including balances and status
+      description: Access all fund accounts, including balances and status.
+      operationId: getAccounts
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Account-Id'
+      - $ref: '#/components/parameters/Fund-Manager-Id'
+      - $ref: '#/components/parameters/Account-Status'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: OK
+          headers:
+            x-request-id:
+              $ref: '#/components/headers/x-request-id'
+            pagination-metadata:
+              $ref: '#/components/headers/pagination-metadata'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Get-Account-Response'
+              example:
+                fundManagerId: FM123
+                accounts:
+                - id: ACC789
+                  jointAccountStatus: Primary
+                  name: John Doe
+                  firstName: John
+                  middleName: M
+                  lastName: Doe
+                  status: Active
+                  designation: Individual
+                  amlStatus: Compliant
+                  pep: 'No'
+                  fullDealingRestrictionsIndicator: false
+                  purchaseRestrictionsIndicator: false
+                  redemptionRestrictionsIndicator: false
+                  transferInRestrictionsIndicator: false
+                  transferOutRestrictionsIndicator: false
+                  exchangeInRestrictionsIndicator: false
+                  exchangeOutRestrictionsIndicator: false
+                  settlementRestrictionsIndicator: false
+                  registerAddressLine1: 123 Main St
+                  registerAddressLine2: Apt 4
+                  registerAddressLine3: 'null'
+                  registerAddressLine4: 'null'
+                  registerAddressLine5: 'null'
+                  registerAddressTown: Anytown
+                  registerAddressPostCode: '12345'
+                  registerAddressCountry: USA
+                  correspondenceAddressLine1: 456 Oak Ave
+                  correspondenceAddressLine2: 'null'
+                  correspondenceAddressLine3: 'null'
+                  correspondenceAddressLine4: 'null'
+                  correspondenceAddressLine5: 'null'
+                  correspondenceAddressTown: Springfield
+                  correspondenceAddressPostCode: '67890'
+                  correspondenceAddressCountry: USA
+                  emailAddress: john.doe@example.com
+                  activationDate: '2023-01-15'
+                  deactivationDate: '2025-01-15'
+                  dealerId: DL789
+                  dealerName: Acme Investments
+                  branchId: BR101
+                  branchName: Main Branch
+                  repId: RP202
+                  repName: Jane Smith
+                  dealerAddressLine1: 789 Pine Ln
+                  dealerAddressLine2: 'null'
+                  dealerAddressLine3: 'null'
+                  dealerAddressLine4: 'null'
+                  dealerAddressLine5: 'null'
+                  dealerTown: Hometown
+                  dealerPostCode: '54321'
+                  dealerCountry: USA
+                  nonDigitalInvestor: 'No'
+                  investorIds:
+                  - INV123
+                  - INV456
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+    servers:
+    - url: https://sit.b2b.api.icg.citi.com/citiconnect/sit5/iis/api/funds/transferagency
+      description: dev gateway url
+    - url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb/iis/api/funds/transferagency
+      description: sandbox url
+    - url: https://b2b.api.icg.citi.com/citiconnect/prod/iis/api/funds/transferagency
+      description: production gateway url
+  /accounts/amountavailability:
+    get:
+      summary: Payment Amount Availability
+      description: 'CitiConnect Payment Amount Availability allows users to submit requests to Citi in order to identify whether a Citi client has sufficient funds available to complete a transaction. The requestor provides details of the transaction and CitiConnect Payment Amount Availability responds with a Yes or No to indicate if there are sufficient funds.
+
+
+        Content-Type : Supports “application/xml” or “application/json” :
+
+        Authorization : The OAuth Token prefixed with “Bearer” and space in between. :
+
+        amount : Amount :
+
+        accountNumber : Account Number :
+
+        baseCurrency : Currency Type :'
+      parameters:
+      - name: client_id
+        in: query
+        description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for oauth token generation
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 200 OK
+          content: {}
+      tags:
+      - Accounts
+      security:
+      - clientCredentials: []
+      operationId: getAccountsAmountavailability
+      x-operation-id-source: derived
+    servers:
+    - url: https://tts.apib2b.citi.com/citiconnect/prod/selfservices/v1
+      description: production gateway url
+    - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/selfservices/v1
+      description: sbox url
+components:
+  schemas:
+    BalInquiryRequest:
+      properties:
+        accountNumber:
+          description: Number of the account to which the balance inquiry relates. TPP clients must send encrypted Account number field.
+          type: string
+          format: alphanumeric
+          example: '1234567890123450'
+          maxLength: 19
+          minLength: 16
+        accountLevel:
+          description: Heirarchy level to which balance inquiry relates<br>Possible Values<br>G - Corporate Group<br>R - Corporate Relationship<br>A - Financial Account<br>C - Card
+          type: string
+          format: alphanumeric
+          example: C
+          maxLength: 1
+        transactionAmount:
+          description: 'The amount of the planned transaction to be checked against the available limit<br><br>Applicable only when transactionType = C<br><br>Amount format must be passed with the appropriate amount of decimal positions based on the currency per the ISO 4217 standard<br><br>If additonal digits are added to the right of the decimal where not applicable for the given currency as per the ISO 4217 standard, the additional digits will be stripped from the end from the value.<br>Max length: 14 digits to the left of the decimal and 2 digits to the right of the decimal<br>or 13 digits to the left of the decimal and 3 digits to the right of the decimal.'
+          type: string
+          format: alphanumeric
+          example: '100.50'
+          maxLength: 17
+        transactionAmountCurrency:
+          description: Required if transactionAmount is included in request. If not included while Transaction Amount is present, transactionAmountCurrency will be defaulted to the domestic currency<br><br>Applicable only when transactionType = C<br><br>The currency of the planned transaction to be checked against the available limit
+          type: string
+          format: alphanumeric
+          example: USD
+          maxLength: 3
+      required:
+      - accountNumber
+    ResponseCodes:
+      properties:
+        errorCode:
+          description: which indicates the error code
+          type: string
+          format: alphanumeric
+          example: EVB1112
+          maxLength: 30
+        errorDescription:
+          description: which indicates the error description
+          type: string
+          format: alphanumeric
+          example: accountNumber not found in the system
+          maxLength: 300
+      required:
+      - errorCode
+      - errorDescription
+    ResponseCodes400:
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseCodes'
+    ResponseCode500:
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseCode'
+    ResponseCode:
+      properties:
+        errorCode:
+          description: which indicates the error code
+          type: string
+          example: GRC0014
+        errorDescription:
+          description: which indicates the error description
+          type: string
+          example: We have encountered an error and couldnot receive your request. Please try again, or contact Citi support if you have any further questions or comments
+    BalInquiryResponse:
+      properties:
+        accountNumber:
+          description: Number of the account to which the balance inquiry relates
+          type: string
+          format: alphanumeric
+          example: '1234567890123450'
+          maxLength: 19
+        accountLevel:
+          description: Heirarchy level to which balance inquiry relates<br>Possible Values<br>G - Corporate Group<br>R - Corporate Relationship<br>A - Financial Account<br>C - Card
+          type: string
+          format: alphanumeric
+          example: C
+          maxLength: 1
+        necessaryAmountAvailableRetail:
+          description: Returned when Account Type = C  and transactionAmount and transactionAmountCurrency are included in the request<br>Possible Value<br>Y - Yes<br>N - No
+          type: string
+          format: alphanumeric
+          example: Y
+          maxLength: 1
+        wtpTierPercentage:
+          description: Percentage value of wholesale travel product interchange tier
+          type: string
+          format: alphanumeric
+          example: '80'
+          maxLength: 6
+        accountBalanceInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountBalanceInfo'
+        wtpTierCode:
+          description: Code of wholesale travel product interchange tier
+          type: string
+          format: alphanumeric
+          example: MBI
+          maxLength: 3
+      required:
+      - accountNumber
+      - accountLevel
+      - accountBalanceInfo
+    AccountBalanceInfo:
+      properties:
+        accountype:
+          description: Indicates the account Level or account type the account balance info is being returned for.<br>Possible values<br>Corporate Group<br>Corporate Relationship<br>Financial Account<br>Card<br>Cash<br>Foreign Currency Credit<br>Alternate Currency Credit<br>Declining Balance
+          type: string
+          format: alphanumeric
+          maxLength: 1
+        limit:
+          description: The maximum amount of credit that can be spent or the maximum amount allowed for cash withdrawals
+          type: string
+          format: alphanumeric
+          example: '800000'
+          maxLength: 18
+        currentBalance:
+          description: Current balance of the account
+          type: string
+          format: alphanumeric
+          example: '24043.71'
+          maxLength: 18
+        outstandingBalance:
+          description: Balance of authorized transactions that are not yet posted on account
+          type: string
+          format: alphanumeric
+          example: '794.48'
+          maxLength: 18
+        totalUsage:
+          description: Total amount of credit limit spent including outstanding balance
+          type: string
+          format: alphanumeric
+          example: '24838.19'
+          maxLength: 18
+        totalUsagePercentage:
+          description: Percentage of total amount of credit limit spent including outstanding balance
+          type: string
+          format: alphanumeric
+          example: '3.1'
+          maxLength: 7
+        availableLimit:
+          description: Remaining limit available to spend or remaining limit available for cash withdrawal
+          type: string
+          format: alphanumeric
+          example: '775161.81'
+          maxLength: 18
+        availableLimitPercentage:
+          description: The percent of the limit of that account which is allowed to be spent or to be withdrawn
+          type: string
+          format: alphanumeric
+          example: '96.6'
+          maxLength: 7
+        currency:
+          description: The currency of the account
+          type: string
+          format: alphanumeric
+          example: GBP
+          maxLength: 3
+        temporaryLimitExpiry:
+          description: Date when Temporary credit or cash Limit will cease to take effect. Returned when temporary credit or cash limit is active
+          type: string
+          format: alphanumeric
+          example: MMDDYYYY
+          maxLength: 8
+        permanentLimit:
+          description: Amount of permanent credit or cash limit, when temporary limit is active. Returned when temporary credit or cash limit is active
+          type: string
+          format: alphanumeric
+          example: '1000000'
+          maxLength: 18
+        startDate:
+          description: Date when Foreign Currency Limit start to take effect
+          type: string
+          format: alphanumeric
+          example: MMDDYYYY
+          maxLength: 8
+        expiryDate:
+          description: Date when Foreign Currency Limit or Declining Balance expires
+          type: string
+          format: alphanumeric
+          example: MMDDYYYY
+          maxLength: 8
+      required:
+      - accountype
+    TransactionResp:
+      properties:
+        transactionDate:
+          description: Transaction date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        transactionDescription:
+          description: Merchant Long name.<br><br>If isEarlyPayTransaction flag is true, then will this field will contain comma separated values.
+          type: string
+          format: alphanumeric
+          example: ENTERPRISE TOLL
+        transactionAmount:
+          description: Transaction amount expressed in source currency.Max character length is 17 digits with 14 digits to the left of the decimal and 2 digits to the right of the decimal
+          type: string
+          format: numeric
+          maxLength: 17
+        ancillaryServiceCharges:
+          description: Ancillary charges list
+          type: array
+          items:
+            $ref: '#/components/schemas/AncillaryServiceChargesResp'
+        transactionAmountCurrency:
+          description: ISO 4127 alpha-3 code
+          type: string
+          format: alphanumeric
+          example: USD
+          maxLength: 3
+        transactionPostingDate:
+          description: Transaction posting date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        reference:
+          description: Acquirer reference number generated by the Card Associations
+          type: string
+          format: alphanumeric
+          example: '24794870033900000000000'
+        exchangeRate:
+          description: Exchange rate<br><br>Returned only for a foreign transaction<br><br>Returned as:<br>{Source currency} = {billing currency} {exchange rate}
+          type: string
+          format: alphanumeric
+        cardPostingAmount:
+          description: Card posting amount.Max character length is 17 digits with 14 digits to the left of the decimal and 2 digits to the right of the decimal
+          type: string
+          format: numeric
+          maxLength: 17
+        merchantCity:
+          description: Merchant city
+          type: string
+          format: alphanumeric
+          maxLength: 15
+        merchantState:
+          description: Merchant state code
+          type: string
+          format: alphanumeric
+          maxLength: 5
+        merchantCountry:
+          description: Merchant Country returned as two character country code<br>Applicable only for non-NAM regions
+          type: string
+          format: alphanumeric
+          maxLength: 2
+        merchantZipCode:
+          description: Merchant Zip code
+          type: string
+          format: alphanumeric
+          maxLength: 10
+        debitCreditIndicator:
+          description: Indicates whether the transaction is a debit or credit<br><br>Possible values<br>DR - Debit<br>CR - Credit
+          type: string
+          format: alphanumeric
+          example: DR
+          maxLength: 2
+        transactionId:
+          description: Transaction ID<br>Applicable for NAM region only
+          type: string
+          format: alphanumeric
+          maxLength: 38
+        addendumKey:
+          description: Addendum Key for transaction. Applicable for non-NAM regions only
+          type: string
+          format: alphanumeric
+          maxLength: 50
+        memoFlag:
+          description: Memo Flag for transaction.<br>Applicable for non-NAM regions only<br><br>Possible values<br>Y - Diverted transactions<br>N - Non-Diverted transactions
+          type: string
+          format: alphanumeric
+          maxLength: 1
+        transactionAmountInUSD:
+          description: Transaction amount expressed in USD currency.<br>Returned only for Brazil and Argentina International Transactions. Max character length is 17 digits with 14 digits to the left of the decimal and 2 digits to the right of the decimal
+          type: string
+          format: numeric
+          maxLength: 17
+      required:
+      - transactionDate
+      - transactionDescription
+      - transactionAmount
+      - transactionAmountCurrency
+      - transactionPostingDate
+      - reference
+      - cardPostingAmount
+      - merchantCity
+    UnbilledTransactionsInboundResponse:
+      properties:
+        unbilledTransactionsInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionsResp'
+        lastStatementDate:
+          description: Last statement date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        nextStatement Date:
+          description: Next statement date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        debitCreditIdicatorFlag:
+          description: Possible values<br>true - Indicates Debit/Credit Indicator is included in the Transaction.<br>false - Indicates Debit/Credit Indicator is not included in the Transaction.
+          type: string
+          format: alphanumeric
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/UndResponse200'
+      required:
+      - unbilledTransactionsInfo
+      - lastStatementDate
+      - nextStatement Date
+    StatementTransactionsInboundResponse:
+      properties:
+        statementTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatementTransactionResp'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/StTxnResponse200'
+    UndResponse200:
+      properties:
+        errorCode:
+          description: The error code
+          type: string
+          format: alphanumeric
+          example: EVB1137
+          enum:
+          - EVB1137
+        errorDescription:
+          description: The error description that corresponds to error code when there is any<br> error occurred while retrieving the transaction.<br>* `EVB1137`-No transaction data for the requested account number
+          type: string
+          format: alphanumeric
+          example: No transaction data for the requested account number
+    StatementTransactionResp:
+      properties:
+        transactionDate:
+          description: Transaction Date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        transactionDescription:
+          description: Merchant Long name. If the `isEarlyPayTransaction` flag is true, then this parameter will contain comma-separated values.
+          type: string
+          format: alphanumeric
+          example: ENTERPRISE TOLL
+          maxLength: 100
+        transactionAmount:
+          description: Transaction amount expressed in source currency. Max character length is 17 digits with 14 digits to the left of the decimal and 2 digits to the right of the decimal
+          type: string
+          format: numeric
+          example: '8.6'
+          maxLength: 17
+        ancillaryServiceCharges:
+          description: Ancillary charges list
+          type: array
+          items:
+            $ref: '#/components/schemas/AncillaryServiceChargesResp'
+        transactionAmountCurrency:
+          description: 3 character currency code expressed in the source currency. ISO 4127 alpha-3 code
+          type: string
+          format: alphanumeric
+          example: USD
+          maxLength: 3
+        transactionPostingDate:
+          description: Transaction posting date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        reference:
+          description: Acquirer reference number generated by the Card Associations
+          type: string
+          format: alphanumeric
+          example: '24794870033900000000000'
+          maxLength: 23
+        exchangeRate:
+          description: Exchange rate<br><br>Returned only for a foreign transaction
+          type: string
+          format: alphanumeric
+          maxLength: 14
+        cardPostingAmount:
+          description: Card posting amount.Max character length is 17 digits with 14 digits to the left of the decimal and 2 digits to the right of the decimal
+          type: string
+          format: numeric
+          example: '8.6'
+          maxLength: 17
+        merchantCity:
+          description: Merchant city
+          type: string
+          format: alphanumeric
+          example: New York
+          maxLength: 15
+        merchantState:
+          description: Merchant state code. Applicable only for NAM region
+          type: string
+          format: alphanumeric
+          example: NY
+          maxLength: 5
+        merchantCountry:
+          description: Merchant Country returned as three character country code<br>Applicable only for non-NAM regions
+          type: string
+          format: alphanumeric
+          example: IND
+          maxLength: 3
+        merchantZipCode:
+          description: Merchant Zip code
+          type: string
+          format: alphanumeric
+          maxLength: 10
+        invoiceRefNumber:
+          description: Invoice reference number. Applicable for non-NAM regions
+          type: string
+          format: alphanumeric
+          maxLength: 25
+        debitCreditIndicator:
+          description: Indicates whether the transaction is a debit or credit<br><br>Possible values<br>DR - Debit<br>CR - Credit
+          type: string
+          format: alphanumeric
+          example: DR
+          maxLength: 2
+        cardPostingAmountAlt:
+          description: Alternate Card Posting Amount Applicable for non-NAM regions for dual currency markets.Max character length is 17 digits with 14 digits to the left of the decimal and 2 digits to the right of the decimal
+          type: string
+          format: numeric
+          example: '8.6'
+          maxLength: 17
+        transactionId:
+          description: Transaction ID applicable for NAM region only
+          type: string
+          format: alphanumeric
+          maxLength: 38
+        addendumKey:
+          description: Addendum Key for transaction. Applicable for non-NAM regions only
+          type: string
+          format: alphanumeric
+          maxLength: 50
+        memoFlag:
+          description: Memo Flag for transaction.<br>Applicable for non-NAM regions only<br><br>Possible values<br>"Y" - Diverted transaction<br>"N" - Non-Diverted transaction
+          type: string
+          format: alphanumeric
+          maxLength: 1
+        earlyPayTransaction:
+          description: Indicates whether transaction is an Early Pay transaction.<br><br>Possible values<br>TRUE - transaction is an Early Pay transaction<br>FALSE - transaction is an Early Pay transaction<br><br>Returned only for non-NAM regions
+          type: boolean
+          format: boolean
+          example: '"TRUE"'
+        transactionAmountInUSD:
+          description: Transaction amount expressed in USD currency.<br>Returned only for Argentina and Brazil International Transactions.Max character length is 17 digits with 14 digits to the left of the decimal and 2 digits to the right of the decimal
+          type: string
+          format: numeric
+          maxLength: 17
+        transactionPostingCurrencyCode:
+          description: Transaction posting currency code expressed in the source currency<br><br>Three character currency code.ISO 4127 alpha-3 code
+          type: string
+          format: alphanumeric
+          maxLength: 3
+      required:
+      - transactionDate
+      - transactionDescription
+      - transactionAmount
+      - transactionAmountCurrency
+      - transactionPostingDate
+      - reference
+      - cardPostingAmount
+      - merchantCity
+    StatementResp:
+      properties:
+        startDate:
+          description: Statement start date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        endDate:
+          description: Statement end date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        year:
+          description: Statement year
+          type: string
+          format: alphanumeric
+          example: YYYY
+          maxLength: 4
+        month:
+          description: Statement month
+          type: string
+          format: alphanumeric
+          example: FEB
+          maxLength: 3
+        currencyCode:
+          description: 3-character alpha currency code
+          type: string
+          format: alphanumeric
+          example: USD
+          maxLength: 3
+        baseCurrencyFlag:
+          description: Boolean Flag to identify whether the statement data is in base currency or not.<br><br>Possible values:<br>Y - True<br>N - False
+          type: string
+          format: alphanumeric
+          example: Y
+          maxLength: 1
+        currentBalance:
+          description: Current balance for the corresponding statement.Max character length is 17 digits with 14 digits to the left of the decimal and 2 digits to the right of the decimal
+          type: string
+          format: alphanumeric
+          example: '0'
+          maxLength: 18
+        paymentDueDate:
+          description: Payment due date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+      required:
+      - startDate
+      - endDate
+      - year
+      - month
+      - currencyCode
+      - baseCurrencyFlag
+      - currentBalance
+      - paymentDueDate
+    ResponseCodes_2:
+      properties:
+        errorCode:
+          description: The error code
+          type: string
+          format: alphanumeric
+          example: EVB1117
+        errorDescription:
+          description: Description of the error
+          type: string
+          format: alphanumeric
+          example: Card account number does not belong to the relationship number that has been onboarded for this client ID
+    UnbilledTransactionsInboundRequest:
+      properties:
+        accountNumber:
+          description: Number of the account to which the statement information relates to. Account number must be between 16 and 19 digits. TPP clients must send encrypted Account number field
+          type: string
+          format: numeric
+          example: '1234567890123450'
+          maxLength: 19
+          minLength: 16
+        currencyCode:
+          description: 3-character alpha currency code<br><br>Applicable for dual currency accounts
+          type: string
+          format: alphanumeric
+          example: USD
+          maxLength: 3
+        languageCode:
+          description: Returns the merchant name value in the respective language<br><br>Eg.<br>EN for English<br>JA for Japanese.If an invalid language is provided, the response will default with English language
+          type: string
+          format: alphanumeric
+          example: EN
+          maxLength: 5
+      required:
+      - accountNumber
+    AccountSummaryInboundResponse:
+      properties:
+        statements:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatementResp'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmryResponse200'
+    AncillaryServiceChargesResp:
+      properties:
+        serviceChargeDescription:
+          description: Details of ancillary charges description based on card type
+          type: string
+          format: alphanumeric
+          maxLength: 50
+        serviceChargeAmount:
+          description: Details of ancillary charges amount based on card type
+          type: string
+          format: numeric
+    ResponseCode_2:
+      properties:
+        errorCode:
+          description: The error code
+          type: string
+          format: alphanumeric
+          example: GRC0014
+        errorDescription:
+          description: Description of the error
+          type: string
+          format: alphanumeric
+          example: We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you have any further questions or comments
+    TransactionsResp:
+      properties:
+        unbilledTransactionAmount:
+          description: Sum of Unbilled transactions<br><br>If base CurrencyFlag = Y, then amount is expressed in the billed currency<br><br>If base CurrencyFlag = N, then amount is expressed in the alternate currency
+          type: string
+          format: numeric
+          example: '8.6'
+          maxLength: 17
+        transactionPostingCurrencyCode:
+          description: Transaction posting currency code<br><br>Three character currency code<br><br>If base CurrencyFlag = Y, then currency is the billed currency<br><br>If base CurrencyFlag = N, then currency is the alternate currency.ISO 4127 alpha-3 code
+          type: string
+          format: alphanumeric
+          example: USD
+          maxLength: 3
+        baseCurrencyFlag:
+          description: Boolean Flag to identify whether the statement data is in base currency or not.<br><br>"N" is only applicable for dual currency accounts<br><br>Possible values:<br>Y   True<br>N   False
+          type: string
+          format: alphanumeric
+          example: Y
+          maxLength: 1
+        unbilledTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionResp'
+      required:
+      - unbilledTransactionAmount
+      - transactionPostingCurrencyCode
+      - baseCurrencyFlag
+    SmryResponse200:
+      properties:
+        errorCode:
+          description: The error code
+          type: string
+          format: alphanumeric
+          example: EVB1136
+          enum:
+          - EVB1136
+        errorDescription:
+          description: The error description that corresponds to error code when there is any<br> error occurred while retrieving the transaction.<br>* `EVB1136`- No statements data for the requested account number
+          type: string
+          format: alphanumeric
+          example: No statements data for the requested account number
+    StatementTransactionsInboundRequest:
+      properties:
+        accountNumber:
+          description: Number of the account to which the statement information relates to. Account number must be between 16 and 19 digits. TPP clients must send encrypted Account number field
+          type: string
+          format: numeric
+          example: '1234567890123450'
+          maxLength: 19
+          minLength: 16
+        statementCycleStartDate:
+          description: Statement cycle start date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        statementCycleEndDate:
+          description: Statement cycle end date
+          type: string
+          format: alphanumeric
+          example: MM/DD/YYYY
+          maxLength: 10
+        currencyCode:
+          description: 3-character alpha currency code<br><br>Applicable for dual currency accounts
+          type: string
+          format: alphanumeric
+          example: USD
+          maxLength: 3
+        languageCode:
+          description: Returns the merchant name value in the respective language<br><br>for example,<br>EN for English<br>JA for Japanese. If an invalid language is provided, the response will default with the English language
+          type: string
+          format: alphanumeric
+          example: EN
+          maxLength: 5
+      required:
+      - accountNumber
+      - statementCycleStartDate
+      - statementCycleEndDate
+    StTxnResponse200:
+      properties:
+        errorCode:
+          description: The error code
+          type: string
+          format: alphanumeric
+          example: EVB1135
+          enum:
+          - EVB1135
+        errorDescription:
+          description: The error description that corresponds to error code when there is any<br> error occurred while retrieving the transaction.<br>* `EVB1135`-No transaction data for the dates requested
+          type: string
+          format: alphanumeric
+          example: No transaction data for the dates requested
+    AccountSummaryInboundRequest:
+      properties:
+        accountNumber:
+          description: Number of the account to which the statement information relates to. Account number must be between 16 and 19 digits. TPP clients must send encrypted Account number field
+          type: string
+          format: numeric
+          example: '1234567890123450'
+          maxLength: 19
+          minLength: 16
+      required:
+      - accountNumber
+    Account:
+      title: Account
+      type: object
+      properties:
+        id:
+          title: Account ID
+          type: string
+          description: Provide the unique ID for a trading Account linked to an Investor.
+          maxLength: 35
+        jointAccountStatus:
+          title: Joint Account Status
+          type: string
+          description: Indicates if the investor is primary / secondary owner.
+          enum:
+          - Primary
+          - Secondary
+        name:
+          title: Account Name
+          type: string
+          description: A party refers to an individual, institution, or entity involved in a financial transaction, agreement, or contractual relationship. In banking, parties can include account holders, investors, banks, fund managers, and regulatory bodies. Each party has defined roles, rights, and responsibilities.
+          minLength: 1
+          maxLength: 256
+        firstName:
+          title: Account First Name
+          type: string
+          description: The individual investor's first name(s).
+          minLength: 1
+          maxLength: 32
+        middleName:
+          title: Account Middle Name
+          type: string
+          description: The individual investor's middle name.
+          minLength: 1
+          maxLength: 32
+        lastName:
+          title: Account Last Name
+          type: string
+          description: The individual investor's surname.
+          minLength: 1
+          maxLength: 32
+        status:
+          title: Account Status
+          type: string
+          description: Indicates if the account is Active, Inactive or Closed.
+          enum:
+          - Active
+          - InActive
+          - Closed
+        designation:
+          title: Account Designation
+          type: string
+        amlStatus:
+          title: Account AML Status
+          type: string
+          description: Indicates if the Account is AML compliant or not.
+          enum:
+          - Compliant
+          - Non-Compliant
+        pep:
+          title: PEP
+          type: string
+          description: Indicates whether individual is a Politically Exposed Person or not.
+          minLength: 1
+          maxLength: 32
+        fullDealingRestrictionsIndicator:
+          title: Full Dealing Restrictions Indicator
+          description: The unique identifier of the Full Dealing Restriction Type. Indicates if all transactions are blocked for an Investor across for the account.
+          type: boolean
+        purchaseRestrictionsIndicator:
+          title: Purchase Restrictions Indicator
+          type: boolean
+          description: The unique identifier of the Purchase Restriction Type.Indicates if only purchase type transactions are blocked for the account.
+        redemptionRestrictionsIndicator:
+          title: Redemption Restrictions Indicator
+          type: boolean
+          description: The unique identifier of the Redemption Restriction Type.Indicates if only redemption type transactions are blocked for the account.
+        transferInRestrictionsIndicator:
+          title: Transfer In Restrictions Indicator
+          type: boolean
+          description: Indicates if only transfer in type transactions are blocked across all their accounts.
+        transferOutRestrictionsIndicator:
+          title: Transfer Out Restrictions Indicator
+          type: boolean
+          description: Indicates if only transfer out type transactions are blocked across all their accounts.
+        exchangeInRestrictionsIndicator:
+          title: Exchange In Restrictions Indicator
+          type: boolean
+          description: Indicates if only exchange in type transactions are blocked across all their accounts.
+        exchangeOutRestrictionsIndicator:
+          title: Exchange Restrictions Indicator
+          type: boolean
+          description: Indicates if only exchange out type transactions are blocked across all their accounts.
+        settlementRestrictionsIndicator:
+          title: Settlement Restrictions Indicator
+          type: boolean
+          description: The unique identifier of the Settlement Restriction Type. Indicates if only settlement type transactions are blocked for the account.
+        registerAddressLine1:
+          title: Account Register Address Line 1
+          type: string
+          description: Register Address Line 1.
+          maxLength: 200
+        registerAddressLine2:
+          title: Account Register Address Line 2
+          type: string
+          description: Register Address Line 2.
+          maxLength: 200
+        registerAddressLine3:
+          title: Account Register Address Line 3
+          type: string
+          description: Register Address Line 3.
+          maxLength: 200
+        registerAddressLine4:
+          title: Account Register Address Line 4
+          type: string
+          description: Register Address Line 4.
+          maxLength: 200
+        registerAddressLine5:
+          title: Account Register Address Line 5
+          type: string
+          description: Register Address Line 5.
+          maxLength: 200
+        registerAddressTown:
+          title: Account Register Address Town
+          type: string
+          description: Register Address Town.
+          maxLength: 200
+        registerAddressPostCode:
+          title: Account Register Address Post Code
+          type: string
+          description: Register Address Post Code.
+          maxLength: 16
+        registerAddressCountry:
+          title: Account Register Address Country
+          type: string
+          description: Register Address Country, in ISO3166 alpha-3.
+          maxLength: 32
+        correspondenceAddressLine1:
+          title: Account Correspondence Address Line 1
+          type: string
+          description: Correspondence Address Line 1.
+          maxLength: 200
+        correspondenceAddressLine2:
+          title: Account Correspondence Address Line 2
+          type: string
+          description: Correspondence Address Line 2.
+          maxLength: 200
+        correspondenceAddressLine3:
+          title: Account Correspondence Address Line 3
+          type: string
+          description: Correspondence Address Line 3.
+          maxLength: 200
+        correspondenceAddressLine4:
+          title: Account Correspondence Address Line 4
+          type: string
+          description: Correspondence Address Line 4.
+          maxLength: 200
+        correspondenceAddressLine5:
+          title: Account Correspondence Address Line 5
+          type: string
+          description: Correspondence Address Line 5.
+          maxLength: 200
+        correspondenceAddressTown:
+          title: Account Correspondence Address Town
+          type: string
+          description: Correspondence Address Town.
+          maxLength: 200
+        correspondenceAddressPostCode:
+          title: Account Correspondence Address Post Code
+          type: string
+          description: Correspondence Address Post Code.
+          maxLength: 16
+        correspondenceAddressCountry:
+          title: Account Correspondence Address Country
+          type: string
+          description: Correspondence Address Country, in ISO3166 alpha-3.
+          maxLength: 32
+        emailAddress:
+          title: Email Address
+          type: string
+          description: The investor's email address.
+          maxLength: 256
+        activationDate:
+          title: Account Activation Date
+          type: string
+          format: date
+          description: The Account activation date.
+        deactivationDate:
+          title: Account Deactivation Date
+          type: string
+          format: date
+          description: The Account deactivation date.
+        dealerId:
+          title: Dealer ID
+          type: string
+          description: The Dealer ID linked to the Account.
+          maxLength: 32
+        dealerName:
+          title: Dealer Name
+          type: string
+          description: Party Name is the official name of a person, organization, or institution that is a participant in a financial transaction. It is used to uniquely identify the party and ensure accurate communication and processing of financial messages.
+          maxLength: 80
+        branchId:
+          title: Branch ID
+          type: string
+          description: The Branch ID linked to the Account.
+          maxLength: 32
+        branchName:
+          title: Branch Name
+          type: string
+          description: Party Name is the official name of a person, organization, or institution that is a participant in a financial transaction. It is used to uniquely identify the party and ensure accurate communication and processing of financial messages.
+          maxLength: 80
+        repId:
+          title: Rep ID
+          type: string
+          description: The Rep ID linked to the Account.
+          maxLength: 32
+        repName:
+          title: Rep Name
+          type: string
+          description: Provide the name of the Rep.
+          maxLength: 80
+        dealerAddressLine1:
+          title: Dealer Address Line 1
+          description: Dealer Address Line 1.
+          type: string
+          maxLength: 200
+        dealerAddressLine2:
+          title: Dealer Address Line 2
+          description: Dealer Address Line 2.
+          type: string
+          maxLength: 200
+        dealerAddressLine3:
+          title: Dealer Address Line 3
+          description: Dealer Address Line 3.
+          type: string
+          maxLength: 200
+        dealerAddressLine4:
+          title: Dealer Address Line 4
+          description: Dealer Address Line 4.
+          type: string
+          maxLength: 200
+        dealerAddressLine5:
+          title: Dealer Address Line 5
+          description: Dealer Address Line 5.
+          type: string
+          maxLength: 200
+        dealerTown:
+          title: Dealer Town
+          description: Dealer Address Town.
+          type: string
+          maxLength: 200
+        dealerPostCode:
+          title: Dealer Post Code
+          description: Dealer Address Post Code.
+          type: string
+          maxLength: 16
+        dealerCountry:
+          title: Dealer Country
+          description: Dealer Address Country, in ISO3166 alpha-3.
+          type: string
+          maxLength: 32
+        nonDigitalInvestor:
+          title: Non-Digital Investor
+          description: Indicates if the Investor is non-digital.
+          type: string
+          maxLength: 32
+        investorIds:
+          title: Investor IDs
+          description: Provides the unique identifier for the Investor
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+    Get-Account-Response:
+      title: GetAccountsResponse
+      type: object
+      properties:
+        fundManagerId:
+          title: Fund Manager ID
+          type: string
+          description: Provides the unique identifier for Fund Manager
+          maxLength: 32
+        accounts:
+          title: Accounts
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+    Error-Response:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errors:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Error-Detail:
+      type: object
+      title: Error Detail
+      xml:
+        name: errors
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  parameters:
+    Account-Status:
+      name: accountStatus
+      in: query
+      required: false
+      description: Indicates if the account is Active, Inactive or Closed.
+      schema:
+        type: string
+        enum:
+        - ACTIVE
+        - INACTIVE
+        - CLOSED
+    Fund-Manager-Id:
+      name: fundManagerId
+      in: path
+      required: true
+      description: The unique identifier for Fund Manager.
+      schema:
+        type: string
+      example: FM001
+    Limit:
+      name: limit
+      in: query
+      description: The maximum number of records to return.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 5000
+    Client-Id:
+      description: Your unique identification, the same one you use for OAuth token generation, was shared with you by Citi during the CitiConnect API integration.
+      name: client_id
+      in: query
+      required: true
+      schema:
+        type: string
+      example: '54563213246'
+    Account-Id:
+      name: accountId
+      in: query
+      description: The unique ID for a trading Account linked to an Investor.
+      schema:
+        type: string
+    Offset:
+      name: offset
+      in: query
+      description: Offset records by a given number (optional).
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+  headers:
+    pagination-metadata:
+      description: '<br> current_page: current page number<br> total_page: Total number of pages available for your request<br> page_size: Total number of records available in the current page<br> has_more: Any more messages or records expected'
+      schema:
+        type: string
+        title: Pagination Metadata
+        xml:
+          name: paginationMetadata
+        examples:
+        - current_page: 2
+          total_pages: 10
+          page_size: 100
+          has_more: true
+    x-request-id:
+      description: Unique system-generated reference number generated by Citi. Use this number when reporting an issue to a Citi representative in case of any discrepancy.
+      schema:
+        type: string
+        maxLength: 36
+        minLength: 1
+        title: APIGEE GUID
+        examples:
+        - 6c29faa6-8e39-4829-b8ce-0ffa32c1a96c
+  examples:
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: path-param fundManagerId is mandatory and it cannot be empty
+          action: please provide valid value for fundManagerId
+          code: VC00010
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: Method not supported
+          action: please use valid http verb
+          code: CC00001
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+          code: CC00004
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: Media type not supported
+          action: please use valid content-type in header
+          code: CC00002
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          scopes: {}
+          tokenUrl: https://tts.apib2b.citi.com/tts/cards/api/v1/oauth2/token
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Grant read-only access to Transfer Agency Funds apis
+x-refined-from:
+- account_balance_inquiry_api.yaml
+- citi-statement-transactions-openapi.yaml
+- citi-transfer-agency-accounts-openapi.yaml
+- self-service_api.yaml

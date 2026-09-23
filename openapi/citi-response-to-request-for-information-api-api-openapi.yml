@@ -1,0 +1,817 @@
+openapi: 3.2.0
+info:
+  title: CCAPI Payments(JSON) Response to Request for Information API
+  description: Update - March 31, 2026
+  version: 1.0.0
+servers:
+- url: https://b2b.api.icg.citi.com/citiconnect/prod
+  description: production gateway url
+- url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb
+  description: 'sbox url '
+tags:
+- name: Response to Request for Information API
+  description: API services to support Response to Request for Information
+paths:
+  /addonservices/v1/responsetorequestforinformations:
+    post:
+      tags:
+      - Response to Request for Information API
+      summary: Initiate Response to Request for Information
+      description: This endpoint allows you to send Response to Request for Information
+      operationId: responseToRequestForInformation
+      parameters:
+      - name: client_id
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+      - name: Idempotency-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          maxLength: 128
+        example: a44cbb606de4edb9a7a123414bba3bb
+        description: "Your unique identification for a POST request \n - Maximum length is 128. \n-  CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      requestBody:
+        required: true
+        description: This endpoint allows you to Response to Request for Information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Response-To-Request-For-Information'
+      security:
+      - clientCredentials: []
+      callbacks:
+        Request-For-Information-Notification:
+          $ref: '#/components/callbacks/Request-For-Information-Notification'
+        Request-For-Information-Closure-Notification:
+          $ref: '#/components/callbacks/Request-For-Information-Closure-Notification'
+      responses:
+        '200':
+          description: OK
+          headers:
+            request_id:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Initial-Response-To-Request-For-Information'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        default:
+          $ref: '#/components/responses/Internal-Server-Error'
+  /addonservices/v1/responsetorequestforinformations/{id}:
+    get:
+      tags:
+      - Response to Request for Information API
+      summary: Inquire of Response to Request for Information
+      description: This endpoint allows you to get Response to Request for Information.
+      operationId: findResponseToRequestForInformationByRfiId
+      parameters:
+      - name: client_id
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          maxLength: 100
+        example: RFI-36345954-RFICSAWCNAM1
+        description: Your unique identification for a request for information, same as rfi_id.
+      security:
+      - clientCredentials: []
+      responses:
+        '200':
+          description: OK
+          headers:
+            request_id:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response-To-Request-For-Information'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        default:
+          $ref: '#/components/responses/Internal-Server-Error'
+components:
+  schemas:
+    Field-Level-Requests:
+      type: object
+      description: Request can have one or more match level requests.
+      title: Field-Level-Requests
+      properties:
+        field_id:
+          type: number
+          description: Unique ID for each match.
+          title: field_id
+        field_name:
+          type: string
+          description: Name of the field where match has occurred.
+          minLength: 1
+          maxLength: 250
+          title: field_name
+        field_value:
+          type: string
+          description: Entire content of the field having the match.
+          minLength: 1
+          maxLength: 500
+          title: field_value
+        clarification_required_for:
+          type: string
+          description: Exact match.
+          minLength: 1
+          maxLength: 500
+          title: clarification_required_for
+        input_type:
+          type: string
+          description: The input type will be one the following - individual / entity / aircraft / vessel / unknown / others.
+          minLength: 1
+          maxLength: 16
+          title: input_type
+        additional_clarification:
+          type: string
+          description: Additional clarification.
+          minLength: 1
+          maxLength: 150
+          title: additional_clarification
+        field_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field-Details'
+          description: Field details with questions requested from client.
+          maxItems: 30
+          title: field_details
+      required:
+      - field_id
+      - field_name
+      - field_value
+      - input_type
+      - field_details
+    Request-Data-Entity:
+      type: object
+      description: Request Data Entity.
+      title: Request-Data-Entity
+      properties:
+        type:
+          type: string
+          description: Specifies the type of request data being provided.
+          minLength: 1
+          maxLength: 25
+          title: type
+          example: entity
+        identifier_type:
+          type: string
+          description: Specifies the type of identifier being provided. This could be a payer ID.
+          minLength: 1
+          maxLength: 25
+          title: identifier_type
+          example: payer_id
+        identifier_value:
+          type: string
+          description: The actual identifier value corresponding to the `identifier_type`.
+          minLength: 1
+          maxLength: 100
+          title: identifier_value
+          example: '425255252352'
+        country:
+          type: string
+          description: Country.
+          minLength: 1
+          maxLength: 5
+          title: country
+          example: US
+        last_name:
+          type: string
+          description: The last name.
+          title: last_name
+          minLength: 1
+          maxLength: 250
+          example: Terry
+        first_name:
+          type: string
+          description: The first name.
+          title: first_name
+          minLength: 1
+          maxLength: 250
+          example: John
+      required:
+      - type
+    Response-To-Request-For-Information:
+      title: Response-To-Request-For-Information
+      type: object
+      description: Response to Request for Information
+      properties:
+        rfi_id:
+          type: string
+          description: RFI ID.
+          minLength: 1
+          maxLength: 100
+          title: rfi_id
+        fieldlevel_requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field-Level-Requests-With-Answers'
+          description: ' Field level requests for which response is requested'
+          maxItems: 30
+          title: fieldlevel_requests
+      required:
+      - rfi_id
+      - alert_id
+      - request_data
+    Request-For-Information:
+      title: Request-For-Information
+      type: object
+      description: Request For Information Compliance
+      properties:
+        rfi_id:
+          type: string
+          description: 'RFI ID '
+          minLength: 1
+          maxLength: 100
+          title: rfi_id
+        alert_id:
+          type: string
+          description: Alert ID.
+          minLength: 1
+          maxLength: 100
+          title: alert_id
+        request_data:
+          type: object
+          description: Source data
+          discriminator:
+            propertyName: type
+            mapping:
+              entity: '#/components/schemas/Request-Data-Entity'
+              transaction: '#/components/schemas/Request-Data-Transaction'
+          oneOf:
+          - $ref: '#/components/schemas/Request-Data-Entity'
+          - $ref: '#/components/schemas/Request-Data-Transaction'
+          title: request_data
+        fieldlevel_requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field-Level-Requests'
+          description: ' Field level requests for which response is requested'
+          maxItems: 30
+          title: fieldlevel_requests
+      required:
+      - rfi_id
+      - alert_id
+      - request_data
+    Field-Details-with-answers:
+      type: object
+      description: Field details can have one or more questions requested from client.
+      title: Field-Details-with-answers
+      properties:
+        question_name:
+          type: string
+          description: Data requested from client.
+          minLength: 1
+          maxLength: 250
+          title: question_name
+        answer:
+          type: string
+          description: Client answer to the question.
+          minLength: 1
+          maxLength: 2000
+          title: answer
+      required:
+      - question_name
+      - answer
+    Error-Response:
+      type: object
+      title: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+        error_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+          title: error_details
+    Request-Data-Transaction:
+      type: object
+      description: Request Data Transaction.
+      title: Request-Data-Transaction
+      properties:
+        type:
+          type: string
+          description: Specifies the type of request data being provided.
+          minLength: 1
+          maxLength: 25
+          title: type
+          example: transaction
+        identifier_type:
+          type: string
+          description: Specifies the type of identifier being provided. This could be an account ID, a Swift code, or an IBAN, indicating the nature of the identifier in `identifier_value`.
+          minLength: 1
+          maxLength: 25
+          title: identifier_type
+          example: IBAN
+        identifier_value:
+          type: string
+          description: The actual identifier value corresponding to the `identifier_type`.
+          minLength: 1
+          maxLength: 100
+          title: identifier_value
+          example: '78765445677'
+        direction:
+          type: string
+          description: Specifies the direction of the transaction.
+          minLength: 1
+          maxLength: 1
+          title: direction
+          example: I
+        origin_country:
+          type: string
+          description: Origin country.
+          minLength: 1
+          maxLength: 5
+          title: origin_country
+          example: US
+        destination_country:
+          type: string
+          description: Destination country.
+          minLength: 1
+          maxLength: 5
+          title: destination_country
+          example: US
+        debtor_account_id:
+          type: string
+          description: The account identifier of the debtor.
+          minLength: 1
+          maxLength: 100
+          title: debtor_account_id
+          example: '3452523525'
+        debtor_name:
+          type: string
+          description: The name of the debtor.
+          minLength: 1
+          maxLength: 250
+          title: debtor_name
+          example: Terry John
+        account_name:
+          type: string
+          description: The name of the creditor.
+          minLength: 1
+          maxLength: 250
+          title: account_name
+          example: OUMUSHINRIKIYOU TESUTO
+        uetr:
+          type: string
+          description: UUID v4 format unique end-to-end transaction reference
+          minLength: 1
+          maxLength: 100
+          title: uetr
+          example: 975f533c-7cdb-46ff-ac7d-8cf21697f804
+        transaction_reference:
+          type: string
+          description: A unique transaction reference number.
+          minLength: 1
+          maxLength: 100
+          title: transaction_reference
+          example: abc1234
+        account_number:
+          type: string
+          description: The account identifier of the creditor.
+          minLength: 1
+          maxLength: 100
+          title: account_number
+          example: '3252347211351'
+        bic_receiver:
+          type: string
+          description: BIC receiver code.
+          minLength: 1
+          maxLength: 100
+          title: bic_receiver
+          example: CITIAU2AXXX
+        iban:
+          type: string
+          description: The transaction IBAN.
+          minLength: 1
+          maxLength: 100
+          title: iban
+          example: GB14WXYZ20562325648978
+        transaction_date:
+          type: string
+          description: 'The date and time when the transaction was initiated or processed. Format: ISO 8601 (YYYY-MM-DDTHH:mm:ss.sssZ).'
+          minLength: 1
+          maxLength: 50
+          title: transaction_date
+          example: '2024-04-20T11:37:41.000Z'
+        value_date:
+          type: string
+          description: Format YYYY-MM-DDTHH:mm:ss.sssZ Date in local time zone (e.g., EST for a United States RTP network transaction) when Citi's transaction processing application starts processing a transaction
+          minLength: 1
+          maxLength: 50
+          title: value_date
+          example: '2024-04-23T12:37:35.000Z'
+        amount:
+          type: string
+          description: Transaction amount.
+          minLength: 1
+          maxLength: 30
+          title: amount
+          example: '425'
+        currency:
+          type: string
+          description: Transaction currency.
+          minLength: 1
+          maxLength: 10
+          title: currency
+          example: INR
+      required:
+      - type
+    Error-Detail:
+      type: object
+      title: ErrorDetail
+      properties:
+        issue:
+          type: string
+          maxLength: 200
+          description: more details about the issue
+          title: issue
+        action:
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          title: action
+        code:
+          type: string
+          maxLength: 8
+          description: unique code representing the issue
+          title: code
+    Initial-Response-To-Request-For-Information:
+      title: InitialResponseToRequestForInformation
+      type: object
+      description: Initial Response To Request For Information
+      properties:
+        rfi_id:
+          type: string
+          description: 'RFI ID '
+          minLength: 1
+          maxLength: 100
+          title: rfi_id
+        status:
+          type: object
+          title: status
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 acknowledgement status code
+              enum:
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- PDNG - Pending"
+              title: description
+          required:
+          - code
+          - description
+          - date_time
+      required:
+      - rfi_id
+      - status
+    Request-For-Information-Closure:
+      title: Request-For-Information-Closure
+      type: object
+      description: Request For Information Closure
+      properties:
+        alert_id:
+          type: string
+          description: Alert ID
+          minLength: 1
+          maxLength: 100
+          title: alert_id
+        rfi_ids:
+          type: array
+          description: RFI IDs
+          minLength: 1
+          maxLength: 30
+          title: rfi_ids
+          items:
+            type: string
+            description: 'RFI ID '
+            minLength: 1
+            maxLength: 100
+            title: rfi_id
+      required:
+      - rfi_ids
+      - alert_id
+    Field-Level-Requests-With-Answers:
+      type: object
+      description: Request can have one or more match level requests.
+      title: Field-Level-Requests-With-Answers
+      properties:
+        field_id:
+          type: number
+          description: Unique ID for each match.
+          title: field_id
+        field_name:
+          type: string
+          description: Name of the field where match has occurred.
+          minLength: 1
+          maxLength: 250
+          title: field_name
+        field_value:
+          type: string
+          description: Entire content of the field having the match.
+          minLength: 1
+          maxLength: 500
+          title: field_value
+        clarification_required_for:
+          type: string
+          description: Exact match.
+          minLength: 1
+          maxLength: 500
+          title: clarification_required_for
+        input_type:
+          type: string
+          description: "The Input type or template to provide the response against the field. It will be one the following - individual / entity / aircraft / vessel / unknown / others. \n If requested input type is unknown, populate fields from any of the other 4 input types in the response."
+          minLength: 1
+          maxLength: 16
+          title: input_type
+        field_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field-Details-with-answers'
+          description: Field details with questions requested from client.
+          maxItems: 30
+          title: field_details
+      required:
+      - field_id
+      - field_name
+      - field_value
+      - input_type
+    Field-Details:
+      type: object
+      description: Field details can have one or more questions requested from client.
+      title: Field-Details
+      properties:
+        question_name:
+          type: string
+          description: Data requested from client.
+          minLength: 1
+          maxLength: 250
+          title: question_name
+        datatype:
+          type: string
+          description: Data format type which client needs to return in the response.
+          minLength: 1
+          maxLength: 25
+          title: datatype
+        description:
+          type: string
+          description: Description of the requested data.
+          minLength: 1
+          maxLength: 500
+          title: description
+      required:
+      - question_name
+      - datatype
+      - description
+  callbacks:
+    Request-For-Information-Notification:
+      /request-for-information-notification:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Request-For-Information'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    Request-For-Information-Closure-Notification:
+      /request-for-information-closure-notification:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Request-For-Information-Closure'
+                examples:
+                  Request for Information - Closure:
+                    $ref: '#/components/examples/Request-For-Information-Closure'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+            Duplicate-Payment-Conflict-Example:
+              $ref: '#/components/examples/Duplicate-Payment-Conflict-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Un-Supported-Media-Type-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+  parameters:
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Event Type
+      schema:
+        type: string
+    Event-Name:
+      name: Event-Name
+      in: header
+      required: true
+      description: Event Name
+      schema:
+        type: string
+  examples:
+    Un-Supported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type is invalid
+          action: Provide valid media type
+          code: CC00002
+    Request-For-Information-Closure:
+      value:
+        alert_id: '209339209123'
+        rfi_ids:
+        - RFI-36345954-RFICSAWTNAM1
+        - RFI-36345954-RFICSAWTNAM2
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request is not authorized
+          action: Try again with valid credentials
+          code: CC00007
+    Idempotency-Id-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Idempotency-Id provided is currently being used in another request
+          action: please do not repeat the same request again
+          code: VC00016
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+        - issue: instructed_amount is missing
+          action: Provide valid instructed_amount
+          code: VC00010
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: HTTP method is not supported
+          action: Provide valid HTTP method
+          code: CC00001
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request was not processed
+          code: CC00004
+    Not-Found-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
+    Duplicate-Payment-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: duplicate request. same request is being processed in another request
+          action: please do not repeat the same request again
+          code: VC00017
+  securitySchemes:
+    clientCredentials:
+      description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
+
+
+        '
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            paymentservices: Grant read-only access to payment initiation service
+            selfservices: Grant read-only access to beneficiary validation

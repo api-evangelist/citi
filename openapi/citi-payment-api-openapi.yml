@@ -1,0 +1,2528 @@
+openapi: 3.2.0
+info:
+  title: Citi Payment API
+  version: '1.0'
+  description: 'Operations tagged Payment across 4 of this provider''s published API definitions: citi-marketplace-management-openapi.yaml, citi-payment-status-openapi.yaml, citi-paymentenhancedinquiry-json-openapi.yaml, self-service_api.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+  description: production gateway url
+- url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb/gatewayservices
+  description: sbox url
+- url: https://tts.apib2b.citi.com/citiconnect/prod/paymentservices/v3
+  description: production gateway URL
+- url: https://tts.apib2b.citi.com/citiconnect/sb/paymentservices/v3
+  description: sandbox URL
+- url: 'https://tts.sandbox.apib2b.citi.com/citiconnect/sb/paymentservices/v3 '
+- url: https://tts.apib2b.citi.com/citiconnect/prod/selfservices/v1
+  description: production gateway url
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/selfservices/v1
+  description: sbox url
+tags:
+- name: Payment
+  description: Payout and payment query operations
+paths:
+  /merchants/v1/payments:
+    post:
+      summary: Create Payment
+      description: Make a payment from your account held with Citi to a virtual account held with Citi or from the virtual account held with Citi to an external bank account. Virtual account must be in "AVAILABLE" status.
+      operationId: createPayout
+      servers:
+      - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      tags:
+      - Payment
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Idempotency-Id'
+      - $ref: '#/components/parameters/Country-Code'
+      - $ref: '#/components/parameters/Optional-Merchant-Id'
+      - $ref: '#/components/parameters/Wallet-Payment'
+      requestBody:
+        x-skip-validation: true
+        required: true
+        description: This section contains the request parameters for payment initiation.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment-Request'
+            examples:
+              Payment-To-Wallet-Request:
+                $ref: '#/components/examples/Payment-To-Wallet-Request'
+              Payment-To-External-Request:
+                $ref: '#/components/examples/Payment-To-External-Request'
+      responses:
+        '202':
+          description: Payout request accepted for processing.
+          headers:
+            apim-guid:
+              $ref: '#/components/headers/Apim-Guid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment-Response'
+              examples:
+                Payment-Validation-Success-Example:
+                  $ref: '#/components/examples/Payment-Validation-Success-Example'
+                Payment-Validation-Partial-Rejection-Example:
+                  $ref: '#/components/examples/Payment-Validation-Partial-Rejection-Example'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                title: Payment-Bad-Request-Response
+                oneOf:
+                - $ref: '#/components/schemas/Gateway-Error-Response'
+                - $ref: '#/components/schemas/Service-Error-Response'
+                - $ref: '#/components/schemas/Payment-Response'
+              examples:
+                Payment-Validation-Full-Rejection-Example:
+                  $ref: '#/components/examples/Payment-Validation-Full-Rejection-Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+      callbacks:
+        payout-webhook:
+          '{$notificationURL}':
+            post:
+              summary: Payout Webhook
+              description: Webhook notification for payment status updates.
+              operationId: payoutWebhook
+              parameters:
+              - $ref: '#/components/parameters/Event-Type'
+              - $ref: '#/components/parameters/Event-Name'
+              - $ref: '#/components/parameters/Apim-Guid'
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/Webhook-Payment-Request'
+                    examples:
+                      Payment-To-Wallet-Rejected-Webhook:
+                        $ref: '#/components/examples/Payment-To-Wallet-Rejected-Webhook'
+                      Payment-To-External-Rejected-Webhook:
+                        $ref: '#/components/examples/Payment-To-External-Rejected-Webhook'
+                      Payment-To-Wallet-Success-Webhook:
+                        $ref: '#/components/examples/Payment-To-Wallet-Success-Webhook'
+                      Payment-To-External-Success-Webhook:
+                        $ref: '#/components/examples/Payment-To-External-Success-Webhook'
+              responses:
+                '200':
+                  description: Webhook received successfully.
+        inbound-payment:
+          '{$notificationURL}':
+            post:
+              operationId: inboundPaymentNotification
+              summary: Inbound Payment Notification Webhook
+              description: This webhook pushes notifications for the payment received in your virtual account.
+              tags:
+              - Inbound Webhook
+              parameters:
+              - $ref: '#/components/parameters/Event-Type'
+              - $ref: '#/components/parameters/Event-Name'
+              - $ref: '#/components/parameters/Apim-Guid'
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/Inbound-Payment-Notification'
+                    examples:
+                      inbound-payment-example:
+                        $ref: '#/components/examples/Inbound-Payment-Notification-Example'
+              responses:
+                '200':
+                  description: Webhook received successfully.
+    get:
+      summary: Get Payment
+      description: Query the status and detailed attributes of a payment using supported identifiers, including processing state, settlement outcomes, and reference information needed for reconciliation and customer support.
+      operationId: getPayment
+      tags:
+      - Payment
+      servers:
+      - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Country-Code'
+      - $ref: '#/components/parameters/Optional-Merchant-Id'
+      - $ref: '#/components/parameters/Uetr'
+      - $ref: '#/components/parameters/End-To-End-Id'
+      responses:
+        '200':
+          description: Payment details retrieved successfully.
+          headers:
+            apim-guid:
+              $ref: '#/components/headers/Apim-Guid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Get-Payment-Response'
+              examples:
+                Get-Payment-To-Wallet:
+                  $ref: '#/components/examples/Get-Payment-To-Wallet'
+                Get-Payment-To-External:
+                  $ref: '#/components/examples/Get-Payment-To-External'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '429':
+          $ref: '#/components/responses/Too-Many-Requests'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '503':
+          $ref: '#/components/responses/Service-Unavailable'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+      deprecated: false
+      security:
+      - oAuth2:
+        - /authenticationservices/v1
+    servers:
+    - url: https://b2b.api.icg.citi.com/citiconnect/prod/gatewayservices
+      description: production gateway url
+    - url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb/gatewayservices
+      description: sbox url
+  /payment/inquiry:
+    post:
+      responses:
+        '200':
+          description: 'OK - your request was received and acknowledged successfully.
+
+
+            Check the response body for the transaction status.
+
+
+            | Payment Status | Recommended Action |
+
+            | -------------- |  ----------------- |
+
+            | Decrypted payload is unintelligible | Make a payment status inquiry every 5 minutes for 15 minutes. If you do not receive a response, contact Citi.
+
+            | ACTC/ACCP - Accepted | Make a payment status inquiry every 5 minutes |
+
+            | PDNG - Pending | Make a payment status inquiry every 60 minutes |
+
+            | RJCT - Rejected | See the status reason for more information |
+
+            | ACSP/ACSC - Payment successfully processed and cleared | No action required |'
+          content:
+            application/xml:
+              example: <?xmlversion="1.0"encoding="UTF-8"?><Documentxmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.03"><CstmrPmtStsRpt><GrpHdr><MsgId>CITIBANK/20210311-PSR/1026834332</MsgId><CreDtTm>2021-03-11T17:30:29</CreDtTm><InitgPty><Id><OrgId><BICOrBEI>CITIUS33</BICOrBEI></OrgId></Id></InitgPty></GrpHdr><OrgnlGrpInfAndSts><OrgnlMsgId>GBP161114694869</OrgnlMsgId><OrgnlMsgNmId>pain.001.001.03</OrgnlMsgNmId></OrgnlGrpInfAndSts><OrgnlPmtInfAndSts><OrgnlPmtInfId>14017498FundTransferDomestic</OrgnlPmtInfId><TxInfAndSts><OrgnlEndToEndId>CC21TPH3B8J8H2R</OrgnlEndToEndId><TxSts>ACSP</TxSts><StsRsnInf><AddtlInf>ProcessedSettledatclearingSystem.Paymentsettledatclearingsystem</AddtlInf></StsRsnInf><OrgnlTxRef><Amt><InstdAmtCcy="USD">1.00</InstdAmt></Amt><ReqdExctnDt>2021-02-03</ReqdExctnDt><PmtMtd>TRF</PmtMtd><RmtInf><Ustrd>TR002638</Ustrd></RmtInf><Dbtr><Nm>CITIBANKE-BUSINESSEURDUMDEMO</Nm></Dbtr><DbtrAcct><Id><Othr><Id>12345678</Id></Othr></Id></DbtrAcct><DbtrAgt><FinInstnId><PstlAdr><Ctry>GB</Ctry></PstlAdr></FinInstnId></DbtrAgt><CdtrAgt><FinInstnId><BIC>fakebic</BIC></FinInstnId></CdtrAgt><Cdtr><Nm>8010643122XXXXXXXXXXXXXXXXX</Nm></Cdtr><CdtrAcct><Id><Othr><Id>12345678</Id></Othr></Id></CdtrAcct></OrgnlTxRef></TxInfAndSts></OrgnlPmtInfAndSts></CstmrPmtStsRpt></Document>
+      summary: Payment Status Inquiry
+      requestBody:
+        description: 'EndToEndId (required) Unique identification assigned by the initiating party to clearly identify the transaction. This Identification is passed on, unchanged, throughout the entire end-to-end chain. <br>CreDt Date when the payment initiation started. <br>The date format is: YYYY-MM-DD. InstdAmt, Ccy Amount of money transferred between the debtor and the creditor before any deduction of charges is made. This is expressed in the currency that is specified by the initiating party. <b>ReqdExctnDt Date that the initiating party requests that the clearing agent process the payment.'
+        content:
+          application/xml:
+            schema: object
+            example: <?xml version="1.0" encoding="UTF-8"?><paymentInquiryRequest xmlns="http://com.citi.citiconnect/services/types/inquiries/payment/v1"><EndToEndId>CC21TPH3B8J8H2R</EndToEndId></paymentInquiryRequest>
+        required: true
+      tags:
+      - Payment
+      security:
+      - clientCredentials: []
+        Client ID: []
+      operationId: postPaymentInquiry
+      x-operation-id-source: derived
+    get:
+      responses:
+        '200':
+          description: 200 OK
+          content:
+            application/xml:
+              example: <?xml version="1.0" encoding="UTF-8"?><Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.03"><CstmrPmtStsRpt><GrpHdr><MsgId>CITIBANK/20210311-PSR/981382059</MsgId><CreDtTm>2021-03-11T19:31:39</CreDtTm><InitgPty><Id><OrgId><BICOrBEI>CITIUS33</BICOrBEI></OrgId></Id></InitgPty></GrpHdr><OrgnlGrpInfAndSts><OrgnlMsgId>GBP161114694869</OrgnlMsgId><OrgnlMsgNmId>pain.001.001.03</OrgnlMsgNmId></OrgnlGrpInfAndSts><OrgnlPmtInfAndSts><OrgnlPmtInfId>14017498 Fund Transfer Domestic</OrgnlPmtInfId><TxInfAndSts><OrgnlEndToEndId>CC21TPH3B8J8H2R</OrgnlEndToEndId><TxSts>ACSP</TxSts><StsRsnInf><AddtlInf>Processed Settled at clearing System. Payment settled at clearing system</AddtlInf></StsRsnInf><OrgnlTxRef><Amt><InstdAmt Ccy="USD">1.00</InstdAmt></Amt><ReqdExctnDt>2021-02-03</ReqdExctnDt><PmtMtd>TRF</PmtMtd><RmtInf><Ustrd>TR002638</Ustrd></RmtInf><Dbtr><Nm>CITIBANK E-BUSINESS EUR DUM DEMO</Nm></Dbtr><DbtrAcct><Id><Othr><Id>12345678</Id></Othr></Id></DbtrAcct><DbtrAgt><FinInstnId><PstlAdr><Ctry>GB</Ctry></PstlAdr></FinInstnId></DbtrAgt><CdtrAgt><FinInstnId><BIC>fakebic</BIC></FinInstnId></CdtrAgt><Cdtr><Nm>8010643122X XXXXXXXXXXXXX XXX</Nm></Cdtr><CdtrAcct><Id><Othr><Id>12345678</Id></Othr></Id></CdtrAcct></OrgnlTxRef></TxInfAndSts></OrgnlPmtInfAndSts></CstmrPmtStsRpt></Document>
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized; OAuth header decryption failed
+        '403':
+          description: Forbidden
+        '404':
+          description: Service Not Found
+        '405':
+          description: Method Not Allowed
+        '406':
+          description: Duplicate Request Received
+        '412':
+          description: Precondition Failed
+        '415':
+          description: Unsupported Media Type
+        '429':
+          description: Too Many Requests
+        '500':
+          description: Internal Server Error
+      summary: Payment Status Inquiry
+      parameters:
+      - name: endToEndId
+        required: false
+        in: query
+        schema:
+          type: string
+      - name: globalTranNo
+        required: false
+        in: query
+        schema:
+          type: string
+      - name: creationDate
+        required: false
+        in: query
+        schema:
+          type: string
+      - name: amount
+        required: false
+        in: query
+        schema:
+          type: string
+      - name: requiredExecutionDate
+        required: false
+        in: query
+        schema:
+          type: string
+      - name: directDebitInd
+        required: false
+        in: query
+        schema:
+          type: string
+      description: null
+      tags:
+      - Payment
+      security:
+      - clientCredentials: []
+        Client ID: []
+      operationId: getPaymentInquiry
+      x-operation-id-source: derived
+    servers:
+    - url: https://tts.apib2b.citi.com/citiconnect/prod/paymentservices/v3
+      description: production gateway URL
+    - url: https://tts.apib2b.citi.com/citiconnect/sb/paymentservices/v3
+      description: sandbox URL
+  /payment/enhancedinquiry:
+    post:
+      summary: Payment Status Inquiry
+      description: 'This API returns details of your transactions for both Incoming and Outgoing payments based on specified parameters.
+
+
+        Content-Type : Supports application/json.'
+      operationId: paymentStatusInquiry
+      parameters:
+      - name: client_id
+        in: query
+        description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for oauth token generation
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Oauth token used to authenticate the user. This token is short lived, so make sure valid token used.
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: This header represents the format in which the response output is needed. I.e. Input will be application/json;format=PSRJ03
+        required: true
+        schema:
+          type: string
+        example: application/json;format=PSRJ03
+      - name: Content-type
+        in: header
+        description: Specify 'application/json' as the response type.
+        required: true
+        schema:
+          type: string
+        example: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnhancedRequest'
+            examples:
+              Inquiry-Request-Example-EndtoEndId:
+                $ref: '#/components/examples/Inquiry-Request-Example-EndtoEndId'
+              Inquiry-Request-Example-UETR:
+                $ref: '#/components/examples/Inquiry-Request-Example-UETR'
+              Inquiry-Request-Example-EndtoEndId-Transaction-Flow-Indicator:
+                $ref: '#/components/examples/Inquiry-Request-Example-EndtoEndId-Transaction-Flow-Indicator'
+              Inquiry-Request-Example-UETR-Transaction-Flow-Indicator:
+                $ref: '#/components/examples/Inquiry-Request-Example-UETR-Transaction-Flow-Indicator'
+        required: true
+      responses:
+        '200':
+          description: OK. successful operation response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+              examples:
+                Inquiry-Response-Example:
+                  $ref: '#/components/examples/Inquiry-Response-Example'
+                Inquiry-Response-Return-Example:
+                  $ref: '#/components/examples/Inquiry-Response-Return-Example'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+              example:
+                errors:
+                - action: Resend request with valid Transaction flow indicator, Indicator should be CR or DR.
+                  issue: Invalid Transaction flow indicator
+                - action: Resend request with valid UETR.
+                  issue: UETR cannot be empty or invalid format
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response_2'
+              example:
+                httpCode: '401'
+                httpMessage: Unauthorized
+                moreInformation: This server could not verify that you are authorized to access the URL
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response_2'
+              example:
+                httpCode: '404'
+                httpMessage: Not Found
+                moreInformation: No resources match requested URI
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response_2'
+              example:
+                httpCode: '405'
+                httpMessage: Method Not Allowed
+                moreInformation: The method is not allowed for the requested URL
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response_2'
+              example:
+                httpCode: '415'
+                httpMessage: Unsupported Media Type
+                moreInformation: Unsupported Content-Type
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gateway-Error-Response_2'
+              example:
+                httpCode: '429'
+                httpMessage: Too Many Requests
+                moreInformation: Rate Limit exceeded
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+              example:
+                errors:
+                - action: Check the service of API.
+                  issue: Internal Server Error
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+              example:
+                errors:
+                - action: Please try again later/ after some time.
+                  issue: Service Unavailable
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+              example:
+                errors:
+                - action: Look for server connectivity issues.
+                  issue: Gateway timeout issue
+      security:
+      - clientCredentials: []
+      x-codegen-request-body-name: body
+      tags:
+      - Payment
+    servers:
+    - url: https://tts.apib2b.citi.com/citiconnect/prod/paymentservices/v3
+    - url: 'https://tts.sandbox.apib2b.citi.com/citiconnect/sb/paymentservices/v3 '
+  /payment/banksearch:
+    post:
+      summary: Bank Listing
+      description: 'CitiConnect Bank Listing allows users to get bank details for specific payment methods, primarily for ACH and FVT, for streamlining integration and reducing downstream errors.
+
+
+        Content-Type : Supports “application/json”
+
+        Authorization: The OAuth Token prefixed with “Bearer” and space in between. :
+
+        countryCode : Country Code
+
+        bankShortName: Bank Short Name
+
+        bankCityName : Bank City Name :
+
+        bankCode : Bank Code :
+
+        bankRoutingCode : Bank Routing code :
+
+        paymentType : Payment Method type (DFT,BKT,…etc.) :
+
+        branchCode : Branch Code :
+
+        currencyCode : Currency Code :
+
+        bankStateName : Bank state Name :'
+      parameters:
+      - name: Authorization
+        in: header
+        description: The OAuth Token prefixed with "Bearer" and space in between.
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Supports application/json.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 200 OK
+          content: {}
+      tags:
+      - Payment
+      security:
+      - clientCredentials: []
+      operationId: postPaymentBanksearch
+      x-operation-id-source: derived
+    servers:
+    - url: https://tts.apib2b.citi.com/citiconnect/prod/selfservices/v1
+      description: production gateway url
+    - url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb/selfservices/v1
+      description: sbox url
+components:
+  examples:
+    Un-Supported-Media-Type-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: please use valid content-type in header
+          code: CC00002
+    Unauthorized-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+    Internal-Server-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+          code: CC00004
+    Bad-Request-Gateway-Error-Example:
+      value:
+        httpCode: '400'
+        httpMessage: Bad Request
+        moreInformation: please provide valid value for request
+    Get-Payment-To-Wallet:
+      value:
+        message_id: bulk123
+        payments:
+        - debtor:
+            account:
+              number: R202501080950209789
+          creditor:
+            account:
+              virtual_account_id: VA202501080950209789
+          transaction:
+            partner_user_reference: PUR1234556567wegry
+            end_to_end_id: SM37864746
+            currency_code: USD
+            amount: 1000
+            payment_details: INV123
+            uetr: '202501092053115499258'
+            created_time: '2026-01-06T10:56:25Z'
+            completed_time: '2026-01-06T11:00:25Z'
+          status: SUCCESS
+    Service-Unavailable-Gateway-Example:
+      value:
+        httpCode: '503'
+        httpMessage: Service is temporarily unavailable
+        moreInformation: Retry the request after some time
+    Forbidden-Service-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - code: CC00008
+          issue: User does not have privilege to access this functionality.
+          action: Please reach out to support team to enable this feature.
+    Un-Supported-Media-Type-Gateway-Error-Example:
+      value:
+        httpCode: '415'
+        httpMessage: Unsupported Media Type
+        moreInformation: Unsupported Content-Type application/octet-stream
+    Payment-Validation-Success-Example:
+      value:
+        status: PENDING
+        message: Request is in-progress
+        message_id: bulk123
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: Internal Server Error
+    Not-Found-Gateway-Error-Example:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Payment-To-External-Rejected-Webhook:
+      value:
+        merchant_id: ec689822-9864-4c4d-9d68-222467627901
+        debtor:
+          account:
+            virtual_account_id: VA202501080950209789
+        creditor:
+          id: R202501080950209789
+        transaction:
+          partner_user_reference: PUR1234556567wegry
+          end_to_end_id: SM37864746
+          currency_code: USD
+          amount: 1000
+          payment_details: INV123
+          uetr: '202501092053115499258'
+          created_time: '2026-01-06T10:56:25Z'
+          completed_time: '2026-01-06T11:00:25Z'
+        status: REJECTED
+        message: Payment is rejected
+        error_details:
+        - issue: property end_to_end_id is mandatory and it cannot be empty
+          action: please provide valid value for property end_to_end_id
+          code: VC00010
+    Payment-To-External-Success-Webhook:
+      value:
+        merchant_id: ec689822-9864-4c4d-9d68-222467627901
+        debtor:
+          account:
+            virtual_account_id: VA202501080950209789
+        creditor:
+          id: R202501080950209789
+        transaction:
+          partner_user_reference: PUR1234556567wegry
+          end_to_end_id: SM37864746
+          equivalent_currency_code: USD
+          currency_code: USD
+          amount: 1000
+          payment_details: INV123
+          uetr: '202501092053115499258'
+          charges_currency: CNH
+          charges_amount: 100.11
+          fx_rate_id: '3885000000000000000'
+          fx_rate: 0
+          created_time: '2026-01-06T10:56:25Z'
+          completed_time: '2026-01-06T11:00:25Z'
+        status: SUCCESS
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: The server could not verify that you are authorized to access the URL
+    Payment-Validation-Full-Rejection-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        status: REJECTED
+        message: Request is rejected
+        message_id: bulk123
+        transaction:
+        - end_to_end_id: SM37864746
+          error_details:
+          - issue: property emailAddress is mandatory and it cannot be empty
+            action: please provide valid value for property emailAddress
+            code: VC00010
+    Bad-Request-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+        - issue: record that you are searching is not found
+          action: resend the request with valid values
+          code: VC00003
+    Payment-To-Wallet-Request:
+      value:
+        message_id: bulk123
+        payments:
+        - payment_info:
+          - transaction:
+              partner_user_reference: PUR1234556567wegry
+              end_to_end_id: SM37864746
+              currency_code: USD
+              amount: 1000
+              payment_details: INV123
+            method:
+              type: LOCAL
+              method: BKT
+            creditor:
+              account:
+                virtual_account_id: VA202501080950209789
+    Payment-Validation-Partial-Rejection-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        status: PARTIALLY_REJECTED
+        message: Request is partially rejected
+        message_id: bulk123
+        transaction:
+        - end_to_end_id: SM37864746
+          error_details:
+          - issue: property emailAddress is mandatory and it cannot be empty
+            action: please provide valid value for property emailAddress
+            code: VC00010
+    Get-Payment-To-External:
+      value:
+        merchant_id: ec689822-9864-4c4d-9d68-222467627901
+        payments:
+        - debtor:
+            account:
+              virtual_account_id: VA202501080950209789
+          creditor:
+            id: R202501080950209780
+          transaction:
+            partner_user_reference: PUR1234556567wegry
+            end_to_end_id: SM37864746
+            equivalent_currency_code: USD
+            currency_code: USD
+            amount: 1000
+            payment_details: INV123
+            uetr: '202501092053115499258'
+            charges_currency_code: CNH
+            charges_amount: 100.11
+            fx_rate: 0
+            created_time: '2026-01-06T10:56:25Z'
+            completed_time: '2026-01-06T11:00:25Z'
+          status: SUCCESS
+    Too-Many-Requests-Gateway-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: Rate Limit exceeded
+    Method-Not-Allowed-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+        - issue: Method not supported
+          action: Method not supported for this endpoint, please use valid http verb
+          code: CC00001
+    Payment-To-Wallet-Rejected-Webhook:
+      value:
+        message_id: bulk123
+        debtor:
+          account:
+            number: R202501080950209789
+        creditor:
+          account:
+            virtual_account_id: VA202501080950209789
+        transaction:
+          partner_user_reference: PUR1234556567wegry
+          end_to_end_id: SM37864746
+          currency_code: USD
+          amount: 1000
+          payment_details: INV123
+          uetr: '202501092053115499258'
+          created_time: '2026-01-06T10:56:25Z'
+        status: REJECTED
+        message: Payment is rejected
+        error_details:
+        - issue: property end_to_end_id is mandatory and it cannot be empty
+          action: please provide valid value for property end_to_end_id
+          code: VC00010
+    Payment-To-Wallet-Success-Webhook:
+      value:
+        message_id: bulk123
+        debtor:
+          account:
+            number: R202501080950209789
+        creditor:
+          account:
+            virtual_account_id: VA202501080950209789
+        transaction:
+          partner_user_reference: PUR1234556567wegry
+          end_to_end_id: SM37864746
+          currency_code: USD
+          amount: 1000
+          payment_details: INV123
+          uetr: '202501092053115499258'
+          created_time: '2026-01-06T10:56:25Z'
+        status: SUCCESS
+    Inbound-Payment-Notification-Example:
+      summary: Example inbound payment notification payload
+      value:
+        merchant_id: ClientCustomerID1234
+        debtor:
+          name: Hongbo
+          account_number: '1234567'
+          country_code: CN
+          address: Ras Al Khaimah
+        debtor_bank:
+          name: Citi Bank US
+        creditor:
+          name: Su Lin
+          account_number: '78945615'
+          address: Schillerstrasse 23
+        transaction:
+          uetr: de2da6c9-18be-48d4-8053-867ed90a316a
+          end_to_end_id: E202501080950209789
+          amount: 1000
+          currency_code: USD
+          payment_details: Goods sold
+        status: SUCCESS
+        inbound_type: INBOUND
+    Payment-To-External-Request:
+      value:
+        payments:
+        - debtor:
+            account:
+              virtual_account_id: VA202501080950209789
+          payment_info:
+          - transaction:
+              partner_user_reference: PUR1234556567wegry
+              end_to_end_id: SM37864746
+              equivalent_currency_code: USD
+              currency_code: USD
+              amount: 1000
+              payment_details: INV123
+              fx_rate_id: '3885000000000000000'
+              purpose_code: '1001'
+              payment_type: PAYOUT
+              file_id: '112213'
+            method:
+              type: CROSS_BORDER
+              method: CBFT
+            creditor:
+              id: R202501080950209789
+    Method-Not-Allowed-Gateway-Error-Example:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Inquiry-Request-Example-EndtoEndId:
+      value:
+        end_to_end_identification: API2307202501
+    Inquiry-Response-Example:
+      value:
+        created_date_time: '2025-08-01T09:49:31.837658377Z'
+        transactions:
+        - uetr: bd97a464-ec40-4054-9a5c-ddd097f7681f
+          end_to_end_identification: API2307202501
+          instruction_identification: API2307202501
+          account_servicer_reference: '3539253208'
+          service_type_indicator: '003'
+          transaction_status:
+            status: ACCP
+          event_time: '2020-10-05T08:35:55.000Z'
+          originator: CITIGB2LXXX
+          instructed_amount:
+            currency: USD
+            amount: '1.00'
+          confirmed_amount:
+            currency: USD
+            amount: '1.00'
+          interbank_settlement_date: '2025-07-24'
+          debtor:
+            name: CITIBANK E-BUSINESS EUR DUM DEMO
+          debtor_account:
+            identification:
+              identification: '10012345'
+          debtor_agent:
+            branch_id: '600'
+          creditor:
+            name: 8010643122X XXXXXXXXXXXXX XXX
+          creditor_account:
+            identification:
+              identification: '10012262'
+          creditor_agent:
+            branch_id: '600'
+          unstructured_remittance_information: TR002638
+          payment_event:
+          - from: CITIGB2LXXX
+            to: CITIGB2LXXX
+            charge_bearer: SHAR
+            charge_amount:
+              currency: USD
+              amount: '0.00'
+            date_time: '2025-07-23T11:54:02.000Z'
+            additional_remittance_information:
+              credit_virtual_account: '10012262'
+              payment_method: FT
+              return_charge_amount: '0.00'
+              confidential: N
+    Inquiry-Request-Example-UETR-Transaction-Flow-Indicator:
+      value:
+        uetr: bd97a464-ec40-4054-9a5c-ddd097f7681f
+        transaction_flow_indicator: CR
+    Inquiry-Request-Example-UETR:
+      value:
+        uetr: bd97a464-ec40-4054-9a5c-ddd097f7681f
+    Inquiry-Request-Example-EndtoEndId-Transaction-Flow-Indicator:
+      value:
+        end_to_end_identification: API2307202501
+        transaction_flow_indicator: CR
+    Inquiry-Response-Return-Example:
+      value:
+        created_date_time: '2025-08-01T09:49:31.837658377Z'
+        transactions:
+        - uetr: bd97a464-ec40-4054-9a5c-ddd097f7681f
+          end_to_end_identification: API2307202501
+          instruction_identification: API2307202501
+          account_servicer_reference: '3539253208'
+          clearing_system_reference: FDW/20200102B1Q1234C123456
+          service_type_indicator: '003'
+          transaction_status:
+            status: ACCP
+            status_reason_information:
+            - reason: MS03
+              type: RETN
+              reason_description: Returned transaction
+          event_time: '2025-07-24T08:35:55Z'
+          originator: CITIGB2LXXX
+          instructed_amount:
+            currency: USD
+            amount: '100.00'
+          confirmed_amount:
+            currency: USD
+            amount: '98.50'
+          requested_execution_date: '2025-07-23'
+          debtor:
+            name: CITIBANK DEMO
+            any_bic: CITIGB2LXXX
+            identification: D-123
+            postal_code: '600096'
+            town: Chennai
+            country_sub_division: TN
+            country: IN
+            address_line_1: CAXTON HOUSE
+            address_line_2: IN, GB
+            address_line_3: GB SW1H 9NA
+          debtor_account:
+            identification:
+              identification: '10012262'
+          debtor_agent:
+            branch_id: '600'
+          creditor:
+            name: BENEFICIARY
+            any_bic: CITIGB2LXXX
+            identification: C-456
+            postal_code: '10001'
+            town: New York
+            country_sub_division: NY
+            country: US
+          creditor_account:
+            identification:
+              identification: '20023344'
+          creditor_agent:
+            branch_id: '700'
+          unstructured_remittance_information: Invoice 998
+          payment_event:
+          - from: CITIGB2LXXX
+            to: CITIUS33XXX
+            charge_bearer: SHAR
+            charge_amount:
+              currency: USD
+              amount: '1.50'
+            date_time: '2025-07-23T11:54:02Z'
+            foreign_exchange_details:
+              source_currency: USD
+              target_currency: USD
+              exchange_rate: '1.0'
+            additional_remittance_information:
+              debit_virtual_account: V123
+              credit_virtual_account: V456
+              payment_method: FT
+              confidential: N
+              payment_contract: PC-001
+              return_contract: RC-001
+              return_source_currency: USD
+              return_target_currency: USD
+              return_exchange_rate: '1.0'
+              return_charge_currency: USD
+              return_charge_amount: '1.00'
+              return_currency: USD
+              return_amount: '50.00'
+              return_account: RET001
+              return_created_date_time: '2025-07-25T11:54:02Z'
+              return_processed_date_time: '2025-07-25T11:54:02Z'
+              other_identification:
+              - code: MD06
+                value: US5WLEFK
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            title: Bad-Request-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Bad-Request-Service-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Service-Error-Example'
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+    Gateway-Timeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            title: Method-Not-Allowed-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
+            Method-Not-Allowed-Service-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Service-Error-Example'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Forbidden-Service-Example:
+              $ref: '#/components/examples/Forbidden-Service-Example'
+    Too-Many-Requests:
+      description: Too Many Requests - Rate limit exceeded. Retry after the specified time.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Too-Many-Requests-Gateway-Example:
+              $ref: '#/components/examples/Too-Many-Requests-Gateway-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            title: Unauthorized-Response
+            oneOf:
+            - $ref: '#/components/schemas/Service-Error-Response'
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Service-Error-Example'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            title: Internal-Server-Error-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Internal-Server-Service-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Service-Error-Example'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            title: Unsupported-Media-Type-Response
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Un-Supported-Media-Type-Gateway-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Gateway-Error-Example'
+            Un-Supported-Media-Type-Service-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Service-Error-Example'
+    Service-Unavailable:
+      description: Service Unavailable - The server is temporarily unable to  handle the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Service-Unavailable-Gateway-Example:
+              $ref: '#/components/examples/Service-Unavailable-Gateway-Example'
+  schemas:
+    Payment-Info-Details:
+      title: PaymentInfoDetails
+      type: object
+      description: Payment Information details.
+      required:
+      - transaction
+      - method
+      properties:
+        transaction:
+          $ref: '#/components/schemas/Transaction-Details'
+        creditor:
+          $ref: '#/components/schemas/Payment-Creditor'
+        method:
+          $ref: '#/components/schemas/Method'
+    Country-Code:
+      type: string
+      title: country_code
+      pattern: ^[A-Z]{2,2}$
+      description: Country code.
+      example: CN
+    Fx-Rate:
+      type: number
+      title: fx_rate
+      description: The indicative FX rate which is for reference only. The number indicates how much units of buy_currency you can get from one unit of sell_currency.
+    Common-Inbound:
+      type: object
+      title: Inbound-Common
+      description: This section contains Common details.
+      properties:
+        name:
+          allOf:
+          - $ref: '#/components/schemas/Name'
+          - description: Creditor's name.
+            example: Su Lin
+        account_number:
+          type: string
+          title: account_number
+          description: Account number of the VA receiving funds.
+          minLength: 1
+          maxLength: 64
+          example: '78945615'
+        address:
+          type: string
+          title: address
+          description: Recipient's address.
+          example: Schillerstrasse 23
+    Gateway-Error-Response:
+      type: object
+      title: GatewayErrorResponse
+      required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+          example: Bad Request
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: moreInformation
+          example: please provide valid value for request
+    Message-Id:
+      type: string
+      title: message_id
+      description: Unique id from your system for batch. Required for Payment to Wallet (virtual_account credit).
+      example: bulk123
+      minLength: 1
+      maxLength: 34
+    Partner-User-Reference:
+      title: PartnerUserReference
+      type: string
+      description: Unique reference from seller for each payment.
+      minLength: 1
+      maxLength: 35
+      example: PUR1234556567wegry
+    Payment-Details:
+      title: PaymentDetails
+      type: object
+      description: Payment details.
+      required:
+      - payment_info
+      properties:
+        debtor:
+          $ref: '#/components/schemas/Payment-Debtor'
+        payment_info:
+          type: array
+          title: payment_info
+          items:
+            $ref: '#/components/schemas/Payment-Info-Details'
+    Inbound-Debtor:
+      type: object
+      description: This section contains detailed payor information.
+      allOf:
+      - $ref: '#/components/schemas/Common-Inbound'
+      - type: object
+        title: Inbound-Debtor
+        properties:
+          country_code:
+            type: string
+            title: country_code
+            description: Payer's country.
+            minLength: 1
+            maxLength: 128
+            example: CN
+    File-Id:
+      type: string
+      description: Unique identifier for the document uploaded.
+      title: file_id
+      minLength: 1
+      maxLength: 128
+      example: '112213'
+    Payment-Request:
+      title: PaymentRequest
+      type: object
+      description: Request body for creating a payment. Contains the payload with debtor, creditor, and transaction details.
+      required:
+      - payments
+      properties:
+        message_id:
+          allOf:
+          - $ref: '#/components/schemas/Message-Id'
+          description: Unique identifier for bulk payments. Required for payment to wallet.
+        payments:
+          type: array
+          title: payments
+          items:
+            $ref: '#/components/schemas/Payment-Details'
+    Completed-Time:
+      type: string
+      title: completed_on
+      format: date-time
+      description: The time the transaction was finished. Pattern YYYY-MM-DDTHH:mm:ssZ
+      example: '2026-01-06T11:00:25Z'
+    Payment-Response:
+      title: PaymentResponse
+      type: object
+      description: Response body for payment initiation. Contains the details of the payment.
+      properties:
+        ref_id:
+          type: string
+          minLength: 1
+          maxLength: 120
+          description: Unique ID for the Transaction.
+          title: ref_id
+          example: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        status:
+          $ref: '#/components/schemas/Status'
+        message:
+          $ref: '#/components/schemas/Message'
+        message_id:
+          $ref: '#/components/schemas/Message-Id'
+        transaction:
+          type: array
+          title: transaction
+          items:
+            $ref: '#/components/schemas/Transaction'
+    Transaction-Details:
+      title: TransactionDetails
+      type: object
+      description: Transaction details.
+      allOf:
+      - $ref: '#/components/schemas/Common-Transaction'
+      - type: object
+        title: Transaction-Details
+        required:
+        - end_to_end_id
+        - amount
+        - currency_code
+        properties:
+          partner_user_reference:
+            $ref: '#/components/schemas/Partner-User-Reference'
+          equivalent_currency_code:
+            allOf:
+            - $ref: '#/components/schemas/Currency-Code'
+            title: equivalent_currency_code
+            description: The currency you use to fund the payment. <br> Required for payment to external.
+          equivalent_amount:
+            allOf:
+            - $ref: '#/components/schemas/Amount'
+            title: equivalent_amount
+            description: Amount in origin currency.
+          fx_rate_id:
+            allOf:
+            - $ref: '#/components/schemas/Fx-Rate-Id'
+            title: fx_rate_id
+            example: '3885000000000000000'
+          charges_type:
+            type: string
+            title: charges_type
+            description: Charges type.
+            enum:
+            - OUR
+            - SHAR
+            example: SHAR
+          purpose_code:
+            type: string
+            title: purpose_code
+            minLength: 1
+            maxLength: 50
+            description: Payment purpose code. Required for payment to external parties. Supported values are 1001 (Physical goods), 3003 (Logistics), 3005 (Salary), 3006 (Business/ Commission), 3007 (Family support), 3009 (Rent), 3010 (Tax), 3011 (Property/management fees), 3012 (Water electricity), 3016 (Patent), 3017 (Accounting Service), 3018 (Office Expenses), 3019 (Advertising), 3021 (Transfer to Own Account), 3022 (Warehousing), 3023 (GoodsInsurance), 3024 (AttorneysFee), 3025 (StaffWelfare)
+            example: '1001'
+          file_id:
+            $ref: '#/components/schemas/File-Id'
+          payment_type:
+            $ref: '#/components/schemas/Payment-Type'
+    Merchant-Id:
+      type: string
+      description: Unique identifier generated by Citi for each seller. Seller to use this id for the further functional calls.
+      title: merchant_id
+      minLength: 1
+      maxLength: 36
+      example: ec689822-9864-4c4d-9d68-222467627901
+    Account:
+      title: Account
+      type: object
+      description: Account details.
+      properties:
+        number:
+          type: string
+          title: number
+          description: Account number.
+          example: '456456547'
+        branch_code:
+          type: string
+          title: branch_code
+          description: Branch code which holds the account number.
+          example: VA202501080950209789
+        virtual_account_id:
+          allOf:
+          - $ref: '#/components/schemas/Virtual-Account-Id'
+          description: virtual_account_id received when you call wallet activation endpoint. <br> Required at creditor side when paying to wallet. <br> Required at debtor side for payment to external.
+    Method:
+      title: method
+      type: object
+      description: This object contains the payment method and clearing network details.
+      required:
+      - type
+      - method
+      properties:
+        type:
+          type: string
+          title: type
+          description: Payment method. Required for payment to external and payment to wallet. <br> payment to wallet - LOCAL should be used. <br> payment to external - CROSS_BORDER.
+          enum:
+          - CROSS_BORDER
+          - LOCAL
+          example: CROSS_BORDER
+        method:
+          type: string
+          title: method
+          description: ACH, IP, RTGS, DFT, SEPA, BKT, CBFT. <br> For payment to wallet - value must be BKT <br> For payment to external - value should be CBFT.
+          enum:
+          - ACH
+          - IP
+          - RTGS
+          - DFT
+          - SEPA
+          - BKT
+          - CBFT
+          example: CBFT
+        country_code:
+          allOf:
+          - $ref: '#/components/schemas/Country-Code'
+          title: country_code
+          description: Country code of the debtor.
+    Payment-Debtor:
+      title: Debtor
+      type: object
+      description: Information pertaining to debtor of the payment.
+      properties:
+        account:
+          $ref: '#/components/schemas/Account'
+        country_code:
+          allOf:
+          - $ref: '#/components/schemas/Country-Code'
+          title: country_code
+          description: Country code where the fund is credited.
+    Amount:
+      type: number
+      title: amount
+      description: Amount in currency.
+      minimum: 0.01
+      maximum: 10000000000000
+      example: 1000
+    Name:
+      type: string
+      title: name
+      minLength: 1
+      maxLength: 128
+      example: SHASHANK VIJAYSHANKAR TIWARI
+    Get-Payment-Response-Details:
+      title: GetPaymentResponseDetails
+      type: object
+      description: Get Payment Response Details.
+      properties:
+        debtor:
+          $ref: '#/components/schemas/Payment-Debtor'
+        creditor:
+          $ref: '#/components/schemas/Payment-Creditor'
+        transaction:
+          $ref: '#/components/schemas/Get-Transaction-Detail'
+        status:
+          $ref: '#/components/schemas/Status'
+        message:
+          $ref: '#/components/schemas/Message'
+        error_details:
+          type: array
+          description: List of error details.
+          title: error_details
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Debtor-Bank:
+      type: object
+      title: Debtor-Bank
+      description: This section contains detailed payor bank information.
+      properties:
+        name:
+          allOf:
+          - $ref: '#/components/schemas/Name'
+          - description: Bank name of the payer.
+            example: Citi Bank US
+    Payment-Creditor:
+      title: Creditor
+      type: object
+      description: Information pertaining to creditor of the payment.
+      properties:
+        id:
+          type: string
+          title: id
+          minLength: 1
+          maxLength: 64
+          description: Required when paying into a bank account.             creditor_id is returned when you call Link Account endpoint. <br> Required for payment to external.
+          example: R202501080950209789
+        account:
+          $ref: '#/components/schemas/Account'
+    Created-Time:
+      type: string
+      format: date-time
+      description: Date and time of the file created. Pattern YYYY-MM-DDTHH:mm:ssZ
+      title: created_time
+      example: '2026-01-06T10:56:25Z'
+    Inbound-Payment-Notification:
+      type: object
+      title: Inbound-Payment-Notification
+      description: Inbound payment notification.
+      properties:
+        merchant_id:
+          $ref: '#/components/schemas/Merchant-Id'
+        debtor:
+          $ref: '#/components/schemas/Inbound-Debtor'
+        debtor_bank:
+          $ref: '#/components/schemas/Debtor-Bank'
+        creditor:
+          $ref: '#/components/schemas/Inbound-Creditor'
+        transaction:
+          $ref: '#/components/schemas/Inbound-Transaction'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status'
+          description: 'Status of the incoming payments to virtual account. Possible values: SUCCESS, REJECTED.'
+        message:
+          $ref: '#/components/schemas/Message'
+        inbound_type:
+          type: string
+          title: inbound_type
+          description: Type of inbound review.
+          example: INBOUND
+    Message:
+      type: string
+      description: Description of the status.
+      title: message
+      minLength: 1
+      maxLength: 500
+      example: Request is in-progress
+    Inbound-Creditor:
+      type: object
+      description: This section contains detailed payee information.
+      allOf:
+      - $ref: '#/components/schemas/Common-Inbound'
+      - type: object
+        title: Inbound-Creditor
+    Uetr:
+      type: string
+      title: uetr
+      description: This is a unique payment service provider ID assigned to all individual transactions.
+      minLength: 1
+      maxLength: 36
+      example: '202501092053115499258'
+    Fx-Rate-Id:
+      type: string
+      title: fx_rate_id
+      description: When you request a guaranteed quote of Instant FX and Reserved FX, the Citi will return a `fx_rate_id`, which is the unique ID only for guaranteed `fx_indi_rate. <b> fx_rate_id is mandatory for other than USD to USD transfer.
+      minLength: 1
+      maxLength: 64
+      example: '16098876465273400000'
+    Get-Transaction-Detail:
+      title: GetTransactionDetail
+      type: object
+      description: Retrieve transaction details.
+      allOf:
+      - $ref: '#/components/schemas/Common-Transaction'
+      - type: object
+        title: Get-Transaction-Detail
+        properties:
+          partner_user_reference:
+            $ref: '#/components/schemas/Partner-User-Reference'
+          uetr:
+            $ref: '#/components/schemas/Uetr'
+          equivalent_currency_code:
+            allOf:
+            - $ref: '#/components/schemas/Currency-Code'
+            title: equivalent_currency_code
+            description: The currency you use to fund the payout.
+          equivalent_amount:
+            allOf:
+            - $ref: '#/components/schemas/Amount'
+            title: equivalent_amount
+            description: Amount in origin currency.
+          charges_currency_code:
+            allOf:
+            - $ref: '#/components/schemas/Currency-Code'
+            title: charges_currency_code
+            description: Charges currency code.
+            example: CNH
+          charges_amount:
+            allOf:
+            - $ref: '#/components/schemas/Amount'
+            title: charges_amount
+            description: Charges amount.
+            example: 100.11
+          fx_rate:
+            $ref: '#/components/schemas/Fx-Rate'
+          payment_type:
+            $ref: '#/components/schemas/Payment-Type'
+          created_time:
+            $ref: '#/components/schemas/Created-Time'
+          completed_time:
+            $ref: '#/components/schemas/Completed-Time'
+    Get-Payment-Response:
+      title: GetPaymentResponse
+      type: object
+      description: Retrieve payments details.
+      properties:
+        message_id:
+          $ref: '#/components/schemas/Message-Id'
+        payments:
+          type: array
+          title: payments
+          description: A list of individual payment details.
+          items:
+            $ref: '#/components/schemas/Get-Payment-Response-Details'
+    Service-Error-Response:
+      title: ServiceErrorResponse
+      type: object
+      required:
+      - ref_id
+      - error_details
+      properties:
+        ref_id:
+          type: string
+          maxLength: 120
+          description: Unique ID for the Transaction
+          title: ref_id
+          example: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+          type: array
+          description: List of error details
+          title: error_details
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Error-Detail:
+      type: object
+      title: ErrorDetail
+      properties:
+        issue:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: more details about the issue
+          title: issue
+          example: property emailAddress is mandatory and it cannot be empty
+        action:
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          title: action
+          example: please provide valid value for property emailAddress
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: unique code representing the issue
+          title: code
+          example: VC00010
+    Webhook-Payment-Request:
+      title: WebhookPaymentRequest
+      description: Notification for payments to update the status.
+      allOf:
+      - $ref: '#/components/schemas/Webhook-Error-Response'
+      - type: object
+        properties:
+          message_id:
+            $ref: '#/components/schemas/Message-Id'
+          debtor:
+            $ref: '#/components/schemas/Payment-Debtor'
+          creditor:
+            $ref: '#/components/schemas/Payment-Creditor'
+          transaction:
+            $ref: '#/components/schemas/Webhook-Transaction'
+    Common-Error-Response:
+      title: CommonErrorResponse
+      description: Details of error in the request.
+      type: object
+      properties:
+        merchant_id:
+          $ref: '#/components/schemas/Merchant-Id'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status'
+          description: Status description. <br> Certification Webhook - Allowed values are APPROVED, DECLINED, RFI_PENDING. <br> Wallet Activation Webhook - Allowed values are AVAILABLE - account is available to be used; DECLINED - account application rejected; SUSPENDED - account is frozen; CLOSED - account is no longer available. <br> Link Account Webhook - Allowed values are AVAILABLE and DECLINED <br> Payment Webhook - Allowed values are SUCCESS, REJECTED. <br> Inbound Webhook - Allowed values is SUCCESS. <br> Transaction Reporting - PENDING, SUCCESS, REJECTED.
+        message:
+          $ref: '#/components/schemas/Message'
+    Common-Transaction:
+      title: CommonTransaction
+      type: object
+      description: Transaction details.
+      properties:
+        end_to_end_id:
+          $ref: '#/components/schemas/End-To-End-Id'
+        currency_code:
+          allOf:
+          - $ref: '#/components/schemas/Currency-Code'
+          title: target_currency_code
+          description: The currency that the creditor receives. Required for payment to wallet and payment to external.
+        amount:
+          allOf:
+          - $ref: '#/components/schemas/Amount'
+          title: target_amount
+          description: Amount in target currency. Required for payment to wallet and payment to external.
+        payment_details:
+          type: string
+          title: payment_details
+          description: Reference information.
+          minLength: 1
+          maxLength: 140
+          example: INV123
+    Virtual-Account-Id:
+      type: string
+      title: Virtual-Account-Id
+      description: Account ID for a specific virtual account.
+      minLength: 1
+      maxLength: 36
+      example: R200801012359590001
+    Webhook-Error-Response:
+      title: WebhookErrorResponse
+      description: Details of error in the request.
+      allOf:
+      - $ref: '#/components/schemas/Common-Error-Response'
+      - type: object
+        properties:
+          error_details:
+            type: array
+            description: List of error details
+            title: error_details
+            items:
+              $ref: '#/components/schemas/Error-Detail'
+    Payment-Type:
+      type: string
+      title: payment_type
+      description: Transaction type. WITHDRAW is applicable only if the payment is USD to CNY to China.
+      enum:
+      - PAYOUT
+      - WITHDRAW
+      example: PAYOUT
+    Status:
+      type: string
+      description: Status of the request.
+      title: status
+      minLength: 1
+      maxLength: 64
+    Currency-Code:
+      type: string
+      title: currency_code
+      description: The currency code in the transaction.
+      pattern: ^[A-Z]{3}$
+      example: USD
+    Inbound-Transaction:
+      type: object
+      title: Transaction
+      description: This section contains detailed transaction information.
+      allOf:
+      - $ref: '#/components/schemas/Common-Transaction'
+      - type: object
+        title: Transaction-Details
+        properties:
+          uetr:
+            $ref: '#/components/schemas/Uetr'
+    Transaction:
+      title: Transaction
+      type: object
+      description: Details of the transaction.
+      properties:
+        end_to_end_id:
+          allOf:
+          - $ref: '#/components/schemas/End-To-End-Id'
+          description: Unique identifier for the payment. Required when initiating payments (payment to wallet and payment to external).
+        error_details:
+          type: array
+          description: List of error details.
+          title: error_details
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Webhook-Transaction:
+      title: WebhookTransaction
+      type: object
+      description: Transaction details.
+      allOf:
+      - $ref: '#/components/schemas/Common-Transaction'
+      - type: object
+        title: Webhook-Transaction
+        properties:
+          partner_user_reference:
+            $ref: '#/components/schemas/Partner-User-Reference'
+          uetr:
+            $ref: '#/components/schemas/Uetr'
+          equivalent_currency_code:
+            allOf:
+            - $ref: '#/components/schemas/Currency-Code'
+            title: equivalent_currency_code
+            description: The currency you use to fund the payment.
+          equivalent_amount:
+            allOf:
+            - $ref: '#/components/schemas/Amount'
+            title: equivalent_amount
+            description: Amount in origin currency.
+          charges_currency_code:
+            allOf:
+            - $ref: '#/components/schemas/Currency-Code'
+            title: charges_currency_code
+            description: Charges currency.
+            example: CNH
+          charges_amount:
+            allOf:
+            - $ref: '#/components/schemas/Amount'
+            title: charges_amount
+            description: Charges amount.
+            example: 100.11
+          fx_rate_id:
+            allOf:
+            - $ref: '#/components/schemas/Fx-Rate-Id'
+            title: fx_rate_id
+            description: Exchange rate ID.
+            example: '3885000000000000000'
+          fx_rate:
+            $ref: '#/components/schemas/Fx-Rate'
+          created_time:
+            $ref: '#/components/schemas/Created-Time'
+          completed_time:
+            $ref: '#/components/schemas/Completed-Time'
+    End-To-End-Id:
+      type: string
+      title: end_to_end_id
+      description: The unique payment request ID from your system. If the request is for payment to wallet, this field should contain maximum 16 character and should be in UPPER CASE.
+      minLength: 1
+      maxLength: 35
+      example: SM37864746
+    error_detail:
+      type: object
+      properties:
+        action:
+          maxLength: 150
+          minLength: 1
+          type: string
+          description: correction action needs to be done
+        issue:
+          maxLength: 150
+          minLength: 1
+          type: string
+          description: more details about the issue
+    PartyIdentificationCreditor:
+      type: object
+      properties:
+        address_line_1:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_2:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_3:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_4:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_5:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_6:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_7:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        any_bic:
+          description: Code allocated to a financial institution or non financial institution by the ISO 9362 Registration Authority as described in ISO 9362 Banking - Banking telecommunication messages - Business identifier code (BIC).
+          allOf:
+          - $ref: '#/components/schemas/AnyBICIdentifier'
+        country:
+          pattern: '[A-Z]{2,2}'
+          type: string
+          description: Nation with its own government.
+        country_sub_division:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Identifies a subdivision of a country such as state, region, county '
+        identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Other identification maintained apart from BIC.
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Name by which a party is known and which is usually used to identify that party.
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Identifier consisting of a group of letters and/or numbers that is added to a postal address to assist the sorting of mail.
+        town:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Name of a built-up area, with defined boundaries, and a local government.Its a Debtors Town Name.
+      description: Specifies the identification of a person or an organisation.
+    errors:
+      type: object
+      properties:
+        error:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/error_detail'
+    ISODateTime:
+      pattern: ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.[0-9]+)?(?:Z|[+-][01]\d:[0-5]\d)?$
+      type: string
+      description: 'Date & time(format YYYY-MM-DDThh:mm:ss.sssZ) when this particular of transaction status is captured. A particular point in the progression of time defined by a mandatory date and a mandatory time component, expressed in either UTC time format (YYYY-MM-DDThh:mm:ss.sssZ), local time with UTC offset format (YYYY-MM-DDThh:mm:ss.sss+/-hh:mm), or local time format (YYYY-MM-DDThh:mm:ss.sss). These representations are defined in "XML Schema Part 2: Datatypes Second Edition - W3C Recommendation 28 October 2004" which is aligned with ISO 8601.
+
+        Note on the time format:
+
+        1) beginning / end of calendar day
+
+        00:00:00 = the beginning of a calendar day
+
+        24:00:00 = the end of a calendar day
+
+        2) fractions of second in time format
+
+        Decimal fractions of seconds may be included. In this case, the involved parties shall agree on the maximum number of digits that are allowed.'
+    PartyAgent:
+      type: object
+      properties:
+        any_bic:
+          description: Code allocated to a financial institution or non financial institution by the ISO 9362 Registration Authority as described in ISO 9362 Banking - Banking telecommunication messages - Business identifier code (BIC)
+          allOf:
+          - $ref: '#/components/schemas/AnyBICIdentifier'
+        branch_id:
+          maxLength: 35
+          type: string
+          description: Identifies a specific branch of a financial institution.It Contains the Party's accout branch number
+        clearing_code:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Identification of a clearing system, in a coded form as published in an external list.Routing Code of debtor bank (Other Bank) for Debtor OR beneficiary bank (Citi Bank) for Creditor - if Non BIC
+    UUIDv4Identifier:
+      maxLength: 105
+      minLength: 1
+      pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+      type: string
+      description: Universally Unique IDentifier (UUID) version 4, as described in IETC RFC 4122 "Universally Unique IDentifier (UUID) URN Namespace".
+    PartyIdentification:
+      type: object
+      properties:
+        address_line_1:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_2:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_3:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_4:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_5:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_6:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        address_line_7:
+          type: string
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+        any_bic:
+          description: Code allocated to a financial institution or non financial institution by the ISO 9362 Registration Authority as described in ISO 9362 Banking - Banking telecommunication messages - Business identifier code (BIC).
+          allOf:
+          - $ref: '#/components/schemas/AnyBICIdentifier'
+        country:
+          pattern: '[A-Z]{2,2}'
+          type: string
+          description: Nation with its own government.
+        country_sub_division:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Identifies a subdivision of a country such as state, region, county '
+        identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Other identification maintained apart from BIC.
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Name by which a party is known and which is usually used to identify that party.
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Identifier consisting of a group of letters and/or numbers that is added to a postal address to assist the sorting of mail.
+        town:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Name of a built-up area, with defined boundaries, and a local government.Its a Debtors Town Name.
+      description: Specifies the identification of a person or an organisation.
+    StatusReasonInformation:
+      required:
+      - reason
+      type: object
+      properties:
+        reason:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: specifies the status reason code. Value like MS03, AC01 (will be populated only in case of rejection/returns at debit side)
+        reason_description:
+          type: string
+          description: specifies the status reason description.Details about the payment information.
+        type:
+          type: string
+          description: Describe the type. Value like RETN (will be populated only in case of rejection/returns at debit side)
+          items:
+            $ref: '#/components/schemas/Max105Text'
+    PaymentTransaction:
+      required:
+      - confirmed_amount
+      - creditor
+      - creditor_account
+      - creditor_agent
+      - debtor
+      - debtor_account
+      - debtor_agent
+      - instructed_amount
+      - payment_event
+      - service_type_indicator
+      - transaction_status
+      - uetr
+      type: object
+      properties:
+        uetr:
+          allOf:
+          - $ref: '#/components/schemas/UUIDv4Identifier'
+          - description: string of unique characters attached to payment messages,designed to provide complete transparency for all parties in a payment. It identifies the payment resource.
+        end_to_end_identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Unique identification assigned by the initiating party to unambiguously identify the transaction
+        instruction_identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Contains Payer Company's Transaction ID. Its a Unique identification as assigned by an instructing party for an instructed party to unambiguously identify the instruction
+        account_servicer_reference:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: It contains Citi Transaction Reference Number. Its Internal Citi's product processors's reference number to track the transaction
+        clearing_system_reference:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Information used to identify a member within a clearing system.Contain FMI ISO name code, FMI Reference number.eg - FDW/20200102B1Q1234C123456
+        service_type_indicator:
+          maxLength: 3
+          minLength: 3
+          type: string
+          description: It indicates whether the transaction is credit or debit. Possible values for credit 007 and for debit 003.
+        transaction_status:
+          type: object
+          properties:
+            status:
+              type: string
+              description: Specifies the status of a transaction, in a coded form. Possible Values - PDNG/ACCP/ACSC/ACSP/ACCC/RJCT. <br><br>ACCC (Accepted Credit Settlement Completed). Settlement on the creditors account has been completed <br><br> ACSC (Accepted Settlement Completed), Settlement on the debtors account has been completed <br><br> ACSP (Accepted Settlement In Process), All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution <br><br>PDNG (Pending), Payment or individual transaction included in the payment is pending. Further checks and status update will be performed <br><br>RJCT (Rejected), Payment initiation or individual transaction included in the payment initiation has been rejected
+              enum:
+              - PDNG
+              - ACCP
+              - ACSC
+              - ACSP
+              - ACCC
+              - RJCT
+            status_reason_information:
+              type: array
+              description: Information about a each transaction. It is repeated as many times as there are transactions to be returned.
+              items:
+                $ref: '#/components/schemas/StatusReasonInformation'
+          description: Indicates the payment transaction status and optionally the reason for that status.
+        event_time:
+          description: Time(format YYYY-MM-DDThh:mm:ss.sssZ) when the transaction had taken place
+          allOf:
+          - $ref: '#/components/schemas/ISODateTime'
+        originator:
+          maxLength: 35
+          minLength: 1
+          pattern: ^[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}$
+          type: string
+          description: Code allocated to a financial or non-financial institution by  the ISO 9362 Registration Authority, as described in ISO 9362 2014 Banking Banking telecommunication messages - Business identifier code (BIC)
+        instructed_amount:
+          type: object
+          description: A number of monetary units specified in an active or a historic currency where the unit of currency is explicit and compliant with ISO 4217
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        confirmed_amount:
+          required:
+          - amount
+          type: object
+          properties:
+            amount:
+              type: string
+              description: Its a Final confirmed amount after dedcution of charges.A number of monetary units specified in an active or a historic currency where the unit of currency is explicit and compliant with iso 4217.
+            currency:
+              pattern: ^[A-Z]{3,3}$
+              type: string
+              description: Its a Final Confirmed currency. A code allocated to a currency by a Maintenance Agency under an international identification scheme, as described in the latest edition of the international standard ISO 4217
+          description: A number of monetary units specified in an active or a historic currency where the unit of currency is explicit and compliant with ISO 4217
+        request_execution_date:
+          type: object
+          description: 'Date at which the initiating party requests the clearing agent to process the payment.  '
+          allOf:
+          - $ref: '#/components/schemas/ISODate'
+        debtor:
+          type: object
+          description: Party that owes an amount of money to the (ultimate) creditor.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification'
+        debtor_account:
+          type: object
+          description: Unambiguous identification of the account of the debtor to which a debit entry will be made as a result of the transaction
+          allOf:
+          - $ref: '#/components/schemas/CashAccount'
+        debtor_agent:
+          type: object
+          description: Financial institution servicing an account for the debtor.
+          allOf:
+          - $ref: '#/components/schemas/PartyAgent'
+        creditor:
+          type: object
+          description: Creditor is the Party to which an amount of money is due.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentificationCreditor'
+        creditor_account:
+          type: object
+          description: Unambiguous identification of the account of the creditor to which a credit entry will be posted as a result of the payment transaction.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount'
+        creditor_agent:
+          type: object
+          description: Financial institution servicing an account for the creditor.
+          allOf:
+          - $ref: '#/components/schemas/PartyAgent'
+        unstructured_remittance_information:
+          type: string
+          description: Contains Remittance Information or Payment details. Information supplied to enable the matching/reconciliation of an entry with the items that the payment is intended to settle, such as commercial invoices in an accounts' receivable system, in a structured form.
+        payment_event:
+          type: array
+          description: Information about an event which is a payment message or status confirmation update. It is repeated as many times as there are events to be returned.
+          items:
+            $ref: '#/components/schemas/PaymentEventDetail'
+      description: Contains the details on the payment transaction.
+    TransactionResponse:
+      required:
+      - created_date_time
+      type: object
+      properties:
+        created_date_time:
+          $ref: '#/components/schemas/ISODateTime'
+        transactions:
+          type: array
+          description: Information about a each transaction. It is repeated as many times as there are transactions to be returned.
+          items:
+            $ref: '#/components/schemas/PaymentTransaction'
+    IBANIdentifier:
+      pattern: ^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$
+      type: string
+      description: An identifier used internationally by financial institutions to uniquely identify the account of a customer at a financial institution, as described in the latest edition of the international standard ISO 13616 - 2007 - Banking and related financial services - International Bank Account Number (IBAN).
+    ActiveOrHistoricCurrencyAndAmount:
+      required:
+      - amount
+      - currency
+      type: object
+      properties:
+        amount:
+          type: string
+          description: a number of monetary units specified in an active or a historic currency where the unit of currency is explicit and compliant with iso 4217.
+        currency:
+          pattern: ^[A-Z]{3,3}$
+          type: string
+          description: A code allocated to a currency by a Maintenance Agency under an international identification scheme, as described in the latest edition of the international standard ISO 4217
+      description: A number of monetary units specified in an active or a historic currency where the unit of currency is explicit and compliant with ISO 4217.
+    Gateway-Error-Response_2:
+      type: object
+      title: GatewayErrorResponse
+      xml:
+        name: GatewayErrorResponse
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: http_code
+          example: '400'
+          xml:
+            name: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: http_message
+          example: Bad Request
+          xml:
+            name: httpMessage
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: more_information
+          example: please provide valid value for request
+          xml:
+            name: moreInformation
+    CurrencyExchange:
+      maxLength: 70
+      type: object
+      properties:
+        exchange_rate:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Specifies the factor used to convert an amount from one currency into another. This reflects the price at which one currency was bought with another currency.
+
+
+            Usage: ExchangeRate expresses the ratio between UnitCurrency and QuotedCurrency (ExchangeRate = UnitCurrency/QuotedCurrency).'
+        source_currency:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Its the source currency. A code allocated to a currency by a Maintenance Agency under an international identification scheme, as described in the latest edition of the international standard ISO 4217 Codes for the representation of currencies and funds
+        target_currency:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Its the target currency A code allocated to a currency by a Maintenance Agency under an international identification scheme, as described in the latest edition of the international standard ISO 4217 Codes for the representation of currencies and funds
+      description: Contains the set of elements used to provide details of the currency exchange.
+    CashAccount:
+      required:
+      - identification
+      type: object
+      properties:
+        identification:
+          type: object
+          allOf:
+          - $ref: '#/components/schemas/AccountIdentification47Choice'
+      description: Provides the details to identify an account.
+    PaymentEventDetail:
+      type: object
+      properties:
+        additional_remittance_information:
+          type: object
+          description: Information supplied to enable the matching of an entry with the items that the transfer is intended to settle, such as commercial invoices in an accounts' receivable system.
+          allOf:
+          - $ref: '#/components/schemas/AddtlRemInf'
+        charge_amount:
+          type: object
+          description: A number of monetary units specified in an active or a historic currency where the unit of currency is explicit and compliant with ISO 4217.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        charge_bearer:
+          type: string
+          description: Specifies which party/parties will bear the charges associate with the processing of the payment transaction. Charge bearer details DEBT/CRED/SHAR/SLEV. DEBT - All transaction charges are to be borne by the debtor. CRED - All transaction charges are to be borne by the creditor. SHAR - In a credit transfer context, means that transaction charges on the sender side are to be borne by the debtor, transaction charges on the receiver side are to be borne by the creditor. In a direct debit context, means that transaction charges on the sender side are to be borne by the creditor, transaction charges on the receiver side are to be borne by the debtor. SLEV - Charges are to be applied following the rules agreed in the service level and/or scheme.
+          enum:
+          - DEBT
+          - CRED
+          - SHAR
+          - SLEV
+        date_time:
+          description: Time(format YYYY-MM-DDThh:mm:ss.sssZ) when this particular instance of the payment is captured in SWIFT GPI
+          allOf:
+          - $ref: '#/components/schemas/ISODateTime'
+        foreign_exchange_details:
+          type: object
+          description: Contains the set of elements used to provide details of the currency exchange
+          allOf:
+          - $ref: '#/components/schemas/CurrencyExchange'
+        from:
+          description: ' BIC of the source bank. Code allocated to a financial or non-financial institution by the ISO 9362 Registration Authority, as described in ISO 9362: 2014'
+          allOf:
+          - $ref: '#/components/schemas/AnyBICIdentifier'
+        to:
+          description: 'BIC of the destination bank. Code allocated to a financial or non-financial institution by the ISO 9362 Registration Authority, as described in ISO 9362: 2014'
+          allOf:
+          - $ref: '#/components/schemas/AnyBICIdentifier'
+      description: "This groups the information of an event, namely of a payment message or status confirmation update. \nUsage:\nIt is repeated as many times as there are events to be returned."
+    AccountIdentification47Choice:
+      type: object
+      properties:
+        iban:
+          type: object
+          description: International Bank Account Number (IBAN) - identifier used internationally by financial institutions to uniquely identify the account of a customer
+          allOf:
+          - $ref: '#/components/schemas/IBANIdentifier'
+        identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: It is assigned for making a payment to an account that doesn't have an IBAN
+      description: Specifies the unique identification of an account as assigned by the account servicer.
+    AddtlRemInf:
+      type: object
+      properties:
+        confidential:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Indicates whether the confidential by Yes or No
+        credit_virtual_account:
+          type: string
+          description: a system generated unique account number which is based on logic and masks the original account number
+        debit_virtual_account:
+          type: string
+          description: a system generated unique account number which is based on logic and masks the original account number'
+        payment_contract:
+          type: string
+          description: A payment agreement contract is a legally binding document between two parties � the lender and the borrower, this include info how payments will be made
+        payment_method:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: The way one pays for a transaction - ACH, Book Transfer, etc.
+        return_account:
+          maxLength: 35
+          type: string
+          description: Account number which is dedicated to track all transactions for returns
+        return_amount:
+          type: string
+          description: Return Amount of money to be moved between the debtor and creditor, before deduction of charges, expressed in the currency as ordered by the initiating party.
+        return_charge_amount:
+          type: string
+          description: Transaction charges to be paid by the charge bearer during return
+        return_charge_currency:
+          type: string
+          description: A code allocated to a currency by a Maintenance Agency under an international identification scheme, as described in the latest edition of the international standard ISO 4217 Codes for the representation of currencies and funds
+        return_contract:
+          type: string
+          description: A return payment agreement contract is a legally binding document between two parties � the lender and the borrower, this include info how return payments will be made
+        return_currency:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: A code allocated to a currency for return by a Maintenance Agency under an international identification scheme, as described in the latest edition of the international standard ISO 4217 Codes for the representation of currencies and funds
+        return_exchange_rate:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'specifies the factor used to convert an amount from one currency into another. this reflects the price at which one currency was bought with another currency.
+
+
+            usage: exchangerate expresses the ratio between unitcurrency and quotedcurrency (exchangerate = unitcurrency/quotedcurrency).'
+        return_source_currency:
+          type: string
+          description: A code allocated to a currency by a Maintenance Agency under an international identification scheme, as described in the latest edition of the international standard ISO 4217 Codes for the representation of currencies and funds
+        return_created_date_time:
+          type: string
+          format: date-time
+          description: Return created date time
+        return_processed_date_time:
+          type: string
+          format: date-time
+          description: Return processed date time
+        other_identification:
+          type: array
+          description: Other information related to return or remittance
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                maxLength: 4
+                description: 'To indicate any additional remittance information related to transaction, e.g. return identification reference or modified account number
+
+                  '
+              value:
+                type: string
+                maxLength: 140
+                description: 'To indicate any additional remittance information related to transaction, e.g. return identification reference or modified account number
+
+                  '
+        return_target_currency:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: A code allocated to a currency by a Maintenance Agency under an international identification scheme, as described in the latest edition of the international standard ISO 4217 Codes for the representation of currencies and funds
+    Max105Text:
+      maxLength: 105
+      type: string
+    AnyBICIdentifier:
+      pattern: ^[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}$
+      type: string
+      description: 'Code allocated to a financial or non-financial institution by the ISO 9362 Registration Authority, as described in ISO 9362: 2014 - "Banking - Banking telecommunication messages - Business identifier code (BIC)".'
+    EnhancedRequest:
+      type: object
+      properties:
+        uetr:
+          maxLength: 105
+          minLength: 1
+          pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          type: string
+          description: Input UETR number. Unique EndtoEnd Transaction Reference identification assigned by the initiating party or payment processing bank to uniquely identify the transaction. 36 characters, made up to 32 hexadecimal characters, shown in five parts divided by hyphens/dashes as follows - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx. Please provide either of uetr or end_to_end_identification.
+          xml:
+            name: UETR
+        end_to_end_identification:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Unique identification assigned by the initiating party to clearly identify the transaction. This Identification is passed on, unchanged, throughout the entire end-to-end chain.   Please provide either of uetr or end_to_end_identification.
+          xml:
+            name: endToEndId
+        transaction_flow_indicator:
+          type: string
+          description: This value indicates whether the transaction is a Credit or debit with the values CR or DR respectively. For Debit Transaction inquiry, this input is not required as by default Sytem will consider the query to be Debit.  However for Credit Transaction inquiry this must be inputted as CR. Debit account number should be specified for outgoing transaction.Credit account number should be specified for incoming transaction
+          xml:
+            name: txnFlowInd
+    ISODate:
+      pattern: ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$
+      type: string
+      description: 'A particular point in the progression of time in a calendar year expressed in the YYYY-MM-DD format. This representation is defined in "XML Schema Part 2: Datatypes Second Edition - W3C Recommendation 28 October 2004" which is aligned with ISO 8601.'
+  parameters:
+    Client-Id:
+      in: query
+      name: client_id
+      description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding.
+      schema:
+        type: string
+        title: Client-Id
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+        minimum: 1
+        maximum: 128
+      required: true
+    End-To-End-Id:
+      name: end_to_end_id
+      in: query
+      required: false
+      description: The unique payment identifier from your system. If the request is for payment to wallet, this field should contain maximum 16 character.
+      schema:
+        type: string
+        title: end_to_end_id
+        minLength: 1
+        maxLength: 35
+    Country-Code:
+      in: header
+      name: Country-Code
+      description: Marketplace's country code.
+      schema:
+        pattern: ^[A-Z]{2,2}$
+        type: string
+        title: Country-Code
+        example: US
+      required: true
+    Optional-Merchant-Id:
+      in: header
+      name: Merchant-Id
+      description: CITI generated Merchant ID during merchant creation. It is mandatory for payment to external.
+      schema:
+        type: string
+        title: Merchant-Id
+        minLength: 1
+        maxLength: 36
+        example: ec689822-9864-4c4d-9d68-22246762901
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Type of event (e.g., CERTIFICATION, WALLET_ACTIVATION, LINK_ACCOUNT, PAYMENT, INBOUND, RFI).
+      schema:
+        type: string
+        title: event-type
+        minLength: 1
+        maxLength: 64
+        example: Webhook
+    Event-Name:
+      name: Event-Name
+      in: header
+      description: Name of event (e.g., PAYOUT, PAYIN).
+      schema:
+        type: string
+        title: event-name
+        minLength: 1
+        maxLength: 64
+        example: Payout
+    Wallet-Payment:
+      name: Wallet-Payment
+      in: header
+      required: true
+      description: Indicates whether this is a wallet payment. Y or N.
+      schema:
+        type: string
+        title: Wallet-Payment
+        enum:
+        - Y
+        - N
+      example: N
+    Idempotency-Id:
+      in: header
+      name: Idempotency-Id
+      description: "Your unique identification for a POST request \n - Maximum length is 128. \n-CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      schema:
+        type: string
+        title: Idempotency-Id
+        minLength: 1
+        maxLength: 128
+        example: a44cbb606de4edb9a7a123414bba3bb
+      required: true
+    Apim-Guid:
+      in: header
+      name: Apim-Guid
+      description: Unique system generated reference number generated by   Citi. Refer to this number in case of any discrepancy reporting to a Citi representative.
+      schema:
+        type: string
+        maxLength: 128
+        minLength: 1
+        title: Apim-Guid
+      required: true
+      example: na-apimgwgtds04~4a98cbc5-d813-4e65-bc81-d70f0f87f6ec
+    Uetr:
+      name: uetr
+      required: false
+      in: query
+      description: The unique payment identifier assigned during payment initiation.
+      schema:
+        type: string
+        title: uetr
+        minLength: 1
+        maxLength: 36
+  headers:
+    Apim-Guid:
+      description: Unique system generated reference number generated by   Citi. Refer to this number in case of any discrepancy reporting to a Citi representative.
+      schema:
+        type: string
+        maxLength: 128
+        minLength: 1
+        title: Apim-Guid
+      required: true
+      example: na-apimgwgtds04~4a98cbc5-d813-4e65-bc81-d70f0f87f6ec
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://b2b.api.icg.citi.com/authenticationservices/v3/oauth/token
+          scopes:
+            /authenticationservices/v1: Access to marketplace management APIs
+    Client_ID:
+      description: ''
+      in: query
+      name: client_id
+      type: apiKey
+    clientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          scopes: {}
+          tokenUrl: $(catalog.url)/authenticationservices/v1/oauth/token
+      description: All CitiConnect APIs use the OAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See the Citi Authentication API Reference for information on requesting a token.
+x-refined-from:
+- citi-marketplace-management-openapi.yaml
+- citi-payment-status-openapi.yaml
+- citi-paymentenhancedinquiry-json-openapi.yaml
+- self-service_api.yaml

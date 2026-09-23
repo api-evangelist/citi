@@ -1,0 +1,5072 @@
+openapi: 3.2.0
+info:
+  title: Instant Payments Non-Payment Messages API
+  description: 'Use the Citi Payments Express API to initiate these types of transaction and check their status:
+
+    * Instant Payments
+
+    * Payment Messages
+
+    * Refunds
+
+    * Beneficiary Validation
+
+
+    **Note:** The Citi Payments Express API is for direct payments and refunds. To send payments or refunds to a third-party account or via a proxy, use the CitiConnect Payments API'
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+servers:
+- url: https://b2b.api.icg.citi.com/citiconnect/prod
+  description: production gateway url
+- url: https://sandbox.b2b.api.icg.citi.com/citiconnect/sb
+  description: 'sbox url '
+tags:
+- name: Non-Payment Messages
+paths:
+  /paymentservices/v1/payments/{uetr}/messages:
+    post:
+      tags:
+      - Non-Payment Messages
+      summary: Initiate a non payment message
+      description: This endpoint validates your request and responds with HTTP status 202 (accepted) after successful validation. If validation fails, the endpoint synchronously responds with error (HTTP status 4XX / 5XX and any applicable ISO 20022 reason code), indicating Citi couldn't accept your message initiation request.
+      operationId: createMessage
+      parameters:
+      - name: client_id
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+      - name: uetr
+        in: path
+        required: true
+        description: Unique end-to-end transaction reference
+        schema:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+      - name: Idempotency-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          maxLength: 128
+        example: a44cbb60-6de4-4edb-9a7a-123414bba3bb
+        description: "Your unique identification for a POST request \n - Maximum length is 128. \n-  CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      requestBody:
+        required: true
+        description: 'This endpoint validates your request and responds with HTTP status 202 (accepted) after successful validation. If validation fails, the endpoint synchronously responds with error (HTTP status 4XX / 5XX and any applicable ISO 20022 reason code), indicating Citi couldn''t accept your message initiation request.
+
+          '
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Message-Request'
+            examples:
+              Response to Request For Refund:
+                $ref: '#/components/examples/Response-To-Request-For-Refund-Example'
+              Response to Payment Confirmation Request:
+                $ref: '#/components/examples/Response-To-Payment-Confirmation-Request-Example'
+              Accept Response to Incoming Payment Confirmation Request From CITI:
+                $ref: '#/components/examples/Th-Response-To-Payment-Confirmation-Sucess-Request-Example'
+              Reject Response to Incoming Payment Confirmation Request From CITI:
+                $ref: '#/components/examples/Th-Response-To-Payment-Confirmation-Reject-Request-Example'
+              Response to Request for Payment:
+                $ref: '#/components/examples/Response-To-Request-For-Payment-Example'
+              Outgoing Request for Refund:
+                $ref: '#/components/examples/Outgoing-Request-For-Refund-Example'
+              Response to Request for Information Compliance:
+                $ref: '#/components/examples/Response-To-Request-For-Information-Compliance-Example'
+              Uk Stop Request:
+                $ref: '#/components/examples/Uk-Stop-Request-Example'
+              In Stop Request:
+                $ref: '#/components/examples/In-Stop-Request-Example'
+              Br Stop Request:
+                $ref: '#/components/examples/Br-Stop-Request-Example'
+      security:
+      - oAuth2:
+        - paymentservices
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            request_id:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Initial-Acknowledgement-Response'
+              examples:
+                Status - Initial-Response-To-Request-For-Refund:
+                  $ref: '#/components/examples/Initial-Response-To-Request-For-Refund'
+                Status - Initial-Response-To-Payment-Confirmation-Request:
+                  $ref: '#/components/examples/Initial-Response-To-Payment-Confirmation-Request'
+                Status - Initial-Response-To-Request-For-Payment:
+                  $ref: '#/components/examples/Initial-Response-To-Request-For-Payment'
+                Status - Initial-Outgoing-Request-For-Refund:
+                  $ref: '#/components/examples/Initial-Outgoing-Request-For-Refund'
+                Status - Initial-Response-To-Request-for-Information-Compliance:
+                  $ref: '#/components/examples/Initial-Response-To-Request-for-Information-Compliance'
+                Uk Status - Stop Request:
+                  $ref: '#/components/examples/Uk-Stop-Request'
+                In Status - Stop Request:
+                  $ref: '#/components/examples/In-Stop-Request'
+                Br Status - Stop Request:
+                  $ref: '#/components/examples/Br-Stop-Request'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        default:
+          $ref: '#/components/responses/Internal-Server-Error'
+  /paymentservices/v1/payments/{uetr}/messages/{message_id}:
+    get:
+      tags:
+      - Non-Payment Messages
+      summary: Inquire for the latest status of a transaction using UETR and Message Id
+      operationId: findMessageByMessageId
+      parameters:
+      - name: client_id
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 6d3cf821-db6d-496d-bec0-064a362e9c31
+      - name: uetr
+        in: path
+        description: Unique end-to-end transaction reference
+        required: true
+        schema:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+      - name: message_id
+        in: path
+        description: Unique message id
+        required: true
+        schema:
+          type: string
+          maxLength: 35
+        examples:
+          message_id_1:
+            value: 0c4fb98bd77a446896bb0c88b3b8f75a
+      security:
+      - oAuth2:
+        - paymentservices
+      responses:
+        '200':
+          description: OK
+          headers:
+            request_id:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Final-Message-Response'
+              examples:
+                Status - ValidRequest-For-Refund:
+                  $ref: '#/components/examples/Ok-Request-For-Refund'
+                Status - ValidRequest-For-Refund-SEPA:
+                  $ref: '#/components/examples/Ok-Request-For-Refund-SEPA'
+                Status - ValidResponsetoRequest-For-Refund:
+                  $ref: '#/components/examples/Ok-Response-To-Request-For-Refund'
+                Status - ValidResponsetoRequest-For-Refund-SEPA:
+                  $ref: '#/components/examples/Ok-Response-To-Request-For-Refund-SEPA'
+                Status - InvalidResponsetoRequest-For-Refund:
+                  $ref: '#/components/examples/Not-Ok-Response-To-Request-For-Refund'
+                Status - ValidPayment-Confirmation-Request:
+                  $ref: '#/components/examples/Ok-Payment-Confirmation-Request'
+                Status - ValidPending-Payment-Confirmation-Request:
+                  $ref: '#/components/examples/Pending-Payment-Confirmation-Request'
+                Status - ValidRequest-For-Payment:
+                  $ref: '#/components/examples/Ok-Request-For-Payment'
+                Status - ValidRequest-for-Information-Compliance:
+                  $ref: '#/components/examples/OK-Request-For-Information-Compliance'
+                Status - ValidResponsetoRequest-For-Information-Compliance:
+                  $ref: '#/components/examples/OK-Response-To-Request-For-Information-Compliance'
+                Status - ValidRequest-For-Refund-Uk:
+                  $ref: '#/components/examples/Ok-Request-For-Refund-Uk'
+                Status - ValidRequest-For-Refund-In:
+                  $ref: '#/components/examples/Ok-Request-For-Refund-In'
+                Status - ValidRequest-For-Refund-Br:
+                  $ref: '#/components/examples/Ok-Request-For-Refund-Br'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        default:
+          $ref: '#/components/responses/Internal-Server-Error'
+components:
+  responses:
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+  schemas:
+    Response-To-Payment-Confirmation-Request:
+      type: object
+      title: ResponseToPaymentConfirmationRequest
+      properties:
+        uetr:
+          type: string
+          description: UETR of Original payment
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          title: uetr
+        status:
+          type: object
+          title: status
+          readOnly: true
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time, \n-, status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - PDNG
+              - RJCT
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- PDNG - Pending \n- RJCT - Rejected"
+              minLength: 1
+              maxLength: 256
+              title: description
+            reasons:
+              type: object
+              title: reasons
+              readOnly: true
+              properties:
+                code:
+                  type: string
+                  description: Reason code (applicable when message is rejected)
+                  maxLength: 4
+                  title: code
+                description:
+                  type: string
+                  description: Reason code description (e.g., Debtor account is invalid.)
+                  minLength: 1
+                  maxLength: 256
+                  title: description
+    Initial-Acknowledgement-Response:
+      type: object
+      title: InitialAcknowledgementResponse
+      properties:
+        message_id:
+          type: string
+          description: Message Identification
+          readOnly: true
+          maxLength: 35
+          title: message_id
+        creation_date_time:
+          type: string
+          format: date-time
+          description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time when a message was created"
+          readOnly: true
+          title: creation_date_time
+        message_type:
+          type: string
+          description: "Message Type as provided by the customer \n- RFR - Request for Refund (camt.056) \n- RRFR - Response to Request for Refund(camt.029) \n- PCR - Payment Confirmation Request \n- RPCR - Response to Payment Confirmation Request \n- RFP - Request for Payment (pain.013) \n- RRFP - Response to Request for Payment (pain.014) \n- RRFICS - Response to Request for Information Compliance"
+          enum:
+          - RFR
+          - RRFR
+          - PCR
+          - RPCR
+          - RFP
+          - RRFP
+          - RRFICS
+          title: message_type
+        message:
+          oneOf:
+          - $ref: '#/components/schemas/Initial-Response-To-Request-For-Refund'
+          - $ref: '#/components/schemas/Initial-Response-To-Payment-Confirmation-Request'
+          - $ref: '#/components/schemas/Initial-Response-To-Request-For-Payment'
+          - $ref: '#/components/schemas/Initial-Outgoing-Request-For-Refund'
+          - $ref: '#/components/schemas/Initial-Response-To-Request-for-Information-Compliance'
+      required:
+      - message_id
+      - creation_date_time
+      - message_type
+    Initial-Response-To-Request-For-Refund:
+      type: object
+      title: InitialResponseToRequestForRefund
+      properties:
+        case_id:
+          type: string
+          description: Case Id received from clearing
+          minLength: 1
+          maxLength: 35
+          title: case_id
+        decision_code:
+          type: string
+          description: "Acceptance or Rejection of return of funds. Only the below 3 codes are applicable  \n- IPAY - Acceptance to Return the payment \n- RJCR - Decline to Return the payment \n- PECR - Partially Executed Cancellation Return"
+          enum:
+          - ACDA
+          - ACNR
+          - ACVA
+          - CHRG
+          - CNCL
+          - CONF
+          - CVAA
+          - CWFW
+          - FTNA
+          - ICOV
+          - IDUP
+          - IPAY
+          - IPYI
+          - MCOV
+          - MODI
+          - MWFW
+          - PDCR
+          - PECR
+          - PURP
+          - RJCR
+          - RJNR
+          - RJVA
+          - SMTC
+          - SMTI
+          - UWFW
+          - BIAS
+          - IDNE
+          - IVCR
+          - INFO
+          - NINF
+          - PDNG
+          title: decision_code
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: "Code of Transaction reasons \n- If decision_code = RJCR,reasons.code is mandatory for ResponseToRequest-For-Refund "
+              enum:
+              - AC04
+              - ADAC
+              - AGNT
+              - AM04
+              - ARDT
+              - ARPL
+              - CUST
+              - LEGL
+              - NARR
+              - NOAS
+              - NOOR
+              - PTNA
+              - RQDA
+              - WSEQ
+              - IDMN
+              - ACLR
+              - AEXR
+              - ARFR
+              - ARJR
+              - PATE
+              - RR04
+              - RCAR
+              - RCNR
+              - RCPR
+              - URTP
+              title: code
+            description:
+              type: string
+              description: "Reason code description (e.g., Debtor account is invalid.). \n- For reasons.code = NARR this field is mandatory"
+              minLength: 1
+              maxLength: 105
+              title: description
+        instructed_amount:
+          type: number
+          description: "Instructed amount for partial acceptance of return request \n- Mandatory for ResponseToRequest-For-Refund with decision code as PECR."
+          minimum: 0.01
+          maximum: 1000000000000000
+          title: instructed_amount
+        instructed_currency:
+          type: string
+          description: "Instructed currency for partial acceptance of return request \n- Mandatory for ResponseToRequest-For-Refund with decision code as PECR"
+          enum:
+          - USD
+          - EUR
+          - AUD
+          - ARS
+          - BRL
+          - HKD
+          - CNY
+          title: instructed_currency
+        instruction_id:
+          type: string
+          description: Unique Instruction id on return payment initiation
+          minLength: 1
+          maxLength: 35
+          title: instruction_id
+        end_to_end_id:
+          type: string
+          description: Unique end to end id on return payment initiation
+          minLength: 1
+          maxLength: 35
+          title: end_to_end_id
+        country:
+          description: "ISO 3166 Alpha-2 code for the non pay message country. \n- This field is optional for US \n- This field is mandatory for SEPA"
+          type: string
+          default: US
+          enum:
+          - US
+          - IE
+          - DE
+          - AT
+          - BE
+          - FI
+          - FR
+          - GR
+          - IT
+          - LU
+          - NL
+          - PT
+          - ES
+          - SK
+          - BG
+          title: country
+        status:
+          type: object
+          title: status
+          readOnly: true
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- PDNG - Pending"
+              minLength: 1
+              maxLength: 256
+              title: description
+          required:
+          - date_time
+          - code
+          - description
+      required:
+      - case_id
+      - decision_code
+      - end_to_end_id
+    Message-Debtor-Request-For-Payment:
+      type: object
+      title: MessageDebtorRequestForPayment
+      properties:
+        account:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Debtor Account ID
+          title: account
+        account_name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Debit Account name, different from the Debtor Name
+          title: account_name
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Debtor Name
+          title: name
+        bank_id:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Instructing Agent member Identification ID of a clearing system
+          title: bank_id
+        address_lines:
+          type: array
+          description: Debtor's address_lines
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+        street_name:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: 'Debtor''s street_name '
+          title: street_name
+        building_number:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Debtor's building_number
+          title: building_number
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Debtor's postal_code
+          title: postal_code
+        city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Debtor's City
+          title: city
+        state:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Debtor's State
+          title: state
+        country:
+          type: string
+          description: Debtor's Country
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        org_id:
+          maxLength: 20
+          minLength: 1
+          type: string
+          description: Debtor's org_id
+          title: org_id
+        birth_date:
+          type: string
+          format: date
+          description: 'ISO 8601 (YYYY-MM-DD), Debtor''s birth_date '
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Debtor's birth_city
+          title: birth_city
+        birth_country:
+          type: string
+          description: Debtor's birth_country
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+      required:
+      - account
+      - name
+      - bank_id
+    Message-Transaction-Status:
+      type: object
+      title: MessageTransactionStatus
+      required:
+      - uetr
+      - type
+      - instructed_amount
+      - creation_date_time
+      - value_date
+      - settlement_currency
+      - settlement_amount
+      properties:
+        end_to_end_id:
+          maxLength: 35
+          minLength: 1
+          pattern: ^(?!\s*$).+
+          type: string
+          description: Specifies a character string with a maximum length of 35 characters
+          title: end_to_end_id
+        instruction_id:
+          type: string
+          maxLength: 35
+          minLength: 1
+          description: Instruction Id
+          title: instruction_id
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+          title: uetr
+        network_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: Transaction identification generated for or by the network
+          title: network_id
+        local_reference:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: This is a Citi generated payment reference which is included in the ‘Bank Reference’ field of bank statement posting for itemized transaction
+          title: local_reference
+        batch_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: "Identification for the bulk debit or credit posting to Citi account \n - For SEPA, transaction.batch_id field is optional and allwed maxLength is 35"
+          title: batch_id
+        bill_id_1:
+          maxLength: 128
+          pattern: ^[0-9A-Z]{1,128}$
+          type: string
+          description: "Bill identification for a bill payment \n - For US transaction.bill_id_1 field is not applicable"
+          title: bill_id_1
+        bill_id_2:
+          maxLength: 128
+          pattern: ^[0-9A-Z]{1,128}$
+          type: string
+          description: "Bill identification for a bill payment \n - For US transaction.bill_id_2 field is not applicable"
+          title: bill_id_2
+        bill_id_3:
+          maxLength: 128
+          pattern: ^[0-9A-Z]{1,128}$
+          type: string
+          description: "Bill identification for a bill payment \n - For US transaction.bill_id_3 field is not applicable"
+          title: bill_id_3
+        type:
+          type: string
+          description: Transaction Type - Debit or Credit
+          enum:
+          - credit
+          - debit
+          title: type
+        purpose:
+          type: string
+          enum:
+          - CNFL
+          - PAYR
+          - OTHR
+          - CASH
+          - GP2P
+          - SCVE
+          - GDDS
+          - GDSV
+          - SALA
+          - SUPP
+          - RCPT
+          - COST
+          - TREA
+          - REFU
+          description: "Purpose of a transaction \n- CASH for cash management \n- CNFL for confidential \n- COST for payment for business expenses \n- GDDS for payment related to purchase or sale of goods \n- GDSV for payment related to purchase or sale of goods and services \n- GP2P for person-to-person payment \n- OTHR for other, if your payment doesn't fit any of the specific purpose codes \n- PAYR for payroll payment \n- RCPT for payment of a receipt \n- SALA for salary payment \n- SCVE for payment related to purchase or sale of services \n- SUPP for supplier payment \n- TREA for treasury payment \n- REFU for refund payment"
+          title: purpose
+        tax_code:
+          type: number
+          enum:
+          - 0
+          - 1
+          description: "Tax code \n - For US transaction.tax_code field is not applicable"
+          title: tax_code
+        wht_code:
+          type: string
+          enum:
+          - A
+          - S
+          - B
+          description: "Withholding tax (WHT) code \n - For US transaction.wht_code field is not applicable"
+          title: wht_code
+        income_type:
+          type: string
+          pattern: ^(00[0-9]|01[0-2])$
+          description: "Income type  \n - For US transaction.income_type field is not applicable"
+          title: income_type
+        vat_rate:
+          type: number
+          minimum: 0
+          description: "Value-added tax (VAT) rate \n - For US transaction.vat_rate field is not applicable"
+          title: vat_rate
+        vat_amount:
+          type: number
+          maximum: 1000000000000000
+          description: "Value-added tax (VAT) amount \n - For US transaction.vat_amount field is not applicable"
+          title: vat_amount
+        wht_rate:
+          type: number
+          minimum: 0
+          description: "Withholding tax (WHT) rate (0 - 99.99) \n - For US transaction.wht_rate field is not applicable"
+          title: wht_rate
+        wht_amount:
+          type: number
+          maximum: 1000000000000000
+          description: "Withholding tax (WHT) amount \n - For US transaction.wht_amount field is not applicable"
+          title: wht_amount
+        bill_due_date:
+          type: string
+          format: date
+          description: "ISO 8601 (YYYY-MM-DD) bill due date \n - For US transaction.bill_due_date field is not applicable"
+          title: bill_due_date
+        creation_date_time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created"
+          title: creation_date_time
+        value_date:
+          type: string
+          format: date
+          description: YYYY-MM-DD Date in local time zone (e.g., EST for a United States RTP ) when Citi's transaction processing application starts processing a transaction
+          title: value_date
+        instructed_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: Amount instructed by client for a transaction
+          title: instructed_amount
+        settlement_currency:
+          maxLength: 3
+          type: string
+          description: ISO 4217 code for the transaction settlement amount currency
+          title: settlement_currency
+        settlement_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: Settlement amount (e.g., after any currency exchange or charge on the instructed amount)
+          title: settlement_amount
+        interbank_settlement_date:
+          type: string
+          format: date
+          description: Interbank settlement Date received from  clearing (TCH) Format is YYYY-MM-DD
+          title: interbank_settlement_date
+        unstructured_remittance_info:
+          type: array
+          description: "Unstructured remitance information \n - For US transaction.unstructured_remittance_info field maximum length is 140 and unlimited line is allowed \n - For SEPA, transaction.unstructured_remittance_info field is optional and maxLength is 140"
+          items:
+            $ref: '#/components/schemas/Unstructured'
+          title: unstructured_remittance_info
+        advice_id:
+          type: string
+          description: Remittance identifier
+          maxLength: 35
+          minLength: 1
+          title: advice_id
+        advice_type:
+          type: string
+          description: Method use to deliver the remittance advice information
+          enum:
+          - EMAL
+          - FAXI
+          - SMSM
+          - URID
+          title: advice_type
+        advice_address:
+          type: string
+          maxLength: 2048
+          minLength: 1
+          description: Address to send remittance details
+          title: advice_address
+        category:
+          type: string
+          maxLength: 35
+          minLength: 1
+          description: "Specifies the high level purpose of the instruction \n- For US TCH - CONUSMER, BUSINESS \n- For US Fednow - CONS, BIZZ,GOVT \n- CONS for credit transfers initiated by a consumer \n-  BIZZ for credit transfers initiated by a business entity \n-  GOVT for credit transfers initiated by a government agency"
+          title: category
+        original_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Amount that was originally sent by our client. \n - For Thailand PromptPay transaction.original_amount field is not applicable \n- For United States transaction.original_amount field is optional \n- For IN IMPS transaction.original_amount field is not applicable \n- For UK FPS Instant payment transaction.original_amount field is not applicable"
+          title: original_amount
+        full_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Amount that is the gross amount payable to our client. If populated, transaction.discount_amount must also be populated \n - For Thailand PromptPay transaction.full_amount field is not applicable \n- For United States transaction.full_amount field is optional \n- For IN IMPS transaction.full_amount field is not applicable \n- For UK FPS Instant payment transaction.full_amount field is not applicable"
+          title: full_amount
+        discount_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Amount that is the discount from the gross amount. If populated, transaction.full_amount must also be popluated \n - For Thailand PromptPay transaction.discount_amount field is not applicable \n- For United States transaction.discount_amount field is optional \n- For IN IMPS transaction.discount_amount field is not applicable \n- For UK FPS Instant payment transaction.discount_amount field is not applicable"
+          title: discount_amount
+    Error-Response:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        error_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+          title: error_details
+          xml:
+            name: Errordetails
+    Message-Method-Status:
+      type: object
+      title: MessageMethodStatus
+      required:
+      - country
+      - instructed_currency
+      - method
+      - type
+      properties:
+        country:
+          description: ISO 3166 Alpha-2 code for the transaction country
+          type: string
+          enum:
+          - US
+          title: country
+        instructed_currency:
+          type: string
+          description: ISO 4217 code for the transaction instructed amount currency
+          enum:
+          - USD
+          - EUR
+          - ARS
+          - BRL
+          title: instructed_currency
+        method:
+          description: Method specified by the debtor for the transaction \n- Provide IP for instant payment
+          type: string
+          enum:
+          - IP
+          title: method
+        type:
+          type: string
+          description: "Transaction message type (e.g., CT for credit transfer. RF for Refund) \n- CT - Credit Transfer \n- RF - Return payment \n- BK_CT - Book to Book Credit Transfer \n- BK_RF - Book to Book Return Payment"
+          enum:
+          - CT
+          - RF
+          - BK_CT
+          - BK_RF
+          title: type
+        network:
+          type: string
+          enum:
+          - RTP
+          - ZELLE
+          - FDN
+          description: "Financial market infrastructure or clearing system (e.g., RTP Network in the United States) \n- RTP for TCH \n- FDN for FedNow"
+          title: network
+    Message-Transaction-Request-For-Payment:
+      type: object
+      title: MessageTransactionRequestForPayment
+      required:
+      - uetr
+      - type
+      - instructed_amount
+      - creation_date_time
+      - settlement_currency
+      - payment_information_id
+      - end_to_end_id
+      - category
+      properties:
+        end_to_end_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Client provided reference number
+          title: end_to_end_id
+        instruction_id:
+          type: string
+          maxLength: 35
+          minLength: 1
+          description: Instruction Id
+          title: instruction_id
+        payment_information_id:
+          type: string
+          maxLength: 35
+          minLength: 1
+          description: Payment Information ID
+          title: payment_information_id
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+          title: uetr
+        type:
+          type: string
+          description: Transaction Type - Debit or Credit
+          enum:
+          - credit
+          - debit
+          title: type
+        local_reference:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: This is a Citi generated payment reference which is included in the ‘Bank Reference’ field of bank statement posting for itemized transaction
+          title: local_reference
+        creation_date_time:
+          type: string
+          format: date-time
+          description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Instant Payment (Debit) - Date time, generated by CitiConnect API, when CitiConnect API accepted a payment initiation after validation \n- Instant Payment (Credit) - Date time, either provided by the debtor bank or generated by Citi's transaction processing application, when a transaction was created"
+          title: creation_date_time
+        instructed_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: Amount instructed by client for a transaction
+          title: instructed_amount
+        settlement_currency:
+          maxLength: 3
+          type: string
+          description: ISO 4217 code for the transaction settlement amount currency
+          title: settlement_currency
+        unstructured_remittance_info:
+          type: array
+          description: "Unstructured remitance information \n - For US transaction.unstructured_remittance_info field maximum length is 140 and unlimited line is allowed"
+          items:
+            $ref: '#/components/schemas/Unstructured'
+          title: unstructured_remittance_info
+        category:
+          type: string
+          description: Specifies the high level purpose of the instruction
+          enum:
+          - BUSINESS
+          - CONSUMER
+          title: category
+        requested_execution_date:
+          type: string
+          format: date
+          description: "Requested Execution Date Format is YYYY-MM-DD. \n- Either Requested Execution Date or Requested Execution Date Time must be present"
+          title: requested_execution_date
+        requested_execution_date_time:
+          type: string
+          format: date-time
+          description: "Requested Execution Date/Time UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n - \n- Either Requested Execution Date or Requested Execution Date Time must be present"
+          title: requested_execution_date_time
+        expiry_date:
+          type: string
+          format: date
+          description: "Expiry Date Format is YYYY-MM-DD \n - Either Expiry Date or Expiry Date Time must be present"
+          title: expiry_date
+        expiry_date_time:
+          type: string
+          format: date-time
+          description: "Expiry Date/Time GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n - Either Expiry Date or Expiry Date Time must be present"
+          title: expiry_date_time
+        amt_mod_allowed:
+          type: boolean
+          default: true
+          description: "Indicator by customer if the debtor (RFP recipient) can modify over/under the instructed amount \n - true - Amount may be modified by the Debtor \n-  false - Amount of payment must equal the Instructed Amount"
+          title: amt_mod_allowed
+        full_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Amount that is the gross amount payable by client \n- If populated, message.transaction.discount_amount must also be populated"
+          title: full_amount
+        discount_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Amount that is the discount from the gross amount \n- If populated, message.transaction.full_amount must also be popluated"
+          title: discount_amount
+        purpose:
+          type: string
+          minLength: 1
+          maxLength: 5
+          description: "Purpose of a transaction \n- GDDS for payment related to purchase or sale of goods \n- SCVE for payment related to purchase or sale of services \n- PAYR for payroll payment \n- NOWS for Not Otherwise Specified \n- INVS for Invoice Signed \n- INSC for Payment Of Insurance Claim \n- INSM for Installment \n- PDEP for Property Deposit \n- UBIL for Utilities Subscription Identification \n- ACCT for Account Management \n- CBLK for Bulk card transactions \n- MP2P for Mobile P2P Payment "
+          title: purpose
+        status:
+          type: object
+          title: status
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "GMT (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time of transaction status"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - PRES
+              - ACSP
+              - ACCC
+              - RJCT
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- RJCT - Rejected \n- PRES - Request For Payment has been presented to the Debtor \n- ACSP- Accepted Settlement In Process \n- ACCC - Accepted Settlement Completed"
+              minLength: 1
+              maxLength: 256
+              title: description
+          required:
+          - date_time
+          - code
+          - description
+        reasons:
+          type: object
+          title: reasons
+          readOnly: true
+          properties:
+            code:
+              type: string
+              description: Reason code (applicable when message is rejected)
+              maxLength: 4
+              title: code
+            description:
+              type: string
+              description: Reason code description (e.g., Debtor account is invalid.)
+              minLength: 1
+              maxLength: 256
+              title: description
+            isproprietary:
+              type: integer
+              description: "Flag to indicate the Rejection code is ISO Standard or Proprietary \n- 0 For ISO Code \n- 1 For Proprietary"
+              enum:
+              - 0
+              - 1
+              title: isproprietary
+    Ultimate-Debtor-Refund:
+      type: object
+      title: UltimateDebtorRefund
+      properties:
+        name:
+          minLength: 1
+          maxLength: 140
+          type: string
+          description: "Name of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.name field is optional \n- For Thailand ultimatedebtor.name field is not applicable \n- For Brazil ultimatedebtor.name field is not applicable \n- For SEPA ultimate_debtor.name field is not applicable"
+          title: name
+        street_name:
+          minLength: 1
+          maxLength: 70
+          type: string
+          description: "Street Name of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.street_name field is optional \n- For Thailand ultimatedebtor.street_name field is not applicable \n- For Brazil ultimatedebtor.street_name field is not applicable \n- For SEPA ultimate_debtor.street_name field is not applicable"
+          title: street_name
+        building_number:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: "Building number of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.building_number field is optional \n- For Thailand ultimatedebtor.building_number field is not applicable \n- For Brazil ultimatedebtor.building_number field is not applicable \n- For SEPA ultimate_debtor.building_number field is not applicable"
+          title: building_number
+        postal_code:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: "Postal code of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.postal_code field is optional\n- For Thailand ultimatedebtor.postal_code field is not applicable \n- For Brazil ultimatedebtor.postal_code field is not applicable \n- For SEPA ultimate_debtor.postal_code field is not applicable"
+          title: postal_code
+        city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: "City of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.city field is optional \n- For Thailand ultimatedebtor.city field is not applicable \n- For Brazil ultimatedebtor.city field is not applicable \n- For SEPA ultimate_debtor.city field is not applicable"
+          title: city
+        state:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: "State of Ultimate Debtor to be passed for Refund payment \n- For United States ultimate_debtor.state field is optional \n- For Thailand ultimatedebtor.state field is not applicable \n- For Brazil ultimatedebtor.state field is not applicable \n- For SEPA ultimate_debtor.state field is not applicable"
+          title: state
+        country:
+          type: string
+          description: "Country of Ultimate Debtor to be passed for Refund payment  \n- For United States ultimate_debtor.country field is optional \n- For Thailand ultimatedebtor.country field is not applicable \n- For Brazil ultimatedebtor.country field is not applicable \n- For SEPA ultimate_debtor.country field is not applicable"
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        address_lines:
+          type: array
+          minItems: 1
+          maxItems: 7
+          description: "Ultimate Debtor Address lines which is array of 7 lines and each line has maximum 70 characters which is to be passed for Refund payment  \n- For United States ultimate_debtor.address_lines field is optional \n- For Thailand ultimatedebtor.address_lines field is not applicable \n- For Brazil ultimatedebtor.address_lines field is not applicable \n- For SEPA ultimate_debtor.address_lines field is not applicable"
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+    Original-Ultimate-Debtor:
+      type: object
+      title: OriginalUltimateDebtor
+      properties:
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: 'Ultimate Debtor''s bank account name of original payment '
+          title: name
+        org_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's org_id of original payment
+          title: org_id
+        birth_date:
+          type: string
+          format: date
+          description: 'ISO 8601 (YYYY-MM-DD), ultimate debtor''s birth date of original payment '
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Ultimate debtor''s birth city of original payment '
+          title: birth_city
+        birth_country:
+          type: string
+          description: 'Ultimate debtor''s birth country of original payment '
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+        birth_province:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Ultimate Debtor  Province Of Birth of original payment '
+          title: birth_province
+        prvt_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Ultimate Debtor''s private id of original payment '
+          title: prvt_id
+        anybic:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'ultimate debtor''s BIC of original payment '
+          title: anybic
+        lei:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Unique global identifier for legal entities participating in financial transactions of original payment '
+          title: lei
+        issuer:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'ultimate debtor''s name that identifies an issuer of original payment '
+          title: issuer
+        scheme_name:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's scheme name of original payment
+          title: scheme_name
+    Field-level-Responses-For-RRFICS:
+      type: object
+      description: “FieldlevelResponsesForRRFICS”
+      title: Field-level-Responses-For-RRFICS
+      properties:
+        field_id:
+          type: string
+          description: Field ID.
+          minLength: 1
+          maxLength: 16
+          title: field_id
+        field_name:
+          type: string
+          description: Field name.
+          minLength: 1
+          maxLength: 70
+          title: field_name
+        field_value:
+          type: string
+          description: Field value.
+          minLength: 1
+          maxLength: 70
+          title: field_value
+        individual:
+          type: object
+          description: "Input type selected as Individual. \n When individual is selected any one of the fields displayed under individual object are mandatory"
+          title: individual
+          properties:
+            name:
+              type: string
+              description: "Name of individual.\n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 140
+              title: name
+            street_name:
+              type: string
+              description: "Street Name of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 70
+              title: street_name
+            building_number:
+              type: string
+              description: "Building Number of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 16
+              title: building_number
+            postal_code:
+              type: string
+              description: "Postal Code of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 16
+              title: postal_code
+            city:
+              type: string
+              description: "City of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: city
+            state:
+              type: string
+              description: "State of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: state
+            country:
+              type: string
+              description: "Country of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 2
+              title: country
+            birth_date:
+              type: string
+              format: date
+              description: "Birth Date of individual \n Format is YYYY-MM-DD. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              title: birth_date
+            city_of_birth:
+              type: string
+              description: "City Of Birth of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: city_of_birth
+            country_of_birth:
+              type: string
+              description: "Country Of Birth of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 2
+              title: country_of_birth
+            nationality:
+              type: string
+              description: "Nationality of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: nationality
+            occupation:
+              type: string
+              description: "Occupation of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: occupation
+            country_of_residence:
+              type: string
+              description: "Country of Residence of individual. \n If selected input type = individual, at least 1 field from individual object must be provided."
+              minLength: 1
+              maxLength: 2
+              title: country_of_residence
+        entity:
+          type: object
+          description: Input type selected as Entity. When Entity is selected any one of the fields displayed under entity object are mandatory
+          title: entity
+          properties:
+            name:
+              type: string
+              description: "Name of Entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 140
+              title: name
+            street_name:
+              type: string
+              description: "Street Name of Entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 70
+              title: street_name
+            building_number:
+              type: string
+              description: "Building Number of Entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 16
+              title: building_number
+            postal_code:
+              type: string
+              description: "Postal Code of Entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 16
+              title: postal_code
+            city:
+              type: string
+              description: "City of Entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: city
+            state:
+              type: string
+              description: "State of Entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: state
+            country:
+              type: string
+              description: "Country of Entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 2
+              title: country
+            line_of_business:
+              type: string
+              description: "Line of business of Entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: line_of_business
+            ownership_details:
+              type: string
+              description: "Ownership Details of entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 560
+              title: ownership_details
+            global_presence:
+              type: string
+              description: "Global Presence of entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 140
+              title: global_presence
+            website:
+              type: string
+              description: "Website of entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 140
+              title: website
+            registration_number:
+              type: string
+              description: "Registration Number of entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: registration_number
+            country_of_incorporation:
+              type: string
+              description: "Country of incorporation of entity. \n If selected input type = entity, at least 1 field from entity object must be provided."
+              minLength: 1
+              maxLength: 2
+              title: country_of_incorporation
+        vessel:
+          type: object
+          description: Input type selected as vessel. When vessel is selected any one of the fields displayed under vessel object are mandatory
+          title: vessel
+          properties:
+            name:
+              type: string
+              description: "Name of vessel. \n If selected input type = vessel, at least 1 field from vessel object must be provided."
+              minLength: 1
+              maxLength: 140
+              title: name
+            flag:
+              type: string
+              description: "Flag of vessel. \n If selected input type = vessel, at least 1 field from vessel object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: flag
+            ownership_details:
+              type: string
+              description: "Ownership Details of vessel. \n If selected input type = vessel, at least 1 field from vessel object must be provided."
+              minLength: 1
+              maxLength: 560
+              title: ownership_details
+            imo_number:
+              type: string
+              description: "Imo Number of vessel. \n If selected input type = vessel, at least 1 field from vessel object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: imo_number
+            gross_registered_tonnage:
+              type: string
+              description: "Gross registered tonnage of vessel. \n If selected input type = vessel, at least 1 field from vessel object must be provided."
+              minLength: 1
+              maxLength: 10
+              title: gross_registered_tonnage
+            vessel_type:
+              type: string
+              description: "Type of vessel. \n If selected input type = vessel, at least 1 field from vessel object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: vessel_type
+        aircraft:
+          type: object
+          description: Input type selected as aircraft. When aircraft is selected any one of the fields displayed under aircraft object are mandatory
+          title: aircraft
+          properties:
+            call_sign:
+              type: string
+              description: "Call Sign of aircraft. \n If selected input type = aircraft, at least 1 field from aircraft object must be provided."
+              minLength: 1
+              maxLength: 140
+              title: call_sign
+            flag:
+              type: string
+              description: "Flag of aircraft. \n If selected input type = aircraft, at least 1 field from aircraft object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: flag
+            ownership_details:
+              type: string
+              description: "Ownership Details of aircraft. \n If selected input type = aircraft, at least 1 field from aircraft object must be provided."
+              minLength: 1
+              maxLength: 560
+              title: ownership_details
+            msn_number:
+              type: string
+              description: "Msn Number of aircraft. \n If selected input type = aircraft, at least 1 field from aircraft object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: msn_number
+            model:
+              type: string
+              description: "Model of aircraft. \n If selected input type = aircraft, at least 1 field from aircraft object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: model
+            operator:
+              type: string
+              description: "Operator of aircraft. \n If selected input type = aircraft, at least 1 field from aircraft object must be provided."
+              minLength: 1
+              maxLength: 35
+              title: operator
+    Response-To-Request-For-Payment:
+      type: object
+      title: ResponseToRequestForPayment
+      description: Response to Request for Payment
+      properties:
+        decision_code:
+          type: string
+          description: "Acceptance or Rejection of request for payment \n- ACTC - Acceptance to make requested payment \n- RJCT - Decline to pay requested amount"
+          enum:
+          - ACTC
+          - RJCT
+          title: decision_code
+        end_to_end_id:
+          maxLength: 35
+          minLength: 1
+          pattern: ^(?!\s*$).+
+          type: string
+          description: Unique End to End ID of Response to Request for Payment
+          title: end_to_end_id
+        accepted_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Amount to be paid from Request for Payment.Indicates if Instructed amount in Payment request will be paid, or different amount.If Different amount not allowed by Payment Request, this field must carry Instructed amount \n- Mandatory if message.decision_code = ACTC"
+          title: accepted_amount
+        accepted_currency:
+          type: string
+          description: "ISO 4217 code for the accepted currency \n- Mandatory if message.decision_code = ACTC"
+          enum:
+          - USD
+          title: accepted_currency
+        scheduled_exec_date:
+          type: string
+          format: date
+          description: "Date payment is expected to be made.Format is YYYY-MM-DD \n- Mandatory if message.decision_code = ACTC"
+          title: scheduled_exec_date
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: "Code of Transaction reasons \n - Mandatory if message.decision_code = RJCT"
+              enum:
+              - AC06
+              - AG01
+              - AG03
+              - AM09
+              - AM14
+              - BE04
+              - BE07
+              - CH11
+              - CUST
+              - DS04
+              - MD07
+              - NARR
+              - SL12
+              title: code
+            description:
+              type: string
+              description: "Description of Transaction reasons \n-  Mandatory if message.reasons.code = NARR"
+              minLength: 1
+              maxLength: 105
+              title: description
+        debtor:
+          $ref: '#/components/schemas/Debtor-Payment'
+        ultimate_debtor:
+          $ref: '#/components/schemas/Ultimate-Debtor-Payment'
+        status:
+          type: object
+          title: status
+          readOnly: true
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - RCVD
+              - RJCT
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- RCVD - Received \n - RJCT - Rejected  \n-  PDNG - Pending"
+              minLength: 1
+              maxLength: 256
+              title: description
+            reasons:
+              type: object
+              title: reasons
+              readOnly: true
+              properties:
+                code:
+                  type: string
+                  description: Reason code (applicable when message is rejected)
+                  maxLength: 4
+                  title: code
+                description:
+                  type: string
+                  description: Reason code description (e.g., Debtor account is invalid.)
+                  minLength: 1
+                  maxLength: 256
+                  title: description
+          required:
+          - date_time
+          - code
+          - description
+      required:
+      - decision_code
+      - end_to_end_id
+      - payment_information_id
+    Message-Method-Request-For-Payment:
+      type: object
+      title: MessageMethodRequestForPayment
+      required:
+      - country
+      - instructed_currency
+      - method
+      properties:
+        country:
+          description: ISO 3166 Alpha-2 code for the transaction country
+          type: string
+          enum:
+          - US
+          title: country
+        instructed_currency:
+          type: string
+          description: ISO 4217 code for the transaction instructed amount currency
+          enum:
+          - USD
+          title: instructed_currency
+        method:
+          description: "Method specified by the debtor for the transaction \n- Provide IP for instant payment"
+          type: string
+          enum:
+          - IP
+          title: method
+        network:
+          type: string
+          enum:
+          - RTP
+          - ZELLE
+          description: Financial market infrastructure or clearing system (e.g., RTP Network in the United States)
+          title: network
+    Debtor-Payment:
+      type: object
+      title: DebtorPayment
+      writeOnly: true
+      properties:
+        name:
+          minLength: 1
+          maxLength: 140
+          type: string
+          description: Name of Debtor that may be passed for payment initiation
+          title: name
+        street_name:
+          minLength: 1
+          maxLength: 70
+          type: string
+          description: Street Name of Debtor that may be passed for payment initiation
+          title: street_name
+        building_number:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: Building number of Debtor that may be passed for payment initiation
+          title: building_number
+        postal_code:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: Postal code of Debtor that may be passed for payment initiation
+          title: postal_code
+        city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: City of Debtor that may be passed for payment initiation
+          title: city
+        state:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: State of Debtor that may be passed for payment initiation
+          title: state
+        country:
+          type: string
+          description: Country of Debtor that may be passed for payment initiation
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        address_lines:
+          type: array
+          minItems: 1
+          maxItems: 7
+          description: Debtor Address lines which is array of 7 lines and each line has maximum 70 characters which may be passed for payment initiation
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+    Initial-Response-To-Request-For-Payment:
+      type: object
+      title: InitialResponseToRequestForPayment
+      properties:
+        uetr:
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique reference generated in outgoing payment
+          title: uetr
+        decision_code:
+          type: string
+          description: "Acceptance or Rejection of request for payment \n- ACTC - Acceptance to make requested payment \n- RJCT - Decline to pay requested amount"
+          enum:
+          - ACTC
+          - RJCT
+          title: decision_code
+        end_to_end_id:
+          maxLength: 35
+          minLength: 1
+          pattern: ^(?!\s*$).+
+          type: string
+          description: Unique End to End ID of Response to Request for Payment
+          title: end_to_end_id
+        accepted_amount:
+          type: number
+          minimum: 0.01
+          maximum: 1000000000000000
+          description: "Amount to be paid from Request for Payment.Indicates if Instructed amount in Payment request will be paid, or different amount.If Different amount not allowed by Payment Request, this field must carry Instructed amount \n- Mandatory if message.decision_code = ACTC"
+          title: accepted_amount
+        accepted_currency:
+          type: string
+          description: "ISO 4217 code for the accepted currency \n- Mandatory if message.decision_code = ACTC"
+          enum:
+          - USD
+          title: accepted_currency
+        scheduled_exec_date:
+          type: string
+          format: date
+          description: "Date payment is expected to be made.Format is YYYY-MM-DD \n- Mandatory if message.decision_code = ACTC"
+          title: scheduled_exec_date
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: "Code of Transaction reasons \n - Mandatory if message.decision_code = RJCT"
+              enum:
+              - AC06
+              - AG01
+              - AG03
+              - AM09
+              - AM14
+              - BE04
+              - BE07
+              - CH11
+              - CUST
+              - DS04
+              - MD07
+              - NARR
+              - SL12
+              title: code
+            description:
+              type: string
+              description: "Description of Transaction reasons \n-  Mandatory if message.reasons.code = NARR"
+              minLength: 1
+              maxLength: 105
+              title: description
+        debtor:
+          $ref: '#/components/schemas/Debtor-Payment'
+        ultimate_debtor:
+          $ref: '#/components/schemas/Ultimate-Debtor-Payment'
+        status:
+          type: object
+          title: status
+          readOnly: true
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- PDNG - Pending"
+              minLength: 1
+              maxLength: 256
+              title: description
+          required:
+          - date_time
+          - code
+          - description
+      required:
+      - decision_code
+      - end_to_end_id
+      - payment_information_id
+    Initial-Response-To-Payment-Confirmation-Request:
+      type: object
+      title: InitialResponseToPaymentConfirmationRequest
+      properties:
+        uetr:
+          type: string
+          description: UETR of Original payment
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          title: uetr
+        status:
+          type: object
+          title: status
+          readOnly: true
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- PDNG - Pending"
+              minLength: 1
+              maxLength: 256
+              title: description
+          required:
+          - date_time
+          - code
+          - description
+    Debtor-Refund:
+      type: object
+      title: DebtorRefund
+      properties:
+        name:
+          minLength: 1
+          maxLength: 140
+          type: string
+          description: "Name of Debtor to be passed for Refund payment \n- For United States debtor.name field is mandatory for decision code IPAY and PECR \n- For Thailand debtor.name field is not applicable \n- For Brazil debtor.name field is not applicable \n- For SEPA debtor.name field is not applicable"
+          title: name
+        street_name:
+          minLength: 1
+          maxLength: 70
+          type: string
+          description: "Street Name of Debtor to be passed for Refund payment \n- For United States debtor.street_name field is optional \n- For Thailand debtor.street_name field is not applicable \n- For Brazil debtor.street_name field is not applicable \n- For SEPA debtor.street_name field is not applicable"
+          title: street_name
+        building_number:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: "Building number of Debtor to be passed for Refund payment \n- For United States debtor.building_number field is optional \n- For Thailand debtor.building_number field is not applicable \n- For Brazil debtor.building_number field is not applicable \n- For SEPA debtor.building_number field is not applicable"
+          title: building_number
+        postal_code:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: "Postal code of Debtor to be passed for Refund payment \n- For United States debtor.postal_code field is optional \n- For Thailand debtor.postal_code field is not applicable \n- For Brazil debtor.postal_code field is not applicable \n- For SEPA debtor.postal_code field is not applicable"
+          title: postal_code
+        city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: "City of Debtor to be passed for Refund payment \n- For United States debtor.city field is optional \n- For Thailand debtor.city field is not applicable \n- For Brazil debtor.city field is not applicable \n- For SEPA debtor.city field is not applicable"
+          title: city
+        state:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: "State of Debtor to be passed for Refund payment \n- For United States debtor.state field is optional \n- For Thailand debtor.state field is not applicable \n- For Brazil debtor.state field is not applicable \n- For SEPA debtor.state field is not applicable"
+          title: state
+        country:
+          type: string
+          description: "Country of Debtor to be passed for Refund payment \n- For United States debtor.country field is optional \n- For Thailand debtor.country field is not applicable \n- For Brazil debtor.country field is not applicable \n- For SEPA debtor.country field is not applicable"
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        address_lines:
+          type: array
+          minItems: 1
+          maxItems: 7
+          description: "Debtor Address lines which is array of 7 lines and each line has maximum 70 characters which is to be passed for Refund payment \n- For United States debtor.address_lines field is optional \n- For Thailand debtor.address_lines field is not applicable \n- For Brazil debtor.address_lines field is not applicable \n- For SEPA debtor.address_lines field is not applicable"
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+    Outgoing-Request-For-Refund:
+      type: object
+      title: OutgoingRequestForRefund
+      description: Outgoing Request For Refund
+      properties:
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: "Code of Transaction reasons \n- For US RTP the applicable reason.code are (AC03,AM09,CUST,DUPL,FRAD,FRTR,TECH,UPAY) \n- For AU the applicable reason.code are (DUPL,AGNT,CURR,CUST,UPAY,CUTA,TECH,FRAD) \n- DUPL DuplicatePayment \n- BIAS BatchInstructionAlreadySettled \n- DRTP DuplicationRequestToPay \n- WNTB WarrantyBreach \n- MD06 RefundRequestByEndCustomer \n- UAPA UnauthorizedPayment \n- PAID TransactionAlreadyPaid \n- SVNR ServiceNotRendered \n- SYAD RequestToSettlementSystemAdministrator \n- ENUE EndUserError \n- NARR Narrative \n- INCR InvalidCancellationRequest \n- BE16 InvalidDebtorIdentificationCode \n- COVR CoverCancelledOrReturned \n- CURR IncorrectCurrency \n- CUTA CancelUponUnableToApply \n- DT01 InvalidDate \n- FRNA ForwardToNextAgent \n- INDM IndemnityRequired \n- MODT ModifiedTransaction \n- AC03 InvalidCreditorAccountNumber \n- AM09 WrongAmount \n- CUST RequestedByCustomerDUPL \n- FRAD FraudulentOrigin \n- FRTR FinalResponse \n- TECH TechnicalProblem \n- UPAY UnduePayment \n- AC02 InvalidDebtorAccountNumber \n- AGNT IncorrectAgent"
+              enum:
+              - AC03
+              - AM09
+              - CUST
+              - DUPL
+              - FRAD
+              - FRTR
+              - TECH
+              - UPAY
+              - UAPA
+              - AGNT
+              - CURR
+              - CUTA
+              - AC02
+              - BE16
+              - COVR
+              - DT01
+              - FRNA
+              - INDM
+              - MODT
+              - PAID
+              - SVNR
+              - SYAD
+              - ENUE
+              - NARR
+              - INCR
+              - BIAS
+              - DRTP
+              - WNTB
+              - MD06
+              title: code
+            description:
+              type: string
+              description: "Description of Transaction reasons. \n- For RFP warranty claim, the following codes/ warranty component may be used.The client may populate the code and warranty component, OR code, comma, free form text \n - N: No Legitimate Purpose \n- F: Part of Fraudulent Scheme to Induce Payment \n- H: Harassing \n- U: Otherwise Unlawful"
+              minLength: 1
+              maxLength: 105
+              title: description
+          required:
+          - code
+        country:
+          writeOnly: true
+          description: "The ISO 3166 Alpha-2 code for the non-payment message country should correspond to the originator’s payment initiation country code. \n- This field is optional for US \n- This field is mandatory for SEPA"
+          type: string
+          default: US
+          enum:
+          - US
+          - IE
+          - DE
+          - AT
+          - BE
+          - FI
+          - FR
+          - GR
+          - IT
+          - LU
+          - NL
+          - PT
+          - ES
+          - SK
+          - GB
+          - AU
+          - IN
+          - AR
+          - BR
+          - HK
+          - BG
+          title: country
+    Original-Debtor:
+      type: object
+      title: OriginalDebtor
+      properties:
+        bank_id:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: Debtor Bank ID of Original Payment
+          title: bank_id
+        name:
+          minLength: 1
+          maxLength: 140
+          type: string
+          description: Name of Debtor from Original Payment
+          title: name
+        street_name:
+          minLength: 1
+          maxLength: 70
+          type: string
+          description: Street Name of Debtor address from Original Payment
+          title: street_name
+        building_number:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: Debtor Building number of Original Payment
+          title: building_number
+        postal_code:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: Debtor Postal code of Original Payment
+          title: postal_code
+        city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: City of Debtor from Original Payment
+          title: city
+        state:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: State of Debtor from Original Payment
+          title: state
+        country:
+          maxLength: 2
+          type: string
+          description: Country of Debtor from Original Payment
+          title: country
+        address_lines:
+          type: array
+          description: Debtor Address lines of Original Payment which is array of 7 lines and each line has maximum 70 characters
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+        org_id:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: Debtor Org ID of Original Payment
+          title: org_id
+        birth_date:
+          type: string
+          format: date
+          description: Debtor Birth date of Original Payment.Format is YYYY-MM-DD
+          title: birth_date
+        birth_city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: Debtor Birth city of Original Payment
+          title: birth_city
+        birth_country:
+          maxLength: 2
+          type: string
+          description: Debtor Birth country of Original Payment
+          title: birth_country
+        proxy_id:
+          maxLength: 255
+          minLength: 1
+          type: string
+          description: Debtor's proxy identification (e.g., email address) of original payment
+          title: proxy_id
+        proxy_type:
+          type: string
+          enum:
+          - BIID
+          - EMAL
+          - EWAL
+          - MBNO
+          - NIDN
+          description: Debtor's proxy type (BIID for bill identification, EMAL for email address, EWAL for electronic wallet identification, MBNO for mobile number and NIDN for national identification) of original payment
+          title: proxy_type
+        account:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Debtor's bank account of original payment
+          title: account
+        birth_province:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: ' Debtor Province Of Birth of original payment'
+          title: birth_province
+        prvt_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Debtor's private id of original payment
+          title: prvt_id
+        department:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: 'debtor Address Department of original payment '
+          title: department
+        sub_department:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: debtor Address Sub-Department  of original payment
+          title: sub_department
+        building_name:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'debtor building name of original payment '
+          title: building_name
+        floor:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: debtor address floor of original payment
+          title: floor
+        post_box:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: 'debtor address post box of original payment '
+          title: post_box
+        room:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: debtor address room of original payment
+          title: room
+        town_location_name:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'debtor address town location name of original payment '
+          title: town_location_name
+        district_name:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'debtor address district_name of original payment '
+          title: district_name
+        anybic:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'debtor BIC of original payment '
+          title: anybic
+        lei:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Unique global identifier for legal entities participating in financial transactions of original payment '
+          title: lei
+        issuer:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'debtor name that identifies an issuer of original payment '
+          title: issuer
+        scheme_name:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: Debtor's scheme name of original payment
+          title: scheme_name
+    Initial-Outgoing-Request-For-Refund:
+      type: object
+      title: InitialOutgoingRequestForRefund
+      properties:
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: "Code of Transaction reasons \n- AC03 InvalidCreditorAccountNumber \n- AM09 WrongAmount \n- CUST Requested by Customer \n- DUPL DuplicatePayment \n- FRAD FraudulentOrigin \n- FRTR FinalResponse \n- TECH TechnicalProblem \n- UPAY UnduePayment \n- UAPA Customer claims Credit Transfer is fraudulently induced"
+              enum:
+              - AC03
+              - AM09
+              - CUST
+              - DUPL
+              - FRAD
+              - FRTR
+              - TECH
+              - UPAY
+              - AC02
+              - UAPA
+              - AGNT
+              - BE16
+              - COVR
+              - CURR
+              - CUTA
+              - DT01
+              - FRNA
+              - INDM
+              - MODT
+              - PAID
+              - SVNR
+              - SYAD
+              - ENUE
+              - NARR
+              - INCR
+              - BIAS
+              - DRTP
+              - WNTB
+              - MD06
+              title: code
+            description:
+              type: string
+              description: "Description of Transaction reasons. \n- For RFP warranty claim, the following codes/ warranty component may be used.The client may populate the code and warranty component, OR code, comma, free form text \n - N: No Legitimate Purpose \n- F: Part of Fraudulent Scheme to Induce Payment \n- H: Harassing \n- U: Otherwise Unlawful"
+              minLength: 1
+              maxLength: 105
+              title: description
+          required:
+          - code
+        country:
+          description: "ISO 3166 Alpha-2 code for the non pay message country. \n- This field is optional for US \n- This field is mandatory for SEPA"
+          type: string
+          default: US
+          enum:
+          - US
+          - IE
+          - DE
+          - AT
+          - BE
+          - FI
+          - FR
+          - GR
+          - IT
+          - LU
+          - NL
+          - PT
+          - ES
+          - SK
+          - GB
+          - AU
+          - IN
+          - AR
+          - BR
+          - BG
+          - HK
+          title: country
+        status:
+          type: object
+          title: status
+          readOnly: true
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- PDNG - Pending"
+              minLength: 1
+              maxLength: 256
+              title: description
+          required:
+          - date_time
+          - code
+          - description
+    Message-Creditor-Request-For-Payment:
+      type: object
+      title: MessageCreditorRequestForPayment
+      properties:
+        account:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Creditor Account ID
+          title: account
+        account_name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Creditor Account Name
+          title: account_name
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Creditor Name
+          title: name
+        bank_id:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Beneficiary Bank Clearing Id
+          title: bank_id
+        address_lines:
+          type: array
+          description: Creditor's address_lines
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+        street_name:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: 'Creditor''s street_name '
+          title: street_name
+        building_number:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Creditor's building_number
+          title: building_number
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Creditor's postal_code
+          title: postal_code
+        city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Creditor's city
+          title: city
+        state:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Creditor's state
+          title: state
+        country:
+          type: string
+          description: Creditor's country
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        org_id:
+          maxLength: 20
+          minLength: 1
+          type: string
+          description: Creditor's org_id
+          title: org_id
+        birth_date:
+          type: string
+          format: date
+          description: ISO 8601 (YYYY-MM-DD), Creditor's birth_date
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Creditor''s birth_city '
+          title: birth_city
+        birth_country:
+          type: string
+          description: Creditor's birth_country
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+        phone_number:
+          type: string
+          maxLength: 35
+          description: Creditor's phone number
+          pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
+          title: phone_number
+      required:
+      - account
+      - name
+      - bank_id
+    Final-Response-To-Request-For-Refund:
+      type: object
+      title: FinalResponseToRequestForRefund
+      description: Outgoing/Incoming Response to Request for Refund
+      properties:
+        case_id:
+          type: string
+          description: Case Id received from clearing
+          minLength: 1
+          maxLength: 35
+          title: case_id
+        decision_code:
+          type: string
+          description: "Acceptance or Rejection of return of funds. Only the below 3 codes are applicable \n- IPAY - Acceptance to Return the payment \n- RJCR - Decline to Return the payment \n- PECR - Partially Executed Cancellation Return"
+          enum:
+          - ACDA
+          - ACNR
+          - ACVA
+          - CHRG
+          - CNCL
+          - CONF
+          - CVAA
+          - CWFW
+          - FTNA
+          - ICOV
+          - IDUP
+          - IPAY
+          - IPYI
+          - MCOV
+          - MODI
+          - MWFW
+          - PDCR
+          - PECR
+          - PURP
+          - RJCR
+          - RJNR
+          - RJVA
+          - SMTC
+          - SMTI
+          - UWFW
+          - BIAS
+          - IDNE
+          - IVCR
+          - INFO
+          - NINF
+          - PDNG
+          title: decision_code
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: "Code of Transaction reasons \n- If decision_code = RJCR,reasons.code is mandatory for ResponseToRequest-For-Refund "
+              enum:
+              - AC04
+              - ADAC
+              - AGNT
+              - AM04
+              - ARDT
+              - ARPL
+              - CUST
+              - LEGL
+              - NARR
+              - NOAS
+              - NOOR
+              - PTNA
+              - RQDA
+              - WSEQ
+              - IDMN
+              - ACLR
+              - AEXR
+              - ARFR
+              - ARJR
+              - PATE
+              - RR04
+              - RCAR
+              - RCNR
+              - RCPR
+              - URTP
+              title: code
+            description:
+              type: string
+              description: "Reason code description (e.g., Debtor account is invalid.). \n- For reasons.code = NARR this field is mandatory"
+              minLength: 1
+              maxLength: 105
+              title: description
+        method:
+          type: string
+          description: "Method type \n- MPNS - for ACH payment \n- RTGS - for FedWire \n- RTNS - for CHIPS \n- RT1 - for SEPA IP payments"
+          readOnly: true
+          enum:
+          - MPNS
+          - RTGS
+          - RTNS
+          - RT1
+          title: method
+        interbank_settlement_date:
+          type: string
+          description: YYYY-MM-DD Intended interbank settlement date
+          format: date
+          readOnly: true
+          title: interbank_settlement_date
+        instructed_amount:
+          type: number
+          description: "Instructed amount for partial acceptance of return request \n- Mandatory for ResponseToRequest-For-Refund with decision code as PECR."
+          minimum: 0.01
+          maximum: 1000000000000000
+          title: instructed_amount
+        instructed_currency:
+          type: string
+          description: "Instructed currency for partial acceptance of return request \n- Mandatory for ResponseToRequest-For-Refund with decision code as PECR"
+          enum:
+          - USD
+          - EUR
+          - AUD
+          - ARS
+          - BRL
+          - HKD
+          - CNY
+          title: instructed_currency
+        instruction_id:
+          writeOnly: true
+          type: string
+          description: Unique Instruction id on return payment initiation
+          minLength: 1
+          maxLength: 35
+          title: instruction_id
+        end_to_end_id:
+          writeOnly: true
+          type: string
+          description: Unique end to end id on return payment initiation
+          minLength: 1
+          maxLength: 35
+          title: end_to_end_id
+        country:
+          writeOnly: true
+          description: "ISO 3166 Alpha-2 code for the non pay message country. \n- This field is optional for US \n- This field is mandatory for SEPA"
+          type: string
+          default: US
+          enum:
+          - US
+          - IE
+          - DE
+          - AT
+          - BE
+          - FI
+          - FR
+          - GR
+          - IT
+          - LU
+          - NL
+          - PT
+          - ES
+          - SK
+          - AU
+          - AR
+          - BR
+          - HK
+          - BG
+          title: country
+        network:
+          type: string
+          readOnly: true
+          enum:
+          - RTP
+          - FDN
+          description: "Financial market infrastructure or clearing system (e.g., RTP Network in the United States) \n- RTP for TCH \n- FDN for FedNow"
+          title: network
+        debtor:
+          $ref: '#/components/schemas/Debtor-Refund'
+        ultimate_debtor:
+          $ref: '#/components/schemas/Ultimate-Debtor-Refund'
+        status:
+          type: object
+          title: status
+          readOnly: true
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time, \n-, status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - RCVD
+              - RJCT
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- RJCT - Rejected \n- RCVD - Received \n -  PDNG - Pending"
+              minLength: 1
+              maxLength: 256
+              title: description
+            reasons:
+              type: object
+              title: reasons
+              readOnly: true
+              properties:
+                code:
+                  type: string
+                  description: Reason code (applicable when message is rejected)
+                  maxLength: 4
+                  title: code
+                description:
+                  type: string
+                  description: Reason code description (e.g., Debtor account is invalid.)
+                  minLength: 1
+                  maxLength: 256
+                  title: description
+          required:
+          - date_time
+          - code
+          - description
+        return_id:
+          type: string
+          readOnly: true
+          description: "If other FI wants to return funds outside of RTP, the unique identifier of the transaction used to return the funds must be included in this field \n - If via ACH, Trace Number must be populated \n - If via FedWire -- IMAD  must be populated \n- If via CHIPS -- System Sequence Number (SSN)  must be populated"
+          minLength: 1
+          maxLength: 35
+          title: return_id
+      required:
+      - case_id
+      - decision_code
+      - end_to_end_id
+    Message-Creditor-Status:
+      type: object
+      title: MessageCreditorStatus
+      properties:
+        proxy_id:
+          type: string
+          maxLength: 128
+          minLength: 1
+          description: "Creditor's proxy identification (e.g., email address) \n - For US  creditor.proxy_id field is not applicable"
+          title: proxy_id
+        proxy_type:
+          type: string
+          enum:
+          - BIID
+          - EMAL
+          - EWAL
+          - MBNO
+          - NIDN
+          description: "Creditor's proxy type (BIID for bill identification, EMAL for email address, EWAL for electronic wallet identification, MBNO for mobile number and NIDN for national identification) \n - For US creditor.proxy_type field is not applicable"
+          title: proxy_type
+        tax_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: "Creditor's tax identification  \n - For US creditor.tax_id field is not applicable"
+          title: tax_id
+        account:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Creditor's bank account
+          title: account
+        account_name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Creditor Account name, different from the Creditor Name
+          title: account_name
+        virtual_account:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: "Creditor's virtual account (also kown as PAYER ID) \n - For US creditor.virtual_account field is not applicable"
+          title: virtual_account
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Creditor's name
+          title: name
+        address_lines:
+          type: array
+          description: Creditor's address_lines
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+        street_name:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: 'Creditor''s street_name '
+          title: street_name
+        building_number:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Creditor's building_number
+          title: building_number
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Creditor's postal_code
+          title: postal_code
+        city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Creditor's city
+          title: city
+        state:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Creditor's state
+          title: state
+        country:
+          type: string
+          description: Creditor's country
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        org_id:
+          maxLength: 20
+          minLength: 1
+          type: string
+          description: Creditor's org_id
+          title: org_id
+        birth_date:
+          type: string
+          format: date
+          description: ISO 8601 (YYYY-MM-DD), Creditor's birth_date
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Creditor''s birth_city '
+          title: birth_city
+        birth_country:
+          type: string
+          description: Creditor's birth_country
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+        bank_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Creditor Bank ID
+          title: bank_id
+        bank_branch_id:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: 'Creditor Bank Branch ID '
+          title: bank_branch_id
+    Error-Detail:
+      type: object
+      title: ErrorDetail
+      xml:
+        name: Errordetail
+      properties:
+        issue:
+          xml:
+            name: issue
+          type: string
+          maxLength: 200
+          description: more details about the issue
+          title: issue
+        action:
+          xml:
+            name: action
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+          title: action
+        code:
+          xml:
+            name: code
+          type: string
+          maxLength: 8
+          description: unique code representing the issue
+          title: code
+    Original-Creditor:
+      type: object
+      title: OriginalCreditor
+      properties:
+        bank_id:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: Bank Id of Creditor from original payment
+          title: bank_id
+        name:
+          minLength: 1
+          maxLength: 140
+          type: string
+          description: Name of Creditor from Original Payment
+          title: name
+        street_name:
+          minLength: 1
+          maxLength: 70
+          type: string
+          description: Creditor Street name of Original Payment
+          title: street_name
+        building_number:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: Creditor Building number of Original Payment
+          title: building_number
+        postal_code:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: Creditor Postal code of Original Payment
+          title: postal_code
+        city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: City of Creditor from Original Payment
+          title: city
+        state:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: State of Creditor from Original Payment
+          title: state
+        country:
+          maxLength: 2
+          type: string
+          description: Country of Creditor from Original Payment
+          title: country
+        address_lines:
+          type: array
+          description: Creditor Address lines of Original Payment which is an array of 7 lines and each line has maximum 70 characters
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+        org_id:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: Creditor Org ID of Original Payment
+          title: org_id
+        birth_date:
+          type: string
+          format: date
+          description: Creditor Birth date of Original Payment.Format is YYYY-MM-DD
+          title: birth_date
+        birth_city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: Creditor Birth city of Original Payment
+          title: birth_city
+        birth_country:
+          maxLength: 2
+          type: string
+          description: Creditor Birth country of Original Payment
+          title: birth_country
+        proxy_id:
+          maxLength: 255
+          minLength: 1
+          type: string
+          description: Creditor's proxy identification (e.g., email address) of original payment
+          title: proxy_id
+        proxy_type:
+          type: string
+          enum:
+          - BIID
+          - EMAL
+          - EWAL
+          - MBNO
+          - NIDN
+          - COTS
+          - IBAN
+          - PAYR
+          description: Creditor's proxy type (BIID for bill identification, EMAL for email address, EWAL for electronic wallet identification, MBNO for mobile number, NIDN for national identification, COTS for tax identification, IBAN for internetational bank account number and PAYR for payer identification) of original payment
+          title: proxy_type
+        account:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: 'Creditor''s bank account of original payment '
+          title: account
+        prvt_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Creditor''s prvt_id of original payment '
+          title: prvt_id
+        birth_province:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Creditor''s Province Of Birth of original payment '
+          title: birth_province
+        department:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: 'creditor Address Department of original payment '
+          title: department
+        sub_department:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: creditor Address Sub-Department of original payment
+          title: sub_department
+        building_name:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'creditor building name of original payment '
+          title: building_name
+        floor:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: creditor address floor of original payment
+          title: floor
+        post_box:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: 'creditor address post box of original payment '
+          title: post_box
+        room:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: 'creditor address room of original payment '
+          title: room
+        town_location_name:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'creditor address town location name of original payment '
+          title: town_location_name
+        district_name:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'creditor address district_name of original payment '
+          title: district_name
+        anybic:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'creditor BIC of original payment '
+          title: anybic
+        lei:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Unique global identifier for legal entities participating in financial transactions of original payment '
+          title: lei
+        issuer:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'creditor name that identifies an issuer of original payment '
+          title: issuer
+        scheme_name:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: Creditor's scheme name of original payment
+          title: scheme_name
+    Request-For-Refund:
+      type: object
+      title: RequestForRefund
+      description: Incoming/Outgoing Request For Refund
+      properties:
+        case_id:
+          type: string
+          description: Case Id received from clearing
+          minLength: 1
+          maxLength: 35
+          readOnly: true
+          title: case_id
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: Code of Transaction reasons.Either ISO code or proprietary code should be present in this field
+              maxLength: 4
+              title: code
+            description:
+              type: string
+              description: Description of Transaction reasons
+              minLength: 1
+              maxLength: 105
+              title: description
+          required:
+          - code
+        requestor_name:
+          type: string
+          description: Official name of the originator of Request For Refund
+          minLength: 1
+          maxLength: 140
+          title: requestor_name
+        requestor_bank_id:
+          type: string
+          description: Bank ID of the originator FI requesting Request For Refund
+          minLength: 1
+          maxLength: 35
+          title: requestor_bank_id
+        requestor_issuer:
+          type: string
+          description: Originator Issuer
+          minLength: 1
+          maxLength: 35
+          title: requestor_issuer
+        requestor_org_id:
+          type: string
+          description: Orginator Identification
+          minLength: 1
+          maxLength: 35
+          title: requestor_org_id
+        requestor_lei:
+          type: string
+          description: LEI of the originator of RFR
+          minLength: 1
+          maxLength: 20
+          pattern: '[A-Z0-9]{18,18}[0-9]{2,2}'
+          title: requestor_lei
+        status:
+          type: object
+          title: status
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - RCVD
+              - RJCT
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- RJCT - Rejected \n- RCVD - Received \n - PDNG - Pending"
+              minLength: 1
+              maxLength: 256
+              title: description
+            reasons:
+              type: object
+              title: reasons
+              readOnly: true
+              properties:
+                code:
+                  type: string
+                  description: Reason code (applicable when message is rejected)
+                  maxLength: 4
+                  title: code
+                description:
+                  type: string
+                  description: Reason code description (e.g., Debtor account is invalid.)
+                  minLength: 1
+                  maxLength: 256
+                  title: description
+          required:
+          - date_time
+          - code
+          - description
+      required:
+      - case_id
+      additionalProperties: false
+    Final-Request-For-Information-Compliance:
+      title: Final-Request-For-Information-Compliance
+      type: object
+      description: Request For Information Compliance
+      properties:
+        transaction:
+          type: object
+          title: transaction
+          properties:
+            end_to_end_id:
+              type: string
+              description: End to End ID of Original Payment for which RFI is requested
+              minLength: 1
+              maxLength: 35
+              title: end_to_end_id
+            uetr:
+              type: string
+              description: 'UETR of Original payment for which RFI is requested '
+              minLength: 1
+              maxLength: 36
+              title: uetr
+            status:
+              type: object
+              title: status
+              properties:
+                date_time:
+                  type: string
+                  format: date-time
+                  description: "Status Date Time \n- UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time."
+                  title: date_time
+                code:
+                  type: string
+                  description: "ISO 20022 message status code. \n- PDNG - Pending "
+                  title: code
+                  enum:
+                  - PDNG
+                description:
+                  type: string
+                  description: "Status code description. \n- PDNG - Pending "
+                  minLength: 1
+                  maxLength: 256
+                  title: description
+              required:
+              - date_time
+            reasons:
+              type: object
+              title: reasons
+              properties:
+                code:
+                  type: string
+                  description: "Reason code corresponding to the transaction status. \n- RECI - ReceiverCustomerInformation."
+                  title: code
+                  enum:
+                  - RECI
+                description:
+                  type: string
+                  description: "Reason code description. \n - Transaction is in compliance review request for further information"
+                  minLength: 1
+                  maxLength: 256
+                  title: description
+          required:
+          - uetr
+          - end_to_end_id
+        rfics:
+          type: object
+          description: Request for Information Compliance
+          title: rfics
+          properties:
+            alert_id:
+              type: string
+              description: 'RFI Alert ID '
+              minLength: 1
+              maxLength: 16
+              title: alert_id
+            request_id:
+              type: string
+              description: 'RFI Request ID '
+              minLength: 1
+              maxLength: 16
+              title: request_id
+            request_date_time:
+              type: string
+              format: date-time
+              description: "RFI Request Date Time. \n - Date when RFI request is initiated. "
+              title: request_date_time
+            purpose_of_transaction_required:
+              type: string
+              description: 'Purpose Of Transaction '
+              title: purpose_of_transaction_required
+              enum:
+              - Y
+              - N
+            additional_details_requested:
+              type: string
+              description: 'Additional Details '
+              minLength: 1
+              maxLength: 4000
+              title: additional_details_requested
+            fieldlevel_requests:
+              type: array
+              items:
+                $ref: '#/components/schemas/Field-level-Requests-For-RFICS'
+              description: ' Field level requests for which response is requested'
+              maxItems: 30
+              title: fieldlevel_requests
+          required:
+          - alert_id
+          - request_id
+          - request_date_time
+          - purpose_of_transaction_required
+    Message-Debtor-Status:
+      type: object
+      title: MessageDebtorStatus
+      properties:
+        proxy_id:
+          type: string
+          maxLength: 128
+          minLength: 1
+          description: "Debtor's proxy identification (e.g., email address) \n - For US debtor.proxy_id field is not applicable"
+          title: proxy_id
+        proxy_type:
+          type: string
+          enum:
+          - BIID
+          - EMAL
+          - EWAL
+          - MBNO
+          - NIDN
+          description: "Debtor's proxy type (BIID for bill identification, EMAL for email address, EWAL for electronic wallet identification, MBNO for mobile number and NIDN for national identification) \n - For US debtor.proxy_type is not applicable"
+          title: proxy_type
+        tax_id:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: "Debtor's tax identification \n - For US debtor.tax_id is not applicable"
+          title: tax_id
+        account:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: Debtor's bank account
+          title: account
+        account_name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Debtor Account name, different from the Debtor Name
+          title: account_name
+        virtual_account:
+          maxLength: 40
+          minLength: 1
+          type: string
+          description: "Debtor's virtual account \n - For US debtor.virtual_account field is not applicable"
+          title: virtual_account
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: 'Debtor''s bank account name '
+          title: name
+        address_lines:
+          type: array
+          description: Debtor's address_lines
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+        street_name:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: 'Debtor''s street_name '
+          title: street_name
+        building_number:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Debtor's building_number
+          title: building_number
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Debtor's postal_code
+          title: postal_code
+        city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Debtor's City
+          title: city
+        state:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Debtor's State
+          title: state
+        country:
+          type: string
+          description: Debtor's Country
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        org_id:
+          maxLength: 20
+          minLength: 1
+          type: string
+          description: Debtor's org_id
+          title: org_id
+        birth_date:
+          type: string
+          format: date
+          description: 'ISO 8601 (YYYY-MM-DD), Debtor''s birth_date '
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Debtor's birth_city
+          title: birth_city
+        birth_country:
+          type: string
+          description: Debtor's birth_country
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+        bank_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Instructing Agent member Identification ID of a clearing system
+          title: bank_id
+        bank_branch_id:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Debtor Bank branch ID
+          title: bank_branch_id
+    Request-For-Payment:
+      type: object
+      title: RequestForPayment
+      required:
+      - debtor
+      - creditor
+      - method
+      - transaction
+      description: Request For Payment
+      properties:
+        debtor:
+          $ref: '#/components/schemas/Message-Debtor-Request-For-Payment'
+        ultimate_debtor:
+          $ref: '#/components/schemas/Message-Ultimate-Debtor-Request-For-Payment'
+        creditor:
+          $ref: '#/components/schemas/Message-Creditor-Request-For-Payment'
+        ultimate_creditor:
+          $ref: '#/components/schemas/Message-Ultimate-Creditor-Status'
+        method:
+          $ref: '#/components/schemas/Message-Method-Request-For-Payment'
+        transaction:
+          $ref: '#/components/schemas/Message-Transaction-Request-For-Payment'
+        response_rfp:
+          type: object
+          title: responserfp
+          properties:
+            message_id:
+              type: string
+              description: "Message Identification of Response to Request For Payment \n- Mandatory only if message.transaction.status.code = ACSP \n - Conditional if message.transaction.status.code = ACCC. The condition is -: If a RRFP was initiated , this field is mandatory; if RRFP was not initiated, this field must not be present."
+              maxLength: 35
+              title: message_id
+            creation_date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) Date time when a message was created for Response to Request For Payment.\n- Mandatory only if message.transaction.status.code = ACSP \n - Conditional if message.transaction.status.code = ACCC. The condition is -: If a RRFP was initiated , this field is mandatory; if RRFP was not initiated, this field must not be present."
+              title: creation_date_time
+            end_to_end_id:
+              maxLength: 35
+              minLength: 1
+              pattern: ^(?!\s*$).+
+              type: string
+              description: "Unique End to end id of Response to Request for Payment \n- Mandatory only if message.transaction.status.code = ACSP \n - Conditional if message.transaction.status.code = ACCC. The condition is -: If a RRFP was initiated , this field is mandatory; if RRFP was not initiated, this field must not be present."
+              title: end_to_end_id
+            accepted_amount:
+              type: number
+              minimum: 0.01
+              maximum: 1000000000000000
+              description: "Amount to be paid from Request for Payment.\n- Mandatory only if message.transaction.status.code = ACSP \n - Conditional if message.transaction.status.code = ACCC. The condition is -: If a RRFP was initiated , this field is mandatory; if RRFP was not initiated, this field must not be present."
+              title: accepted_amount
+            accepted_currency:
+              type: string
+              description: "ISO 4217 code for the accepted currency \n- Mandatory only if message.transaction.status.code = ACSP \n - Conditional if message.transaction.status.code = ACCC. The condition is -: If a RRFP was initiated , this field is mandatory; if RRFP was not initiated, this field must not be present."
+              enum:
+              - USD
+              title: accepted_currency
+            scheduled_exec_date:
+              type: string
+              format: date
+              description: "Date payment is expected to be made.Format is YYYY-MM-DD \n- Mandatory only if message.transaction.status.code = ACSP \n - Conditional if message.transaction.status.code = ACCC. The condition is -: If a RRFP was initiated , this field is mandatory; if RRFP was not initiated, this field must not be present."
+              title: scheduled_exec_date
+    Message-Ultimate-Debtor-Request-For-Payment:
+      type: object
+      title: MessageUltimateDebtorRequestForPayment
+      properties:
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Name of the ultimate debtor
+          title: name
+        address_lines:
+          type: array
+          description: Ultimate Debtor's address_lines
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+        street_name:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's street_name
+          title: street_name
+        building_number:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's building_number
+          title: building_number
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's postal_code
+          title: postal_code
+        city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's city
+          title: city
+        state:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Ultimate Debtor''s state '
+          title: state
+        country:
+          type: string
+          description: Ultimate Debtor's country
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        org_id:
+          maxLength: 20
+          minLength: 1
+          type: string
+          description: ' Ultimate Debtor''s org_id'
+          title: org_id
+        birth_date:
+          type: string
+          format: date
+          description: ISO 8601 (YYYY-MM-DD), ultimate debtor's birth date
+          title: org_id
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Ultimate debtor's birth city
+          title: birth_city
+        birth_country:
+          type: string
+          description: Ultimate debtor's birth country
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+    Address:
+      type: string
+      maxLength: 70
+      minLength: 1
+      maxItems: 7
+      description: Address
+      title: Address
+    Response-To-Request-For-Information-Compliance:
+      title: Response-To-Request-For-Information-Compliance
+      type: object
+      description: Response to Request for Information Compliance
+      properties:
+        rrfics:
+          type: object
+          description: Response to Request for Information Compliance
+          title: rrfics
+          properties:
+            alert_id:
+              type: string
+              description: RFI Alert ID.
+              minLength: 1
+              maxLength: 16
+              title: alert_id
+            request_id:
+              type: string
+              description: 'RFI Request ID. '
+              minLength: 1
+              maxLength: 16
+              title: request_id
+            response_date_time:
+              type: string
+              format: date-time
+              description: RFI Response Date Time.
+              title: response_date_time
+            purpose_of_transaction:
+              type: string
+              description: Purpose Of Transaction.
+              minLength: 1
+              maxLength: 140
+              title: purpose_of_transaction
+            additional_details:
+              type: string
+              description: Additional Details.
+              minLength: 1
+              maxLength: 140
+              title: additional_details
+            fieldlevel_responses:
+              type: array
+              items:
+                $ref: '#/components/schemas/Field-level-Responses-For-RRFICS'
+              description: ' This block will contain 3 fields (id, name,value) and at least 1 field from the input type for which response is provided.'
+              maxItems: 30
+              title: fieldlevel_responses
+          required:
+          - alert_id
+          - request_id
+          - response_date_time
+      required:
+      - uetr
+    Message-Request:
+      type: object
+      title: MessageRequest
+      properties:
+        message_type:
+          type: string
+          description: "Message Type provided by the customer \n- RFR - Request for Refund (camt.056) \n- RRFR - Response to Request for Refund(camt.029) \n- PCR - Payment Confirmation Request \n- RPCR - Response to Payment Confirmation Request \n- RFP - Request for Payment (pain.013) \n- RRFP - Response to Request for Payment (pain.014) \n- RRFICS - Response to Request for Information Compliance"
+          enum:
+          - RFR
+          - RRFR
+          - PCR
+          - RPCR
+          - RFP
+          - RRFP
+          - RRFICS
+          title: message_type
+        message:
+          oneOf:
+          - $ref: '#/components/schemas/Final-Response-To-Request-For-Refund'
+          - $ref: '#/components/schemas/Final-Response-To-Payment-Confirmation-Request'
+          - $ref: '#/components/schemas/Response-To-Request-For-Payment'
+          - $ref: '#/components/schemas/Outgoing-Request-For-Refund'
+          - $ref: '#/components/schemas/Response-To-Request-For-Information-Compliance'
+      required:
+      - message_type
+      - message
+    Original-Ultimate-Creditor:
+      type: object
+      title: OriginalUltimateCreditor
+      properties:
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: 'Ultimate Creditor''s bank account name of original payment '
+          title: name
+        org_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Ultimate Creditor's org_id of original payment
+          title: org_id
+        birth_date:
+          type: string
+          format: date
+          description: 'ISO 8601 (YYYY-MM-DD), ultimate creditor''s birth date of original payment '
+          title: birth_date
+        birth_city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Ultimate Creditor''s birth city of original payment '
+          title: birth_city
+        birth_country:
+          type: string
+          description: 'Ultimate Creditor''s birth country of original payment '
+          pattern: ^[A-Z]{2,2}$
+          title: birth_country
+        birth_province:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Ultimate Creditor  Province Of Birth of original payment '
+          title: birth_province
+        prvt_id:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Ultimate Creditor''s private id of original payment '
+          title: prvt_id
+        anybic:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'ultimate Creditor''s BIC of original payment '
+          title: anybic
+        lei:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Unique global identifier for legal entities participating in financial transactions of original payment '
+          title: lei
+        issuer:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'ultimate Creditor''s name that identifies an issuer of original payment '
+          title: issuer
+        scheme_name:
+          maxLength: 128
+          minLength: 1
+          type: string
+          description: Ultimate Creditor's scheme name of original payment
+          title: scheme_name
+    Message-Ultimate-Debtor-Status:
+      type: object
+      title: MessageUltimateDebtorStatus
+      properties:
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Name of the ultimate debtor
+          title: name
+        address_lines:
+          type: array
+          description: Ultimate Debtor's address_lines
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+        street_name:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's street_name
+          title: street_name
+        building_number:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's building_number
+          title: building_number
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's postal_code
+          title: postal_code
+        city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Ultimate Debtor's city
+          title: city
+        state:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: 'Ultimate Debtor''s state '
+          title: state
+        country:
+          type: string
+          description: Ultimate Debtor's country
+          pattern: ^[A-Z]{2,2}$
+          title: country
+    Field-level-Requests-For-RFICS:
+      type: object
+      description: “FieldlevelRequestsForRFICS”
+      title: Field-level-Requests-For-RFICS
+      properties:
+        field_id:
+          type: string
+          description: Field ID.
+          minLength: 1
+          maxLength: 16
+          title: field_id
+        field_name:
+          type: string
+          description: 'Field name. '
+          minLength: 1
+          maxLength: 70
+          title: field_name
+        field_value:
+          type: string
+          description: 'Field value. '
+          minLength: 1
+          maxLength: 70
+          title: field_value
+        input_type:
+          type: string
+          description: "The Input type or template to provide the response against the field. It will be one the following - individual / entity / aircraft / vessel / unknown. \n If requested input type is unknown, populate fields from any of the other 4 input types in the response."
+          minLength: 1
+          maxLength: 16
+          title: input_type
+      required:
+      - field_id
+      - field_name
+      - field_value
+      - input_type
+    Final-Message-Response:
+      type: object
+      title: FinalMessageResponse
+      properties:
+        message_id:
+          type: string
+          description: Message Identification
+          readOnly: true
+          maxLength: 35
+          title: message_id
+        creation_date_time:
+          type: string
+          format: date-time
+          description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time when a message was created"
+          readOnly: true
+          title: creation_date_time
+        message_type:
+          type: string
+          description: "Message Type as provided by the customer \n- RFR - Request for Refund (camt.056) \n- RRFR - Response to Request for Refund(camt.029) \n- PCR - Payment Confirmation Request \n- RPCR - Response to Payment Confirmation Request \n- RFP - Request for Payment (pain.013) \n- RRFP - Response to Request for Payment (pain.014) \n- RFICS - Request for Information Compliance \n- RRFICS - Response to Request for Information Compliance"
+          enum:
+          - RFR
+          - RRFR
+          - PCR
+          - RPCR
+          - RFP
+          - RRFP
+          - RFICS
+          - RRFICS
+          title: message_type
+        original_payment:
+          type: object
+          title: OriginalPayment
+          readOnly: true
+          properties:
+            message_id:
+              type: string
+              description: Message Id of original payment
+              maxLength: 35
+              title: message_id
+            creation_date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time when a original payment was created"
+              title: creation_date_time
+            instruction_id:
+              type: string
+              description: Instruction ID of Original Payment
+              minLength: 1
+              maxLength: 35
+              title: instruction_id
+            end_to_end_id:
+              type: string
+              description: End to End ID of Original Payment
+              minLength: 1
+              maxLength: 35
+              title: end_to_end_id
+            transaction_id:
+              type: string
+              description: Transaction ID of Original Payment
+              minLength: 1
+              maxLength: 35
+              title: transaction_id
+            uetr:
+              type: string
+              description: UETR of Original payment
+              pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+              title: uetr
+            clearing_reference:
+              type: string
+              description: Clearing reference of Original Payment
+              minLength: 1
+              maxLength: 35
+              title: clearing_reference
+            instructed_amount:
+              type: number
+              description: Instructed amount of Original Payment
+              minimum: 0.01
+              maximum: 1000000000000000
+              title: instructed_amount
+            instructed_currency:
+              type: string
+              description: Instructed currency of Original Payment
+              enum:
+              - USD
+              - EUR
+              - GBP
+              - AUD
+              - INR
+              - ARS
+              - BRL
+              - HUF
+              - HKD
+              - CNY
+              title: instructed_currency
+            value_date:
+              type: string
+              format: date
+              description: Date in local time zone (e.g., EST for a United States RTP network transaction) when Citi's transaction processing application starts processing a transaction.Format is YYYY-MM-DD
+              title: value_date
+            message_name_identification:
+              type: string
+              description: Clearing specific original message name
+              minLength: 1
+              maxLength: 35
+              title: message_name_identification
+            requested_execution_date:
+              type: string
+              format: date
+              description: Requested Execution Date of Original Request for Payment
+              title: requested_execution_date
+            requested_execution_date_time:
+              type: string
+              format: date-time
+              description: Requested Execution Date/ Time of Original Request for Payment
+              title: requested_execution_date_time
+            expiry_date:
+              type: string
+              format: date
+              description: Expiry Date of Original Request for Payment
+              title: expiry_date
+            expiry_date_time:
+              type: string
+              format: date-time
+              description: Expiry Date/Time of Original Request for Payment
+              title: expiry_date_time
+            payment_information_id:
+              type: string
+              maxLength: 35
+              minLength: 1
+              description: Payment Information ID Original Request for Payment
+              title: payment_information_id
+            category_purpose:
+              type: string
+              maxLength: 128
+              minLength: 1
+              description: Category purpose of original payment
+              title: category_purpose
+            unstructured_remittance_info:
+              type: array
+              description: Unstructured remitance information of original payment
+              items:
+                $ref: '#/components/schemas/Unstructured'
+              title: unstructured_remittance_info
+            structured_remittance_info:
+              type: object
+              title: structured_remittance_info
+              properties:
+                creditor_reference_information_code:
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+                  description: Structured Creditor Reference Information Code of original payment
+                  title: creditor_reference_information_code
+                creditor_reference_issuer:
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+                  description: "Structured Creditor Reference Issuer \n - For TH Instant payment transaction.structured_remittance_info.creditor_reference_issuer  is not applicable \n - For US Instant payment transaction.structured_remittance_info.creditor_reference_issuer field is not applicable \n - For IN IMPS transaction.structured_remittance_info.creditor_reference_issuer  is not applicable \n - For UK FPS Instant payment transaction.structured_remittance_info.creditor_reference_issuer  is not applicable \n - For JP Instant payment transaction.structured_remittance_info.creditor_reference_issuer  is not applicable \n - For IN UPI transaction.structured_remittance_info.creditor_reference_issuer  is not applicable \n - For US WIRE,transaction.structured_remittance_info.creditor_reference_issuer field is not applicable \n - For US ACH CCD/PPD/IAT payment,transaction.structured_remittance_info.creditor_reference_issuer field is not applicable \n - For SEPA IDP transaction.structured_remittance_info.creditor_reference_issuer field is optional with max length 35 \n - For Japan Instant payment transaction.structured_remittance_info.creditor_reference_issuer field is not applicable \n - For SEPA, transaction.structured_remittance_info.creditor_reference_issuer field is optional field and allowed maxLength is 35"
+                  title: creditor_reference_issuer
+                creditor_reference:
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+                  description: Structured Creditor Reference of original payment
+                  title: creditor_reference
+            purpose:
+              type: string
+              minLength: 1
+              maxLength: 5
+              description: "Purpose of a transaction of original payment\n- CASH for cash management \n- CNFL for confidential \n- COST for payment for business expenses \n- GDDS for payment related to purchase or sale of goods \n- GDSV for payment related to purchase or sale of goods and services \n- GP2P for person-to-person payment \n- OTHR for other, if your payment doesn't fit any of the specific purpose codes \n- PAYR for payroll payment \n- RCPT for payment of a receipt \n- SALA for salary payment \n- SCVE for payment related to purchase or sale of services \n- SUPP for supplier payment \n- TREA for treasury payment \n- REFU for refund payment \n- CLPO for Claim Payouts \n- LODI for Loan Disbursals \n- TIPO for Tips Payout \n- GIEO for Gig economy \n- VEPO for Vendor Payouts \n- INPO for Incentive Payouts \n- ISPO for Insurance Payouts \n- MPPO for Merchant/Marketplace Payouts \n- TXPO for Tax Payments \n- RDPO for Rider payout"
+              title: purpose
+            method:
+              type: object
+              title: OriginalMethod
+              properties:
+                network:
+                  type: string
+                  enum:
+                  - RTP
+                  - FDN
+                  - AUNPP
+                  description: Financial market infrastructure or clearing system (e.g., RTP Network in the United States) of original payment
+                  title: network
+            debtor:
+              $ref: '#/components/schemas/Original-Debtor'
+            creditor:
+              $ref: '#/components/schemas/Original-Creditor'
+            ultimate_debtor:
+              $ref: '#/components/schemas/Original-Ultimate-Debtor'
+            ultimate_creditor:
+              $ref: '#/components/schemas/Original-Ultimate-Creditor'
+        message:
+          oneOf:
+          - $ref: '#/components/schemas/Request-For-Refund'
+          - $ref: '#/components/schemas/Final-Response-To-Request-For-Refund'
+          - $ref: '#/components/schemas/Payment-Confirmation-Request'
+          - $ref: '#/components/schemas/Response-To-Payment-Confirmation-Request'
+          - $ref: '#/components/schemas/Request-For-Payment'
+          - $ref: '#/components/schemas/Response-To-Request-For-Payment'
+          - $ref: '#/components/schemas/Final-Request-For-Information-Compliance'
+          - $ref: '#/components/schemas/Response-To-Request-For-Information-Compliance'
+      required:
+      - message_id
+      - creation_date_time
+      - message_type
+    Initial-Response-To-Request-for-Information-Compliance:
+      type: object
+      title: Initial-Response-To-Request-for-Information-Compliance
+      properties:
+        uetr:
+          type: string
+          description: UETR of Original payment
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          title: uetr
+        status:
+          type: object
+          title: status
+          readOnly: true
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- PDNG - Pending"
+              minLength: 1
+              maxLength: 256
+              title: description
+          required:
+          - date_time
+          - code
+          - description
+    Ultimate-Debtor-Payment:
+      type: object
+      title: UltimateDebtorPayment
+      writeOnly: true
+      properties:
+        name:
+          minLength: 1
+          maxLength: 140
+          type: string
+          description: Name of Ultimate Debtor that may be passed for payment initiation
+          title: name
+        street_name:
+          minLength: 1
+          maxLength: 70
+          type: string
+          description: Street Name of Ultimate Debtor that may be passed for payment initiation
+          title: street_name
+        building_number:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: Building number of Ultimate Debtor that may be passed for payment initiation
+          title: building_number
+        postal_code:
+          minLength: 1
+          maxLength: 16
+          type: string
+          description: Postal code of Ultimate Debtor that may be passed for payment initiation
+          title: postal_code
+        city:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: City of Ultimate Debtor that may be passed for payment initiation
+          title: city
+        state:
+          minLength: 1
+          maxLength: 35
+          type: string
+          description: State of Ultimate Debtor that may be passed for payment initiation
+          title: state
+        country:
+          type: string
+          description: Country of Ultimate Debtor that may be passed for payment initiation
+          pattern: ^[A-Z]{2,2}$
+          title: country
+        address_lines:
+          type: array
+          minItems: 1
+          maxItems: 7
+          description: Ultimate Debtor Address lines which is array of 7 lines and each line has maximum 70 characters which may be passed for payment initiation
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+    Unstructured:
+      type: string
+      maxLength: 140
+      minLength: 1
+      description: Unstructured remitance information
+      title: Unstructured
+    Payment-Confirmation-Request:
+      type: object
+      title: PaymentConfirmationRequest
+      description: Incoming Payment Confirmation Request
+      properties:
+        debtor:
+          $ref: '#/components/schemas/Message-Debtor-Status'
+        ultimate_debtor:
+          $ref: '#/components/schemas/Message-Ultimate-Debtor-Status'
+        creditor:
+          $ref: '#/components/schemas/Message-Creditor-Status'
+        ultimate_creditor:
+          $ref: '#/components/schemas/Message-Ultimate-Creditor-Status'
+        method:
+          $ref: '#/components/schemas/Message-Method-Status'
+        transaction:
+          $ref: '#/components/schemas/Message-Transaction-Status'
+    Message-Ultimate-Creditor-Status:
+      type: object
+      title: MessageUltimateCreditorStatus
+      properties:
+        name:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: Ultimate Creditor's bank account name
+          title: name
+        address_lines:
+          type: array
+          description: Ultimate Creditor's address_lines
+          items:
+            $ref: '#/components/schemas/Address'
+          title: address_lines
+        street_name:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: Ultimate Creditor's street_name
+          title: street_name
+        building_number:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Ultimate Creditor's building_number
+          title: building_number
+        postal_code:
+          maxLength: 16
+          minLength: 1
+          type: string
+          description: Ultimate Creditor's postal_code
+          title: postal_code
+        city:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Ultimate Creditor's city
+          title: city
+        state:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Ultimate Creditor's state
+          title: state
+        country:
+          type: string
+          description: Ultimate Creditor's country
+          pattern: ^[A-Z]{2,2}$
+          title: country
+    Final-Response-To-Payment-Confirmation-Request:
+      type: object
+      title: FinalResponseToPaymentConfirmationRequest
+      description: Outgoing Response to Payment Confirmation Request
+      properties:
+        status:
+          type: object
+          title: status
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: UTC (YYYY-MM-DDTHH:MM:SS.sssZ) date time
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 message status code
+              enum:
+              - ACSC
+              - RJCT
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- ACSC - Accepted \n- RJCT - Rejected"
+              minLength: 1
+              maxLength: 105
+              title: description
+          required:
+          - date_time
+          - code
+          - description
+        reasons:
+          type: object
+          title: reasons
+          properties:
+            code:
+              type: string
+              description: "Reason code (mandatory when status is rejected) \n- For US RPCR, client need to pass reason.code only AC02,AC03,AC04,AC06,AC11,AC13,AC14,AG01,AG03,AM02,AM04,AM09,AM12,AM13,AM14,NARR \n- For Thailand RPCR, client need to pass reason.code only AM09 or NARR \n- For SEPA RPCR, client need to pass reason.code only AM05,AC01,AC04,AC06,RR04,AG01,MS03,MS02"
+              enum:
+              - AC02
+              - AC03
+              - AC04
+              - AC06
+              - AC11
+              - AC13
+              - AC14
+              - AG01
+              - AG03
+              - AM02
+              - AM04
+              - AM09
+              - AM12
+              - AM13
+              - AM14
+              - NARR
+              - AM05
+              - AC01
+              - RR04
+              - MS02
+              - MS03
+              title: code
+            description:
+              type: string
+              description: "Reason code description \n - AC02- Debtor account number invalid or missing \n - AC03- Creditor account number invalid or missing \n- AC04- Account number specified has been closed on the bank of account’s books \n- AC06- Account specified is blocked,prohibiting posting of transactions against it \n- AC11- Creditor account currency is invalid or missing \n- AC13- Debtor account type invalid \n- AC14- Creditor account type invalid \n- AG01- Transaction forbidden on this type of account (formerly NoAgreement) \n- AG03- Transaction type not supported / authorized on this account \n- AM02- Specific transaction/message amount is greater than allowed maximum \n- AM04- Amount of funds available to  cover specified message amount is insufficient \n- AM09- Amount received is not the  amount agreed or expected \n- AM12- Amount is invalid or missing \n- AM13- Transaction amount exceeds limits set by clearing system \n- AM14- Transaction amount exceeds limits agreed between bank and client \n- NARR- Put the description as per clearing guideline for NARR  (if reasons.code is NARR, reasons.decription is mandatory) \n- AM05-  Duplication \n- AC01-  Incorrect Account Number \n- RR04-  Regulatory Reason \n- MS03-  Not Specified Reason Agent Generated \n- MS02- Not Specified Reason Customer Generated"
+              minLength: 1
+              maxLength: 105
+              title: description
+      required:
+      - status
+  examples:
+    OK-Response-To-Request-For-Information-Compliance:
+      value:
+        message_id: 7f0aa5afdf7c4850b2823b7eae259450
+        creation_date_time: '2024-10-16T14:13:10.953Z'
+        original_payment:
+          end_to_end_id: CCAPI0603180692
+          uetr: 5e9058c5-ef9e-40c9-aff4-f14bd8af6ae0
+        message_type: RRFICS
+        message:
+          rrfics:
+            alert_id: '209339209123'
+            request_id: '123456'
+            response_date_time: '2023-01-10T08:45:10.489Z'
+            purpose_of_transaction: This payment is for order number 12345
+            additional_details: Payment was sent to vendor ABC for order number 12345
+            fieldlevel_responses:
+            - field_id: M12345
+              field_name: UltimateCreditor.name
+              field_value: Mohammed
+              individual:
+                name: John Terry Weiss
+                street_name: BeakalWoldemariam
+                building_number: 24324
+                postal_code: 22079
+                city: Lorton
+                state: VA
+                country: US
+                birth_date: '1967-11-27'
+                city_of_birth: San Francisco
+                country_of_birth: US
+                nationality: American
+                occupation: occupation
+                country_of_residence: US
+            - field_id: M12346
+              field_name: UltimateDebtor.name
+              field_value: Jesus
+              entity:
+                name: Drivers4Hire
+                street_name: BeakalWoldemariam
+                building_number: '324324'
+                postal_code: '22079'
+                city: Lorton
+                state: VA
+                country: US
+                line_of_business: Transportation
+                ownership_details: Uber US LLC
+                global_presence: Thailand, India, Japan
+                website: www.Drivers4Hire.com
+                registration_number: US1234
+                country_of_incorporation: US
+    Ok-Request-For-Payment:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af89j4
+        creation_date_time: '2023-02-10T07:45:10.489Z'
+        message_type: RFP
+        message:
+          debtor:
+            account: '98078'
+            account_name: Yuzi
+            name: Karl
+            bank_id: 099289
+            street_name: 1212 4th Street
+            building_number: A6378
+            postal_code: '94158'
+            city: San Francisco
+            state: CA
+            country: US
+            org_id: GH4657
+            birth_date: '2023-01-02'
+            birth_city: New York
+            birth_country: US
+          ultimate_debtor:
+            name: Himan
+            street_name: 1345 4th Street
+            building_number: B5829
+            postal_code: '89934'
+            city: Vegas
+            state: CA
+            country: US
+          creditor:
+            account: '900900981'
+            account_name: Mike
+            name: Yokal
+            bank_id: '89332'
+            street_name: 1212 7th Street
+            building_number: V7839
+            postal_code: '50098'
+            city: New York
+            state: CA
+            country: US
+            org_id: AS2345
+            birth_date: '2023-01-03'
+            birth_city: New Ark
+            birth_country: US
+            phone_number: +1-555-123-4567
+          ultmate_creditor:
+            name: Pits
+            street_name: 4th Avenue
+            building_number: G6178
+            postal_code: '90213'
+            city: New York
+            state: CA
+            country: US
+          method:
+            country: US
+            instructed_currency: USD
+            method: IP
+            network: RTP
+          transaction:
+            type: debit
+            end_to_end_id: r/434SKtUcdGT
+            instruction_id: 2017111202120020101BSTRF00000000011
+            uetr: bea176bf-1d5d-48cc-88fb-1d0e06af87p5
+            creation_date_time: '2023-01-10T07:45:10.489Z'
+            instructed_amount: 192.33
+            settlement_currency: USD
+            unstructured_remittance_info:
+            - This is example
+            category: CONSUMER
+            requested execution_date: '1992-07-17'
+            requested execution_date_time: '2023-01-11T07:45:11.489Z'
+            expiry_date: '1992-07-18'
+            expiry_date_time: '2023-01-12T07:45:10.489Z'
+            amt_mod_allowed: true
+            full_amount: 192.33
+            discount_amount: 0
+            local_reference: 7634an78543
+            payment_information_id: 2023111202120020101BSRFP00000000013
+            purpose: INVS
+            status:
+              date_time: '2023-01-10T08:59:10.487Z'
+              code: PRES
+              description: Request For Payment has been presented to the Debtor
+    Response-To-Payment-Confirmation-Request-Example:
+      value:
+        message_id: 7f0aa5afdf7c4850b2823b7eae259450
+        creation_date_time: '2024-10-16T14:13:10.953Z'
+        message_type: RPCR
+        message:
+          uetr: 4f09214d-296c-494b-8e9c-810bf1d9fc93
+          status:
+            date_time: '2023-01-10T07:57:10.489Z'
+            code: ACSC
+            description: Accepted
+    Response-To-Request-For-Refund-Example:
+      value:
+        message_type: RRFR
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          decision_code: PECR
+          instructed_amount: 135.56
+          instructed_currency: USD
+          payment_information_id: '1122334455'
+          instruction_id: 2017111202120020101BSTRF00000000067
+          end_to_end_id: r/434SKtUcwBY
+          status: null
+          date_time: '2022-09-13T08:23:49.112Z'
+          code: ACTC
+          description: Accepted
+          debtor:
+            name: Kyne
+            street_name: 2345 3rd Street
+            building_number: A1234
+            postal_code: '98076'
+            city: San Francisco
+            state: CA
+            country: US
+          ultimate_debtor:
+            name: Jul
+            street_name: 7868 3rd Street
+            building_number: BC567
+            postal_code: '99089'
+            city: San Francisco
+            state: CA
+            country: US
+    Ok-Request-For-Refund-Br:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af90g5
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RFR
+        original_payment:
+          message_id: M2017111202120020101BTRF00000000011
+          creation_date_time: '2023-01-01T17:06:49.712Z'
+          end_to_end_id: I364836174511668
+          transaction_id: 20230411021000089T1BXPAY09462848400
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+          instructed_amount: 144.56
+          instructed_currency: BRL
+          value_date: '2023-01-01'
+          debtor:
+            account: '520993444'
+            bank_id: CITI0000027
+          creditor:
+            account: '1234567890123456'
+            bank_id: CITI0000032
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          reasons:
+            code: AC03
+            description: InvalidCreditorAccountNumber
+          requestor_name: Khalq
+          status:
+            date_time: '2023-01-10T08:59:10.489Z'
+            code: RCVD
+            description: Received
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: HTTP method is not supported
+          action: Provide valid HTTP method
+          code: CC00001
+    Initial-Response-To-Request-For-Refund:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af54y8
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RRFR
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          decision_code: IPAY
+          instructed_amount: 144.56
+          instructed_currency: USD
+          end_to_end_id: r/434SKtUcdGQ
+          status:
+            date_time: '2023-01-10T07:47:10.489Z'
+            code: PDNG
+            description: Pending
+    Outgoing-Request-For-Refund-Example:
+      value:
+        message_type: RFR
+        message:
+          country: IE
+          reasons:
+            code: AM09
+            description: WrongAmount
+    In-Stop-Request:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af54y8
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RFR
+        message:
+          country: IN
+          reasons:
+            code: AM09
+            description: WrongAmount
+          status:
+            date_time: '2023-01-10T07:47:10.489Z'
+            code: PDNG
+            description: Pending
+    Uk-Stop-Request-Example:
+      value:
+        message_type: RFR
+        message:
+          country: GB
+          reasons:
+            code: AM09
+            description: WrongAmount
+    Initial-Response-To-Payment-Confirmation-Request:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af78b5
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RPCR
+        message:
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af87p5
+          status:
+            date_time: '2023-01-10T07:59:10.489Z'
+            code: PDNG
+            description: Pending
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request is not authorized
+          action: Try again with valid credentials
+          code: CC00007
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+        - issue: instructed_amount is missing
+          action: Provide valid instructed_amount
+          code: VC00010
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request was not processed
+          code: CC00004
+    Ok-Response-To-Request-For-Refund:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af54y8
+        creation_date_time: '2023-01-10T08:50:10.489Z'
+        message_type: RRFR
+        original_payment:
+          message_id: M2017111202120020101BTRF00000000011
+          creation_date_time: '2023-01-01T17:06:49.712Z'
+          instruction_id: 2017111202120020101BSTRF00000000011
+          end_to_end_id: I364836174511668
+          transaction_id: 20230411021000089T1BXPAY09462848400
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+          clearing_reference: 7634an78543
+          instructed_amount: 144.56
+          instructed_currency: USD
+          value_date: '2023-01-01'
+          message_name_identification: 123456BKLO
+          debtor:
+            bank_id: 021000089
+            name: John M
+            street_name: 1515 3rd Street
+            building_number: A1234
+            postal_code: '94158'
+            city: San Francisco
+            state: CA
+            country: US
+            org_id: '12333333'
+            birth_date: '1950-09-26'
+            birth_city: San Francisco
+            birth_country: US
+          creditor:
+            bank_id: '000000010'
+            name: BeakalWoldemariam
+            street_name: 5th Street
+            building_number: '123444'
+            postal_code: '22079'
+            city: Lorton
+            state: CA
+            country: US
+            org_id: '6563'
+            birth_date: '1967-11-27'
+            birth_city: San Francisco
+            birth_country: US
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          decision_code: IPAY
+          end_to_end_id: I364836174511668
+          instructed_amount: 144.56
+          instructed_currency: USD
+          interbank_settlement_date: '2023-01-01'
+          status:
+            date_time: '2023-01-10T08:59:10.489Z'
+            code: RCVD
+            description: Received
+    Ok-Payment-Confirmation-Request:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af89j4
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: PCR
+        original_payment:
+          instruction_id: 2017111202120020101BSTRF00000000011
+        message:
+          debtor:
+            account: '98078'
+            name: Karl
+            bank_id: 099289
+            bank_branch_id: BAC456
+            street_name: 1212 4th Street
+            building_number: A6378
+            postal_code: '94158'
+            city: San Francisco
+            state: CA
+            country: US
+            org_id: GH4657
+            birth_date: '2023-01-02'
+            birth_city: New York
+            birth_country: US
+          ultimate_debtor:
+            name: Himan
+            street_name: 1345 4th Street
+            building_number: B5829
+            postal_code: '89934'
+            city: Vegas
+            state: CA
+            country: US
+          creditor:
+            account: '900900981'
+            name: Yokal
+            bank_id: '89332'
+            street_name: 1212 7th Street
+            building_number: V7839
+            postal_code: '50098'
+            city: New York
+            state: CA
+            country: US
+            org_id: AS2345
+            birth_date: '2023-01-03'
+            birth_city: New Ark
+            birth_country: US
+          ultmate_creditor:
+            name: Pits
+            street_name: 4th Avenue
+            building_number: G6178
+            postal_code: '90213'
+            city: New York
+            state: CA
+            country: US
+          method:
+            country: US
+            instructed_currency: USD
+            method: IP
+            type: CT
+            network: RTP
+          transaction:
+            type: credit
+            end_to_end_id: r/434SKtUcdGT
+            instruction_id: 2017111202120020101BSTRF00000000011
+            payment_information_id: '1122334455'
+            uetr: bea176bf-1d5d-48cc-88fb-1d0e06af87b5
+            network_id: '889923283934'
+            purpose: PAYR
+            creation_date_time: '2023-01-10T07:45:10.489Z'
+            value_date: '1992-07-16'
+            instructed_amount: 192.33
+            settlement_currency: USD
+            settlement_amount: 132.45
+            unstructured_remittance_info:
+            - This is example
+            interbank_settlement_date: '2022-09-13'
+            advice_id: '234'
+            advice_type: EMAL
+            advice_address: mat@qmail.com
+            category: CONSUMER
+    Initial-Response-To-Request-for-Information-Compliance:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af54y8
+        creation_date_time: '2023-10-10T08:49:10.489Z'
+        message_type: RRFICS
+        message:
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af87p5
+          status:
+            date_time: '2023-10-10T08:52:10.489Z'
+            code: PDNG
+            description: Pending
+    Ok-Request-For-Refund-SEPA:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af90g5
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RFR
+        original_payment:
+          message_id: M2017111202120020101BTRF00000000011
+          creation_date_time: '2023-01-01T17:06:49.712Z'
+          instruction_id: 2017111202120020101BSTRF00000000011
+          end_to_end_id: I364836174511668
+          transaction_id: 20230411021000089T1BXPAY09462848400
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+          instructed_amount: 144.56
+          instructed_currency: EUR
+          value_date: '2023-01-01'
+          category_purpose: YUOP
+          purpose: PAYR
+          unstructured_remittance_info:
+          - More details of transaction
+          structured_remittance_info:
+            creditor_reference_information_code: RADM
+            creditor_reference: More details
+          debtor:
+            proxy_id: a93d@gmail.com
+            account: '520993444'
+            name: Chris Topher
+            bank_id: CITI0000027
+            department: Loan
+            sub_department: Personal
+            street_name: 123 street
+            building_number: '67'
+            building_name: Bird View
+            floor: 3rd
+            post_box: Bhesil Dist
+            room: '234'
+            postal_code: '196278'
+            city: Belfast
+            town_location_name: Belfast
+            district_name: Belfast
+            state: California
+            country: IE
+            address_lines:
+            - ABC#GFD
+            anybic: ABCDIE20
+            lei: ABCDIE20XXX
+            org_id: HIDC3344
+            issuer: ABC pvt ltd
+          ultimate_debtor:
+            name: Heri Tig
+            anybic: ABKLIE20
+            lei: ABKLIE20XXX
+            issuer: JKL pvt ltd
+            birth_date: '1989-09-08'
+            birth_province: Cali
+            birth_city: New Jersey
+            birth_country: IE
+          creditor:
+            bank_id: TYEG6758
+            name: Retin Sew
+            department: Mortgage
+            sub_department: Car
+            street_name: 4th Street
+            building_number: '29'
+            building_name: Antella
+            floor: 9th
+            post_box: Calst
+            room: '999'
+            postal_code: '901223'
+            city: New Ark
+            town_location_name: New Ark
+            district_name: New Ark
+            state: California
+            country: IE
+            address_lines:
+            - ABC#TEG
+            anybic: POLVIE20
+            lei: POLVIE20XXX
+            issuer: QRS pvt ltd
+            birth_province: California
+            prvt_id: HJK876
+            account: '5589076'
+            proxy_id: qwerty@kmail
+          ultimate_creditor:
+            name: Karl Lewis
+            anybic: ABCJIE20
+            lei: ABCJIE20XXX
+            org_id: 55879VB
+            issuer: VBH pvt ltd
+            birth_province: Cali
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          requestor_lei: ABCDEFGH123456789012
+          requestor_org_id: '1234567'
+          requestor_issuer: ABCDFHGY765432
+          reasons:
+            code: AC03
+            description: InvalidCreditorAccountNumber
+          requestor_name: Khalq
+          requestor_bank_id: 0027849
+          status:
+            date_time: '2023-01-10T08:59:10.489Z'
+            code: RJCT
+            description: Rejected
+    Response-To-Request-For-Information-Compliance-Example:
+      value:
+        message_type: RRFICS
+        message:
+          rrfics:
+            alert_id: '209339209123'
+            request_id: '123456'
+            response_date_time: '2023-01-10T08:45:10.489Z'
+            purpose_of_transaction: This payment is for order number 12345
+            additional_details: Payment was sent to vendor ABC for order number 12345
+            fieldlevel_responses:
+            - field_id: M12345
+              field_name: UltimateCreditor.name
+              field_value: Mohammed
+              individual:
+                name: John Terry Weiss
+                street_name: BeakalWoldemariam
+                building_number: 24324
+                postal_code: 22079
+                city: Lorton
+                state: VA
+                country: US
+                birth_date: '1967-11-27'
+                city_of_birth: San Francisco
+                country_of_birth: US
+                nationality: American
+                occupation: occupation
+                country_of_residence: US
+            - field_id: M12346
+              field_name: UltimateDebtor.name
+              field_value: Jesus
+              entity:
+                name: Drivers4Hire
+                street_name: BeakalWoldemariam
+                building_number: '324324'
+                postal_code: '22079'
+                city: Lorton
+                state: VA
+                country: US
+                line_of_business: Transportation
+                ownership_details: Uber US LLC
+                global_presence: Thailand, India, Japan
+                website: www.Drivers4Hire.com
+                registration_number: US1234
+                country_of_incorporation: US
+    Ok-Request-For-Refund:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af90g5
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RFR
+        original_payment:
+          message_id: M2017111202120020101BTRF00000000011
+          creation_date_time: '2023-01-01T17:06:49.712Z'
+          instruction_id: 2017111202120020101BSTRF00000000011
+          end_to_end_id: I364836174511668
+          transaction_id: 20230411021000089T1BXPAY09462848400
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+          clearing_reference: 7634an78543
+          instructed_amount: 144.56
+          instructed_currency: USD
+          value_date: '2023-01-01'
+          message_name_identification: 123456BKLO
+          debtor:
+            bank_id: 021000089
+            name: John M
+            street_name: 1515 3rd Street
+            building_number: A1234
+            postal_code: '94158'
+            city: San Francisco
+            state: CA
+            country: US
+            org_id: '12333333'
+            birth_date: '1950-09-26'
+            birth_city: San Francisco
+            birth_country: US
+          creditor:
+            bank_id: '000000010'
+            name: BeakalWoldemariam
+            street_name: 5th Street
+            building_number: '123444'
+            postal_code: '22079'
+            city: Lorton
+            state: CA
+            country: US
+            org_id: '6563'
+            birth_date: '1967-11-27'
+            birth_city: San Francisco
+            birth_country: US
+        message:
+          country: US
+          reasons:
+            code: AC03
+            description: InvalidCreditorAccountNumber
+          requestor_name: Khalq
+          requestor_bank_id: 0027849
+          status:
+            date_time: '2023-01-10T08:59:10.489Z'
+            code: RJCT
+            description: Rejected
+    Not-Found-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
+    In-Stop-Request-Example:
+      value:
+        message_type: RFR
+        message:
+          country: IN
+          reasons:
+            code: AM09
+            description: WrongAmount
+    Br-Stop-Request:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af54y8
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RFR
+        message:
+          country: BR
+          reasons:
+            code: AM09
+            description: WrongAmount
+          status:
+            date_time: '2023-01-10T07:47:10.489Z'
+            code: PDNG
+            description: Pending
+    Pending-Payment-Confirmation-Request:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af89j4
+        creation_date_time: '2023-02-10T07:45:10.489Z'
+        message_type: RPCR
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          status:
+            date_time: '2023-01-10T07:57:10.489Z'
+            code: PDNG
+            description: Pending
+    Uk-Stop-Request:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af54y8
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RFR
+        message:
+          country: GB
+          reasons:
+            code: AM09
+            description: WrongAmount
+          status:
+            date_time: '2023-01-10T07:47:10.489Z'
+            code: PDNG
+            description: Pending
+    Th-Response-To-Payment-Confirmation-Reject-Request-Example:
+      value:
+        message_type: RPCR
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          end_to_end_id: r/434SKtUcdGQ
+          decision_code: RJNR
+          payment_information_id: '1122334455'
+          status:
+            date_time: '2023-01-10T07:57:10.489Z'
+            code: RJCT
+            description: Rejected
+          reasons:
+            code: AM04
+            description: Amount received is not the amount agreed or expected
+    Th-Response-To-Payment-Confirmation-Sucess-Request-Example:
+      value:
+        message_type: RPCR
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          end_to_end_id: r/434SKtUcdGQ
+          payment_information_id: '1122334455'
+          status:
+            date_time: '2023-01-10T07:57:10.489Z'
+            code: ACSC
+            description: Accepted
+    OK-Request-For-Information-Compliance:
+      value:
+        message_id: 7f0aa5afdf7c4850b2823b7eae259450
+        creation_date_time: '2024-10-16T14:13:10.953Z'
+        original_payment:
+          end_to_end_id: CCAPI0603180692
+          uetr: 5e9058c5-ef9e-40c9-aff4-f14bd8af6ae0
+        message_type: RFICS
+        message:
+          transaction:
+            end_to_end_id: '30820231'
+            uetr: 5671c145-df7c-47df-b949-8824ddd776a7
+            status:
+              date_time: '2023-08-30T15:59:41.048Z'
+              code: PDNG
+              description: Pending
+            reasons:
+              code: RECI
+              description: Transaction is in compliance review request for further information
+          rfics:
+            alert_id: '209339209123'
+            request_id: '123546'
+            request_date_time: '2023-01-10T07:45:10.489Z'
+            purpose_of_transaction_required: Y
+            additional_details_requested: Please provide additional details for this transaction
+            fieldlevel_requests:
+            - field_id: M12345
+              field_name: UltimateCreditor.name
+              field_value: Mohammed
+              input_type: individual
+            - field_id: M12346
+              field_name: UltimateDebtor.name
+              field_value: Jesus
+              input_type: entity
+    Ok-Request-For-Refund-In:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af90g5
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RFR
+        original_payment:
+          message_id: M2017111202120020101BTRF00000000011
+          creation_date_time: '2023-01-01T17:06:49.712Z'
+          end_to_end_id: I364836174511668
+          transaction_id: 20230411021000089T1BXPAY09462848400
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+          instructed_amount: 144.56
+          instructed_currency: INR
+          value_date: '2023-01-01'
+          debtor:
+            account: '520993444'
+            bank_id: CITI0000027
+          creditor:
+            account: '1234567890123456'
+            bank_id: CITI0000032
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          reasons:
+            code: AC03
+            description: InvalidCreditorAccountNumber
+          requestor_name: Khalq
+          status:
+            date_time: '2023-01-10T08:59:10.489Z'
+            code: RCVD
+            description: Received
+    Br-Stop-Request-Example:
+      value:
+        message_type: RFR
+        message:
+          country: BR
+          reasons:
+            code: AM09
+            description: WrongAmount
+    Response-To-Request-For-Payment-Example:
+      value:
+        message_type: RRFP
+        message:
+          decision_code: ACTC
+          end_to_end_id: I364836174511719
+          accepted_amount: 500
+          accepted_currency: USD
+          scheduled_exec_dat: '2023-10-02'
+    Initial-Response-To-Request-For-Payment:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af89n6
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RRFP
+        message:
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af90k8
+          decision_code: ACTC
+          end_to_end_id: I364836174511719
+          accepted_amount: 500
+          accepted_currency: USD
+          scheduled_exec_dat: '2023-10-02'
+          status:
+            date_time: '2023-01-10T07:59:10.489Z'
+            code: PDNG
+            description: Pending
+    Ok-Request-For-Refund-Uk:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af90g5
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RFR
+        original_payment:
+          message_id: M2017111202120020101BTRF00000000011
+          creation_date_time: '2023-01-01T17:06:49.712Z'
+          instruction_id: 2017111202120020101BSTRF00000000011
+          end_to_end_id: I364836174511668
+          transaction_id: 20230411021000089T1BXPAY09462848400
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+          instructed_amount: 144.56
+          instructed_currency: GBP
+          value_date: '2023-01-01'
+          category_purpose: YUOP
+          purpose: PAYR
+          unstructured_remittance_info:
+          - More details of transaction
+          structured_remittance_info:
+            creditor_reference: More details
+          debtor:
+            account: '520993444'
+            bank_id: CITI0000027
+          creditor:
+            bank_id: TYEG6758
+            prvt_id: HJK876
+            account: '5589076'
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          reasons:
+            code: AC03
+            description: InvalidCreditorAccountNumber
+          requestor_name: Khalq
+          status:
+            date_time: '2023-01-10T08:59:10.489Z'
+            code: RCVD
+            description: Received
+    Not-Ok-Response-To-Request-For-Refund:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af54y8
+        creation_date_time: '2023-01-10T07:56:11.489Z'
+        message_type: RRFR
+        original_payment:
+          message_id: M2017111202120020101BTRF00000000011
+          creation_date_time: '2023-01-01T17:06:49.712Z'
+          instruction_id: 2017111202120020101BSTRF00000000011
+          end_to_end_id: I364836174511668
+          transaction_id: 20230411021000089T1BXPAY09462848400
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+          clearing_reference: 7634an78543
+          instructed_amount: 231.54
+          instructed_currency: USD
+          value_date: '2023-01-02'
+          debtor:
+            bank_id: 021000089
+            name: John M
+            street_name: 1515 3rd Street
+            building_number: A1234
+            postal_code: '94158'
+            city: San Francisco
+            state: CA
+            country: US
+            org_id: '12333333'
+            birth_date: '1950-09-26'
+            birth_city: San Francisco
+            birth_country: US
+          creditor:
+            bank_id: '000000033'
+            name: BeakalWoldemariam
+            street_name: 5th Street
+            building_number: '123576'
+            postal_code: '22089'
+            city: Lorton
+            state: CA
+            country: US
+            org_id: '6561'
+            birth_date: '1967-11-27'
+            birth_city: San Francisco
+            birth_country: US
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          decision_code: RJCR
+          reasons:
+            code: AM04
+          instructed_amount: 144.56
+          instructed_currency: USD
+          interbank_settlement_date: '2023-01-01'
+          status:
+            date_time: '2023-01-10T07:50:10.489Z'
+            code: RJCT
+            description: Rejected
+            reasons:
+              code: AC03
+              description: Creditor account number invalid or missing
+    Initial-Outgoing-Request-For-Refund:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af54y8
+        creation_date_time: '2023-01-10T07:45:10.489Z'
+        message_type: RFR
+        message:
+          reasons:
+            code: AM09
+            description: WrongAmount
+          status:
+            date_time: '2023-01-10T07:47:10.489Z'
+            code: PDNG
+            description: Pending
+    Ok-Response-To-Request-For-Refund-SEPA:
+      value:
+        message_id: bea176bf1d5d48cc88fb1d0e06af54y8
+        creation_date_time: '2023-01-10T08:50:10.489Z'
+        message_type: RRFR
+        original_payment:
+          message_id: M2017111202120020101BTRF00000000011
+          creation_date_time: '2023-01-01T17:06:49.712Z'
+          instruction_id: 2017111202120020101BSTRF00000000011
+          end_to_end_id: I364836174511668
+          transaction_id: 20230411021000089T1BXPAY09462848400
+          uetr: bea176bf-1d5d-48cc-88fb-1d0e06af43e7
+          instructed_amount: 144.56
+          instructed_currency: EUR
+          message_name_identification: ABCD12345
+          value_date: '2023-01-01'
+          category_purpose: YUOP
+          unstructured_remittance_info:
+          - More details of transaction
+          structured_remittance_info:
+            creditor_reference_information_code: RADM
+            creditor_reference: More details
+          debtor:
+            proxy_id: a93d@gmail.com
+            account: '520993444'
+            name: Chris Topher
+            bank_id: CITI0000027
+            department: Loan
+            sub_department: Personal
+            street_name: 123 street
+            building_number: '67'
+            building_name: Bird View
+            floor: 3rd
+            post_box: Bhesil Dist
+            room: '234'
+            postal_code: '196278'
+            city: Belfast
+            town_location_name: Belfast
+            district_name: Belfast
+            state: California
+            country: IE
+            address_lines:
+            - ABC#GFD
+            anybic: ABCDIE20
+            lei: ABCDIE20XXX
+            org_id: HIDC3344
+            issuer: ABC pvt ltd
+          ultimate_debtor:
+            name: Heri Tig
+            anybic: ABKLIE20
+            lei: ABKLIE20XXX
+            prvt_id: hdhfhahah
+            issuer: JKL pvt ltd
+            birth_date: '1989-09-08'
+            birth_province: Cali
+            birth_city: New Jersey
+            birth_country: IE
+          creditor:
+            bank_id: TYEG6758
+            name: Retin Sew
+            department: Mortgage
+            sub_department: Car
+            street_name: 4th Street
+            building_number: '29'
+            building_name: Antella
+            floor: 9th
+            post_box: Calst
+            room: '999'
+            postal_code: '901223'
+            city: New Ark
+            town_location_name: New Ark
+            district_name: New Ark
+            state: California
+            country: IE
+            address_lines:
+            - ABC#TEG
+            anybic: POLVIE20
+            lei: POLVIE20XXX
+            issuer: QRS pvt ltd
+            birth_province: California
+            prvt_id: HJK876
+            account: '5589076'
+            proxy_id: qwerty@kmail
+            message_name_identification: ABCD12345
+            purpose: SALA
+          ultimate_creditor:
+            name: Karl Lewis
+            anybic: ABCJIE20
+            lei: ABCJIE20XXX
+            org_id: 55879VB
+            issuer: VBH pvt ltd
+            birth_province: Cali
+          method:
+            network: FDN
+        message:
+          case_id: M20230411021000089T1BXPY09462848401
+          decision_code: RJCR
+          reasons:
+            code: AM04
+          end_to_end_id: r/434SKtUcd01
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            paymentservices: Grant read-only access to payment initation service
+            selfservices: Grant read-only access to beneficiary validation

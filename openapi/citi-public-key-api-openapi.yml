@@ -1,0 +1,210 @@
+openapi: 3.2.0
+info:
+  description: IVA capabilities allow users to self-service when facing issues or inquiries such as username/password reset, unlock accounts, authorizations and declines, registration, card status, contact details update, merchant.
+  version: ''
+  title: IVA-GRACE Public Key API
+servers:
+- url: https://tts.apib2b.citi.com/tts/cards/iva
+security:
+- clientCredentials: []
+tags:
+- name: Public Key
+paths:
+  /v1/user/publicKey:
+    get:
+      tags:
+      - Public Key
+      summary: Public Key
+      description: ''
+      operationId: publicKey
+      parameters:
+      - name: Content-Type
+        in: header
+        description: Supports application/json
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: 'Request should contain Authorization header OAuth <br> **OAuth:** <br> Request contains a header field in the form of Authorization: Bearer (access_token), where access_token is generated using the OAuth url <br>
+
+          `Example` : Bearer AAIkMjU2OTI4OGQtODY5Ny00ZjgzLTg0NzEtY2QyZWYwZjM5ZjJk_m3yqnGAbxR_ovVx5bs9OUfF0dd52qHadLtw2ARkwCw2BJcwg1zHsTOuvjPtsW5ioxxd2xXXjlDDCKLuvg15Ce1gzGxTu17xEvLOzSECLIdU_02JbpS3h9ee9GzB-u_MPfKseOiACXYAh_7AVWQhtRMLDKd8RgCUsNzTGXXBeE4'
+        required: true
+        schema:
+          type: string
+          maxLength: 255
+      - name: client_id
+        in: query
+        required: true
+        description: This is your unique identifier shared during your CitiConnect API onboarding. This is the same `client_id` used for oauth token generation
+        schema:
+          type: string
+      - name: region
+        in: header
+        description: 'region of the client. <br>`Example`: APAC, EMEA, NAM'
+        required: true
+        schema:
+          type: string
+          maxLength: 3
+          minLength: 3
+      - name: country
+        in: header
+        description: 'Country code in ISO 3166 alpha-2 format. <br>`Example`: USA (United States of America), SGP (Singapore), PHL (Philippines), THA (Thailand)'
+        required: true
+        schema:
+          type: string
+          maxLength: 3
+          minLength: 3
+      - name: req-sys-id
+        in: header
+        description: 'Client Unique ID to identify the particular request.<br> `Format`: UUID <br> `Example`: 123d837e-958a-4e9f-bc97-4843ec948123'
+        required: true
+        schema:
+          type: string
+          maxLength: 36
+          minLength: 12
+      responses:
+        '200':
+          description: Success response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/publicKey'
+        '401':
+          description: Authentication Failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unAuthorizedResponse'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/methodNotAllowedResponse'
+        '500':
+          description: Technical Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalServerErrorResponse'
+components:
+  schemas:
+    publicKey:
+      properties:
+        publicKeyString:
+          type: string
+          format: alphanumeric [a-zA-Z0-9-]
+          description: Represents the public key got from CM.
+          minLength: 1
+          maxLength: 255
+    methodNotAllowedResponse:
+      properties:
+        httpCode:
+          type: string
+          example: '405'
+          description: Error code to be sent to the Client
+          minLength: 1
+          maxLength: 10
+        httpMessage:
+          type: string
+          example: Method Not ALLowed
+          description: Error message to be sent to the Client
+          minLength: 1
+          maxLength: 255
+        moreInformation:
+          type: string
+          example: Requested HTTP operation is not supported
+          description: Details related to the error to be sent to the Client
+          minLength: 1
+          maxLength: 255
+    unAuthorizedResponse:
+      properties:
+        httpCode:
+          type: string
+          example: '401'
+          description: Error code to be sent to the Client
+          minLength: 1
+          maxLength: 10
+        httpMessage:
+          type: string
+          example: Unauthorized
+          description: Error message to be sent to the Client
+          minLength: 1
+          maxLength: 255
+        moreInformation:
+          type: string
+          example: Access Denied
+          description: Details related to the error to be sent to the Client
+          minLength: 1
+          maxLength: 255
+    ErrorMessage:
+      required:
+      - errorCode
+      - errorDescription
+      properties:
+        errorCode:
+          type: string
+          description: Error code to be sent to the Client
+          minLength: 1
+          maxLength: 10
+          enum:
+          - EVB0300
+          - EVB0301
+          - EVB0302
+          - EVB0303
+          - EVB0304
+          - EVB0305
+          - EVB0306
+          - EVB0307
+          - EVB0308
+          - EVB0309
+          - EVB0310
+          - EVB0311
+          - GRC0001
+          - GRC0002
+          - GRC0003
+          - GRC0004
+          - GRC0005
+          - GRC0006
+          - GRC0007
+          - GRC0008
+          - GRC0009
+          - GRC0010
+          - GRC0011
+          - GRC0012
+          - GRC0014
+          - GRC0015
+          - GRC0016
+          - CMERR02
+          - CMERR16
+          - CMERR17
+          - CMERR18
+          - CMERR22
+          - CMERR23
+          - CMERR24
+          - CMERR25
+        errorDescription:
+          type: string
+          description: EVB0300 - operationId is mandatory\\ \'EVB0301' - Invalid value passed. operationId accepts ["getUserProfile"\ \resetLockedCard","unlockUser","resetPassword","resetChallengeQuestion","forgotUserName"\ \"phoneNumber","emailId" ] `EVB0302` - encodedCardNumber is mandatory\ \`EVB0303` - source is mandatory `EVB0304` - userType is mandatory\ \`EVB0305` - Invalid value passed. userType accepts [CH,NCH]\ \`EVB0306` - mobileNumber is mandatory when operation id is phoneNumber\ \`EVB0307` - mobileCountryCode is mandatory when operation id is phoneNumber\ \`EVB0308` - emailId is mandatory when operation id is emailId.\ \`EVB0309` - Email Type can be Primary or Alternate\ \`EVB0310` - Mail address is required when mailType is Temporary for resetPassword.\ \`EVB0311` - Mail address is should be null or empty when mailType is not Temporary for resetPassword.\ \`GRC0001` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you \have any further questions or comments.\ \`GRC0002` - Client ID is missing in the request header\ \`GRC0003` - Invalid JSON Input\ \`GRC0004` - Region ID is not available in the request \`GRC0005` - Client Tracking ID is missing in the request header \`GRC0006` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you \have any further questions or comments.\ \`GRC0007` - Client requested MediaType is not supported.\ \`GRC0008` - Invalid request. Unable to bind incoming request\ \`GRC0009` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you \have any further questions or comments\ \`GRC0010` - Client Tracking ID length should contain a min of 12 character and a max of 36 characters\ \`GRC0011` - Client ID and/or Country and/or region id is missing in Client Onboard Configuration setup. Contact Citi support.\ \`GRC0012` - Necessary header value is missing\ \`GRC0014` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you \have any further questions or comments\ \`GRC0015` - We have encountered an error and couldn't receive your request. Please try again, or contact Citi support if you \have any further questions or comments\ \`GRC0016` - Country code is not available in the request\ \`CMERR02` - Invalid Input Parameter(s)\ \`CMERR17` - Only Individual Accounts (cards) and Centrally Billed cards can be updated\ \`CMERR18` - Not authorized to perform this action\ \`CMERR22` - Data not Found for the given Card Number\ \`CMERR24` - Email primary/alternate mail id not found\ \`CMERR25` - Error in password creation
+          minLength: 1
+          maxLength: 255
+    internalServerErrorResponse:
+      required:
+      - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          scopes: {}
+          tokenUrl: https://tts.apib2b.citi.com/tts/cards/api/v1/oauth2/token
+      description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
+
+
+        '

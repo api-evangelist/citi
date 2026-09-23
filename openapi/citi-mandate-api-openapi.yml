@@ -1,0 +1,1559 @@
+openapi: 3.2.0
+info:
+  title: Payment Acceptance Mandate API
+  description: 'Payment Acceptance API
+
+    Update - April 28, 2026'
+  contact:
+    name: Standards & Developer Hub
+    url: https://tts.sandbox.developer.citi.com/citiconnect/
+    email: developer-support@citi.com
+  version: 1.0.0
+servers:
+- url: https://tts.apib2b.citi.com/citiconnect/prod
+  description: production gateway URL
+- url: https://tts.sandbox.apib2b.citi.com/citiconnect/sb
+  description: sbox URL
+- url: https://tts.sit.apib2b.citi.com/citiconnect/uat
+  description: uat URL
+tags:
+- name: Mandate
+  description: Mandate API
+paths:
+  /digitalpayments/v1/payment-acceptance/mandates:
+    post:
+      tags:
+      - Mandate
+      summary: Initiate New Mandate Outgoing Request
+      description: This endpoint allows the Merchant to initiate the mandate creation process from Clients ERP to Citi’s system in a secure manner.
+      operationId: initiateMandate
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Idempotency-Id'
+      requestBody:
+        description: Mandate Initiation
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Mandate-Initiation-Request'
+            examples:
+              Brazil-Mandate-Initiation-Request:
+                $ref: '#/components/examples/Brazil-Mandate-Initiation-Request-Example'
+      security:
+      - clientCredentials: []
+      callbacks:
+        mandate-initiation-status:
+          $ref: '#/components/callbacks/Mandate-Initiation-Status'
+      responses:
+        '202':
+          $ref: '#/components/responses/Mandate-Initiation-Request-Accepted'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Rate-Limit-Exceeded'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+    get:
+      tags:
+      - Mandate
+      summary: Get Mandate details
+      description: Retrieve status of your mandate
+      operationId: getMandate
+      parameters:
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Mandate-Country-Code'
+      - $ref: '#/components/parameters/Mandate-Id'
+      security:
+      - clientCredentials: []
+      responses:
+        '200':
+          description: Mandate status
+          headers:
+            apim-guid:
+              schema:
+                type: string
+              description: Citi's unique identification for your request
+            result:
+              schema:
+                type: integer
+                minimum: 1
+                maximum: 1000
+                default: 100
+              description: Number of transaction status matching your request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mandate-Inquiry-Response'
+              examples:
+                Brazil-Mandate-Get-Status:
+                  $ref: '#/components/examples/Brazil-Mandate-Get-Status-Example'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Rate-Limit-Exceeded'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+    patch:
+      tags:
+      - Mandate
+      summary: Cancel Mandate Outgoing Request
+      description: This endpoint allows the Merchant to cancel an existing mandate from Clients ERP to Citi’s system in a secure manner.
+      operationId: cancelMandate
+      parameters:
+      - $ref: '#/components/parameters/Idempotency-Id'
+      - $ref: '#/components/parameters/Client-Id'
+      - $ref: '#/components/parameters/Mandate-Patch-Operation'
+      requestBody:
+        description: Mandate Cancellation Request.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Mandate-Cancellation-Request'
+            examples:
+              Brazil-Mandate-Cancellation-Request:
+                $ref: '#/components/examples/Brazil-Mandate-Cancellation-Request-Example'
+      security:
+      - clientCredentials: []
+      callbacks:
+        mandate-cancellation-status:
+          $ref: '#/components/callbacks/Mandate-Cancellation-Status'
+      responses:
+        '202':
+          $ref: '#/components/responses/Mandate-Cancellation-Request-Accepted'
+        '400':
+          $ref: '#/components/responses/Bad-Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Not-Found'
+        '405':
+          $ref: '#/components/responses/Method-Not-Allowed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/Unsupported-Media-Type'
+        '429':
+          $ref: '#/components/responses/Rate-Limit-Exceeded'
+        '500':
+          $ref: '#/components/responses/Internal-Server-Error'
+        '504':
+          $ref: '#/components/responses/Gateway-Timeout'
+components:
+  responses:
+    Mandate-Cancellation-Request-Accepted:
+      description: Accepted
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Mandate-Cancellation-Response'
+    Gateway-Timeout:
+      description: Gateway Timeout
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Gateway-Timeout-Gateway-Error-Example:
+              $ref: '#/components/examples/Gateway-Timeout-Gateway-Error-Example'
+    Bad-Request:
+      description: Bad Request
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Service-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+    Mandate-Initiation-Request-Accepted:
+      description: Accepted
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Mandate-Initiation-Response'
+    Unauthorized:
+      description: Unauthorized
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Not-Found:
+      description: Not Found
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Service-Error-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
+    Conflict:
+      description: Conflict
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Service-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unsupported-Media-Type-Service-Error-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+            Unsupported-Media-Type-Gateway-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Gateway-Error-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+    Rate-Limit-Exceeded:
+      description: Rate Limit Exceeded
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Rate-Limit-Exceeded-Gateway-Error-Example:
+              $ref: '#/components/examples/Rate-Limit-Exceeded-Gateway-Error-Example'
+  schemas:
+    Mandate-Initiation-Response:
+      type: object
+      title: Mandate Initiation Response
+      properties:
+        mandate_request_id:
+          type: string
+          maxLength: 128
+          description: Unique Id assigned to identify request made on the mandate
+          example: SC3347902320251109REF12345678
+          title: mandate_request_id
+        status:
+          type: string
+          maxLength: 10
+          description: Request status
+          example: CREATED
+          title: status
+        description:
+          type: string
+          maxLength: 200
+          description: More information about the status
+          example: Mandate Request has been received and it is in progress.
+          title: description
+    Mandate-Initiation-Status-Customer-Notification:
+      title: Customer Notification
+      type: object
+      properties:
+        private_id:
+          description: "Customer Tax or Legal Entity Id \n- This parameter is optional for Brazil with max length 11 or 14"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: ABC123456789
+          title: private_id
+        account:
+          title: mandate customer account
+          description: Account Details
+          required:
+          - number
+          - bank_id
+          properties:
+            number:
+              description: "Customer's bank account number \n- This parameter is optional for Brazil with max length 20"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: ABC123456789
+              title: number
+            bank_id:
+              description: "Customer bank's network identification \n- This parameter is optional for Brazil with max length 8"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: CITIBRSP
+              title: number
+            branch_id:
+              description: "Customer bank's branch id \n- This parameter is optional for Brazil with max length 4"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: BR123
+              title: branch_id
+        address:
+          $ref: '#/components/schemas/Mandate-Address'
+    Mandate-Initiation-Status-Mandate-Notification:
+      type: object
+      title: Mandate Notification
+      required:
+      - id
+      properties:
+        id:
+          description: "Unique Id assigned to identify the mandate \n- This parameter is mandatory for Brazil with max length 29"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: RR3347902320251109BR345678901
+          title: id
+        request_id:
+          description: "Unique Id assigned to identify request made on the mandate \n- This parameter is mandatory for Brazil with max length 29"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: SC3347902320251109R2345678901
+          title: request_id
+        frequency:
+          description: "Frequency in which payments are to be processed YEAR = Annual, MNTH = Monthly, QURT = Quarterly, MIAN = Semiannual, WEEK = Weekly, DAIL = Daily, ADHO = Ad hoc, INDA = Intraday, FRTN = Fortnightly & OOFF = One Off \n- This parameter is mandatory for Brazil"
+          type: string
+          enum:
+          - YEAR
+          - MNTH
+          - QURT
+          - MIAN
+          - WEEK
+          - DAIL
+          - ADHO
+          - INDA
+          - FRTN
+          - OOFF
+          example: MNTH
+          title: frequency
+        start_date:
+          description: "Effective start date for the payment in YYYY-MM-DD format \n- This parameter is mandatory for Brazil"
+          type: string
+          format: date
+          example: '2025-12-07'
+          title: start_date
+        end_date:
+          description: "Effective end date for the payment in YYYY-MM-DD format \n- This parameter is optional for Brazil"
+          type: string
+          format: date
+          example: '2025-12-07'
+          title: end_date
+        auto_debit:
+          description: "Specifies whether the direct debit instructions should be automatically re-submitted periodically \n- This parameter is mandatory for Brazil"
+          type: boolean
+          example: false
+          title: auto-debit
+        amount:
+          description: "Fixed amount to be collected from the customer's account \n- This parameter is optional for Brazil with 18 digits including 2 decimals"
+          minimum: 0.01
+          maximum: 1000000000000000000
+          type: number
+          example: 1000
+          title: amount
+        max_amount:
+          description: "Max amount to be collected from customer's account \n- This parameter is optional for Brazil with 18 digits including 2 decimals"
+          minimum: 0.01
+          maximum: 1000000000000000000
+          type: number
+          example: 1000
+          title: max_amount
+        currency_code:
+          type: string
+          description: "Currency Code for the mandate \n- This parameter is mandatory for Brazil"
+          enum:
+          - BRL
+          example: BRL
+          title: currency_code
+        reason_code:
+          description: "Reason Code for rejection \n- This parameter is optional for Brazil with max length 4"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: AC01
+          title: reason_code
+        description:
+          description: "Description against the status or/and reason code \n- This parameter is optional For Brazil"
+          minLength: 1
+          maxLength: 105
+          type: string
+          example: IncorrectAccountNumber
+          title: description
+        status:
+          description: "Mandate Status \n- This parameter is mandatory for Brazil"
+          type: string
+          enum:
+          - ACTIVE
+          - PENDING_AUTHORIZATION
+          - REJECTED
+          - CANCELLED
+          example: ACTIVE
+          title: status
+        reference_id:
+          description: "Reference Id given by merchant such as contract/document number \n- This parameter is mandatory for Brazil with max length 35"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: 84126/12
+          title: reference_id
+        creation_date_time:
+          type: string
+          format: date-time
+          description: "Date and time at which the message was created in format YYYY-MM-DDTHH:MM:SS.sssZ in UTC time zone \n- This parameter is mandatory for Brazil"
+          example: '2022-09-13T08:23:49.114Z'
+          title: creation_date_time
+        additional_info:
+          type: string
+          maxLength: 140
+          minLength: 1
+          description: "Additional Info on the mandate \n- This parameter is optional for Brazil with max length 35"
+          title: additional_info
+        qr_string:
+          type: string
+          maxLength: 512
+          description: "Dynamic QR Code based on the merchant payload request \n- This parameter is optional for Brazil"
+          example: 00020101021226700014br.gov.bcb.pix.citi.com.br/qr/2/8b3da2f39a4140d1a91abd93113bd44 15204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***630464E4
+          title: qr_string
+    Mandate-Inquiry-Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/Mandate-Response'
+    Mandate-Initiation-Request-Customer:
+      title: Customer
+      type: object
+      properties:
+        private_id:
+          description: "Customer Tax or Legal Entity Id \n- For Brazil this parameter is mandatory only when `mandate.qr_code` = N, individual person tax identification (CPF) allowed length = 11 or business entity tax identification (CNPJ) allowed length = 14"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: ABC123456789
+          title: private_id
+        account:
+          title: customer account
+          description: Account Details
+          properties:
+            number:
+              description: "Customer's bank account number \n- For Brazil this parameter is mandatory only when `mandate.qr_code` = N with max length 20"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: '123456789'
+              title: number
+            bank_id:
+              description: "Customer bank's network identification \n- For Brazil this parameter is mandatory only when `mandate.qr_code` = N with max length 8"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: CITIBRSP
+              title: bank_id
+            branch_id:
+              description: "Customer bank's branch id \n- For Brazil this parameter is optional with max length 4 and only numbers are allowed"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: BR123
+              title: branch_id
+    Mandate-Status-Notification:
+      type: object
+      title: Mandate Initiation Status Notification
+      required:
+      - mandate
+      properties:
+        mandate:
+          $ref: '#/components/schemas/Mandate-Initiation-Status-Mandate-Notification'
+        customer:
+          $ref: '#/components/schemas/Mandate-Initiation-Status-Customer-Notification'
+        sender:
+          $ref: '#/components/schemas/Mandate-Initiation-Status-Sender-Notification'
+        merchant:
+          $ref: '#/components/schemas/Mandate-Initiation-Status-Merchant-Notification'
+    Mandate-Get-Status:
+      type: object
+      title: Mandate Notification
+      properties:
+        id:
+          description: "Unique Id given during initiation to identify the mandate \n- This parameter is mandatory for Brazil with max length 29"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: RR3347902320251109REF12345678
+          title: id
+        request_id:
+          description: "Unique Id given during initiation to identify request made on the mandate \n- This parameter is mandatory for Brazil with max lenght 29"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: SC3347902320251109REF12345678
+          title: request_id
+        status:
+          description: "Mandate Current Status \n- This parameter is mandatory for Brazil"
+          type: string
+          enum:
+          - PENDING_AUTHORIZATION
+          - PENDING_ACKNOWLEDGEMENT
+          - ACTIVE
+          - EXPIRED
+          - REJECTED
+          - SUSPENDED
+          - CANCELLED
+          example: ACTIVE
+          title: status
+        country_code:
+          description: "Mandate country \n- This parameter is mandatory for Brazil"
+          enum:
+          - US
+          - BR
+          - GB
+          - IN
+          example: US
+          type: string
+          title: country_code
+        frequency:
+          description: "Frequency in which payments are to be processed YEAR = Annual, MNTH = Monthly, QURT = Quarterly, MIAN = Semiannual, WEEK = Weekly, DAIL = Daily, ADHO = Ad hoc, INDA = Intraday, FRTN = Fortnightly & OOFF = One Off \n- This parameter is mandatory for Brazil"
+          type: string
+          enum:
+          - YEAR
+          - MNTH
+          - QURT
+          - MIAN
+          - WEEK
+          - DAIL
+          - ADHO
+          - INDA
+          - FRTN
+          - OOFF
+          example: MNTH
+          title: frequency
+        count_per_period:
+          description: "Number of instructions to be created and processed during the specified period \n- This parameter is mandatory for Brazil"
+          type: number
+          minimum: 1
+          maximum: 99
+          example: 13
+          title: count_per_period
+        auto_debit:
+          description: "Specifies whether the direct debit instructions should be automatically re-submitted periodically \n- This parameter is mandatory for Brazil"
+          type: boolean
+          example: true
+          title: auto_debit
+        expiry_date_time:
+          description: "Date & Time when the mandate request will get expired (format-YYYYMMDDYhh:mm:ss.000Z where time should be in UTC) \n- This is mandatory parameter for Brazil"
+          type: string
+          format: date-time
+          example: '2024-04-29T23:59:59.999Z'
+          title: expiry_date_time
+        start_date:
+          description: "Effective start date for the payment in YYYY-MM-DD format \n- This parameter is mandatory for Brazil"
+          type: string
+          format: date
+          example: '2025-12-07'
+          title: start_date
+        end_date:
+          description: "Effective end date for the payment in YYYY-MM-DD format \n- This parameter is optional for Brazil"
+          type: string
+          format: date
+          example: '2025-12-07'
+          title: end_date
+        nature:
+          description: "Mandate nature \n- This parameter is mandatory for Brazil"
+          type: string
+          enum:
+          - ELECTRONIC
+          - QRC
+          - PAPER
+          example: PAPER
+          title: nature
+        reference_id:
+          description: "Reference Id given by merchant such as contract/document number \n- This parameter is optional for Brazil with max length 35"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: 84126/12
+          title: reference_id
+        additional_info:
+          maxLength: 140
+          minLength: 1
+          type: string
+          description: "Additional information provided by payor \n- This parameter is mandatory for Brazil with max length 35"
+          example: Mandate Initiated
+          title: additional_info
+        currency_code:
+          description: "Currency Code \n- This parameter is mandatory for Brazil"
+          enum:
+          - BRL
+          example: BRL
+          type: string
+          title: currency_code
+        amount:
+          description: "Fixed amount to be collected from the customer's account \n- This parameter is optional for Brazil with max length 18 digits including 2 decimals"
+          minimum: 0.01
+          maximum: 1000000000000000000
+          type: number
+          example: 1000
+          title: amount
+        max_amount:
+          description: "Max amount to be collected from customer's account \n- This parameter is optional for Brazil with max length 18 digits including 2 decimals"
+          minimum: 0.01
+          maximum: 1000000000000000000
+          type: number
+          example: 1000
+          title: max_amount
+        cancellation_requested_by:
+          description: "Party who initiated mandate cancelation \n- This parameter is optional for Brazil with max length 15"
+          type: string
+          maxLength: 35
+          minLength: 1
+          example: Canberry Inc
+          title: cancellation_requested_by
+        reason_code:
+          description: "Reason Code for rejection/cancellation \n- This parameter is optional for Brazil with max length 4"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: AC01
+          title: reason_code
+        description:
+          description: "Description against the status or/and reason code \n- This parameter is optional for Brazil with max length 105"
+          minLength: 1
+          maxLength: 105
+          type: string
+          example: IncorrectAccountNumber
+          title: description
+        audit_trail:
+          description: "Series of events along with date & time stamp on the mandate \n- This parameter is mandatory for Brazil"
+          minLength: 1
+          maxLength: 105
+          type: string
+          example: CRDT2024-04-23T10:00:00.000Z;ACTV2024-04-24T11:30:00.000Z;AMND2024-04-30T11:30:00.000Z
+          title: audit_trail
+        agreement_number:
+          description: "Agreement number between merchant and customer \n- This parameter is optional for Brazil"
+          minLength: 1
+          maxLength: 60
+          type: string
+          example: '123456'
+          title: agreement_number
+        qr_string:
+          type: string
+          maxLength: 512
+          description: "Dynamic QR Code based on the merchant payload request \n- This parameter is optional for Brazil"
+          example: 00020101021226700014br.gov.bcb.pix.citi.com.br/qr/2/8b3da2f39a4140d1a91abd93113bd44 15204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***630464E4
+          title: qr_string
+    Mandate-Response:
+      type: object
+      title: Mandate Inquiry Notification
+      properties:
+        mandate:
+          $ref: '#/components/schemas/Mandate-Get-Status'
+        customer:
+          $ref: '#/components/schemas/Customer-Get-Status'
+        merchant:
+          $ref: '#/components/schemas/Merchant-Get-Status'
+        sender:
+          $ref: '#/components/schemas/Sender-Get-Status'
+    Mandate-Cancellation-Response:
+      type: object
+      title: Mandate Cancellation Response
+      properties:
+        mandate_request_id:
+          type: string
+          maxLength: 128
+          description: Unique Id assigned to identify request made on the mandate
+          example: IC3347902320251109REF12345678
+          title: mandate_request_id
+        mandate_id:
+          type: string
+          maxLength: 128
+          description: Unique Id assigned to identify request made on the mandate
+          example: RR3347902320251109BRF12345678
+          title: mandate_id
+        status:
+          type: string
+          maxLength: 10
+          description: Request status
+          example: CREATED
+          title: status
+        description:
+          type: string
+          maxLength: 200
+          description: More information about the status
+          example: Mandate Request has been received and it is in progress.
+          title: description
+    Mandate-Initiation-Request:
+      type: object
+      title: Mandate Initiation Request
+      required:
+      - mandate
+      - merchant
+      properties:
+        mandate:
+          $ref: '#/components/schemas/Mandate-Initiation-Request-Mandate'
+        customer:
+          $ref: '#/components/schemas/Mandate-Initiation-Request-Customer'
+        sender:
+          $ref: '#/components/schemas/Mandate-Initiation-Request-Sender'
+        merchant:
+          $ref: '#/components/schemas/Mandate-Initiation-Request-Merchant'
+    Mandate-Initiation-Request-Mandate:
+      title: Mandate
+      type: object
+      required:
+      - request_id
+      - auto_debit
+      - frequency
+      - country_code
+      properties:
+        request_id:
+          description: "Unique ID assigned to identify the request made on the mandate. \n- For Brazil, this parameter is mandatory with a max length of 29 in format 'SC33479023yyyyMMddRkkkkkkkkkk' or 'QR33479023yyyyMMddNkkkkkkkkkk', where:<br> the first two characters will be 'SC' in case of mandate.qr_code is 'N' or <br>the first two characters will be 'QR' in case of mandate.qr_code is 'Y'<br>'33479023' is the merchant bank code<br> 'yyyyMMdd' is the mandate initiation date<br>The next character will be either 'R' or 'N' where: <br>'R' refers to new attempts for the amount collection applicable after original recurrence scheduling date<br>'N' refers to the new attempts for amounts collection NOT applicable after original recurrence scheduling date<br>'kkkkkkkkkk' are unique alphanumeric characters"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: SC3347902320251109REF12345678
+          title: request_id
+        frequency:
+          description: "Frequency in which payments are to be processed YEAR = Annual, MNTH = Monthly, QURT = Quarterly, MIAN = Semiannual, WEEK = Weekly, DAIL = Daily, ADHO = Ad hoc, INDA = Intraday, FRTN = Fortnightly and OOFF = One Off \n- For Brazil this parameter is mandatory and with the allowed values: MIAN, MNTH, QURT, WEEK, and YEAR"
+          type: string
+          enum:
+          - YEAR
+          - MNTH
+          - QURT
+          - MIAN
+          - WEEK
+          - DAIL
+          - ADHO
+          - INDA
+          - FRTN
+          - OOFF
+          example: MNTH
+          title: frequency
+        start_date:
+          description: "Effective start date for the payment in YYYY-MM-DD format \n- For Brazil this parameter is mandatory where the date should be greater than mandate creation date"
+          type: string
+          format: date
+          example: '2025-12-07'
+          title: start_date
+        end_date:
+          description: "Effective end date for the payment in YYYY-MM-DD format \n- For Brazil this parameter is optional where date should be greater than mandate start date"
+          type: string
+          format: date
+          example: '2025-12-07'
+          title: end_date
+        auto_debit:
+          description: "Specifies whether the direct debit instructions should be automatically re-submitted periodically by indicating value either 'true' or 'false' \n- For Brazil this parameter is mandatory with an allowed value of false"
+          type: boolean
+          example: false
+          title: auto_debit
+        amount:
+          description: "Fixed amount to be collected from the customer's account (either of amount or max_amount is allowed) \n- For Brazil this is optional parameter with maxlength 18 digits and 2 decimals"
+          minimum: 0.01
+          maximum: 1000000000000000000
+          type: number
+          example: 1000
+          title: amount
+        max_amount:
+          description: "Max amount to be collected from customer's account (either of amount or max_amount is allowed) \n- For Brazil this is optional parameter with maxlength 18 digits and 2 decimals"
+          minimum: 0.01
+          maximum: 1000000000000000000
+          type: number
+          example: 1000
+          title: max_amount
+        currency_code:
+          type: string
+          description: "Currency Code for the mandate \n- For Brazil this parameter should be provided only when amount or max_amount is provided"
+          enum:
+          - BRL
+          example: BRL
+          title: currency_code
+        country_code:
+          description: "Country code \n- This parameter is mandatory for all regions"
+          enum:
+          - BR
+          example: BR
+          type: string
+          title: country_code
+        expiry_date_time:
+          description: "Date & Time when the mandate request will get expired (format-YYYY-MM-DDThh:mm:ss.000Z where time should be in UTC) \n- This is mandatory parameter for Brazil and date should be between current business day + 30 days"
+          type: string
+          format: date-time
+          example: '2024-04-29T23:59:59.999Z'
+          title: expiry_date_time
+        qr_code:
+          description: "QR Code against the mandate Y-Creating QR and sending to payer for acceptance/rejection N-Sending Pain.009 to Payer Bank for Authorization \n- This is mandatory parameter for Brazil QR PIX"
+          type: string
+          enum:
+          - Y
+          - N
+          example: Y
+          title: qr_code
+        reference_id:
+          description: "Reference Id given by merchant such as contract number \n- For Brazil this parameter is mandatory with max length 35"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: 84126/12
+          title: reference_id
+        agreement_number:
+          description: "Agreement number between merchant and customer \n- For Brazil this parameter is optional with max length 60"
+          minLength: 1
+          maxLength: 60
+          type: string
+          example: '123456'
+          title: agreement_number
+        additional_info:
+          type: string
+          maxLength: 140
+          minLength: 1
+          description: "Additional Info on the mandate \n- For Brazil this is optional parameter with max length 35"
+          title: additional_info
+    Sender-Get-Status:
+      type: object
+      title: Sender Notification
+      properties:
+        name:
+          description: "Sender Name \n- This parameter is optional for Brazil with max length 140"
+          minLength: 1
+          maxLength: 140
+          type: string
+          example: Carlton Inc
+          title: name
+        private_id:
+          description: "Sender tax or Legal Entity Id \n- This parameter is optional for Brazil with max length 11 or 14"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: '553241'
+          title: private_id
+    Error-Response:
+      type: object
+      title: Error Response
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+        error_details:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Mandate-Initiation-Request-Merchant:
+      title: Merchant
+      type: object
+      required:
+      - private_id
+      - account
+      properties:
+        name:
+          description: "Merchant Name \n- For Brazil this parameter is mandatory with max length 140"
+          minLength: 1
+          maxLength: 140
+          type: string
+          example: Amazon Inc
+          title: name
+        private_id:
+          description: "Merchant Tax or Legal Entity Id \n- For Brazil this parameter is mandatory, individual person tax identification (CPF) allowed length = 11 or business entity tax identification (CNPJ) allowed length = 14"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: ABC123456789
+          title: private_id
+        account:
+          title: merchant account
+          description: Account Details
+          required:
+          - bank_id
+          properties:
+            bank_id:
+              description: "Merchant bank's network identification \n- For Brazil this parameter is mandatory with max length 8"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: CITIBRSP
+              title: bank_id
+            number:
+              description: "Merchant's bank account number \n- For Brazil this parameter is mandatory with max length 10"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: '123456789'
+              title: number
+    Gateway-Error-Response:
+      type: object
+      title: GatewayErrorResponse
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+    Error-Detail:
+      type: object
+      title: Error Detail
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+    Mandate-Address:
+      type: object
+      description: Mandate Address
+      title: Mandate Address
+      properties:
+        postal_code:
+          description: "Postal code \n- This parameter is optional for Brazil with max length 7 for customer object"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: '1234567'
+          title: postal_code
+    Customer-Get-Status:
+      type: object
+      title: Customer Notification
+      properties:
+        account:
+          title: customer account
+          description: Account Details
+          properties:
+            number:
+              description: "Customer's bank account number \n- This parameter is optional for Brazil with max length 20"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: '123456789'
+              title: number
+            bank_id:
+              description: "Customer bank's network identification \n- This parameter is optional for Brazil with max length 8"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: CITIBRSP
+              title: bank_id
+        private_id:
+          description: "Customer Tax or Legal Entity Id \n- This parameter is optional for Brazil with max length 11 or 14"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: ABC123456789
+          title: private_id
+        address:
+          $ref: '#/components/schemas/Mandate-Address'
+    Mandate-Initiation-Request-Sender:
+      title: Sender
+      type: object
+      properties:
+        name:
+          description: "Sender Name \n- For Brazil this parameter is mandatory only when `mandate.qr_code` = Y with max length 140"
+          minLength: 1
+          maxLength: 140
+          type: string
+          example: Carlton Inc
+          title: name
+        private_id:
+          description: "Sender tax or Legal Entity Id \n- For Brazil this parameter is mandatory when qr_code = Y, individual person tax identification (CPF) allowed length = 11 or business entity tax identification (CNPJ) allowed length = 14 (this parameter to be provided along with `sender.name`). \n- For Brazil this parameter is optional when qr_code = N, individual person tax identification (CPF) allowed length = 11 or business entity tax identification (CNPJ) allowed length = 14 (if provided, value should be different from `customer.private_id` along with `sender.name`)."
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: '886253'
+          title: private_id
+    Mandate-Cancellation-Request-Mandate:
+      type: object
+      title: Mandate
+      required:
+      - reason_code
+      - request_id
+      - country_code
+      properties:
+        reason_code:
+          description: "Reason due to which mandate is being cancelled \n- For Brazil this is mandatory parameter with the allowed values: SLCR - Cancellation requested by receiver, SJUD - Cancellation by court order, OTHS - Other reasons"
+          type: string
+          enum:
+          - SLCR
+          - SJUD
+          - OTHS
+          example: SLCR
+          title: reason_code
+        id:
+          description: "Unique ID to identify the mandate \n- For Brazil this parameter is mandatory with min & max length 29 with format RRxxxxxxxxyyyyMMddBRkkkkkkkkk received during mandate initiation"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: RR3347902320251109BRF12345678
+          title: id
+        request_id:
+          description: "Unique ID assigned to identify request made on the mandate \n- For Brazil this parameter is mandatory with max length 29 in format 'IC33479023yyyyMMddkkkkkkkkkkk', where First two characters will be 'IC', '33479023' is merchant bank code, 'yyyyMMdd' is mandate cancellation date, 'kkkkkkkkkkk' are unique alphanumeric characters"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: IC3347902320251109REF12345678
+          title: request_id
+        country_code:
+          description: Country code
+          enum:
+          - BR
+          example: BR
+          type: string
+          title: country_code
+    Mandate-Initiation-Status-Merchant-Notification:
+      title: Merchant Notification
+      type: object
+      required:
+      - private_id
+      - account
+      properties:
+        name:
+          description: "Merchant Name \n- This parameter is mandatory for Brazil with max length 140"
+          minLength: 1
+          maxLength: 140
+          type: string
+          example: Amazon Inc
+          title: name
+        private_id:
+          description: "Merchant Tax or Legal Entity Id \n- This parameter is mandatory Brazil with max length 11 or 14"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: ABC123456789
+          title: private_id
+        account:
+          title: mandate merchant account
+          description: Account Details
+          required:
+          - bank_id
+          properties:
+            bank_id:
+              description: "Merchant bank's network identification \n- This parameter is mandatory for Brazil with max length 8"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: CITIBRSP
+              title: bank_id
+    Merchant-Get-Status:
+      type: object
+      title: Merchant Notification
+      properties:
+        name:
+          description: "Merchant Name \n- This parameter is mandatory for Brazil with max length 140"
+          minLength: 1
+          maxLength: 140
+          type: string
+          example: Amazon Inc
+          title: name
+        private_id:
+          description: "Merchant Tax or Legal Entity Id \n- This parameter is mandatory for Brazil with max length 11 or 14"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: ABC123456789
+          title: private_id
+        account:
+          title: merchant account
+          description: Account Details
+          properties:
+            bank_id:
+              description: "Merchant bank's network identification \n- This parameter is mandatory for Brazil with max length 8"
+              minLength: 1
+              maxLength: 35
+              type: string
+              example: CITIBRSP
+              title: bank_id
+    Mandate-Initiation-Status-Sender-Notification:
+      title: Sender Notification
+      type: object
+      properties:
+        name:
+          description: "Sender Name \n- This parameter is optional for Brazil with max length 140"
+          minLength: 1
+          maxLength: 140
+          type: string
+          example: Carlton Inc
+          title: name
+        private_id:
+          description: "Sender tax or Legal Entity Id \n- This parameter is optional for Brazil with max length 11 or 14"
+          minLength: 1
+          maxLength: 35
+          type: string
+          example: '553241'
+          title: private_id
+    Mandate-Cancellation-Request:
+      type: object
+      title: Mandate Cancellation Request
+      required:
+      - mandate
+      properties:
+        mandate:
+          $ref: '#/components/schemas/Mandate-Cancellation-Request-Mandate'
+  examples:
+    Brazil-Mandate-Initiation-Request-Example:
+      value:
+        mandate:
+          request_id: SCCITIBRSP20251109REF12345678
+          frequency: YEAR
+          start_date: '2025-12-07'
+          end_date: '2025-02-18'
+          auto_debit: 'TRUE'
+          amount: 1000.5
+          currency_code: BRL
+          country_code: BR
+          expiry_date_time: '2025-02-18T23:59:99.000Z'
+          qr_code: Y
+          reference_id: 85344/17
+          agreement_number: '123456'
+          additional_info: New Mandate Created
+        customer:
+          private_id: '39053344705'
+          account:
+            number: 0009795493
+            bank_id: '33479023'
+            branch_id: '2527'
+        sender:
+          name: Hathway
+          private_id: '12345678000190'
+        merchant:
+          name: Beverly
+          private_id: '16727230000197'
+          account:
+            bank_id: '33479023'
+            number: '123456'
+    Gateway-Timeout-Gateway-Error-Example:
+      value:
+        httpCode: '504'
+        httpMessage: GATEWAY_TIMEOUT
+        moreInformation: 'Response took longer than timeout: PT50S'
+    Not-Found-Gateway-Error-Example:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Bad-Request-Gateway-Error-Example:
+      value:
+        httpCode: '400'
+        httpMessage: Bad Request
+        moreInformation: please provide valid value for property emailAddress
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+    Idempotency-Id-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Idempotency-Id provided is currently being used in another request
+          action: please do not repeat the same request again
+          code: VC00016
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+        - issue: property method.type is mandatory and it cannot be empty
+          action: please provide valid value for property method.type
+          code: VC00010
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: HTTP method is not supported
+          action: Provide valid HTTP method
+          code: CC00001
+    Brazil-Mandate-Initiation-Status-Example:
+      value:
+        mandate:
+          reason_code: AC01
+          description: ClosedAccountNumber
+          id: RR3347902320251109BRF12345678
+          request_id: SC3347902320251109REF12345678
+          frequency: YEAR
+          start_date: '2025-12-07'
+          end_date: '2025-02-18'
+          auto_debit: true
+          amount: 1000.27
+          currency_code: BRL
+          status: REJECTED
+          reference_id: 83227/19
+          creation_date_time: '2022-09-13T08:23:49.114Z'
+          additional_info: Mandate Accepted
+          qr_string: 00020101021226700014br.gov.bcb.pix.citi.com.br/qr/2/8b3da2f39a4140d1a91abd93113bd44 15204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***630464E4
+        merchant:
+          name: Beverly
+          private_id: '16727230000197'
+          account:
+            bank_id: '33479023'
+        customer:
+          private_id: '39053344705'
+          account:
+            number: 0009795493
+            bank_id: '33479023'
+            branch_id: '2527'
+          address:
+            postal_code: '1234567'
+        sender:
+          name: Hathway
+          private_id: '12345678000190'
+    Brazil-Mandate-Cancellation-Status-Example:
+      value:
+        mandate:
+          reason_code: AC01
+          description: ClosedAccountNumber
+          id: RR3347902320251109BRF12345678
+          request_id: IC3347902320251109REF12345678
+          frequency: YEAR
+          start_date: '2025-12-07'
+          expriy_date: '2025-02-18'
+          auto_debit: true
+          amount: 1000.27
+          currency_code: BRL
+          status: REJECTED
+          reference_id: 84126/12
+          creation_date_time: '2022-09-13T08:23:49.114Z'
+          additional_info: Mandate Cancelled
+        merchant:
+          name: Beverly
+          private_id: '16727230000197'
+          account:
+            bank_id: '33479023'
+        customer:
+          private_id: '39053344705'
+          account:
+            number: 0009795493
+            bank_id: '33479023'
+            branch_id: '2527'
+          address:
+            postal_code: '1234567'
+        sender:
+          name: Hathway
+          private_id: '12345678000190'
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+          code: CC00004
+    Not-Found-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
+    Brazil-Mandate-Cancellation-Request-Example:
+      value:
+        mandate:
+          reason_code: SLCR
+          id: RR3347902320251109BRF12345678
+          request_id: IC3347902320251109REF12345678
+          country_code: BR
+    Un-Supported-Media-Type-Gateway-Error-Example:
+      value:
+        httpCode: '415'
+        httpMessage: Unsupported Media Type
+        moreInformation: Unsupported Content-Type
+    Brazil-Mandate-Get-Status-Example:
+      value:
+      - mandate:
+          id: RN3347902320250318BR561454732
+          request_id: IC334790220250319996252269918
+          status: ACTIVE
+          country_code: BR
+          frequency: MNTH
+          count_per_period: 7
+          auto_debit: 'FALSE'
+          expiry_date_time: '2025-04-29T23:59:59.999Z'
+          start_date: '2025-04-25'
+          end_date: '2029-03-25'
+          nature: PAPER
+          reference_id: 240/27
+          additional_info: Mandate Initiated
+          currency_code: BRL
+          amount: 420.27
+          status_date_time: '2022-09-13T08:23:49.114Z'
+          cancellation_requested_by: Creditor
+          reason_code: SLCR
+          description: RejectedByDebtor
+          audit_trail: CRDT2024-04-23T10:00:00.000Z;ACTV2024-04-24T11:30:00.000Z;AMND2024-04-30T11:30:00.000Z
+          agreement_number: '123456'
+          qr_string: 00020101021226700014br.gov.bcb.pix.citi.com.br/qr/2/8b3da2f39a4140d1a91abd93113bd44 15204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***630464E4
+        customer:
+          account:
+            bank_id: '3347902'
+            number: '602301192802'
+          address:
+            postal_code: '1234567'
+          private_id: '88032766834'
+        merchant:
+          account:
+            bank_id: '3347902'
+          name: Williams Inc
+          private_id: '80062766835'
+        sender:
+          name: Canberry Inc
+          private_id: '90042723835'
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: please use valid content-type in header
+          code: CC00002
+    Rate-Limit-Exceeded-Gateway-Error-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: Rate Limit exceeded
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: This server could not verify that you are authorized to access the URL
+    Method-Not-Allowed-Gateway-Error-Example:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: unable to serve your request at this moment
+  parameters:
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Event Type
+      schema:
+        type: string
+    Mandate-Patch-Operation:
+      in: header
+      name: Operation
+      required: true
+      description: API operation
+      schema:
+        type: string
+        enum:
+        - CANCEL
+        description: API operation
+        example: CANCEL
+    Mandate-Id:
+      name: mandate_id
+      in: query
+      required: true
+      description: Unique Id assigned to identify the mandate
+      schema:
+        type: string
+    Event-Name:
+      name: Event-Name
+      in: header
+      required: true
+      description: Event Type
+      schema:
+        type: string
+    Client-Id:
+      in: query
+      name: client_id
+      required: true
+      description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+      schema:
+        type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 9a10a5d6-63d4-4885-b6bd-19e79629496d
+    Idempotency-Id:
+      name: Idempotency-Id
+      in: header
+      required: true
+      description: "Your unique identification for a POST request \n - Maximum length is 128. \n-  CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database."
+      schema:
+        type: string
+        maxLength: 128
+        description: "Your unique identification for a POST request \n - Maximum length is 128. \n-  CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
+      example: a44cbb60-6de4-4edb-9a7a-123414bba3bb
+    Mandate-Country-Code:
+      name: country_code
+      in: query
+      required: true
+      schema:
+        type: string
+        enum:
+        - BR
+      description: Country code
+      example: BR
+  callbacks:
+    Mandate-Initiation-Status:
+      /mandate-initiation-status:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Mandate-Status-Notification'
+                examples:
+                  Brazil-Mandate-Initiation-Status-Notification:
+                    $ref: '#/components/examples/Brazil-Mandate-Initiation-Status-Example'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+    Mandate-Cancellation-Status:
+      /mandate-cancellation-status:
+        patch:
+          parameters:
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Mandate-Status-Notification'
+                examples:
+                  Brazil-Mandate-Cancellation-Status-Notification:
+                    $ref: '#/components/examples/Brazil-Mandate-Cancellation-Status-Example'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
+  headers:
+    Request-Id:
+      schema:
+        type: string
+      description: Citi's unique identification for your request
+  securitySchemes:
+    clientCredentials:
+      description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
+
+
+        '
+    oAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /authenticationservices/v3/oauth/token
+          tokenUrl: /authenticationservices/v3/oauth/token
+          scopes:
+            authenticationservices/v1: Grant read-only access to payment initation service
