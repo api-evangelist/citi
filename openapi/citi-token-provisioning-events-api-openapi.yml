@@ -91,6 +91,35 @@ components:
       minItems: 1
       items:
         $ref: '#/components/schemas/Error'
+    WalletInfo:
+      properties:
+        walletId:
+          description: The identifier of the Wallet Provider who requested the digitization. Only present when the token is provided to a Wallet Provider
+          type: string
+          format: numeric
+          example: '123'
+          maxLength: 3
+          minLength: 1
+        paymentAppInstanceId:
+          description: The identifier of the Payment App instance within a device that will be provisioned with a token. Only present when supplied by a Wallet Provider.
+          type: string
+          format: alphanumeric
+          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e
+          maxLength: 48
+          minLength: 1
+        secureElementId:
+          description: The identifier of the Secure Element to be provisioned with the token. Present only when the token is provisioned to a Secure Element and when provided by the Wallet Provider. Not required
+          type: string
+          format: alphanumeric
+          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e93452c
+          maxLength: 128
+          minLength: 1
+    ForbiddenError:
+      properties:
+        Errors:
+          $ref: '#/components/schemas/Errors'
+      required:
+      - Errors
     OwnerInfo:
       properties:
         issuerGuid:
@@ -103,12 +132,42 @@ components:
           type: string
           format: alphanumeric
           example: 123e4567-e89b-12d3-a456-426614174008
-    UnauthorizedError:
+    MetaData:
       properties:
-        Errors:
-          $ref: '#/components/schemas/Errors'
-      required:
-      - Errors
+        accountHolderData:
+          description: Additional information that can be used to identify the account holder, such as name, address
+          $ref: '#/components/schemas/AccountHolderDataSchema'
+        paymentAccountReference:
+          description: The unique account reference assigned to the PAN
+          type: string
+          format: alphanumeric
+          example: 512381d9f8e0629211e3949a08002
+          maxLength: 29
+          minLength: 29
+        deviceInfo:
+          description: Contains information about the target device to be provisioned. Max length - Not applicable. Type - Map (DeviceInfo).
+          $ref: '#/components/schemas/DeviceInfo'
+        accountIdHash:
+          description: SHA-256 hash of the Account holders account ID with the Payment App Provider. Typically expected to be an email address. Type - string (Alpha Numeric) Hex-encoded data (case-insensitive)
+          type: string
+          format: alphanumeric
+          example: 5ae9c9890b326bd23bfa9db9672298ae3b10a9388e56ec17a001e191f24572aa
+          maxLength: 64
+          minLength: 1
+        activeTokenCount:
+          description: The number of active tokens that already exist for the Funding Account based on the token type. Secure Element and Cloud tokens are counted together. Valid values are 0 to 99. A value of 99 means there are 99 or more active tokens. Tokens that have been deleted from the wallet are excluded from the count. Max length - 2.
+          type: string
+          format: numeric
+          example: '3'
+          maxLength: 2
+          minLength: 1
+        consumerFacingEntityName:
+          description: Entity name that account holder recognizes as being where they store their PAN (wallets, merchants, commerce platforms )
+          type: string
+          format: string
+          example: MerchantName
+          maxLength: 100
+          minLength: 1
     RcnInfo:
       properties:
         accountNumber:
@@ -133,7 +192,13 @@ components:
       required:
       - accountNumber
       - expiry
-    InternalServerErrorResponse:
+    ResourceNotFoundError:
+      properties:
+        Errors:
+          $ref: '#/components/schemas/Errors'
+      required:
+      - Errors
+    UnauthorizedError:
       properties:
         Errors:
           $ref: '#/components/schemas/Errors'
@@ -175,6 +240,175 @@ components:
           type: string
           format: string
           example: '2024-02-12T15:19:36.633965Z'
+    AccountHolderDataSchema:
+      properties:
+        accountHolderName:
+          description: The name of the account holder in the format LASTNAME/FIRSTNAME or FIRSTNAME LASTNAME
+          type: string
+          format: string
+          example: John Doe
+          maxLength: 27
+          minLength: 1
+        accountHolderAddress:
+          description: The address for the account holder. Verified as part of reaching the digitization decision.
+          $ref: '#/components/schemas/BillingAddressSchema'
+        sourceIp:
+          description: The IP of the device initiating the request.
+          type: string
+          format: numeric
+          example: 127.0.0.1
+          maxLength: 64
+          minLength: 7
+        deviceLocation:
+          description: Latitude and longitude where the device the consumer is attempting to authorize is located. In the format "(sign) latitude/(sign) longitude" with a precision of 2 decimal places. Ex:"38.63/-90.2". Latitude is between -90 and 90. Longitude between -180 and 180.
+          type: string
+          format: numeric
+          example: 38.63/-90.2
+          maxLength: 64
+          minLength: 1
+        consumerIdentifier:
+          description: Consumer Identifier provided by the token requestor. Not required   Optionally present in AuthorizeService when provided by the wallet provider.
+          type: string
+          format: alphanumeric
+          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e93452c1b24f24a24b
+          maxLength: 88
+          minLength: 1
+        accountHolderEmailAddress:
+          description: The email address of the account holder. Not required - Optionally present in pushAccount request. Not present otherwise.
+          type: string
+          format: alphanumeric
+          example: abcdef@xyz.com
+          maxLength: 320
+          minLength: 6
+        accountHolderMobilePhoneNumber:
+          description: The mobile phone number of the account holder. Not required.
+          $ref: '#/components/schemas/PhoneNumberSchema'
+    TokenProvisioningEventRequest:
+      properties:
+        tokenInfo:
+          description: The Token Information for this service request
+          $ref: '#/components/schemas/TokenInfo'
+        tokenType:
+          description: The type of token requested for this digitization. Valid values are EMBEDDED_SE = Embedded Secure Element | CLOUD = Mastercard Cloud-Based Payments | STATIC = Static token.
+          type: string
+          format: string
+          example: CLOUD
+          maxLength: 16
+          minLength: 1
+        eventType:
+          description: The type of the provisioning event  [ APPROVED, REQUIRE_ADDITIONAL_AUTHENTICATION, COMPLETED, REJECTED ]
+          type: string
+          format: string
+          example: APPROVED
+        tokenRequestorId:
+          description: The party that requested the digitization. Type - String (Numeric). Conditional - Required if tokens are assigned by MDES
+          type: string
+          format: numeric
+          example: '12345678901'
+          maxLength: 11
+          minLength: 11
+        reasonCode:
+          description: The reason code for why the notification is being sent. This applies to all tokens in the Tokens array. Must be one of; STATUS_UPDATE - The status of the tokens has been changed, REDIGITIZATION_COMPLETE - The token has been re-digitized to the device, DELETED_FROM_CONSUMER_APP = The token has been deleted from the consumer application. The token may still be active.
+          type: string
+          format: string
+          example: REDIGITIZATION_COMPLETE
+          maxLength: 32
+          minLength: 1
+        source:
+          description: 'The source of this account information. Must be one of - ACCOUNT_ON_FILE : Source was an existing account on file, - ACCOUNT_ADDED_MANUALLY: Source was a new account entered manually be the account holder, - ACCOUNT_ADDED_VIA_APPLICATION: Source was new account added by another application (for example, Issuer banking app), - EXISTING_TOKEN_CREDENTIAL: Source was an existing token, - ACCOUNT_ADDED_VIA_BROWSER: Source was browser.
+
+            '
+          type: string
+          example: ACCOUNT_ADDED_VIA_APPLICATION
+          maxLength: 32
+          minLength: 1
+        correlationId:
+          description: Value linking pre-digitization messages generated during provisioning.
+          type: string
+          format: alphanumeric
+          example: D98765432104
+          maxLength: 14
+          minLength: 1
+        tokenizedMetaData:
+          description: Account holder information and other financial information
+          $ref: '#/components/schemas/MetaData'
+        walletInfo:
+          description: Contains information about the wallet.
+          $ref: '#/components/schemas/WalletInfo'
+        walletProviderDecisioningInfo:
+          description: Contains information about the decision recommended by the Wallet Provider.
+          $ref: '#/components/schemas/WalletProviderDecisioningInfo'
+        vcnInfo:
+          $ref: '#/components/schemas/VcnInfo'
+        rcnInfo:
+          $ref: '#/components/schemas/RcnInfo'
+      required:
+      - tokenType
+      - eventType
+      - tokenRequestorId
+      - correlationId
+      - vcnInfo
+      - rcnInfo
+    BillingAddressSchema:
+      properties:
+        line1:
+          description: First line of the billing address.
+          type: string
+          format: alphanumeric
+          example: 100 1st Street
+          maxLength: 64
+          minLength: 1
+        line2:
+          description: Second line of the billing address.
+          type: string
+          format: alphanumeric
+          example: Apt. 4B
+          maxLength: 64
+          minLength: 1
+        city:
+          description: The city of the billing address.
+          type: string
+          format: string
+          example: St. Louis
+          maxLength: 32
+          minLength: 1
+        countrySubdivision:
+          description: The country subdivision (for example, the state in the U.S.) of the billing address.
+          type: string
+          format: alphanumeric
+          example: MO
+          maxLength: 12
+          minLength: 1
+        postalCode:
+          description: The postal code (for example, zip code in the U.S.) of the billing address.
+          type: string
+          format: numeric
+          example: '61000'
+          maxLength: 16
+          minLength: 1
+        country:
+          description: The country of the billing address. Expressed as a 3-letter (alpha-3) country code as defined in ISO 3166 -1
+          type: string
+          format: string
+          example: USA
+          maxLength: 3
+          minLength: 3
+    PhoneNumberSchema:
+      properties:
+        countryDialInCode:
+          description: The country code for the phone number. E.g. 1 for US or 44 for UK
+          type: string
+          format: numeric
+          example: '1'
+          maxLength: 4
+          minLength: 1
+        phoneNumber:
+          description: The phone number, may contain country code along with phone number when countryDialInCode is not present.
+          type: string
+          format: numeric
+          example: '4692392391'
+          maxLength: 20
+          minLength: 1
     DeviceInfo:
       properties:
         deviceName:
@@ -254,92 +488,6 @@ components:
           example: CAMERA
           maxLength: 32
           minLength: 1
-    BillingAddressSchema:
-      properties:
-        line1:
-          description: First line of the billing address.
-          type: string
-          format: alphanumeric
-          example: 100 1st Street
-          maxLength: 64
-          minLength: 1
-        line2:
-          description: Second line of the billing address.
-          type: string
-          format: alphanumeric
-          example: Apt. 4B
-          maxLength: 64
-          minLength: 1
-        city:
-          description: The city of the billing address.
-          type: string
-          format: string
-          example: St. Louis
-          maxLength: 32
-          minLength: 1
-        countrySubdivision:
-          description: The country subdivision (for example, the state in the U.S.) of the billing address.
-          type: string
-          format: alphanumeric
-          example: MO
-          maxLength: 12
-          minLength: 1
-        postalCode:
-          description: The postal code (for example, zip code in the U.S.) of the billing address.
-          type: string
-          format: numeric
-          example: '61000'
-          maxLength: 16
-          minLength: 1
-        country:
-          description: The country of the billing address. Expressed as a 3-letter (alpha-3) country code as defined in ISO 3166 -1
-          type: string
-          format: string
-          example: USA
-          maxLength: 3
-          minLength: 3
-    ForbiddenError:
-      properties:
-        Errors:
-          $ref: '#/components/schemas/Errors'
-      required:
-      - Errors
-    MetaData:
-      properties:
-        accountHolderData:
-          description: Additional information that can be used to identify the account holder, such as name, address
-          $ref: '#/components/schemas/AccountHolderDataSchema'
-        paymentAccountReference:
-          description: The unique account reference assigned to the PAN
-          type: string
-          format: alphanumeric
-          example: 512381d9f8e0629211e3949a08002
-          maxLength: 29
-          minLength: 29
-        deviceInfo:
-          description: Contains information about the target device to be provisioned. Max length - Not applicable. Type - Map (DeviceInfo).
-          $ref: '#/components/schemas/DeviceInfo'
-        accountIdHash:
-          description: SHA-256 hash of the Account holders account ID with the Payment App Provider. Typically expected to be an email address. Type - string (Alpha Numeric) Hex-encoded data (case-insensitive)
-          type: string
-          format: alphanumeric
-          example: 5ae9c9890b326bd23bfa9db9672298ae3b10a9388e56ec17a001e191f24572aa
-          maxLength: 64
-          minLength: 1
-        activeTokenCount:
-          description: The number of active tokens that already exist for the Funding Account based on the token type. Secure Element and Cloud tokens are counted together. Valid values are 0 to 99. A value of 99 means there are 99 or more active tokens. Tokens that have been deleted from the wallet are excluded from the count. Max length - 2.
-          type: string
-          format: numeric
-          example: '3'
-          maxLength: 2
-          minLength: 1
-        consumerFacingEntityName:
-          description: Entity name that account holder recognizes as being where they store their PAN (wallets, merchants, commerce platforms )
-          type: string
-          format: string
-          example: MerchantName
-          maxLength: 100
-          minLength: 1
     Errors:
       type: object
       required:
@@ -347,12 +495,6 @@ components:
       properties:
         Error:
           $ref: '#/components/schemas/ErrorList'
-    ResourceNotFoundError:
-      properties:
-        Errors:
-          $ref: '#/components/schemas/Errors'
-      required:
-      - Errors
     VcnInfo:
       properties:
         accountNumber:
@@ -390,6 +532,53 @@ components:
       required:
       - accountNumber
       - expiry
+    Error:
+      properties:
+        Source:
+          description: The error description that corresponds to error code when there is any error occurred while retrieving the trsansaction.
+          type: string
+          format: alphanumeric
+          example: Expiry date should be of 7 characters.
+          maxLength: 255
+          minLength: 1
+        ReasonCode:
+          description: The reason code specifies the error code that corresponds to the description
+          type: string
+          format: alphanumeric
+          example: WTPM0002
+          maxLength: 10
+          minLength: 1
+        Description:
+          description: The error description that corresponds to error code when there is any error occurred while retrieving the trsansaction.
+          type: string
+          format: alphanumeric
+          example: Expiry date should be of 7 characters.
+          maxLength: 255
+          minLength: 1
+        recoverable:
+          description: Recoverable to be sent to the Client
+          type: boolean
+          format: boolean
+          example: 'true'
+        Details:
+          description: The error description that corresponds to error code when there is any error occurred while retrieving the trsansaction.
+          type: string
+          format: alphanumeric
+          example: Expiry date should be of 7 characters.
+          maxLength: 255
+          minLength: 1
+      required:
+      - Source
+      - ReasonCode
+      - Description
+      - recoverable
+      - Details
+    InternalServerErrorResponse:
+      properties:
+        Errors:
+          $ref: '#/components/schemas/Errors'
+      required:
+      - Errors
     WalletProviderDecisioningInfo:
       properties:
         recommendedDecision:
@@ -447,195 +636,6 @@ components:
           $ref: '#/components/schemas/Errors'
       required:
       - Errors
-    Error:
-      properties:
-        Source:
-          description: The error description that corresponds to error code when there is any error occurred while retrieving the trsansaction.
-          type: string
-          format: alphanumeric
-          example: Expiry date should be of 7 characters.
-          maxLength: 255
-          minLength: 1
-        ReasonCode:
-          description: The reason code specifies the error code that corresponds to the description
-          type: string
-          format: alphanumeric
-          example: WTPM0002
-          maxLength: 10
-          minLength: 1
-        Description:
-          description: The error description that corresponds to error code when there is any error occurred while retrieving the trsansaction.
-          type: string
-          format: alphanumeric
-          example: Expiry date should be of 7 characters.
-          maxLength: 255
-          minLength: 1
-        recoverable:
-          description: Recoverable to be sent to the Client
-          type: boolean
-          format: boolean
-          example: 'true'
-        Details:
-          description: The error description that corresponds to error code when there is any error occurred while retrieving the trsansaction.
-          type: string
-          format: alphanumeric
-          example: Expiry date should be of 7 characters.
-          maxLength: 255
-          minLength: 1
-      required:
-      - Source
-      - ReasonCode
-      - Description
-      - recoverable
-      - Details
-    AccountHolderDataSchema:
-      properties:
-        accountHolderName:
-          description: The name of the account holder in the format LASTNAME/FIRSTNAME or FIRSTNAME LASTNAME
-          type: string
-          format: string
-          example: John Doe
-          maxLength: 27
-          minLength: 1
-        accountHolderAddress:
-          description: The address for the account holder. Verified as part of reaching the digitization decision.
-          $ref: '#/components/schemas/BillingAddressSchema'
-        sourceIp:
-          description: The IP of the device initiating the request.
-          type: string
-          format: numeric
-          example: 127.0.0.1
-          maxLength: 64
-          minLength: 7
-        deviceLocation:
-          description: Latitude and longitude where the device the consumer is attempting to authorize is located. In the format "(sign) latitude/(sign) longitude" with a precision of 2 decimal places. Ex:"38.63/-90.2". Latitude is between -90 and 90. Longitude between -180 and 180.
-          type: string
-          format: numeric
-          example: 38.63/-90.2
-          maxLength: 64
-          minLength: 1
-        consumerIdentifier:
-          description: Consumer Identifier provided by the token requestor. Not required   Optionally present in AuthorizeService when provided by the wallet provider.
-          type: string
-          format: alphanumeric
-          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e93452c1b24f24a24b
-          maxLength: 88
-          minLength: 1
-        accountHolderEmailAddress:
-          description: The email address of the account holder. Not required - Optionally present in pushAccount request. Not present otherwise.
-          type: string
-          format: alphanumeric
-          example: abcdef@xyz.com
-          maxLength: 320
-          minLength: 6
-        accountHolderMobilePhoneNumber:
-          description: The mobile phone number of the account holder. Not required.
-          $ref: '#/components/schemas/PhoneNumberSchema'
-    WalletInfo:
-      properties:
-        walletId:
-          description: The identifier of the Wallet Provider who requested the digitization. Only present when the token is provided to a Wallet Provider
-          type: string
-          format: numeric
-          example: '123'
-          maxLength: 3
-          minLength: 1
-        paymentAppInstanceId:
-          description: The identifier of the Payment App instance within a device that will be provisioned with a token. Only present when supplied by a Wallet Provider.
-          type: string
-          format: alphanumeric
-          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e
-          maxLength: 48
-          minLength: 1
-        secureElementId:
-          description: The identifier of the Secure Element to be provisioned with the token. Present only when the token is provisioned to a Secure Element and when provided by the Wallet Provider. Not required
-          type: string
-          format: alphanumeric
-          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e93452c
-          maxLength: 128
-          minLength: 1
-    TokenProvisioningEventRequest:
-      properties:
-        tokenInfo:
-          description: The Token Information for this service request
-          $ref: '#/components/schemas/TokenInfo'
-        tokenType:
-          description: The type of token requested for this digitization. Valid values are EMBEDDED_SE = Embedded Secure Element | CLOUD = Mastercard Cloud-Based Payments | STATIC = Static token.
-          type: string
-          format: string
-          example: CLOUD
-          maxLength: 16
-          minLength: 1
-        eventType:
-          description: The type of the provisioning event  [ APPROVED, REQUIRE_ADDITIONAL_AUTHENTICATION, COMPLETED, REJECTED ]
-          type: string
-          format: string
-          example: APPROVED
-        tokenRequestorId:
-          description: The party that requested the digitization. Type - String (Numeric). Conditional - Required if tokens are assigned by MDES
-          type: string
-          format: numeric
-          example: '12345678901'
-          maxLength: 11
-          minLength: 11
-        reasonCode:
-          description: The reason code for why the notification is being sent. This applies to all tokens in the Tokens array. Must be one of; STATUS_UPDATE - The status of the tokens has been changed, REDIGITIZATION_COMPLETE - The token has been re-digitized to the device, DELETED_FROM_CONSUMER_APP = The token has been deleted from the consumer application. The token may still be active.
-          type: string
-          format: string
-          example: REDIGITIZATION_COMPLETE
-          maxLength: 32
-          minLength: 1
-        source:
-          description: 'The source of this account information. Must be one of - ACCOUNT_ON_FILE : Source was an existing account on file, - ACCOUNT_ADDED_MANUALLY: Source was a new account entered manually be the account holder, - ACCOUNT_ADDED_VIA_APPLICATION: Source was new account added by another application (for example, Issuer banking app), - EXISTING_TOKEN_CREDENTIAL: Source was an existing token, - ACCOUNT_ADDED_VIA_BROWSER: Source was browser.
-
-            '
-          type: string
-          example: ACCOUNT_ADDED_VIA_APPLICATION
-          maxLength: 32
-          minLength: 1
-        correlationId:
-          description: Value linking pre-digitization messages generated during provisioning.
-          type: string
-          format: alphanumeric
-          example: D98765432104
-          maxLength: 14
-          minLength: 1
-        tokenizedMetaData:
-          description: Account holder information and other financial information
-          $ref: '#/components/schemas/MetaData'
-        walletInfo:
-          description: Contains information about the wallet.
-          $ref: '#/components/schemas/WalletInfo'
-        walletProviderDecisioningInfo:
-          description: Contains information about the decision recommended by the Wallet Provider.
-          $ref: '#/components/schemas/WalletProviderDecisioningInfo'
-        vcnInfo:
-          $ref: '#/components/schemas/VcnInfo'
-        rcnInfo:
-          $ref: '#/components/schemas/RcnInfo'
-      required:
-      - tokenType
-      - eventType
-      - tokenRequestorId
-      - correlationId
-      - vcnInfo
-      - rcnInfo
-    PhoneNumberSchema:
-      properties:
-        countryDialInCode:
-          description: The country code for the phone number. E.g. 1 for US or 44 for UK
-          type: string
-          format: numeric
-          example: '1'
-          maxLength: 4
-          minLength: 1
-        phoneNumber:
-          description: The phone number, may contain country code along with phone number when countryDialInCode is not present.
-          type: string
-          format: numeric
-          example: '4692392391'
-          maxLength: 20
-          minLength: 1
   securitySchemes:
     clientCredentials:
       type: oauth2

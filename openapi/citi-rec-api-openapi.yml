@@ -212,466 +212,6 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    RecStatus:
-      type: object
-      title: Status da Recorrência
-      required:
-      - status
-      properties:
-        status:
-          type: string
-          title: Status do registro da recorrência
-          enum:
-          - CRIADA
-          - APROVADA
-          - REJEITADA
-          - EXPIRADA
-          - CANCELADA
-    RecPayload:
-      type: object
-      title: Payload da Recorrência
-      required:
-      - idRec
-      - atualizacao
-      - recebedor
-      description: Atributos de Configuração de Recorrência
-      allOf:
-      - type: object
-        properties:
-          idRec:
-            $ref: '#/components/schemas/RecId'
-      - $ref: '#/components/schemas/RecBase'
-      - type: object
-        properties:
-          recebedor:
-            oneOf:
-            - $ref: '#/components/schemas/PessoaJuridicaRecorrencia'
-            allOf:
-            - type: object
-              required:
-              - ispbParticipante
-              properties:
-                ispbParticipante:
-                  type: string
-                  title: ISPB do usuário recebedor.
-                  description: ISPB do usuário recebedor.
-                  pattern: \d{8}
-      - $ref: '#/components/schemas/RecConfiguracao'
-      - $ref: '#/components/schemas/RecAtualizacao'
-    SolicRecAtualizacao:
-      type: object
-      title: Histórico de Status da Solicitação de Recorrência
-      required:
-      - atualizacao
-      properties:
-        atualizacao:
-          type: array
-          title: Histórico de Status da Solicitação de Recorrência
-          description: ''
-          items:
-            type: object
-            required:
-            - status
-            - data
-            properties:
-              status:
-                type: string
-                title: Status do registro da solicitação de recorrência
-                enum:
-                - CRIADA
-                - ENVIADA
-                - RECEBIDA
-                - REJEITADA
-                - ACEITA
-                - EXPIRADA
-                - CANCELADA
-              data:
-                type: string
-                format: date-time
-                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
-    Problema:
-      type: object
-      required:
-      - type
-      - title
-      - status
-      properties:
-        type:
-          type: string
-          format: uri
-          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
-          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title:
-          type: string
-          description: Descrição resumida do problema.
-          example: Not found
-        status:
-          type: integer
-          description: Código HTTP do status retornado.
-          example: 404
-        detail:
-          type: string
-          description: Descrição completa do problema.
-        correlationId:
-          type: string
-          description: Identificador de correlação do problema para fins de suporte
-        violacoes:
-          type: array
-          items:
-            $ref: '#/components/schemas/Violacao'
-    PayloadLocationRecId:
-      type: integer
-      format: int64
-      title: Id da location
-      description: Identificador da location a ser informada na criação de uma recorrência .
-    SolicRecStatus:
-      type: object
-      title: Status da Solicitação de Recorrência
-      required:
-      - status
-      properties:
-        status:
-          type: string
-          title: Status do registro da solicitação de recorrência
-          enum:
-          - CRIADA
-          - ENVIADA
-          - RECEBIDA
-          - REJEITADA
-          - ACEITA
-          - EXPIRADA
-          - CANCELADA
-    RecAtivacao:
-      type: object
-      title: Dados relacionados à confirmação da ativação da recorrência.
-      properties:
-        ativacao:
-          type: object
-          title: Dados relacionados à confirmação da ativação da recorrência.
-          required:
-          - tipoJornada
-          description: Dados relacionados à confirmação da ativação da recorrência.
-          properties:
-            tipoJornada:
-              type: string
-              title: Jornada de ativação
-              description: "Dado relacionado ao caminho percorrido pelo processo de adesão a recorrência pelo usuário pagador, os valores possíveis são:\n  - JORNADA_1: Usuário pagador aceitou a recorrência através de notificação externa ao ecossistema\n  - JORNADA_2: Usuário pagador aceitou a recorrência através de leitura de QR Code de recorrência\n  - JORNADA_3: Usuário pagador iniciou a recorrência através de leitura de QR Code composto e pagamento de cobrança imediata. O uso desta jornada torna obrigatório o preenchimento da informação dadosJornada.txid\n  - JORNADA_4: Usuário pagador escolheu aderir à recorrência através de leitura de QR Code composto relacionado à cobrança com vencimento ou estática relacionada a um contrato vigente\n  - AGUARDANDO_DEFINICAO: Valor inicial posterior a criação e anterior a ativação da recorrência.\n"
-              enum:
-              - JORNADA_1
-              - JORNADA_2
-              - JORNADA_3
-              - JORNADA_4
-              - AGUARDANDO_DEFINICAO
-            dadosJornada:
-              type: object
-              title: Dados de confirmação da jornada e início da recorrência
-              oneOf:
-              - type: object
-                title: Cobrança imediata vinculada à Jornada 3
-                required:
-                - txid
-                description: Dado de preenchimento obrigatório quando utilizada a Jornada 3. Este campo deve ser removido pelo PSP Recebedor quando a ativação for realizada pelas jornadas 1, 2 ou 4.
-                properties:
-                  txid:
-                    $ref: '#/components/schemas/TxId'
-    RecSolicitada:
-      type: object
-      title: Recorrência Solicitada
-      description: Atributos de Configuração de Recorrência
-      allOf:
-      - $ref: '#/components/schemas/RecBase'
-      - type: object
-        properties:
-          recebedor:
-            type: object
-            title: Recebedor
-            properties:
-              convenio:
-                type: string
-                title: Convênio
-                description: Convênio entre usuário e participante recebedor.
-                minLength: 1
-                maxLength: 60
-                example: Master
-      - $ref: '#/components/schemas/RecConfiguracao'
-      - type: object
-        properties:
-          loc:
-            allOf:
-            - $ref: '#/components/schemas/PayloadLocationRecId'
-      - $ref: '#/components/schemas/RecAtivacaoSolicitada'
-    DadosPagadorRec:
-      type: object
-      title: Dados do Pagador
-      required:
-      - ispbParticipante
-      properties:
-        pagador:
-          allOf:
-          - type: object
-            properties:
-              ispbParticipante:
-                type: string
-                title: ISPB do PSP pagador.
-                description: ISPB do PSP pagador.
-                pattern: \d{8}
-          - type: object
-            properties:
-              codMun:
-                title: Código do município
-                description: 'Código baseado na Tabela de Códigos de Municípios do __[IBGE](https://www.ibge.gov.br/explica/codigos-dos-municipios.php)__ que apresenta a lista dos municípios brasileiros associados a um código composto de 7 dígitos, sendo os dois primeiros referentes ao código da Unidade da Federação.
-
-                  '
-                type: string
-                pattern: /^\d{7}$/
-          oneOf:
-          - $ref: '#/components/schemas/CPF'
-          - $ref: '#/components/schemas/CNPJ'
-    RecsConsultadas:
-      type: object
-      title: Recorrencias consultadas
-      required:
-      - parametros
-      - recs
-      properties:
-        parametros:
-          $ref: '#/components/schemas/ParametrosConsultaRec'
-        recs:
-          type: array
-          title: Lista de recorrências
-          items:
-            allOf:
-            - $ref: '#/components/schemas/RecCompletaPesquisada'
-    PessoaFisicaRecorrencia:
-      type: object
-      required:
-      - cpf
-      - nome
-      title: Pessoa Física
-      properties:
-        cpf:
-          type: string
-          title: CPF
-          pattern: /^\d{11}$/
-          example: '45164632481'
-          description: CPF do usuário.
-        nome:
-          type: string
-          title: Nome
-          description: Nome do usuário.
-          minLength: 1
-          maxLength: 140
-          example: Fulano de Tal
-    RecGerada:
-      type: object
-      title: Recorrência Gerada
-      required:
-      - recebedor
-      description: Atributos de Configuração de Recorrência
-      allOf:
-      - type: object
-        properties:
-          idRec:
-            $ref: '#/components/schemas/RecId'
-      - $ref: '#/components/schemas/RecBase'
-      - type: object
-        properties:
-          recebedor:
-            title: Racebedor
-            oneOf:
-            - $ref: '#/components/schemas/PessoaJuridicaRecorrencia'
-            allOf:
-            - type: object
-              properties:
-                convenio:
-                  type: string
-                  title: Convênio
-                  description: Convênio entre usuário e participante recebedor.
-                  maxLength: 60
-      - $ref: '#/components/schemas/RecStatus'
-      - type: object
-        properties:
-          loc:
-            allOf:
-            - $ref: '#/components/schemas/PayloadLocationRecCompleta'
-      - $ref: '#/components/schemas/RecAtualizacao'
-      - $ref: '#/components/schemas/RecEncerramento'
-      - $ref: '#/components/schemas/RecAtivacao'
-    CNPJ:
-      type: object
-      required:
-      - cnpj
-      title: Pessoa Jurídica
-      properties:
-        cnpj:
-          type: string
-          title: CNPJ
-          pattern: /^\d{14}$/
-          description: CNPJ do usuário.
-    ParametrosConsultaRec:
-      type: object
-      title: Parâmetros de Consulta de Recorrências
-      description: Parâmetros utilizados para a realização de uma consulta de recorrências.
-      required:
-      - inicio
-      - fim
-      - paginacao
-      properties:
-        inicio:
-          type: string
-          format: date-time
-          title: Data de Início
-          description: Data inicial utilizada na consulta. Respeita RFC 3339.
-          example: '2020-04-01T00:00:00Z'
-        fim:
-          type: string
-          format: date-time
-          title: Data de Fim
-          description: Data de fim utilizada na consulta. Respeita RFC 3339.
-          example: '2020-04-01T17:00:00Z'
-        cpf:
-          type: string
-          title: CPF
-          pattern: /^\d{11}$/
-          description: Filtro pelo CPF do devedor. Não pode ser utilizado ao mesmo tempo que o CNPJ.
-        cnpj:
-          type: string
-          title: CNPJ
-          pattern: /^\d{14}$/
-          description: Filtro pelo CNPJ do devedor. Não pode ser utilizado ao mesmo tempo que o CPF.
-        locationPresente:
-          type: boolean
-          description: Filtro pela existência de location vinculada.
-        status:
-          type: string
-          title: Status do registro da recorrência
-          description: Filtro pelo status das recorrências.
-        recebedor:
-          type: object
-          title: Recebedor
-          properties:
-            convenio:
-              type: string
-              title: Convênio
-              description: Convênio entre usuário e participante recebedor.
-              maxLength: 60
-        paginacao:
-          $ref: '#/components/schemas/Paginacao'
-    SolicRecId:
-      type: object
-      title: Id da Solicitação de recorrência
-      required:
-      - idSolicRec
-      description: Dados criados ou alterados da cobrança recorrente via API Pix
-      properties:
-        idSolicRec:
-          type: string
-          title: ID Solicitação da Recorrência
-          description: "# Identificador da Solicitação da Recorrência\n\nRegra de formação:\n- SCxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; “case sensitive”, isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - SC - fixo (2 caracteres);\n  - xxxxxxxx – ISPB do agente que envia a mensagem pain.009 de solicitação de confirmação da recorrência;\n  - yyyyMMdd – data (8 caracteres) de criação da mensagem pain.009 de solicitação de confirmação da recorrência;\n  - kkkkkkkkkkk – sequencial criado pelo agente que gerou a mensagem de solicitação de confirmação da recorrência (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada “yyyyMMdd”.\n"
-          pattern: '[a-zA-Z0-9]{29}'
-          minLength: 29
-          maxLength: 29
-          example: SC1234567820240115abcdefghijk
-    RecAtualizacao:
-      type: object
-      title: Histórico de atualização da recorrência.
-      required:
-      - atualizacao
-      properties:
-        atualizacao:
-          type: array
-          title: Histórico de Status
-          description: Histórico das mudanças de status da recorrência.
-          items:
-            type: object
-            required:
-            - status
-            - data
-            properties:
-              status:
-                type: string
-                title: Status da recorrência
-                description: Status da recorrência.
-                enum:
-                - CRIADA
-                - APROVADA
-                - REJEITADA
-                - EXPIRADA
-                - CANCELADA
-              data:
-                type: string
-                format: date-time
-                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
-    PayloadLocationRecCompleta:
-      type: object
-      title: Location do Payload Completa
-      description: Identificador da localização do payload completo.
-      allOf:
-      - $ref: '#/components/schemas/PayloadLocationRecGerada'
-      - type: object
-        properties:
-          idRec:
-            $ref: '#/components/schemas/RecId'
-    Violacao:
-      type: object
-      title: Violações
-      properties:
-        razao:
-          type: string
-          title: Descrição do erro
-          description: Descrição do erro
-          example: Valor da cobrança não pode ser 0.00
-        propriedade:
-          type: string
-          title: Nome da propriedade
-          description: Nome da propriedade
-          example: cob.chave
-        valor:
-          type: string
-          title: Valor da propriedade
-          description: Valor da propriedade
-          example: 061996671234
-    SolicRecCompleta:
-      type: object
-      title: Solicitação de Recorrência Completa
-      required:
-      - rec
-      description: Dados criados ou alterados da solicitação da recorrência
-      allOf:
-      - $ref: '#/components/schemas/SolicRecId'
-      - $ref: '#/components/schemas/SolicRecBase'
-      - $ref: '#/components/schemas/SolicRecStatus'
-      - $ref: '#/components/schemas/SolicRecAtualizacao'
-      - type: object
-        properties:
-          recPayload:
-            $ref: '#/components/schemas/RecPayload'
-    PayloadLocationRecGerada:
-      type: object
-      title: Location do Payload Completa
-      description: Identificador da localização do payload completo.
-      required:
-      - id
-      - location
-      - tipo
-      - criacao
-      properties:
-        id:
-          $ref: '#/components/schemas/PayloadLocationRecId'
-        location:
-          type: string
-          title: Localização do payload
-          description: Localização do Payload a ser informada na criação da recorrência.
-          maxLength: 77
-          format: uri
-          example: pix.example.com/qr/v2/rec/2353c790eefb11eaadc10242ac120002
-          readOnly: true
-        criacao:
-          type: string
-          format: date-time
-          title: Data de Criação
-          description: Data e hora em que a location foi criada. Respeita RFC 3339.
-          readOnly: true
     RecRevisada:
       type: object
       title: Recorrência Revisada
@@ -736,18 +276,245 @@ components:
                 description: Trata-se de uma data, no formato `YYYY-MM-DD`, segundo ISO 8601. Data estimada de primeiro pagamento.
                 example: '2023-04-01'
       - $ref: '#/components/schemas/RecAtivacaoSolicitada'
-    RecConfiguracao:
+    PessoaJuridicaRecorrencia:
       type: object
-      title: Configuração da Recorrência
       required:
-      - politicaRetentativa
+      - cnpj
+      - nome
+      title: Pessoa Jurídica
       properties:
-        politicaRetentativa:
+        cnpj:
           type: string
-          title: Política de retentativa pós vencimento da recorrência
+          title: CNPJ
+          pattern: /^\d{14}$/
+          example: '45164632481234'
+          description: CNPJ do usuário.
+        nome:
+          type: string
+          title: Nome
+          description: Nome do usuário.
+          minLength: 1
+          maxLength: 140
+          example: Fulano de Tal
+    SolicRecStatus:
+      type: object
+      title: Status da Solicitação de Recorrência
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          title: Status do registro da solicitação de recorrência
           enum:
-          - NAO_PERMITE
-          - PERMITE_3R_7D
+          - CRIADA
+          - ENVIADA
+          - RECEBIDA
+          - REJEITADA
+          - ACEITA
+          - EXPIRADA
+          - CANCELADA
+    SolicRecCompleta:
+      type: object
+      title: Solicitação de Recorrência Completa
+      required:
+      - rec
+      description: Dados criados ou alterados da solicitação da recorrência
+      allOf:
+      - $ref: '#/components/schemas/SolicRecId'
+      - $ref: '#/components/schemas/SolicRecBase'
+      - $ref: '#/components/schemas/SolicRecStatus'
+      - $ref: '#/components/schemas/SolicRecAtualizacao'
+      - type: object
+        properties:
+          recPayload:
+            $ref: '#/components/schemas/RecPayload'
+    CNPJ:
+      type: object
+      required:
+      - cnpj
+      title: Pessoa Jurídica
+      properties:
+        cnpj:
+          type: string
+          title: CNPJ
+          pattern: /^\d{14}$/
+          description: CNPJ do usuário.
+    RecStatus:
+      type: object
+      title: Status da Recorrência
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          title: Status do registro da recorrência
+          enum:
+          - CRIADA
+          - APROVADA
+          - REJEITADA
+          - EXPIRADA
+          - CANCELADA
+    RecId:
+      type: string
+      title: ID Recorrência
+      description: "# Identificador da Recorrência\n\nRegra de formação:\n- RAxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; \"case sensitive\", isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - \"R\":  fixo (1 caractere). \"R\" para a recorrência criada dentro do Pix;\n  - \"A\": identificação da possibilidade de novas tentativas, sendo possíveis os valores \"R\" ou \"N\" (1 caractere). \"R\" caso a recorrência permita novas tentativas de pagamento pós vencimento, ou \"N\" caso não permita novas tentativas.\n  - \"xxxxxxxx\":  identificação do agente que presta serviço para o usuário recebedor que gerou o <Id>, podendo ser: o ISPB do participante direto, o ISPB do participante indireto ou os 8 primeiros dígitos do CNPJ do prestador de serviço de iniciação (8 caracteres numéricos [0-9]);\n  - \"yyyyMMdd\":  data (8 caracteres) de criação da recorrência;\n  - \"kkkkkkkkkkk\": sequencial criado pelo agente que gerou o <Id> (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada \"yyyyMMdd\".\n\nDessa forma, o ID da recorrência deve ser formado de acordo com um dos tipos a seguir:\n- \"RRxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que permite novas tentativas de pagamento pós vencimento; ou\n- \"RNxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que não permite novas tentativas de pagamento pós vencimento.”\n"
+      pattern: '[a-zA-Z0-9]{29}'
+      minLength: 29
+      maxLength: 29
+      example: RR1234567820240115abcdefghijk
+    ParametrosConsultaRec:
+      type: object
+      title: Parâmetros de Consulta de Recorrências
+      description: Parâmetros utilizados para a realização de uma consulta de recorrências.
+      required:
+      - inicio
+      - fim
+      - paginacao
+      properties:
+        inicio:
+          type: string
+          format: date-time
+          title: Data de Início
+          description: Data inicial utilizada na consulta. Respeita RFC 3339.
+          example: '2020-04-01T00:00:00Z'
+        fim:
+          type: string
+          format: date-time
+          title: Data de Fim
+          description: Data de fim utilizada na consulta. Respeita RFC 3339.
+          example: '2020-04-01T17:00:00Z'
+        cpf:
+          type: string
+          title: CPF
+          pattern: /^\d{11}$/
+          description: Filtro pelo CPF do devedor. Não pode ser utilizado ao mesmo tempo que o CNPJ.
+        cnpj:
+          type: string
+          title: CNPJ
+          pattern: /^\d{14}$/
+          description: Filtro pelo CNPJ do devedor. Não pode ser utilizado ao mesmo tempo que o CPF.
+        locationPresente:
+          type: boolean
+          description: Filtro pela existência de location vinculada.
+        status:
+          type: string
+          title: Status do registro da recorrência
+          description: Filtro pelo status das recorrências.
+        recebedor:
+          type: object
+          title: Recebedor
+          properties:
+            convenio:
+              type: string
+              title: Convênio
+              description: Convênio entre usuário e participante recebedor.
+              maxLength: 60
+        paginacao:
+          $ref: '#/components/schemas/Paginacao'
+    RecCompletaPesquisada:
+      type: object
+      title: Recorrência Completa Pesquisada
+      required:
+      - status
+      - recebedor
+      description: Atributos de Configuração de Recorrência
+      allOf:
+      - type: object
+        properties:
+          idRec:
+            $ref: '#/components/schemas/RecId'
+      - $ref: '#/components/schemas/RecBase'
+      - type: object
+        properties:
+          recebedor:
+            oneOf:
+            - $ref: '#/components/schemas/PessoaJuridicaRecorrencia'
+            allOf:
+            - type: object
+              properties:
+                convenio:
+                  type: string
+                  title: Convênio
+                  description: Convênio entre usuário e participante recebedor.
+                  maxLength: 60
+      - $ref: '#/components/schemas/DadosPagadorRec'
+      - $ref: '#/components/schemas/RecStatus'
+      - $ref: '#/components/schemas/RecConfiguracao'
+      - type: object
+        properties:
+          loc:
+            allOf:
+            - $ref: '#/components/schemas/PayloadLocationRecCompleta'
+      - $ref: '#/components/schemas/RecAtualizacao'
+      - $ref: '#/components/schemas/RecEncerramento'
+      - type: object
+        properties:
+          solicitacao:
+            type: array
+            title: Solicitações vinculadas
+            description: Solicitações vinculadas
+            items:
+              allOf:
+              - $ref: '#/components/schemas/SolicRecCompleta'
+      - $ref: '#/components/schemas/RecAtivacao'
+    TxId:
+      type: string
+      title: Id da Transação
+      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
+      pattern: '[a-zA-Z0-9]{26,35}'
+      minLength: 26
+      maxLength: 35
+    RecAtivacaoSolicitada:
+      type: object
+      title: Dados relacionados à confirmação da ativação da recorrência.
+      properties:
+        ativacao:
+          type: object
+          title: Dados relacionados à confirmação da ativação da recorrência.
+          description: Dados relacionados à confirmação da ativação da recorrência.
+          properties:
+            dadosJornada:
+              type: object
+              title: Dados de confirmação da jornada e início da recorrência
+              oneOf:
+              - type: object
+                title: Cobrança imediata vinculada à Jornada 3
+                required:
+                - txid
+                description: Dado de preenchimento obrigatório quando utilizada a Jornada 3. Este campo deve ser removido pelo PSP Recebedor quando a ativação for realizada pelas jornadas 1, 2 ou 4.
+                properties:
+                  txid:
+                    $ref: '#/components/schemas/TxId'
+    RecAtualizacao:
+      type: object
+      title: Histórico de atualização da recorrência.
+      required:
+      - atualizacao
+      properties:
+        atualizacao:
+          type: array
+          title: Histórico de Status
+          description: Histórico das mudanças de status da recorrência.
+          items:
+            type: object
+            required:
+            - status
+            - data
+            properties:
+              status:
+                type: string
+                title: Status da recorrência
+                description: Status da recorrência.
+                enum:
+                - CRIADA
+                - APROVADA
+                - REJEITADA
+                - EXPIRADA
+                - CANCELADA
+              data:
+                type: string
+                format: date-time
+                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
     RecCompleta:
       type: object
       title: Recorrência Completa
@@ -813,61 +580,112 @@ components:
                 title: Pix Copia e Cola correspondente à Recorrência.
                 description: Este campo retorna o valor do Pix Copia e Cola correspondente à recorrência. Trata-se da sequência de caracteres que representa o BR Code.
                 maxLength: 512
-    RecAtivacaoSolicitada:
+    SolicRecAtualizacao:
       type: object
-      title: Dados relacionados à confirmação da ativação da recorrência.
-      properties:
-        ativacao:
-          type: object
-          title: Dados relacionados à confirmação da ativação da recorrência.
-          description: Dados relacionados à confirmação da ativação da recorrência.
-          properties:
-            dadosJornada:
-              type: object
-              title: Dados de confirmação da jornada e início da recorrência
-              oneOf:
-              - type: object
-                title: Cobrança imediata vinculada à Jornada 3
-                required:
-                - txid
-                description: Dado de preenchimento obrigatório quando utilizada a Jornada 3. Este campo deve ser removido pelo PSP Recebedor quando a ativação for realizada pelas jornadas 1, 2 ou 4.
-                properties:
-                  txid:
-                    $ref: '#/components/schemas/TxId'
-    Paginacao:
-      type: object
-      title: Paginação
+      title: Histórico de Status da Solicitação de Recorrência
       required:
-      - paginaAtual
-      - itensPorPagina
-      - quantidadeDePaginas
-      - quantidadeTotalDeItens
+      - atualizacao
       properties:
-        paginaAtual:
-          type: integer
-          title: Página atual
-          description: Número da página recuperada.
-          minimum: 0
-        itensPorPagina:
-          type: integer
-          title: Itens por página
-          description: Quantidade de registros retornado na página.
-          minimum: 1
-        quantidadeDePaginas:
-          type: integer
-          title: Quantidade de páginas
-          description: Quantidade de páginas disponíveis para consulta.
-          minimum: 1
-        quantidadeTotalDeItens:
-          type: integer
-          title: Quantidade total de itens
-          description: Quantidade total de itens disponíveis de acordo com os parâmetros informados.
-          minimum: 0
-    RecCompletaPesquisada:
+        atualizacao:
+          type: array
+          title: Histórico de Status da Solicitação de Recorrência
+          description: ''
+          items:
+            type: object
+            required:
+            - status
+            - data
+            properties:
+              status:
+                type: string
+                title: Status do registro da solicitação de recorrência
+                enum:
+                - CRIADA
+                - ENVIADA
+                - RECEBIDA
+                - REJEITADA
+                - ACEITA
+                - EXPIRADA
+                - CANCELADA
+              data:
+                type: string
+                format: date-time
+                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
+    PayloadLocationRecCompleta:
       type: object
-      title: Recorrência Completa Pesquisada
+      title: Location do Payload Completa
+      description: Identificador da localização do payload completo.
+      allOf:
+      - $ref: '#/components/schemas/PayloadLocationRecGerada'
+      - type: object
+        properties:
+          idRec:
+            $ref: '#/components/schemas/RecId'
+    Inicio:
+      type: string
+      format: date-time
+      title: Data de início
+      description: Filtra os registros cuja data de criação seja maior ou igual que a data de início. Respeita RFC 3339.
+    RecsConsultadas:
+      type: object
+      title: Recorrencias consultadas
       required:
-      - status
+      - parametros
+      - recs
+      properties:
+        parametros:
+          $ref: '#/components/schemas/ParametrosConsultaRec'
+        recs:
+          type: array
+          title: Lista de recorrências
+          items:
+            allOf:
+            - $ref: '#/components/schemas/RecCompletaPesquisada'
+    Violacao:
+      type: object
+      title: Violações
+      properties:
+        razao:
+          type: string
+          title: Descrição do erro
+          description: Descrição do erro
+          example: Valor da cobrança não pode ser 0.00
+        propriedade:
+          type: string
+          title: Nome da propriedade
+          description: Nome da propriedade
+          example: cob.chave
+        valor:
+          type: string
+          title: Valor da propriedade
+          description: Valor da propriedade
+          example: 061996671234
+    PessoaFisicaRecorrencia:
+      type: object
+      required:
+      - cpf
+      - nome
+      title: Pessoa Física
+      properties:
+        cpf:
+          type: string
+          title: CPF
+          pattern: /^\d{11}$/
+          example: '45164632481'
+          description: CPF do usuário.
+        nome:
+          type: string
+          title: Nome
+          description: Nome do usuário.
+          minLength: 1
+          maxLength: 140
+          example: Fulano de Tal
+    RecPayload:
+      type: object
+      title: Payload da Recorrência
+      required:
+      - idRec
+      - atualizacao
       - recebedor
       description: Atributos de Configuração de Recorrência
       allOf:
@@ -883,15 +701,106 @@ components:
             - $ref: '#/components/schemas/PessoaJuridicaRecorrencia'
             allOf:
             - type: object
+              required:
+              - ispbParticipante
+              properties:
+                ispbParticipante:
+                  type: string
+                  title: ISPB do usuário recebedor.
+                  description: ISPB do usuário recebedor.
+                  pattern: \d{8}
+      - $ref: '#/components/schemas/RecConfiguracao'
+      - $ref: '#/components/schemas/RecAtualizacao'
+    PayloadLocationRecGerada:
+      type: object
+      title: Location do Payload Completa
+      description: Identificador da localização do payload completo.
+      required:
+      - id
+      - location
+      - tipo
+      - criacao
+      properties:
+        id:
+          $ref: '#/components/schemas/PayloadLocationRecId'
+        location:
+          type: string
+          title: Localização do payload
+          description: Localização do Payload a ser informada na criação da recorrência.
+          maxLength: 77
+          format: uri
+          example: pix.example.com/qr/v2/rec/2353c790eefb11eaadc10242ac120002
+          readOnly: true
+        criacao:
+          type: string
+          format: date-time
+          title: Data de Criação
+          description: Data e hora em que a location foi criada. Respeita RFC 3339.
+          readOnly: true
+    CPF:
+      type: object
+      required:
+      - cpf
+      title: Pessoa Física
+      properties:
+        cpf:
+          type: string
+          title: CPF
+          pattern: /^\d{11}$/
+          description: CPF do usuário.
+    RecSolicitada:
+      type: object
+      title: Recorrência Solicitada
+      description: Atributos de Configuração de Recorrência
+      allOf:
+      - $ref: '#/components/schemas/RecBase'
+      - type: object
+        properties:
+          recebedor:
+            type: object
+            title: Recebedor
+            properties:
+              convenio:
+                type: string
+                title: Convênio
+                description: Convênio entre usuário e participante recebedor.
+                minLength: 1
+                maxLength: 60
+                example: Master
+      - $ref: '#/components/schemas/RecConfiguracao'
+      - type: object
+        properties:
+          loc:
+            allOf:
+            - $ref: '#/components/schemas/PayloadLocationRecId'
+      - $ref: '#/components/schemas/RecAtivacaoSolicitada'
+    RecGerada:
+      type: object
+      title: Recorrência Gerada
+      required:
+      - recebedor
+      description: Atributos de Configuração de Recorrência
+      allOf:
+      - type: object
+        properties:
+          idRec:
+            $ref: '#/components/schemas/RecId'
+      - $ref: '#/components/schemas/RecBase'
+      - type: object
+        properties:
+          recebedor:
+            title: Racebedor
+            oneOf:
+            - $ref: '#/components/schemas/PessoaJuridicaRecorrencia'
+            allOf:
+            - type: object
               properties:
                 convenio:
                   type: string
                   title: Convênio
                   description: Convênio entre usuário e participante recebedor.
                   maxLength: 60
-      - $ref: '#/components/schemas/DadosPagadorRec'
       - $ref: '#/components/schemas/RecStatus'
-      - $ref: '#/components/schemas/RecConfiguracao'
       - type: object
         properties:
           loc:
@@ -899,16 +808,203 @@ components:
             - $ref: '#/components/schemas/PayloadLocationRecCompleta'
       - $ref: '#/components/schemas/RecAtualizacao'
       - $ref: '#/components/schemas/RecEncerramento'
-      - type: object
-        properties:
-          solicitacao:
-            type: array
-            title: Solicitações vinculadas
-            description: Solicitações vinculadas
-            items:
-              allOf:
-              - $ref: '#/components/schemas/SolicRecCompleta'
       - $ref: '#/components/schemas/RecAtivacao'
+    Fim:
+      type: string
+      format: date-time
+      title: Data de fim
+      description: Filtra os registros cuja data de criação seja menor ou igual que a data de fim. Respeita RFC 3339.
+    DadosPagadorRec:
+      type: object
+      title: Dados do Pagador
+      required:
+      - ispbParticipante
+      properties:
+        pagador:
+          allOf:
+          - type: object
+            properties:
+              ispbParticipante:
+                type: string
+                title: ISPB do PSP pagador.
+                description: ISPB do PSP pagador.
+                pattern: \d{8}
+          - type: object
+            properties:
+              codMun:
+                title: Código do município
+                description: 'Código baseado na Tabela de Códigos de Municípios do __[IBGE](https://www.ibge.gov.br/explica/codigos-dos-municipios.php)__ que apresenta a lista dos municípios brasileiros associados a um código composto de 7 dígitos, sendo os dois primeiros referentes ao código da Unidade da Federação.
+
+                  '
+                type: string
+                pattern: /^\d{7}$/
+          oneOf:
+          - $ref: '#/components/schemas/CPF'
+          - $ref: '#/components/schemas/CNPJ'
+    Problema:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
+          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title:
+          type: string
+          description: Descrição resumida do problema.
+          example: Not found
+        status:
+          type: integer
+          description: Código HTTP do status retornado.
+          example: 404
+        detail:
+          type: string
+          description: Descrição completa do problema.
+        correlationId:
+          type: string
+          description: Identificador de correlação do problema para fins de suporte
+        violacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violacao'
+    RecConfiguracao:
+      type: object
+      title: Configuração da Recorrência
+      required:
+      - politicaRetentativa
+      properties:
+        politicaRetentativa:
+          type: string
+          title: Política de retentativa pós vencimento da recorrência
+          enum:
+          - NAO_PERMITE
+          - PERMITE_3R_7D
+    PayloadLocationRecId:
+      type: integer
+      format: int64
+      title: Id da location
+      description: Identificador da location a ser informada na criação de uma recorrência .
+    RecAtivacao:
+      type: object
+      title: Dados relacionados à confirmação da ativação da recorrência.
+      properties:
+        ativacao:
+          type: object
+          title: Dados relacionados à confirmação da ativação da recorrência.
+          required:
+          - tipoJornada
+          description: Dados relacionados à confirmação da ativação da recorrência.
+          properties:
+            tipoJornada:
+              type: string
+              title: Jornada de ativação
+              description: "Dado relacionado ao caminho percorrido pelo processo de adesão a recorrência pelo usuário pagador, os valores possíveis são:\n  - JORNADA_1: Usuário pagador aceitou a recorrência através de notificação externa ao ecossistema\n  - JORNADA_2: Usuário pagador aceitou a recorrência através de leitura de QR Code de recorrência\n  - JORNADA_3: Usuário pagador iniciou a recorrência através de leitura de QR Code composto e pagamento de cobrança imediata. O uso desta jornada torna obrigatório o preenchimento da informação dadosJornada.txid\n  - JORNADA_4: Usuário pagador escolheu aderir à recorrência através de leitura de QR Code composto relacionado à cobrança com vencimento ou estática relacionada a um contrato vigente\n  - AGUARDANDO_DEFINICAO: Valor inicial posterior a criação e anterior a ativação da recorrência.\n"
+              enum:
+              - JORNADA_1
+              - JORNADA_2
+              - JORNADA_3
+              - JORNADA_4
+              - AGUARDANDO_DEFINICAO
+            dadosJornada:
+              type: object
+              title: Dados de confirmação da jornada e início da recorrência
+              oneOf:
+              - type: object
+                title: Cobrança imediata vinculada à Jornada 3
+                required:
+                - txid
+                description: Dado de preenchimento obrigatório quando utilizada a Jornada 3. Este campo deve ser removido pelo PSP Recebedor quando a ativação for realizada pelas jornadas 1, 2 ou 4.
+                properties:
+                  txid:
+                    $ref: '#/components/schemas/TxId'
+    SolicRecId:
+      type: object
+      title: Id da Solicitação de recorrência
+      required:
+      - idSolicRec
+      description: Dados criados ou alterados da cobrança recorrente via API Pix
+      properties:
+        idSolicRec:
+          type: string
+          title: ID Solicitação da Recorrência
+          description: "# Identificador da Solicitação da Recorrência\n\nRegra de formação:\n- SCxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; “case sensitive”, isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - SC - fixo (2 caracteres);\n  - xxxxxxxx – ISPB do agente que envia a mensagem pain.009 de solicitação de confirmação da recorrência;\n  - yyyyMMdd – data (8 caracteres) de criação da mensagem pain.009 de solicitação de confirmação da recorrência;\n  - kkkkkkkkkkk – sequencial criado pelo agente que gerou a mensagem de solicitação de confirmação da recorrência (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada “yyyyMMdd”.\n"
+          pattern: '[a-zA-Z0-9]{29}'
+          minLength: 29
+          maxLength: 29
+          example: SC1234567820240115abcdefghijk
+    RecEncerramento:
+      type: object
+      title: Detalhamento do encerramento da recorrência.
+      properties:
+        encerramento:
+          type: object
+          title: Detalhamento do encerramento da recorrência.
+          oneOf:
+          - type: object
+            properties:
+              rejeicao:
+                type: object
+                title: Informações sobre a rejeição da recorrência
+                required:
+                - codigo
+                - descricao
+                description: Informações sobre a rejeição da recorrência
+                properties:
+                  codigo:
+                    type: string
+                    title: Código da rejeição
+                    description: Código da rejeição. Corresponde ao código de rejeição presente no catálogo de mensagens.
+                    enum:
+                    - AP13
+                    - AP14
+                    maxLength: 4
+                  descricao:
+                    type: string
+                    title: Descricao da rejeição
+                    description: Descricao da causa da rejeição
+                    maxLength: 105
+          - type: object
+            properties:
+              cancelamento:
+                type: object
+                title: Informações sobre o cancelamento da recorrência
+                required:
+                - solicitante
+                - codigo
+                - descricao
+                description: Informações sobre o cancelamento da recorrência
+                properties:
+                  solicitante:
+                    type: string
+                    title: Solicitante do cancelamento
+                    enum:
+                    - PSP_PAGADOR
+                    - USUARIO_PAGADOR
+                    - PSP_RECEBEDOR
+                    - USUARIO_RECEBEDOR
+                  codigo:
+                    type: string
+                    title: Código do cancelamento
+                    description: Código do cancelamento. Corresponde ao código de cancelamento presente no catálogo de mensagens.
+                    enum:
+                    - ACCL
+                    - CPCL
+                    - DCSD
+                    - ERSL
+                    - FRUD
+                    - PCFD
+                    - SLCR
+                    - SLDB
+                    maxLength: 4
+                  descricao:
+                    type: string
+                    title: Descricao do cancelamento
+                    description: Descricao do cancelamento.
+                    maxLength: 105
     RecBase:
       title: Recorrência Base
       type: object
@@ -1018,14 +1114,35 @@ components:
           description: Número da agência do usuário pagador.
           minLength: 1
           maxLength: 4
-    RecId:
-      type: string
-      title: ID Recorrência
-      description: "# Identificador da Recorrência\n\nRegra de formação:\n- RAxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; \"case sensitive\", isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - \"R\":  fixo (1 caractere). \"R\" para a recorrência criada dentro do Pix;\n  - \"A\": identificação da possibilidade de novas tentativas, sendo possíveis os valores \"R\" ou \"N\" (1 caractere). \"R\" caso a recorrência permita novas tentativas de pagamento pós vencimento, ou \"N\" caso não permita novas tentativas.\n  - \"xxxxxxxx\":  identificação do agente que presta serviço para o usuário recebedor que gerou o <Id>, podendo ser: o ISPB do participante direto, o ISPB do participante indireto ou os 8 primeiros dígitos do CNPJ do prestador de serviço de iniciação (8 caracteres numéricos [0-9]);\n  - \"yyyyMMdd\":  data (8 caracteres) de criação da recorrência;\n  - \"kkkkkkkkkkk\": sequencial criado pelo agente que gerou o <Id> (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada \"yyyyMMdd\".\n\nDessa forma, o ID da recorrência deve ser formado de acordo com um dos tipos a seguir:\n- \"RRxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que permite novas tentativas de pagamento pós vencimento; ou\n- \"RNxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que não permite novas tentativas de pagamento pós vencimento.”\n"
-      pattern: '[a-zA-Z0-9]{29}'
-      minLength: 29
-      maxLength: 29
-      example: RR1234567820240115abcdefghijk
+    Paginacao:
+      type: object
+      title: Paginação
+      required:
+      - paginaAtual
+      - itensPorPagina
+      - quantidadeDePaginas
+      - quantidadeTotalDeItens
+      properties:
+        paginaAtual:
+          type: integer
+          title: Página atual
+          description: Número da página recuperada.
+          minimum: 0
+        itensPorPagina:
+          type: integer
+          title: Itens por página
+          description: Quantidade de registros retornado na página.
+          minimum: 1
+        quantidadeDePaginas:
+          type: integer
+          title: Quantidade de páginas
+          description: Quantidade de páginas disponíveis para consulta.
+          minimum: 1
+        quantidadeTotalDeItens:
+          type: integer
+          title: Quantidade total de itens
+          description: Quantidade total de itens disponíveis de acordo com os parâmetros informados.
+          minimum: 0
     SolicRecBase:
       type: object
       title: Solicitação de Recorrência Base
@@ -1056,124 +1173,115 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CPF'
           - $ref: '#/components/schemas/CNPJ'
-    Fim:
-      type: string
-      format: date-time
-      title: Data de fim
-      description: Filtra os registros cuja data de criação seja menor ou igual que a data de fim. Respeita RFC 3339.
-    CPF:
-      type: object
-      required:
-      - cpf
-      title: Pessoa Física
-      properties:
-        cpf:
-          type: string
-          title: CPF
-          pattern: /^\d{11}$/
-          description: CPF do usuário.
-    Inicio:
-      type: string
-      format: date-time
-      title: Data de início
-      description: Filtra os registros cuja data de criação seja maior ou igual que a data de início. Respeita RFC 3339.
-    RecEncerramento:
-      type: object
-      title: Detalhamento do encerramento da recorrência.
-      properties:
-        encerramento:
-          type: object
-          title: Detalhamento do encerramento da recorrência.
-          oneOf:
-          - type: object
-            properties:
-              rejeicao:
-                type: object
-                title: Informações sobre a rejeição da recorrência
-                required:
-                - codigo
-                - descricao
-                description: Informações sobre a rejeição da recorrência
-                properties:
-                  codigo:
-                    type: string
-                    title: Código da rejeição
-                    description: Código da rejeição. Corresponde ao código de rejeição presente no catálogo de mensagens.
-                    enum:
-                    - AP13
-                    - AP14
-                    maxLength: 4
-                  descricao:
-                    type: string
-                    title: Descricao da rejeição
-                    description: Descricao da causa da rejeição
-                    maxLength: 105
-          - type: object
-            properties:
-              cancelamento:
-                type: object
-                title: Informações sobre o cancelamento da recorrência
-                required:
-                - solicitante
-                - codigo
-                - descricao
-                description: Informações sobre o cancelamento da recorrência
-                properties:
-                  solicitante:
-                    type: string
-                    title: Solicitante do cancelamento
-                    enum:
-                    - PSP_PAGADOR
-                    - USUARIO_PAGADOR
-                    - PSP_RECEBEDOR
-                    - USUARIO_RECEBEDOR
-                  codigo:
-                    type: string
-                    title: Código do cancelamento
-                    description: Código do cancelamento. Corresponde ao código de cancelamento presente no catálogo de mensagens.
-                    enum:
-                    - ACCL
-                    - CPCL
-                    - DCSD
-                    - ERSL
-                    - FRUD
-                    - PCFD
-                    - SLCR
-                    - SLDB
-                    maxLength: 4
-                  descricao:
-                    type: string
-                    title: Descricao do cancelamento
-                    description: Descricao do cancelamento.
-                    maxLength: 105
-    TxId:
-      type: string
-      title: Id da Transação
-      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
-      pattern: '[a-zA-Z0-9]{26,35}'
-      minLength: 26
-      maxLength: 35
-    PessoaJuridicaRecorrencia:
-      type: object
-      required:
-      - cnpj
-      - nome
-      title: Pessoa Jurídica
-      properties:
-        cnpj:
-          type: string
-          title: CNPJ
-          pattern: /^\d{14}$/
-          example: '45164632481234'
-          description: CNPJ do usuário.
-        nome:
-          type: string
-          title: Nome
-          description: Nome do usuário.
-          minLength: 1
-          maxLength: 140
-          example: Fulano de Tal
+  responses:
+    ServicoIndisponivel:
+      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/ServicoIndisponivelExample1'
+    NaoEncontrado:
+      description: Recurso solicitado não foi encontrado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/NaoEncontradoExample1'
+    AcessoNegado:
+      description: Requisição de participante autenticado que viola alguma regra de autorização.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/AcessoNegadoExample1'
   examples:
+    getRec1:
+      summary: Exemplo de retorno da consulta de recorrências 1
+      value:
+        parametros:
+          inicio: '2024-04-01T00:00:00Z'
+          fim: '2024-04-01T23:59:59Z'
+          paginacao:
+            paginaAtual: 0
+            itensPorPagina: 100
+            quantidadeDePaginas: 1
+            quantidadeTotalDeItens: 1
+        recs:
+        - idRec: RN1234567820240115abcdefghijk
+          status: APROVADA
+          valor:
+            valorRec: '300.00'
+          vinculo:
+            contrato: '98625023'
+            devedor:
+              cpf: '87734514122'
+              nome: Fulano de Tal
+            objeto: Serviços de Gestão de Imóveis
+          calendario:
+            dataFinal: '2028-09-01'
+            dataInicial: '2024-02-01'
+            periodicidade: MENSAL
+          politicaRetentativa: NAO_PERMITE
+          loc:
+            criacao: '2023-12-19T12:28:05.230Z'
+            id: 5100
+            location: pix.example.com/qr/v2/rec/2353c790eefb11eaadc10242ac120002
+            idRec: RN1234567820240115abcdefghijk
+          pagador:
+            codMun: '2673833'
+            cpf: '75633122216'
+            ispbParticipante: '81102623'
+          recebedor:
+            cnpj: '92221288310574'
+            nome: Imobiliária Bom Sucesso
+          atualizacao:
+          - data: '2024-01-03T08:30:02.050Z'
+            nome: CRIADA
+          - data: '2024-01-04T09:40:42.210Z'
+            nome: APROVADA
+    AcessoNegadoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    recResponse8:
+      summary: Exemplo de Recorrência Completa Jornada 1 com Convênio
+      value:
+        idRec: RR3781267820250201123deabc339
+        status: CRIADA
+        valor:
+          valorRec: '170.00'
+        vinculo:
+          contrato: '1793651'
+          devedor:
+            cpf: 01536985566
+            nome: Fulano de Tal
+          objeto: Serviços de Telefonia
+        calendario:
+          dataFinal: '2028-03-01'
+          dataInicial: '2025-03-01'
+          periodicidade: MENSAL
+        politicaRetentativa: NAO_PERMITE
+        pagador:
+          codMun: '1509873'
+          cpf: '45832633800'
+          ispbParticipante: '52780028'
+        recebedor:
+          convenio: Master
+          cnpj: '56958712500811'
+          nome: Academia Saúde
+        atualizacao:
+        - data: '2025-02-01T08:30:02.050Z'
+          nome: CRIADA
     recResponse2:
       summary: Exemplo de Recorrência 2
       value:
@@ -1197,6 +1305,137 @@ components:
         atualizacao:
         - data: '2024-01-11T10:27:01.280Z'
           nome: CRIADA
+    recBody1:
+      summary: Exemplo de Recorrência 1
+      value:
+        vinculo:
+          contrato: '63100862'
+          devedor:
+            cpf: '45164632481'
+            nome: Fulano de Tal
+          objeto: Serviço de Streamming de Música.
+        calendario:
+          dataFinal: '2025-04-01'
+          dataInicial: '2024-04-01'
+          periodicidade: MENSAL
+        valor:
+          valorRec: '35.00'
+        politicaRetentativa: NAO_PERMITE
+        loc: 108
+        ativacao:
+          dadosJornada:
+            txid: 33beb661beda44a8928fef47dbeb2dc5
+    recResponse1:
+      summary: Exemplo de Recorrência 1
+      value:
+        idRec: RN1234567820240115abcdefghijk
+        vinculo:
+          contrato: '63100862'
+          devedor:
+            cpf: '45164632481'
+            nome: Fulano de Tal
+          objeto: Serviço de Streamming de Música.
+        calendario:
+          dataFinal: '2025-04-01'
+          dataInicial: '2024-04-01'
+          periodicidade: MENSAL
+        politicaRetentativa: NAO_PERMITE
+        recebedor:
+          cnpj: 01602606113708
+          nome: Empresa de Serviços SA
+        valor:
+          valorRec: '35.00'
+        status: CRIADA
+        loc:
+          criacao: '2023-12-10T07:10:05.115Z'
+          id: 108
+          location: pix.example.com/qr/v2/rec/2353c790eefb11eaadc10242ac120002
+          idRec: RN1234567820240115abcdefghijk
+        ativacao:
+          dadosJornada:
+            tipoJornada: JORNADA_3
+            txid: 33beb661beda44a8928fef47dbeb2dc5
+        atualizacao:
+        - data: '2023-12-19T12:28:05.230Z'
+          nome: CRIADA
+    NaoEncontradoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title: Não Encontrado
+        status: 404
+        detail: Entidade não encontrada.
+    ServicoIndisponivelExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+    OperacaoInvalidaRecExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/RecOperacaoInvalida
+        title: Operação inválida.
+        status: 400
+        detail: A recorrência não respeita o schema.
+        violacoes:
+        - razao: O campo rec.calendario.dataInicial não respeita o schema.
+          propriedade: rec.calendario.dataInicial
+    recResponse5:
+      summary: Exemplo de Recorrência Completa Jornada 1 com Cancelamento
+      value:
+        idRec: RR1026652320240821lab77511abf
+        status: CANCELADA
+        valor:
+          valorMinimoRecebedor: '800.00'
+        vinculo:
+          contrato: '298620560'
+          devedor:
+            cpf: '12600511100'
+            nome: Sebastião Silva
+          objeto: Faculdade de Engenharia
+        calendario:
+          dataFinal: '2027-09-01'
+          dataInicial: '2024-10-01'
+          periodicidade: MENSAL
+        politicaRetentativa: PERMITE_3R_7D
+        pagador:
+          codMun: '1509873'
+          cpf: '12600511100'
+          ispbParticipante: '52780028'
+        recebedor:
+          cnpj: '61593007802371'
+          nome: Universidade Brasileira
+        encerramento:
+          cancelamento:
+            solicitante: USUARIO_RECEBEDOR
+            codigo: SLCR
+            descricao: Cancelamento solicitado pelo usuário recebedor
+        atualizacao:
+        - data: '2024-08-03T08:30:02.050Z'
+          nome: CRIADA
+        - data: '2024-09-06T09:11:42.205Z'
+          nome: APROVADA
+        - data: '2024-10-06T15:05:33.305Z'
+          nome: CANCELADA
+        ativacao:
+          tipoJornada: JORNADA_1
+    recBody2:
+      summary: Exemplo de Recorrência 2
+      value:
+        vinculo:
+          contrato: '998782003'
+          devedor:
+            cpf: 02989131415
+            nome: Beltrano da Silva
+          objeto: Serviço de Plano de Saúde.
+        calendario:
+          dataInicial: '2024-10-10'
+          periodicidade: ANUAL
+        valor:
+          valorMinimoRecebedor: '5000.00'
+        politicaRetentativa: PERMITE_3R_7D
     recBody3:
       summary: Exemplo de Revisão de Recorrência 1
       value:
@@ -1247,175 +1486,6 @@ components:
         dadosQR:
           jornada: JORNADA_2
           pixCopiaECola: 00020126180014br.gov.bcb.pix5204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***80800014br.gov.bcb.pix2558pix.example.com/qr/v2/rec/2353c790eefb11eaadc10242ac120002630462C9
-    OperacaoInvalidaRecExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/RecOperacaoInvalida
-        title: Operação inválida.
-        status: 400
-        detail: A recorrência não respeita o schema.
-        violacoes:
-        - razao: O campo rec.calendario.dataInicial não respeita o schema.
-          propriedade: rec.calendario.dataInicial
-    getRec1:
-      summary: Exemplo de retorno da consulta de recorrências 1
-      value:
-        parametros:
-          inicio: '2024-04-01T00:00:00Z'
-          fim: '2024-04-01T23:59:59Z'
-          paginacao:
-            paginaAtual: 0
-            itensPorPagina: 100
-            quantidadeDePaginas: 1
-            quantidadeTotalDeItens: 1
-        recs:
-        - idRec: RN1234567820240115abcdefghijk
-          status: APROVADA
-          valor:
-            valorRec: '300.00'
-          vinculo:
-            contrato: '98625023'
-            devedor:
-              cpf: '87734514122'
-              nome: Fulano de Tal
-            objeto: Serviços de Gestão de Imóveis
-          calendario:
-            dataFinal: '2028-09-01'
-            dataInicial: '2024-02-01'
-            periodicidade: MENSAL
-          politicaRetentativa: NAO_PERMITE
-          loc:
-            criacao: '2023-12-19T12:28:05.230Z'
-            id: 5100
-            location: pix.example.com/qr/v2/rec/2353c790eefb11eaadc10242ac120002
-            idRec: RN1234567820240115abcdefghijk
-          pagador:
-            codMun: '2673833'
-            cpf: '75633122216'
-            ispbParticipante: '81102623'
-          recebedor:
-            cnpj: '92221288310574'
-            nome: Imobiliária Bom Sucesso
-          atualizacao:
-          - data: '2024-01-03T08:30:02.050Z'
-            nome: CRIADA
-          - data: '2024-01-04T09:40:42.210Z'
-            nome: APROVADA
-    recResponse8:
-      summary: Exemplo de Recorrência Completa Jornada 1 com Convênio
-      value:
-        idRec: RR3781267820250201123deabc339
-        status: CRIADA
-        valor:
-          valorRec: '170.00'
-        vinculo:
-          contrato: '1793651'
-          devedor:
-            cpf: 01536985566
-            nome: Fulano de Tal
-          objeto: Serviços de Telefonia
-        calendario:
-          dataFinal: '2028-03-01'
-          dataInicial: '2025-03-01'
-          periodicidade: MENSAL
-        politicaRetentativa: NAO_PERMITE
-        pagador:
-          codMun: '1509873'
-          cpf: '45832633800'
-          ispbParticipante: '52780028'
-        recebedor:
-          convenio: Master
-          cnpj: '56958712500811'
-          nome: Academia Saúde
-        atualizacao:
-        - data: '2025-02-01T08:30:02.050Z'
-          nome: CRIADA
-    recResponse1:
-      summary: Exemplo de Recorrência 1
-      value:
-        idRec: RN1234567820240115abcdefghijk
-        vinculo:
-          contrato: '63100862'
-          devedor:
-            cpf: '45164632481'
-            nome: Fulano de Tal
-          objeto: Serviço de Streamming de Música.
-        calendario:
-          dataFinal: '2025-04-01'
-          dataInicial: '2024-04-01'
-          periodicidade: MENSAL
-        politicaRetentativa: NAO_PERMITE
-        recebedor:
-          cnpj: 01602606113708
-          nome: Empresa de Serviços SA
-        valor:
-          valorRec: '35.00'
-        status: CRIADA
-        loc:
-          criacao: '2023-12-10T07:10:05.115Z'
-          id: 108
-          location: pix.example.com/qr/v2/rec/2353c790eefb11eaadc10242ac120002
-          idRec: RN1234567820240115abcdefghijk
-        ativacao:
-          dadosJornada:
-            tipoJornada: JORNADA_3
-            txid: 33beb661beda44a8928fef47dbeb2dc5
-        atualizacao:
-        - data: '2023-12-19T12:28:05.230Z'
-          nome: CRIADA
-    recResponse5:
-      summary: Exemplo de Recorrência Completa Jornada 1 com Cancelamento
-      value:
-        idRec: RR1026652320240821lab77511abf
-        status: CANCELADA
-        valor:
-          valorMinimoRecebedor: '800.00'
-        vinculo:
-          contrato: '298620560'
-          devedor:
-            cpf: '12600511100'
-            nome: Sebastião Silva
-          objeto: Faculdade de Engenharia
-        calendario:
-          dataFinal: '2027-09-01'
-          dataInicial: '2024-10-01'
-          periodicidade: MENSAL
-        politicaRetentativa: PERMITE_3R_7D
-        pagador:
-          codMun: '1509873'
-          cpf: '12600511100'
-          ispbParticipante: '52780028'
-        recebedor:
-          cnpj: '61593007802371'
-          nome: Universidade Brasileira
-        encerramento:
-          cancelamento:
-            solicitante: USUARIO_RECEBEDOR
-            codigo: SLCR
-            descricao: Cancelamento solicitado pelo usuário recebedor
-        atualizacao:
-        - data: '2024-08-03T08:30:02.050Z'
-          nome: CRIADA
-        - data: '2024-09-06T09:11:42.205Z'
-          nome: APROVADA
-        - data: '2024-10-06T15:05:33.305Z'
-          nome: CANCELADA
-        ativacao:
-          tipoJornada: JORNADA_1
-    AcessoNegadoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 403
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
-    NaoEncontradoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title: Não Encontrado
-        status: 404
-        detail: Entidade não encontrada.
     recResponse4:
       summary: Exemplo de Recorrência Completa Jornada 1
       value:
@@ -1444,98 +1514,18 @@ components:
         atualizacao:
         - data: '2024-01-03T08:30:02.050Z'
           nome: CRIADA
-    recBody2:
-      summary: Exemplo de Recorrência 2
-      value:
-        vinculo:
-          contrato: '998782003'
-          devedor:
-            cpf: 02989131415
-            nome: Beltrano da Silva
-          objeto: Serviço de Plano de Saúde.
-        calendario:
-          dataInicial: '2024-10-10'
-          periodicidade: ANUAL
-        valor:
-          valorMinimoRecebedor: '5000.00'
-        politicaRetentativa: PERMITE_3R_7D
-    ServicoIndisponivelExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 503
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-    recBody1:
-      summary: Exemplo de Recorrência 1
-      value:
-        vinculo:
-          contrato: '63100862'
-          devedor:
-            cpf: '45164632481'
-            nome: Fulano de Tal
-          objeto: Serviço de Streamming de Música.
-        calendario:
-          dataFinal: '2025-04-01'
-          dataInicial: '2024-04-01'
-          periodicidade: MENSAL
-        valor:
-          valorRec: '35.00'
-        politicaRetentativa: NAO_PERMITE
-        loc: 108
-        ativacao:
-          dadosJornada:
-            txid: 33beb661beda44a8928fef47dbeb2dc5
-  responses:
-    NaoEncontrado:
-      description: Recurso solicitado não foi encontrado.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/NaoEncontradoExample1'
-    AcessoNegado:
-      description: Requisição de participante autenticado que viola alguma regra de autorização.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/AcessoNegadoExample1'
-    ServicoIndisponivel:
-      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/ServicoIndisponivelExample1'
-  requestBodies:
-    RecBodyRevisada:
-      description: Dados para revisão da recorrência.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/RecRevisada'
-          examples:
-            retorno1:
-              $ref: '#/components/examples/recBody3'
-    RecBody:
-      description: Dados para geração da recorrência.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/RecSolicitada'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/recBody1'
-            exemplo2:
-              $ref: '#/components/examples/recBody2'
   parameters:
+    paginaAtual:
+      in: query
+      name: paginacao.paginaAtual
+      required: false
+      schema:
+        type: integer
+        format: int32
+        title: Página atual
+        minimum: 0
+        default: 0
+        description: Página a ser retornada pela consulta. Se não for informada, o PSP assumirá que será 0.
     itensPorPagina:
       in: query
       name: paginacao.itensPorPagina
@@ -1557,17 +1547,27 @@ components:
         type: string
         description: Sua identificação exclusiva, a mesma que você usa para geração de token OAuth, o Citi compartilhou com você durante a integração da API do CitiConnect
         example: 9a10a5d6-63d4-4885-b6bd-19e79629496d
-    paginaAtual:
-      in: query
-      name: paginacao.paginaAtual
-      required: false
-      schema:
-        type: integer
-        format: int32
-        title: Página atual
-        minimum: 0
-        default: 0
-        description: Página a ser retornada pela consulta. Se não for informada, o PSP assumirá que será 0.
+  requestBodies:
+    RecBody:
+      description: Dados para geração da recorrência.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RecSolicitada'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/recBody1'
+            exemplo2:
+              $ref: '#/components/examples/recBody2'
+    RecBodyRevisada:
+      description: Dados para revisão da recorrência.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RecRevisada'
+          examples:
+            retorno1:
+              $ref: '#/components/examples/recBody3'
   securitySchemes:
     OAuth2:
       type: oauth2

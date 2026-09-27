@@ -59,6 +59,23 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
+    RecNotification:
+      type: object
+      title: Recorrência Notificada
+      required:
+      - idRec
+      - status
+      - atualizacao"
+      description: Atributos de Notificação de Recorrência
+      allOf:
+      - type: object
+        properties:
+          idRec:
+            $ref: '#/components/schemas/RecId'
+      - $ref: '#/components/schemas/RecStatus'
+      - $ref: '#/components/schemas/RecAtualizacao'
+      - $ref: '#/components/schemas/RecEncerramento'
+      - $ref: '#/components/schemas/RecAtivacao'
     RecStatus:
       type: object
       title: Status da Recorrência
@@ -74,17 +91,75 @@ components:
           - REJEITADA
           - EXPIRADA
           - CANCELADA
-    WebhookRecBase:
+    RecId:
+      type: string
+      title: ID Recorrência
+      description: "# Identificador da Recorrência\n\nRegra de formação:\n- RAxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; \"case sensitive\", isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - \"R\":  fixo (1 caractere). \"R\" para a recorrência criada dentro do Pix;\n  - \"A\": identificação da possibilidade de novas tentativas, sendo possíveis os valores \"R\" ou \"N\" (1 caractere). \"R\" caso a recorrência permita novas tentativas de pagamento pós vencimento, ou \"N\" caso não permita novas tentativas.\n  - \"xxxxxxxx\":  identificação do agente que presta serviço para o usuário recebedor que gerou o <Id>, podendo ser: o ISPB do participante direto, o ISPB do participante indireto ou os 8 primeiros dígitos do CNPJ do prestador de serviço de iniciação (8 caracteres numéricos [0-9]);\n  - \"yyyyMMdd\":  data (8 caracteres) de criação da recorrência;\n  - \"kkkkkkkkkkk\": sequencial criado pelo agente que gerou o <Id> (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada \"yyyyMMdd\".\n\nDessa forma, o ID da recorrência deve ser formado de acordo com um dos tipos a seguir:\n- \"RRxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que permite novas tentativas de pagamento pós vencimento; ou\n- \"RNxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que não permite novas tentativas de pagamento pós vencimento.”\n"
+      pattern: '[a-zA-Z0-9]{29}'
+      minLength: 29
+      maxLength: 29
+      example: RR1234567820240115abcdefghijk
+    TxId:
+      type: string
+      title: Id da Transação
+      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
+      pattern: '[a-zA-Z0-9]{26,35}'
+      minLength: 26
+      maxLength: 35
+    RecAtualizacao:
       type: object
+      title: Histórico de atualização da recorrência.
       required:
-      - webhookUrl
-      title: Webhook Base
+      - atualizacao
       properties:
-        webhookUrl:
+        atualizacao:
+          type: array
+          title: Histórico de Status
+          description: Histórico das mudanças de status da recorrência.
+          items:
+            type: object
+            required:
+            - status
+            - data
+            properties:
+              status:
+                type: string
+                title: Status da recorrência
+                description: Status da recorrência.
+                enum:
+                - CRIADA
+                - APROVADA
+                - REJEITADA
+                - EXPIRADA
+                - CANCELADA
+              data:
+                type: string
+                format: date-time
+                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
+    WebhookRecSolicitado:
+      type: object
+      title: Webhook Solicitado
+      allOf:
+      - $ref: '#/components/schemas/WebhookRecBase'
+    Violacao:
+      type: object
+      title: Violações
+      properties:
+        razao:
           type: string
-          title: URL Webhook
-          format: uri
-          example: https://pix.example.com/api/webhookrec/
+          title: Descrição do erro
+          description: Descrição do erro
+          example: Valor da cobrança não pode ser 0.00
+        propriedade:
+          type: string
+          title: Nome da propriedade
+          description: Nome da propriedade
+          example: cob.chave
+        valor:
+          type: string
+          title: Valor da propriedade
+          description: Valor da propriedade
+          example: 061996671234
     Problema:
       type: object
       required:
@@ -115,6 +190,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Violacao'
+    WebhookRecBase:
+      type: object
+      required:
+      - webhookUrl
+      title: Webhook Base
+      properties:
+        webhookUrl:
+          type: string
+          title: URL Webhook
+          format: uri
+          example: https://pix.example.com/api/webhookrec/
     RecAtivacao:
       type: object
       title: Dados relacionados à confirmação da ativação da recorrência.
@@ -148,85 +234,6 @@ components:
                 properties:
                   txid:
                     $ref: '#/components/schemas/TxId'
-    RecAtualizacao:
-      type: object
-      title: Histórico de atualização da recorrência.
-      required:
-      - atualizacao
-      properties:
-        atualizacao:
-          type: array
-          title: Histórico de Status
-          description: Histórico das mudanças de status da recorrência.
-          items:
-            type: object
-            required:
-            - status
-            - data
-            properties:
-              status:
-                type: string
-                title: Status da recorrência
-                description: Status da recorrência.
-                enum:
-                - CRIADA
-                - APROVADA
-                - REJEITADA
-                - EXPIRADA
-                - CANCELADA
-              data:
-                type: string
-                format: date-time
-                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
-    Violacao:
-      type: object
-      title: Violações
-      properties:
-        razao:
-          type: string
-          title: Descrição do erro
-          description: Descrição do erro
-          example: Valor da cobrança não pode ser 0.00
-        propriedade:
-          type: string
-          title: Nome da propriedade
-          description: Nome da propriedade
-          example: cob.chave
-        valor:
-          type: string
-          title: Valor da propriedade
-          description: Valor da propriedade
-          example: 061996671234
-    RecNotification:
-      type: object
-      title: Recorrência Notificada
-      required:
-      - idRec
-      - status
-      - atualizacao"
-      description: Atributos de Notificação de Recorrência
-      allOf:
-      - type: object
-        properties:
-          idRec:
-            $ref: '#/components/schemas/RecId'
-      - $ref: '#/components/schemas/RecStatus'
-      - $ref: '#/components/schemas/RecAtualizacao'
-      - $ref: '#/components/schemas/RecEncerramento'
-      - $ref: '#/components/schemas/RecAtivacao'
-    WebhookRecSolicitado:
-      type: object
-      title: Webhook Solicitado
-      allOf:
-      - $ref: '#/components/schemas/WebhookRecBase'
-    RecId:
-      type: string
-      title: ID Recorrência
-      description: "# Identificador da Recorrência\n\nRegra de formação:\n- RAxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; \"case sensitive\", isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - \"R\":  fixo (1 caractere). \"R\" para a recorrência criada dentro do Pix;\n  - \"A\": identificação da possibilidade de novas tentativas, sendo possíveis os valores \"R\" ou \"N\" (1 caractere). \"R\" caso a recorrência permita novas tentativas de pagamento pós vencimento, ou \"N\" caso não permita novas tentativas.\n  - \"xxxxxxxx\":  identificação do agente que presta serviço para o usuário recebedor que gerou o <Id>, podendo ser: o ISPB do participante direto, o ISPB do participante indireto ou os 8 primeiros dígitos do CNPJ do prestador de serviço de iniciação (8 caracteres numéricos [0-9]);\n  - \"yyyyMMdd\":  data (8 caracteres) de criação da recorrência;\n  - \"kkkkkkkkkkk\": sequencial criado pelo agente que gerou o <Id> (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada \"yyyyMMdd\".\n\nDessa forma, o ID da recorrência deve ser formado de acordo com um dos tipos a seguir:\n- \"RRxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que permite novas tentativas de pagamento pós vencimento; ou\n- \"RNxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que não permite novas tentativas de pagamento pós vencimento.”\n"
-      pattern: '[a-zA-Z0-9]{29}'
-      minLength: 29
-      maxLength: 29
-      example: RR1234567820240115abcdefghijk
     RecEncerramento:
       type: object
       title: Detalhamento do encerramento da recorrência.
@@ -296,13 +303,67 @@ components:
                     title: Descricao do cancelamento
                     description: Descricao do cancelamento.
                     maxLength: 105
-    TxId:
-      type: string
-      title: Id da Transação
-      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
-      pattern: '[a-zA-Z0-9]{26,35}'
-      minLength: 26
-      maxLength: 35
+  responses:
+    ServicoIndisponivel:
+      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/ServicoIndisponivelExample1'
+    NaoEncontrado:
+      description: Recurso solicitado não foi encontrado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/NaoEncontradoExample1'
+    AcessoNegado:
+      description: Requisição de participante autenticado que viola alguma regra de autorização.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/AcessoNegadoExample1'
+  examples:
+    AcessoNegadoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    recWebhookBody1:
+      summary: Exemplo de criação de webhook de recorrência
+      value:
+        webhookUrl: https://usuario.recebedor.com/api/webhookrec/
+    NaoEncontradoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title: Não Encontrado
+        status: 404
+        detail: Entidade não encontrada.
+    RequisicaoInvalidaWebhookExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/WebhookOperacaoInvalida
+        title: Webhook inválido.
+        status: 400
+        detail: A presente requisição busca criar um webhook sem respeitar o _schema_ ou, ainda, com sentido semanticamente inválido.
+    ServicoIndisponivelExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
   requestBodies:
     WebhookRecConfigBody:
       required: true
@@ -338,67 +399,6 @@ components:
                 tipoJornada: JORNADA_3
                 dadosJornada:
                   txid: r9eFIFmwcZ55Nm4RsKZAAtIvvCrlcNN6
-  responses:
-    NaoEncontrado:
-      description: Recurso solicitado não foi encontrado.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/NaoEncontradoExample1'
-    AcessoNegado:
-      description: Requisição de participante autenticado que viola alguma regra de autorização.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/AcessoNegadoExample1'
-    ServicoIndisponivel:
-      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/ServicoIndisponivelExample1'
-  examples:
-    RequisicaoInvalidaWebhookExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/WebhookOperacaoInvalida
-        title: Webhook inválido.
-        status: 400
-        detail: A presente requisição busca criar um webhook sem respeitar o _schema_ ou, ainda, com sentido semanticamente inválido.
-    AcessoNegadoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 403
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
-    NaoEncontradoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title: Não Encontrado
-        status: 404
-        detail: Entidade não encontrada.
-    ServicoIndisponivelExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 503
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-    recWebhookBody1:
-      summary: Exemplo de criação de webhook de recorrência
-      value:
-        webhookUrl: https://usuario.recebedor.com/api/webhookrec/
   securitySchemes:
     OAuth2:
       type: oauth2

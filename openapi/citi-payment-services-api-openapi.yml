@@ -382,46 +382,6 @@ components:
           type: string
           maxLength: 300
           description: QR code string representation, EMV standard
-    BrazilStaticQRCodeRequest:
-      type: object
-      description: Describes the  Brazil QR Code Creation APIs request fields.This Schema is applicable only when country is BR, payment method is PIX and language is Portuguese.
-      required:
-      - chave
-      properties:
-        txid:
-          type: string
-          pattern: ^[a-zA-Z0-9 ]{1,25}$
-          maxLength: 25
-          description: Transaction identifier (the purpose of this field is to be an element that allows the recipient's PSP to present the payment reconciliation functionality to the recipient user).
-        chave:
-          type: string
-          maxLength: 77
-          description: Pix alias registered in the DICT that will be used for the collection. This key will be read by the payer's PSP application for consultation with the DICT, which will return information that will identify the recipient of the collection.
-        infoAdicionais:
-          type: string
-          maxLength: 72
-          description: Additional information that will be displayed to the Payer when reading the QR code.
-        valor:
-          type: string
-          pattern: ^[0-9]{1,10}.[0-9][0-9]$
-          description: Collection amount. The decimal separator is the period character. Thousands separator not applicable.
-        nomeBeneficiario:
-          type: string
-          pattern: ^[a-zA-Z0-9 ]{1,25}$
-          maxLength: 25
-          description: Beneficiary / recipient name
-        cidadeBeneficiario:
-          type: string
-          pattern: ^[a-zA-Z0-9 ]{1,15}$
-          maxLength: 15
-          description: City where the transaction is made or city of the recipients bank counter
-        saque:
-          type: string
-          default: '0'
-          enum:
-          - '0'
-          - '1'
-          description: identify the static qrcode for withdrawal <br> 1 - this qr code request is for the purpose of saque <br>0 - this qr code is not for the withdrawal purpose and this will be default
     PortugeseErrorDetail:
       type: object
       description: Describes the reason for errors when user initiated request is with country BR, payment method PIX and language Portuguese.
@@ -471,637 +431,46 @@ components:
           maxItems: 10
           items:
             $ref: '#/components/schemas/PortugeseErrorDetail'
-    CobVCompleta:
-      title: Cobrança com vencimento completa
+    BrazilStaticQRCodeRequest:
+      type: object
+      description: Describes the  Brazil QR Code Creation APIs request fields.This Schema is applicable only when country is BR, payment method is PIX and language is Portuguese.
       required:
-      - status
-      allOf:
-      - $ref: '#/components/schemas/CobVSolicitada'
-      - $ref: '#/components/schemas/CobVGerada'
-      - type: object
-        properties:
-          pix:
-            type: array
-            title: Pix recebidos
-            items:
-              allOf:
-              - $ref: '#/components/schemas/Pix'
-              - type: object
-                properties:
-                  txid:
-                    allOf:
-                    - $ref: '#/components/schemas/TxId'
-                    - pattern: '[a-zA-Z0-9]{26,35}'
-      - type: object
-        properties:
-          status:
-            $ref: '#/components/schemas/CobrancaStatus'
-    DadosDevedor:
-      type: object
-      properties:
-        devedor:
-          description: The debtor object organizes information about the collection debtor.
-          oneOf:
-          - $ref: '#/components/schemas/PessoaFisica'
-          - $ref: '#/components/schemas/PessoaJuridica'
-          allOf:
-          - type: object
-            properties:
-              email:
-                type: string
-                title: Email
-                description: User email.
-          - $ref: '#/components/schemas/DadosComplementaresPessoa'
-    Devolucao:
-      type: object
-      title: Devolução
-      required:
-      - id
-      - rtrId
-      - valor
-      - horario
-      - status
-      properties:
-        id:
-          $ref: '#/components/schemas/DevolucaoId'
-        rtrId:
-          type: string
-          title: RtrId
-          description: ReturnIdentification transiting PACS004.
-          example: D12345678202009091000abcde123456
-          pattern: '[a-zA-Z0-9]{32}'
-          minLength: 32
-          maxLength: 32
-        valor:
-          type: string
-          title: Valor a devolver.
-          pattern: \d{1,10}\.\d{2}
-          description: Amount to return.
-        natureza:
-          $ref: '#/components/schemas/DevolucaoNatureza'
-        descricao:
-          type: string
-          title: Mensagem ao pagador relativa à devolução.
-          maxLength: 140
-          description: The optional `description` field determines a text to be displayed to the payer containing information about the payment return. This text will be filled in, in pacs.004, by the recipient's PSP, in the field RemittanceInformation. The field size in pacs.004 is limited to 140 characters.
-        horario:
-          type: object
-          properties:
-            solicitacao:
-              type: string
-              format: date-time
-              title: Horário de solicitação
-              description: Time when the payment return was requested on the PSP.
-            liquidacao:
-              type: string
-              format: date-time
-              title: Horário de liquidacao
-              description: Time the payment return was settled on the PSP.
-        status:
-          type: string
-          title: Status
-          description: Return status.
-          enum:
-          - EM_PROCESSAMENTO
-          - DEVOLVIDO
-          - NAO_REALIZADO
-        motivo:
-          type: string
-          title: Descrição do status.
-          description: '# Payment Return Status
-
-
-            Optional field that can be used by the receiving PSP to detail the reasons
-
-            the return has reached the status in question.
-
-            It can be used, for example, to detail the reason why the return was not carried out.
-
-            '
-          maxLength: 140
-    PayloadLocation:
-      type: object
-      title: Location do Payload
-      description: Payload location identifier.
-      required:
-      - id
-      - location
-      - tipoCob
-      - criacao
-      properties:
-        id:
-          $ref: '#/components/schemas/PayloadLocationId'
-        location:
-          type: string
-          title: Localização do payload
-          description: Payload location to be provided when creating the collection item.
-          maxLength: 77
-          format: uri
-          example: pix.example.com/qr/v2/2353c790eefb11eaadc10242ac120002
-        tipoCob:
-          type: string
-          title: Tipo da cobrança
-          enum:
-          - cob
-          - cobv
-        criacao:
-          type: string
-          format: date-time
-          title: Data de Criação
-          description: Payload location creation Date and time. Complies with RFC 3339.
-    Paginacao:
-      type: object
-      title: Paginação
-      required:
-      - paginaAtual
-      - itensPorPagina
-      - quantidadeDePaginas
-      - quantidadeTotalDeItens
-      properties:
-        paginaAtual:
-          type: integer
-          title: Página atual
-          description: Retrieved page number.
-          minimum: 0
-        itensPorPagina:
-          type: integer
-          title: Itens por página
-          description: Number of records returned on the page.
-          minimum: 1
-        quantidadeDePaginas:
-          type: integer
-          title: Quantidade de páginas
-          description: Number of pages available for consultation.
-          minimum: 1
-        quantidadeTotalDeItens:
-          type: integer
-          title: Quantidade total de itens
-          description: Total amount of items available according to the parameters informed.
-          minimum: 0
-    PixValorMulta:
-      type: object
-      properties:
-        multa:
-          type: object
-          required:
-          - valor
-          properties:
-            valor:
-              type: string
-              title: Valor relativo a multa.
-              description: Fine amount.
-              pattern: \d{1,10}\.\d{2}
-    DadosComplementaresPessoa:
-      type: object
-      properties:
-        logradouro:
-          type: string
-          title: Logradouro
-          description: User address.
-          maxLength: 200
-        cidade:
-          type: string
-          title: Cidade
-          description: User city.
-          maxLength: 200
-        uf:
-          type: string
-          title: UF
-          description: UF of the user.
-          maxLength: 2
-        cep:
-          type: string
-          title: CEP
-          description: User zip code.
-          maxLength: 8
-    Inicio:
-      type: string
-      title: Data de início
-      description: Filters records whose creation date is greater than or equal to the start date. Complies with RFC 3339.It should be in ISO_DATE(yyyy-MM-dd'T'HH:mm:ss.SSSZ) format
-      example: '2021-10-01T00:01:54.876Z'
-    PessoaJuridica:
-      type: object
-      required:
-      - cnpj
-      - nome
-      title: Pessoa Jurídica
-      properties:
-        cnpj:
-          type: string
-          title: CNPJ
-          pattern: /^\d{14}$/
-          description: User's CNPJ.
-        nome:
-          type: string
-          title: Nome
-          description: User's Nome.
-          maxLength: 200
-    TxId:
-      type: string
-      title: Id da Transação
-      description: Field `txid` determines the transaction identifier for reconciliation purposes. In pacs.008 it is referenced as `TransactionIdentification <txId>` or `idConciliacaoRecebedor`. The txid is retrieved by the payer’s PSP application and, after the payment is confirmed, it is sent to SPI via pacs.008. A pacs.008 is also sent to the receiver’s PSP, containing the txid in addition to all the usual payment  information. Upon receiving the payment with txid, the receiver's PSP may inform the creditor to reconcile. The contents of this field are provided exclusively by the collector, who is the ultimate responsible for them. The txid should be unique by collector’s CPF/CNPJ. The receiving PSP is responsible for validating this rule in the API.
-      pattern: '[a-zA-Z0-9]{26,35}'
-    CobrancaStatus:
-      type: string
-      title: Status do registro da cobrança.
-      description: ' Collection registration status. Not to be confused with its payment status, like paid, overdue, expired, for instance.
-
-        The statuses are defined in this way: - `ATIVA`: indicates that the collection item was generated and is active (not yet been paid or removed); - `CONCLUIDA`: indicates that the collection item is no longer active and therefore will not accept further payments; - `REMOVIDO_PELO_USUARIO_RECEBEDOR`: indicates that the collection item was removed by the creditor; and - `REMOVIDO_PELO_PSP`: indicates that the collection item was removed by the PSP.'
-      enum:
-      - ATIVA
-      - CONCLUIDA
-      - REMOVIDA_PELO_USUARIO_RECEBEDOR
-      - REMOVIDA_PELO_PSP
-    PixValorOriginal:
-      type: object
-      properties:
-        original:
-          type: object
-          required:
-          - valor
-          properties:
-            valor:
-              type: string
-              title: Valor original
-              description: Original Pix value.
-              pattern: \d{1,10}\.\d{2}
-    PixValorDesconto:
-      type: object
-      properties:
-        desconto:
-          type: object
-          required:
-          - valor
-          properties:
-            valor:
-              type: string
-              title: Valor relativo a desconto.
-              description: Discount amount.
-              pattern: \d{1,10}\.\d{2}
-    PixValorTroco:
-      type: object
-      properties:
-        troco:
-          type: object
-          required:
-          - valor
-          - modalidadeAgente
-          - prestadorDoServicoDeSaque
-          properties:
-            valor:
-              type: string
-              title: Valor do Troco Pix
-              description: Amount of Change Pix.
-              pattern: \d{1,10}\.\d{2}
-            modalidadeAgente:
-              type: string
-              title: Modalidade do Agente
-              description: '##### Agent Type
-
-                <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr></table>
-
-                '
-              enum:
-              - AGTEC
-              - AGTOT
-            prestadorDoServicoDeSaque:
-              type: string
-              title: Facilitador de Serviço de Saque
-              pattern: \d{8}
-              description: Withdrawal Service Provider ISPB
-    PixValorAbatimento:
-      type: object
-      properties:
-        abatimento:
-          type: object
-          required:
-          - valor
-          properties:
-            valor:
-              type: string
-              title: Valor relativo a abatimento.
-              description: Rebate amount.
-              pattern: \d{1,10}\.\d{2}
-    DevolucaoNatureza:
-      type: string
-      title: Natureza da Devolução
-      description: 'Indicates the nature of the return. A return can be related to a regular Pix, or to a Withdrawal/Change Pix. In the absence of this field the nature must be interpreted as being of a common Pix (ORIGINAL).
-
-
-        Natures are defined as follows:
-
-        - `ORIGINAL`: when the return refers to a common Pix or the purchase amount in a Pix Troca;
-
-        - `RETIRADA`: when the return refers to a Cash Out Pix or the amount of change in a Pix Change.
-
-        - `MED_OPERACIONAL`: when the return occurs within the MED due to operational failure and refers to a common Pix (`BE08`);
-
-        - `MED_FRAUDE`: when the return occurs within the MED on grounds of suspected fraud and refers to a common Pix (`FR01`).
-
-        '
-      enum:
-      - ORIGINAL
-      - RETIRADA
-      - MED_OPERACIONAL
-      - MED_FRAUDE
-    CobBase:
-      type: object
-      title: Cobrança Base
-      description: Attributes common to all collection entities
-      properties:
-        chave:
-          type: string
-          title: Chave DICT do recebedor
-          description: 'PIX Alias - Determines the alias registered in DICT, which will be used for the collection. This alias will be submitted by the payer’s PSP applications to DICT, which will return the translated information that will identify the collection creditor. *The aliases can be of the following types: phone number, e-mail address, taxpayer ID (CPF/CNPJ) or EVP.* The aliases formats can be found in [Standards Manual for starting  Pix](https://www.bcb.gov.br/estabilidadefinanceira/pagamentosinstantaneos).'
-          maxLength: 77
-        solicitacaoPagador:
-          type: string
-          title: Solicitação ao pagador
-          description: This optional field determines a text to be presented to the payer so that he can enter related information, in free format, to be sent to the recipient. This text will be filled, in pacs.008, by the payer's PSP, in the RemittanceInformation <RmtInf> field. The length of the <RmtInf> field in pacs.008 is limited to 140 characters.
-          maxLength: 140
-        infoAdicionais:
-          type: array
-          title: Informações adicionais
-          description: Each respective additional information contained in the list (name and amount) must be presented to the payer.
-          maximum: 50
-          items:
-            type: object
-            required:
-            - nome
-            - valor
-            properties:
-              nome:
-                type: string
-                title: Nome
-                description: Field name.
-                maxLength: 50
-              valor:
-                type: string
-                title: Valor
-                description: Field data.
-                maxLength: 200
-    CobVSolicitada:
-      type: object
-      title: Cobrança com vencimento solicitada
-      description: Data sent to create or update the collection with due date via API
-      required:
-      - valor
       - chave
-      - devedor
-      - calendario
-      allOf:
-      - type: object
-        properties:
-          calendario:
-            title: Calendário
-            description: Fields nested under the calendar identifier organize information regarding collection-related dates.
-            allOf:
-            - $ref: '#/components/schemas/CobDataDeVencimento'
-      - $ref: '#/components/schemas/DadosDevedor'
-      - type: object
-        properties:
-          loc:
-            allOf:
-            - $ref: '#/components/schemas/PayloadLocationCob'
-      - type: object
-        properties:
-          valor:
-            allOf:
-            - required:
-              - original
-            - $ref: '#/components/schemas/CobVValor'
-      - $ref: '#/components/schemas/CobBase'
-    CobBaseCopiaCola:
-      type: object
-      title: Cobrança Base com Copia e Cola
-      description: Attributes common to all collection entities that have Copy and Paste information
-      allOf:
-      - type: object
-        properties:
-          pixCopiaECola:
-            type: string
-            title: Pix Copia e Cola correspondente à cobrança.
-            description: This field returns the QR code string representation for a copy & paste operation.
-            maxLength: 512
-      - $ref: '#/components/schemas/CobBase'
-    CNPJ:
-      type: string
-      title: número de identificação fiscal
-      description: "# Tax identification identifier\n  Field `taxid` determines the tax identification number.\n"
-      pattern: ^[0-9]{14}$
-    CobDataDeVencimento:
-      type: object
-      title: Data de Vencimento
-      required:
-      - dataDeVencimento
       properties:
-        dataDeVencimento:
-          type: string
-          format: date
-          title: Data de vencimento da cobrança
-          description: This is a date, in the format `YYYY-MM-DD`, as per ISO 8601. It is the collection due date. The collection can be paid with no late payment penalty or interest up to this date, at any time of the day.
-          example: '2020-04-01'
-        validadeAposVencimento:
-          type: integer
-          format: int32
-          title: Validade após vencimento
-          description: ' It is the number of calendar days after calendario.dateDeVencimento, in which the collection can be technically paid (with or without late payment penalties or interest).
-
-            Whenever the due date falls on a weekend or a holiday for the paying user, it must be automatically extended to the first subsequent business day. all fields that make reference to this date (`PostExpiration validity`; `discount`; `interest` and `fine`) must assume this extension, when applicable.
-
-            To illustrate how it works, here are some examples, where: - ``(#)`` represents the due date; - ``(*)`` represents the date adjusted in terms of non-working days; - the ``(<number>)`` correspond to the additional days of validity for the payment.
-
-            Exemplo A:
-
-            ```txt Expiration Date: 2020-10-20, Tuesday. validityAfter Expiration: 4
-
-            Trying to pay on the day 2020-10-20, Tuesday: accepted. (#)(*) Trying to pay on the day 2020-10-21, Wednesday: accepted. (1) Trying to pay on 2020-10-22, Thursday: accepted. (two) Trying to pay on the day 2020-10-23, Friday: accepted. (3) Attempts to pay on 2020-10-24, Saturday: accepted. Attempts to pay on the day 2020-10-25, Sunday: accepted. (Holiday) Trying to pay on 2020-10-26, Monday: accepted. (4) Trying to pay on 2020-10-27, Tuesday: denied. ```
-
-            Exemplo B:
-
-            ```txt Expiration Date: 2020-12-25, Friday, holiday. validityAfterExpiration: 0
-
-            Attempts to pay on the day 2020-12-25, Friday: accepted. (#)(Holiday) Attempts to pay on 2020-12-26, Saturday: accepted. Attempts to pay on 2020-12-27, Sunday: accepted. Trying to pay on the day 2020-12-28, Monday: accepted. (*) Trying to pay on 2020-12-29, Tuesday: denied. ```
-
-            Exemplo C:
-
-            ```txt Expiration Date: 2020-12-25, Friday, holiday. validityAfter Expiration: 1
-
-            Attempts to pay on the day 2020-12-25, Friday: accepted. (#)(Holiday) Attempts to pay on 2020-12-26, Saturday: accepted. Attempts to pay on 2020-12-27, Sunday: accepted. Trying to pay on the day 2020-12-28, Monday: accepted. (*) Trying to pay on 2020-12-29, Tuesday: accepted. (1) Trying to pay on the day 2020-12-30, Wednesday: denied. ```
-
-            Exemplo D:
-
-            ```txt Expiration Date: 2020-12-25, Friday, holiday. validityAfter Expiration: 3
-
-            Attempts to pay on the day 2020-12-25, Friday: accepted. (#)(Holiday) Attempts to pay on 2020-12-26, Saturday: accepted. Attempts to pay on 2020-12-27, Sunday: accepted. Trying to pay on the day 2020-12-28, Monday: accepted. (*) Trying to pay on 2020-12-29, Tuesday: accepted. (1) Attempts to pay on the day 2020-12-30, Wednesday: accepted. (two) Trying to pay on 2020-12-31, Thursday: accepted. (3) Trying to pay on 2021-01-01, Friday: denied. ```
-
-            Exemplo E:
-
-            ```txt Expiration Date: 2020-12-25, Friday, holiday. validityAfter Expiration: 4
-
-            Attempts to pay on the day 2020-12-25, Friday: accepted. (#)(Holiday) Attempts to pay on 2020-12-26, Saturday: accepted. Attempts to pay on 2020-12-27, Sunday: accepted. Trying to pay on the day 2020-12-28, Monday: accepted. (*) Trying to pay on 2020-12-29, Tuesday: accepted. (1) Attempts to pay on the day 2020-12-30, Wednesday: accepted. (two) Trying to pay on 2020-12-31, Thursday: accepted. (3) Trying to pay on 2021-01-01, Friday: accepted. (Holiday) Attempts to pay on 2021-01-02, Saturday: accepted. Attempts to pay on 2021-01-03, Sunday: accepted. Trying to pay on 2021-01-04, Monday: accepted. (4) Trying to pay on 2021-01-05, Tuesday: denied. ```
-
-            Exemplo F:
-
-            ```txt Expiration Date: 2021-08-27, Friday. validityAfter Expiration: 5
-
-            Trying to pay on the day 2020-08-27, Friday: accepted. (#)(*) Attempts to pay on the day 2020-08-28, Saturday: accepted. (1) Attempts to pay on the day 2020-08-29, Sunday: accepted. (two) Trying to pay on the day 2020-08-30, Monday: accepted. (3) Trying to pay on 2020-12-31, Tuesday: accepted. (4) Attempts to pay on the day 2020-12-01, Wednesday: accepted. (5) Trying to pay on 2020-12-02, Thursday: denied. ```
-
-            Exemplo G:
-
-            ```txt Expiration Date: 2021-08-28, Saturday. validityAfter Expiration: 5
-
-            Attempts to pay on the day 2020-08-28, Saturday: accepted. (#) Attempts to pay on the day 2020-08-29, Sunday: accepted. Trying to pay on the day 2020-08-30, Monday: accepted. (*) Trying to pay on the day 2020-08-31, Tuesday: accepted. (1) Trying to pay on the day 2020-09-01, Wednesday: accepted. (two) Trying to pay on 2020-09-02, Thursday: accepted. (3) Trying to pay on the day 2020-09-03, Friday: accepted. (4) Trying to pay on the day 2020-09-04, Saturday: accepted. Trying to pay on the day 2020-09-05, Sunday: accepted. Trying to pay on the day 2020-09-06, Monday: accepted. (5) ```'
-          default: 30
-    Violacao:
-      type: object
-      title: Violações
-      properties:
-        razao:
-          type: string
-          title: Descrição do erro
-          description: Error description
-          example: Valor da cobrança não pode ser 0.00
-        propriedade:
-          type: string
-          title: Nome da propriedade
-          description: Property name
-          example: cob.chave
-        valor:
-          type: string
-          title: Valor da propriedade
-          description: Property Value
-          example: 061996671234
-    CobsVConsultadas:
-      type: object
-      title: Cobranças com vencimento consultadas
-      required:
-      - parametros
-      - cobs
-      properties:
-        parametros:
-          $ref: '#/components/schemas/ParametrosConsultaCob'
-        cobs:
-          type: array
-          title: Lista de cobranças
-          items:
-            allOf:
-            - $ref: '#/components/schemas/CobVCompleta'
-            - required:
-              - status
-              - txid
-              - idCob
-    Revisao:
-      type: integer
-      format: int32
-      title: Revisão
-      description: 'Denotes the collection review version. Always starts at zero. Always increments 1.
-
-        This should increase whenever a collection item is updated. The `loc` field change is not considered an update and therefore does not trigger an increment to the version number.
-
-        The `loc` field does not change the collection itself. It is not necessary to store the history of changes in the `loc` field for a given collection. For the other fields of the collection, history is recorded.'
-    PayloadLocationCob:
-      type: object
-      title: Location do Payload
-      required:
-      - id
-      - tipoCob
-      description: Identifier of the payload location.
-      properties:
-        id:
-          $ref: '#/components/schemas/PayloadLocationId'
-    PixValorSaque:
-      type: object
-      properties:
-        saque:
-          type: object
-          required:
-          - valor
-          - modalidadeAgente
-          - prestadorDoServicoDeSaque
-          properties:
-            valor:
-              type: string
-              title: Valor do Saque Pix
-              description: Pix Withdrawal Value Pix
-              pattern: \d{1,10}\.\d{2}
-            modalidadeAgente:
-              type: string
-              title: AgentModalidade do Agente
-              description: '##### Agent Type
-
-                <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr><tr><td>AGPSS</td><td>Agent Withdrawal Service Provider< /td></tr></table>
-
-                '
-              enum:
-              - AGTEC
-              - AGTOT
-              - AGPSS
-            prestadorDoServicoDeSaque:
-              type: string
-              title: Facilitador de Serviço de Saque
-              pattern: \d{8}
-              description: Withdrawal Service Provider ISPB
-    Pix:
-      type: object
-      title: Pix
-      required:
-      - endToEndId
-      - valor
-      - horario
-      - pagador
-      properties:
-        endToEndId:
-          $ref: '#/components/schemas/EndToEndId'
         txid:
-          allOf:
-          - $ref: '#/components/schemas/TxId'
-          - pattern: '[a-zA-Z0-9]{1,35}'
-        valor:
           type: string
-          title: Valor do Pix.
-          pattern: \d{1,10}\.\d{2}
-          description: Valor do Pix.
-        componentesValor:
-          type: object
-          title: Informações sobre o valor do Pix
-          description: "The purpose of this framework is to explain the elements that make up the Pix amount, including information on fines, interest, discounts, and deductions when Pix is related to overdue collections.\n\nStructure rules:\n- Pix `value` is equal to:\n  - (`original.amount` + `withdrawal.amount` + `change.amount`) + `fine.amount` + `interest.amount` – `rebate.amount` – `discount.amount`\n  considering only the fields that are present for each type of paid collection.\n- The `withdrawal` and `change` structures will only be returned when the Pix is relative to a Cashout Pix or Change Pix, respectively, and\nthe other structures (`interest`, `fine`, `rebate` and `discount`) will only be relevant to the Pix of payments of collections due.\n- There cannot be simultaneously a substructure of type `withdrawal` and another of type `change`;\n- There is no restriction on the order of substructures.\n\nIn the case of a Pix Withdraw, you can return `original` with value=0.00 (zero) since the sum will be respected, or you can omit the\noriginal substructure. In the case of a Pix Swap or a collection payment due date, the `original` substructure will always be\ngift.\n\n#### Valid examples:\nExample of valid fills.\n\n- **Pix para pagamento de cobrança imediata (sem saque ou troco).**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"100.00\"\n    }\n  }\n  ...\n  ```\n- **Pix Saque.**\n  ```\n  ...\n  \"componentsValue\": {\n    \"withdraw\": {\n      \"value\": \"100.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```\n- **Pix para pagamento de cobrança imediata com saque (pode vir original.valor=0.00).**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"0.00\"\n    },\n    \"withdraw\": {\n      \"value\": \"100.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```\n- **Pix Troco.**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"80.00\"\n    },\n    \"Thing\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGTEC\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```\n- **Pix para pagamento de cobrança imediata com troco (ordem não importa).**\n  ```\n  ...\n  \"componentsValue\": {\n    \"Thing\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGTEC\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    },\n    \"original\": {\n      \"value\": \"80.00\"\n    }\n  }\n  ...\n  ```\n- **Pix para pagamento de cobrança com vencimento de R$100,00 considerando-se um atraso de 2 dias a uma multa de 3% e juros de 1% ao dia. O valor do Pix será R$105,00.**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"100.00\"\n    },\n    \"traffic ticket\": {\n      \"value\": \"3.00\"\n    },\n    \"fees\": {\n      \"value\": \"2.00\"\n    }\n  }\n  ...\n  ```\n#### Invalid examples:\nNon-exhaustive examples of invalid fills.\n- **`original.valor maior que 0.00 (zero) e saque juntos**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"80.00\"\n    },\n    \"withdraw\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```\n- **dois elementos de saque**\n  ```\n  ...\n  \"componentsValue\": [\n    \"withdraw\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    },\n    \"withdraw\": {\n      \"value\": \"10.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  ]\n  ...\n  ```\n- **saque e troco simultaneamente**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"60.00\"\n    },\n    \"withdraw\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    },\n    \"Thing\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGTEC\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```"
-          anyOf:
-          - $ref: '#/components/schemas/PixValorOriginal'
-          - $ref: '#/components/schemas/PixValorSaque'
-          - $ref: '#/components/schemas/PixValorTroco'
-          - $ref: '#/components/schemas/PixValorJuros'
-          - $ref: '#/components/schemas/PixValorMulta'
-          - $ref: '#/components/schemas/PixValorAbatimento'
-          - $ref: '#/components/schemas/PixValorDesconto'
+          pattern: ^[a-zA-Z0-9 ]{1,25}$
+          maxLength: 25
+          description: Transaction identifier (the purpose of this field is to be an element that allows the recipient's PSP to present the payment reconciliation functionality to the recipient user).
         chave:
           type: string
-          title: Chave DICT do recebedor
-          description: '# Creditor DICT alias
-
-
-            * Creditor alias field as assigned in the respective PACS008.
-
-            * Aliases types can be: phone, email, cpf/cnpj or EVP.
-
-            * The format of the aliases can be found in the section "Formatting DICT aliases in BR Code" of the [Pix Initiation Standards Manual](https://www.bcb.gov.br/estabilidadefinanceira/pix).
-
-            '
           maxLength: 77
-        horario:
+          description: Pix alias registered in the DICT that will be used for the collection. This key will be read by the payer's PSP application for consultation with the DICT, which will return information that will identify the recipient of the collection.
+        infoAdicionais:
           type: string
-          format: date-time
-          title: Horário
-          description: Time the Pix was processed on the PSP.
-        infoPagador:
+          maxLength: 72
+          description: Additional information that will be displayed to the Payer when reading the QR code.
+        valor:
           type: string
-          title: Informação livre do pagador
-          maxLength: 140
-        devolucoes:
-          type: array
-          title: Devoluções
-          items:
-            $ref: '#/components/schemas/Devolucao'
+          pattern: ^[0-9]{1,10}.[0-9][0-9]$
+          description: Collection amount. The decimal separator is the period character. Thousands separator not applicable.
+        nomeBeneficiario:
+          type: string
+          pattern: ^[a-zA-Z0-9 ]{1,25}$
+          maxLength: 25
+          description: Beneficiary / recipient name
+        cidadeBeneficiario:
+          type: string
+          pattern: ^[a-zA-Z0-9 ]{1,15}$
+          maxLength: 15
+          description: City where the transaction is made or city of the recipients bank counter
+        saque:
+          type: string
+          default: '0'
+          enum:
+          - '0'
+          - '1'
+          description: identify the static qrcode for withdrawal <br> 1 - this qr code request is for the purpose of saque <br>0 - this qr code is not for the withdrawal purpose and this will be default
     CobVValor:
       type: object
       title: Valor da cobrança com vencimento
@@ -1222,6 +591,310 @@ components:
                 title: Abatimentos
                 description: Deductions applied to the collection, in absolute value or as a percentage of the original value of the collection.
                 pattern: \d{1,10}\.\d{2}
+    Revisao:
+      type: integer
+      format: int32
+      title: Revisão
+      description: 'Denotes the collection review version. Always starts at zero. Always increments 1.
+
+        This should increase whenever a collection item is updated. The `loc` field change is not considered an update and therefore does not trigger an increment to the version number.
+
+        The `loc` field does not change the collection itself. It is not necessary to store the history of changes in the `loc` field for a given collection. For the other fields of the collection, history is recorded.'
+    PixValorDesconto:
+      type: object
+      properties:
+        desconto:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo a desconto.
+              description: Discount amount.
+              pattern: \d{1,10}\.\d{2}
+    CobsVConsultadas:
+      type: object
+      title: Cobranças com vencimento consultadas
+      required:
+      - parametros
+      - cobs
+      properties:
+        parametros:
+          $ref: '#/components/schemas/ParametrosConsultaCob'
+        cobs:
+          type: array
+          title: Lista de cobranças
+          items:
+            allOf:
+            - $ref: '#/components/schemas/CobVCompleta'
+            - required:
+              - status
+              - txid
+              - idCob
+    CobVCompleta:
+      title: Cobrança com vencimento completa
+      required:
+      - status
+      allOf:
+      - $ref: '#/components/schemas/CobVSolicitada'
+      - $ref: '#/components/schemas/CobVGerada'
+      - type: object
+        properties:
+          pix:
+            type: array
+            title: Pix recebidos
+            items:
+              allOf:
+              - $ref: '#/components/schemas/Pix'
+              - type: object
+                properties:
+                  txid:
+                    allOf:
+                    - $ref: '#/components/schemas/TxId'
+                    - pattern: '[a-zA-Z0-9]{26,35}'
+      - type: object
+        properties:
+          status:
+            $ref: '#/components/schemas/CobrancaStatus'
+    TxId:
+      type: string
+      title: Id da Transação
+      description: Field `txid` determines the transaction identifier for reconciliation purposes. In pacs.008 it is referenced as `TransactionIdentification <txId>` or `idConciliacaoRecebedor`. The txid is retrieved by the payer’s PSP application and, after the payment is confirmed, it is sent to SPI via pacs.008. A pacs.008 is also sent to the receiver’s PSP, containing the txid in addition to all the usual payment  information. Upon receiving the payment with txid, the receiver's PSP may inform the creditor to reconcile. The contents of this field are provided exclusively by the collector, who is the ultimate responsible for them. The txid should be unique by collector’s CPF/CNPJ. The receiving PSP is responsible for validating this rule in the API.
+      pattern: '[a-zA-Z0-9]{26,35}'
+    PixValorTroco:
+      type: object
+      properties:
+        troco:
+          type: object
+          required:
+          - valor
+          - modalidadeAgente
+          - prestadorDoServicoDeSaque
+          properties:
+            valor:
+              type: string
+              title: Valor do Troco Pix
+              description: Amount of Change Pix.
+              pattern: \d{1,10}\.\d{2}
+            modalidadeAgente:
+              type: string
+              title: Modalidade do Agente
+              description: '##### Agent Type
+
+                <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr></table>
+
+                '
+              enum:
+              - AGTEC
+              - AGTOT
+            prestadorDoServicoDeSaque:
+              type: string
+              title: Facilitador de Serviço de Saque
+              pattern: \d{8}
+              description: Withdrawal Service Provider ISPB
+    DadosRecebedor:
+      type: object
+      required:
+      - logradouro
+      - cidade
+      - uf
+      - cep
+      properties:
+        recebedor:
+          description: The receiving object organizes the information about the creditor of the collection.
+          oneOf:
+          - $ref: '#/components/schemas/PessoaFisica'
+          - type: object
+            allOf:
+            - $ref: '#/components/schemas/PessoaJuridica'
+            - type: object
+              properties:
+                nomeFantasia:
+                  type: string
+                  title: Nome fantasia
+                  description: Fantasy name.
+                  maxLength: 200
+          allOf:
+          - required:
+            - logradouro
+            - cidade
+            - uf
+            - cep
+          - $ref: '#/components/schemas/DadosComplementaresPessoa'
+    DadosComplementaresPessoa:
+      type: object
+      properties:
+        logradouro:
+          type: string
+          title: Logradouro
+          description: User address.
+          maxLength: 200
+        cidade:
+          type: string
+          title: Cidade
+          description: User city.
+          maxLength: 200
+        uf:
+          type: string
+          title: UF
+          description: UF of the user.
+          maxLength: 2
+        cep:
+          type: string
+          title: CEP
+          description: User zip code.
+          maxLength: 8
+    EndToEndId:
+      type: string
+      title: Id fim a fim da transação
+      description: EndToEndIdentification that carries over PACS002, PACS004 and PACS008
+      pattern: '[a-zA-Z0-9]{32}'
+      minLength: 32
+      maxLength: 32
+    PixValorOriginal:
+      type: object
+      properties:
+        original:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor original
+              description: Original Pix value.
+              pattern: \d{1,10}\.\d{2}
+    ParametrosConsultaCob:
+      type: object
+      title: Parâmetros de Consulta de Cobrança
+      description: '[DEPRECATED] Parameters used to carry out collection items query.'
+      required:
+      - inicio
+      - fim
+      - paginacao
+      properties:
+        inicio:
+          type: string
+          format: date-time
+          title: Data de Início
+          description: Starting date used in the query. Complies with RFC 3339.
+          example: '2020-04-01T00:00:00Z'
+        fim:
+          type: string
+          format: date-time
+          title: Data de Fim
+          description: End date used in the query. Complies with RFC 3339.
+          example: '2020-04-01T17:00:00Z'
+        cpf:
+          type: string
+          title: CPF
+          pattern: /^\d{11}$/
+          description: Filter by the CPF of the debtor. It cannot be used at the same time as the CNPJ.
+        cnpj:
+          type: string
+          title: CNPJ
+          pattern: /^\d{14}$/
+          description: Filter by the debtor's CNPJ. It cannot be used at the same time as the CPF.
+        locationPresente:
+          type: boolean
+          description: Filter by the existence of linked location.
+        status:
+          type: string
+          title: Status do registro da cobrança
+          description: Filter by collection status.
+        paginacao:
+          $ref: '#/components/schemas/Paginacao'
+    Problema:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: Reference URI identifying the type of issue. As per RFC 7807.
+          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title:
+          type: string
+          description: A short description of the problem.
+          example: Not found
+        status:
+          type: integer
+          description: HTTP code of status returned.
+          example: 404
+        detail:
+          type: string
+          description: Full description of the problem.
+        correlationId:
+          type: string
+          description: Issue correlation identifier for support purposes
+        violacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violacao'
+    Pix:
+      type: object
+      title: Pix
+      required:
+      - endToEndId
+      - valor
+      - horario
+      - pagador
+      properties:
+        endToEndId:
+          $ref: '#/components/schemas/EndToEndId'
+        txid:
+          allOf:
+          - $ref: '#/components/schemas/TxId'
+          - pattern: '[a-zA-Z0-9]{1,35}'
+        valor:
+          type: string
+          title: Valor do Pix.
+          pattern: \d{1,10}\.\d{2}
+          description: Valor do Pix.
+        componentesValor:
+          type: object
+          title: Informações sobre o valor do Pix
+          description: "The purpose of this framework is to explain the elements that make up the Pix amount, including information on fines, interest, discounts, and deductions when Pix is related to overdue collections.\n\nStructure rules:\n- Pix `value` is equal to:\n  - (`original.amount` + `withdrawal.amount` + `change.amount`) + `fine.amount` + `interest.amount` – `rebate.amount` – `discount.amount`\n  considering only the fields that are present for each type of paid collection.\n- The `withdrawal` and `change` structures will only be returned when the Pix is relative to a Cashout Pix or Change Pix, respectively, and\nthe other structures (`interest`, `fine`, `rebate` and `discount`) will only be relevant to the Pix of payments of collections due.\n- There cannot be simultaneously a substructure of type `withdrawal` and another of type `change`;\n- There is no restriction on the order of substructures.\n\nIn the case of a Pix Withdraw, you can return `original` with value=0.00 (zero) since the sum will be respected, or you can omit the\noriginal substructure. In the case of a Pix Swap or a collection payment due date, the `original` substructure will always be\ngift.\n\n#### Valid examples:\nExample of valid fills.\n\n- **Pix para pagamento de cobrança imediata (sem saque ou troco).**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"100.00\"\n    }\n  }\n  ...\n  ```\n- **Pix Saque.**\n  ```\n  ...\n  \"componentsValue\": {\n    \"withdraw\": {\n      \"value\": \"100.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```\n- **Pix para pagamento de cobrança imediata com saque (pode vir original.valor=0.00).**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"0.00\"\n    },\n    \"withdraw\": {\n      \"value\": \"100.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```\n- **Pix Troco.**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"80.00\"\n    },\n    \"Thing\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGTEC\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```\n- **Pix para pagamento de cobrança imediata com troco (ordem não importa).**\n  ```\n  ...\n  \"componentsValue\": {\n    \"Thing\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGTEC\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    },\n    \"original\": {\n      \"value\": \"80.00\"\n    }\n  }\n  ...\n  ```\n- **Pix para pagamento de cobrança com vencimento de R$100,00 considerando-se um atraso de 2 dias a uma multa de 3% e juros de 1% ao dia. O valor do Pix será R$105,00.**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"100.00\"\n    },\n    \"traffic ticket\": {\n      \"value\": \"3.00\"\n    },\n    \"fees\": {\n      \"value\": \"2.00\"\n    }\n  }\n  ...\n  ```\n#### Invalid examples:\nNon-exhaustive examples of invalid fills.\n- **`original.valor maior que 0.00 (zero) e saque juntos**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"80.00\"\n    },\n    \"withdraw\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```\n- **dois elementos de saque**\n  ```\n  ...\n  \"componentsValue\": [\n    \"withdraw\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    },\n    \"withdraw\": {\n      \"value\": \"10.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  ]\n  ...\n  ```\n- **saque e troco simultaneamente**\n  ```\n  ...\n  \"componentsValue\": {\n    \"original\": {\n      \"value\": \"60.00\"\n    },\n    \"withdraw\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGPSS\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    },\n    \"Thing\": {\n      \"value\": \"20.00\",\n      \"agent modality\": \"AGTEC\",\n      \"Withdrawal Service Provider\": \"12345678\"\n    }\n  }\n  ...\n  ```"
+          anyOf:
+          - $ref: '#/components/schemas/PixValorOriginal'
+          - $ref: '#/components/schemas/PixValorSaque'
+          - $ref: '#/components/schemas/PixValorTroco'
+          - $ref: '#/components/schemas/PixValorJuros'
+          - $ref: '#/components/schemas/PixValorMulta'
+          - $ref: '#/components/schemas/PixValorAbatimento'
+          - $ref: '#/components/schemas/PixValorDesconto'
+        chave:
+          type: string
+          title: Chave DICT do recebedor
+          description: '# Creditor DICT alias
+
+
+            * Creditor alias field as assigned in the respective PACS008.
+
+            * Aliases types can be: phone, email, cpf/cnpj or EVP.
+
+            * The format of the aliases can be found in the section "Formatting DICT aliases in BR Code" of the [Pix Initiation Standards Manual](https://www.bcb.gov.br/estabilidadefinanceira/pix).
+
+            '
+          maxLength: 77
+        horario:
+          type: string
+          format: date-time
+          title: Horário
+          description: Time the Pix was processed on the PSP.
+        infoPagador:
+          type: string
+          title: Informação livre do pagador
+          maxLength: 140
+        devolucoes:
+          type: array
+          title: Devoluções
+          items:
+            $ref: '#/components/schemas/Devolucao'
     CobVGerada:
       type: object
       title: Cobrança com vencimento gerada
@@ -1274,6 +947,170 @@ components:
             allOf:
             - $ref: '#/components/schemas/CobVValor'
       - $ref: '#/components/schemas/CobBaseCopiaCola'
+    PessoaJuridica:
+      type: object
+      required:
+      - cnpj
+      - nome
+      title: Pessoa Jurídica
+      properties:
+        cnpj:
+          type: string
+          title: CNPJ
+          pattern: /^\d{14}$/
+          description: User's CNPJ.
+        nome:
+          type: string
+          title: Nome
+          description: User's Nome.
+          maxLength: 200
+    Inicio:
+      type: string
+      title: Data de início
+      description: Filters records whose creation date is greater than or equal to the start date. Complies with RFC 3339.It should be in ISO_DATE(yyyy-MM-dd'T'HH:mm:ss.SSSZ) format
+      example: '2021-10-01T00:01:54.876Z'
+    Violacao:
+      type: object
+      title: Violações
+      properties:
+        razao:
+          type: string
+          title: Descrição do erro
+          description: Error description
+          example: Valor da cobrança não pode ser 0.00
+        propriedade:
+          type: string
+          title: Nome da propriedade
+          description: Property name
+          example: cob.chave
+        valor:
+          type: string
+          title: Valor da propriedade
+          description: Property Value
+          example: 061996671234
+    CobCriacao:
+      type: object
+      title: Criação
+      required:
+      - criacao
+      properties:
+        criacao:
+          type: string
+          format: date-time
+          title: Data de Criação
+          description: Timestamp that indicates when the collection item was created. Complies with the format defined in RFC 3339.
+    DevolucaoNatureza:
+      type: string
+      title: Natureza da Devolução
+      description: 'Indicates the nature of the return. A return can be related to a regular Pix, or to a Withdrawal/Change Pix. In the absence of this field the nature must be interpreted as being of a common Pix (ORIGINAL).
+
+
+        Natures are defined as follows:
+
+        - `ORIGINAL`: when the return refers to a common Pix or the purchase amount in a Pix Troca;
+
+        - `RETIRADA`: when the return refers to a Cash Out Pix or the amount of change in a Pix Change.
+
+        - `MED_OPERACIONAL`: when the return occurs within the MED due to operational failure and refers to a common Pix (`BE08`);
+
+        - `MED_FRAUDE`: when the return occurs within the MED on grounds of suspected fraud and refers to a common Pix (`FR01`).
+
+        '
+      enum:
+      - ORIGINAL
+      - RETIRADA
+      - MED_OPERACIONAL
+      - MED_FRAUDE
+    Paginacao:
+      type: object
+      title: Paginação
+      required:
+      - paginaAtual
+      - itensPorPagina
+      - quantidadeDePaginas
+      - quantidadeTotalDeItens
+      properties:
+        paginaAtual:
+          type: integer
+          title: Página atual
+          description: Retrieved page number.
+          minimum: 0
+        itensPorPagina:
+          type: integer
+          title: Itens por página
+          description: Number of records returned on the page.
+          minimum: 1
+        quantidadeDePaginas:
+          type: integer
+          title: Quantidade de páginas
+          description: Number of pages available for consultation.
+          minimum: 1
+        quantidadeTotalDeItens:
+          type: integer
+          title: Quantidade total de itens
+          description: Total amount of items available according to the parameters informed.
+          minimum: 0
+    PessoaFisica:
+      type: object
+      required:
+      - cpf
+      - nome
+      title: Pessoa Física
+      properties:
+        cpf:
+          type: string
+          title: CPF
+          pattern: /^\d{11}$/
+          description: User's CPF.
+        nome:
+          type: string
+          title: Nome
+          description: Username.
+          maxLength: 200
+    CobVSolicitada:
+      type: object
+      title: Cobrança com vencimento solicitada
+      description: Data sent to create or update the collection with due date via API
+      required:
+      - valor
+      - chave
+      - devedor
+      - calendario
+      allOf:
+      - type: object
+        properties:
+          calendario:
+            title: Calendário
+            description: Fields nested under the calendar identifier organize information regarding collection-related dates.
+            allOf:
+            - $ref: '#/components/schemas/CobDataDeVencimento'
+      - $ref: '#/components/schemas/DadosDevedor'
+      - type: object
+        properties:
+          loc:
+            allOf:
+            - $ref: '#/components/schemas/PayloadLocationCob'
+      - type: object
+        properties:
+          valor:
+            allOf:
+            - required:
+              - original
+            - $ref: '#/components/schemas/CobVValor'
+      - $ref: '#/components/schemas/CobBase'
+    CobBaseCopiaCola:
+      type: object
+      title: Cobrança Base com Copia e Cola
+      description: Attributes common to all collection entities that have Copy and Paste information
+      allOf:
+      - type: object
+        properties:
+          pixCopiaECola:
+            type: string
+            title: Pix Copia e Cola correspondente à cobrança.
+            description: This field returns the QR code string representation for a copy & paste operation.
+            maxLength: 512
+      - $ref: '#/components/schemas/CobBase'
     CobVRevisada:
       type: object
       title: Cobrança com vencimento revisada
@@ -1304,110 +1141,103 @@ components:
           valor:
             $ref: '#/components/schemas/CobVValor'
       - $ref: '#/components/schemas/CobBase'
+    PixValorSaque:
+      type: object
+      properties:
+        saque:
+          type: object
+          required:
+          - valor
+          - modalidadeAgente
+          - prestadorDoServicoDeSaque
+          properties:
+            valor:
+              type: string
+              title: Valor do Saque Pix
+              description: Pix Withdrawal Value Pix
+              pattern: \d{1,10}\.\d{2}
+            modalidadeAgente:
+              type: string
+              title: AgentModalidade do Agente
+              description: '##### Agent Type
+
+                <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr><tr><td>AGPSS</td><td>Agent Withdrawal Service Provider< /td></tr></table>
+
+                '
+              enum:
+              - AGTEC
+              - AGTOT
+              - AGPSS
+            prestadorDoServicoDeSaque:
+              type: string
+              title: Facilitador de Serviço de Saque
+              pattern: \d{8}
+              description: Withdrawal Service Provider ISPB
+    PixValorAbatimento:
+      type: object
+      properties:
+        abatimento:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo a abatimento.
+              description: Rebate amount.
+              pattern: \d{1,10}\.\d{2}
+    CobBase:
+      type: object
+      title: Cobrança Base
+      description: Attributes common to all collection entities
+      properties:
+        chave:
+          type: string
+          title: Chave DICT do recebedor
+          description: 'PIX Alias - Determines the alias registered in DICT, which will be used for the collection. This alias will be submitted by the payer’s PSP applications to DICT, which will return the translated information that will identify the collection creditor. *The aliases can be of the following types: phone number, e-mail address, taxpayer ID (CPF/CNPJ) or EVP.* The aliases formats can be found in [Standards Manual for starting  Pix](https://www.bcb.gov.br/estabilidadefinanceira/pagamentosinstantaneos).'
+          maxLength: 77
+        solicitacaoPagador:
+          type: string
+          title: Solicitação ao pagador
+          description: This optional field determines a text to be presented to the payer so that he can enter related information, in free format, to be sent to the recipient. This text will be filled, in pacs.008, by the payer's PSP, in the RemittanceInformation <RmtInf> field. The length of the <RmtInf> field in pacs.008 is limited to 140 characters.
+          maxLength: 140
+        infoAdicionais:
+          type: array
+          title: Informações adicionais
+          description: Each respective additional information contained in the list (name and amount) must be presented to the payer.
+          maximum: 50
+          items:
+            type: object
+            required:
+            - nome
+            - valor
+            properties:
+              nome:
+                type: string
+                title: Nome
+                description: Field name.
+                maxLength: 50
+              valor:
+                type: string
+                title: Valor
+                description: Field data.
+                maxLength: 200
     Fim:
       type: string
       title: Data de fim
       description: Filters records whose creation date is less than or equal to the end date. Complies with RFC 3339.It should be in ISO_DATE(yyyy-MM-dd'T'HH:mm:ss.SSSZ) format
       example: '2021-10-02T00:01:54.876Z'
-    EndToEndId:
+    CobrancaStatus:
       type: string
-      title: Id fim a fim da transação
-      description: EndToEndIdentification that carries over PACS002, PACS004 and PACS008
-      pattern: '[a-zA-Z0-9]{32}'
-      minLength: 32
-      maxLength: 32
-    Problema:
-      type: object
-      required:
-      - type
-      - title
-      - status
-      properties:
-        type:
-          type: string
-          format: uri
-          description: Reference URI identifying the type of issue. As per RFC 7807.
-          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title:
-          type: string
-          description: A short description of the problem.
-          example: Not found
-        status:
-          type: integer
-          description: HTTP code of status returned.
-          example: 404
-        detail:
-          type: string
-          description: Full description of the problem.
-        correlationId:
-          type: string
-          description: Issue correlation identifier for support purposes
-        violacoes:
-          type: array
-          items:
-            $ref: '#/components/schemas/Violacao'
-    PessoaFisica:
-      type: object
-      required:
-      - cpf
-      - nome
-      title: Pessoa Física
-      properties:
-        cpf:
-          type: string
-          title: CPF
-          pattern: /^\d{11}$/
-          description: User's CPF.
-        nome:
-          type: string
-          title: Nome
-          description: Username.
-          maxLength: 200
-    PayloadLocationId:
-      type: integer
-      format: int64
-      title: Id da location
-      description: Identifier of the location to be informed when creating the collection.
-    CobCriacao:
-      type: object
-      title: Criação
-      required:
-      - criacao
-      properties:
-        criacao:
-          type: string
-          format: date-time
-          title: Data de Criação
-          description: Timestamp that indicates when the collection item was created. Complies with the format defined in RFC 3339.
-    DadosRecebedor:
-      type: object
-      required:
-      - logradouro
-      - cidade
-      - uf
-      - cep
-      properties:
-        recebedor:
-          description: The receiving object organizes the information about the creditor of the collection.
-          oneOf:
-          - $ref: '#/components/schemas/PessoaFisica'
-          - type: object
-            allOf:
-            - $ref: '#/components/schemas/PessoaJuridica'
-            - type: object
-              properties:
-                nomeFantasia:
-                  type: string
-                  title: Nome fantasia
-                  description: Fantasy name.
-                  maxLength: 200
-          allOf:
-          - required:
-            - logradouro
-            - cidade
-            - uf
-            - cep
-          - $ref: '#/components/schemas/DadosComplementaresPessoa'
+      title: Status do registro da cobrança.
+      description: ' Collection registration status. Not to be confused with its payment status, like paid, overdue, expired, for instance.
+
+        The statuses are defined in this way: - `ATIVA`: indicates that the collection item was generated and is active (not yet been paid or removed); - `CONCLUIDA`: indicates that the collection item is no longer active and therefore will not accept further payments; - `REMOVIDO_PELO_USUARIO_RECEBEDOR`: indicates that the collection item was removed by the creditor; and - `REMOVIDO_PELO_PSP`: indicates that the collection item was removed by the PSP.'
+      enum:
+      - ATIVA
+      - CONCLUIDA
+      - REMOVIDA_PELO_USUARIO_RECEBEDOR
+      - REMOVIDA_PELO_PSP
     PixValorJuros:
       type: object
       properties:
@@ -1426,7 +1256,344 @@ components:
       title: Id da Devolução
       description: Location ID to be informed in the collection item creation.
       pattern: '[a-zA-Z0-9]{1,35}'
-    ParametrosConsultaCob:
+    PayloadLocationId:
+      type: integer
+      format: int64
+      title: Id da location
+      description: Identifier of the location to be informed when creating the collection.
+    CNPJ:
+      type: string
+      title: número de identificação fiscal
+      description: "# Tax identification identifier\n  Field `taxid` determines the tax identification number.\n"
+      pattern: ^[0-9]{14}$
+    DadosDevedor:
+      type: object
+      properties:
+        devedor:
+          description: The debtor object organizes information about the collection debtor.
+          oneOf:
+          - $ref: '#/components/schemas/PessoaFisica'
+          - $ref: '#/components/schemas/PessoaJuridica'
+          allOf:
+          - type: object
+            properties:
+              email:
+                type: string
+                title: Email
+                description: User email.
+          - $ref: '#/components/schemas/DadosComplementaresPessoa'
+    CobDataDeVencimento:
+      type: object
+      title: Data de Vencimento
+      required:
+      - dataDeVencimento
+      properties:
+        dataDeVencimento:
+          type: string
+          format: date
+          title: Data de vencimento da cobrança
+          description: This is a date, in the format `YYYY-MM-DD`, as per ISO 8601. It is the collection due date. The collection can be paid with no late payment penalty or interest up to this date, at any time of the day.
+          example: '2020-04-01'
+        validadeAposVencimento:
+          type: integer
+          format: int32
+          title: Validade após vencimento
+          description: ' It is the number of calendar days after calendario.dateDeVencimento, in which the collection can be technically paid (with or without late payment penalties or interest).
+
+            Whenever the due date falls on a weekend or a holiday for the paying user, it must be automatically extended to the first subsequent business day. all fields that make reference to this date (`PostExpiration validity`; `discount`; `interest` and `fine`) must assume this extension, when applicable.
+
+            To illustrate how it works, here are some examples, where: - ``(#)`` represents the due date; - ``(*)`` represents the date adjusted in terms of non-working days; - the ``(<number>)`` correspond to the additional days of validity for the payment.
+
+            Exemplo A:
+
+            ```txt Expiration Date: 2020-10-20, Tuesday. validityAfter Expiration: 4
+
+            Trying to pay on the day 2020-10-20, Tuesday: accepted. (#)(*) Trying to pay on the day 2020-10-21, Wednesday: accepted. (1) Trying to pay on 2020-10-22, Thursday: accepted. (two) Trying to pay on the day 2020-10-23, Friday: accepted. (3) Attempts to pay on 2020-10-24, Saturday: accepted. Attempts to pay on the day 2020-10-25, Sunday: accepted. (Holiday) Trying to pay on 2020-10-26, Monday: accepted. (4) Trying to pay on 2020-10-27, Tuesday: denied. ```
+
+            Exemplo B:
+
+            ```txt Expiration Date: 2020-12-25, Friday, holiday. validityAfterExpiration: 0
+
+            Attempts to pay on the day 2020-12-25, Friday: accepted. (#)(Holiday) Attempts to pay on 2020-12-26, Saturday: accepted. Attempts to pay on 2020-12-27, Sunday: accepted. Trying to pay on the day 2020-12-28, Monday: accepted. (*) Trying to pay on 2020-12-29, Tuesday: denied. ```
+
+            Exemplo C:
+
+            ```txt Expiration Date: 2020-12-25, Friday, holiday. validityAfter Expiration: 1
+
+            Attempts to pay on the day 2020-12-25, Friday: accepted. (#)(Holiday) Attempts to pay on 2020-12-26, Saturday: accepted. Attempts to pay on 2020-12-27, Sunday: accepted. Trying to pay on the day 2020-12-28, Monday: accepted. (*) Trying to pay on 2020-12-29, Tuesday: accepted. (1) Trying to pay on the day 2020-12-30, Wednesday: denied. ```
+
+            Exemplo D:
+
+            ```txt Expiration Date: 2020-12-25, Friday, holiday. validityAfter Expiration: 3
+
+            Attempts to pay on the day 2020-12-25, Friday: accepted. (#)(Holiday) Attempts to pay on 2020-12-26, Saturday: accepted. Attempts to pay on 2020-12-27, Sunday: accepted. Trying to pay on the day 2020-12-28, Monday: accepted. (*) Trying to pay on 2020-12-29, Tuesday: accepted. (1) Attempts to pay on the day 2020-12-30, Wednesday: accepted. (two) Trying to pay on 2020-12-31, Thursday: accepted. (3) Trying to pay on 2021-01-01, Friday: denied. ```
+
+            Exemplo E:
+
+            ```txt Expiration Date: 2020-12-25, Friday, holiday. validityAfter Expiration: 4
+
+            Attempts to pay on the day 2020-12-25, Friday: accepted. (#)(Holiday) Attempts to pay on 2020-12-26, Saturday: accepted. Attempts to pay on 2020-12-27, Sunday: accepted. Trying to pay on the day 2020-12-28, Monday: accepted. (*) Trying to pay on 2020-12-29, Tuesday: accepted. (1) Attempts to pay on the day 2020-12-30, Wednesday: accepted. (two) Trying to pay on 2020-12-31, Thursday: accepted. (3) Trying to pay on 2021-01-01, Friday: accepted. (Holiday) Attempts to pay on 2021-01-02, Saturday: accepted. Attempts to pay on 2021-01-03, Sunday: accepted. Trying to pay on 2021-01-04, Monday: accepted. (4) Trying to pay on 2021-01-05, Tuesday: denied. ```
+
+            Exemplo F:
+
+            ```txt Expiration Date: 2021-08-27, Friday. validityAfter Expiration: 5
+
+            Trying to pay on the day 2020-08-27, Friday: accepted. (#)(*) Attempts to pay on the day 2020-08-28, Saturday: accepted. (1) Attempts to pay on the day 2020-08-29, Sunday: accepted. (two) Trying to pay on the day 2020-08-30, Monday: accepted. (3) Trying to pay on 2020-12-31, Tuesday: accepted. (4) Attempts to pay on the day 2020-12-01, Wednesday: accepted. (5) Trying to pay on 2020-12-02, Thursday: denied. ```
+
+            Exemplo G:
+
+            ```txt Expiration Date: 2021-08-28, Saturday. validityAfter Expiration: 5
+
+            Attempts to pay on the day 2020-08-28, Saturday: accepted. (#) Attempts to pay on the day 2020-08-29, Sunday: accepted. Trying to pay on the day 2020-08-30, Monday: accepted. (*) Trying to pay on the day 2020-08-31, Tuesday: accepted. (1) Trying to pay on the day 2020-09-01, Wednesday: accepted. (two) Trying to pay on 2020-09-02, Thursday: accepted. (3) Trying to pay on the day 2020-09-03, Friday: accepted. (4) Trying to pay on the day 2020-09-04, Saturday: accepted. Trying to pay on the day 2020-09-05, Sunday: accepted. Trying to pay on the day 2020-09-06, Monday: accepted. (5) ```'
+          default: 30
+    PixValorMulta:
+      type: object
+      properties:
+        multa:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo a multa.
+              description: Fine amount.
+              pattern: \d{1,10}\.\d{2}
+    Devolucao:
+      type: object
+      title: Devolução
+      required:
+      - id
+      - rtrId
+      - valor
+      - horario
+      - status
+      properties:
+        id:
+          $ref: '#/components/schemas/DevolucaoId'
+        rtrId:
+          type: string
+          title: RtrId
+          description: ReturnIdentification transiting PACS004.
+          example: D12345678202009091000abcde123456
+          pattern: '[a-zA-Z0-9]{32}'
+          minLength: 32
+          maxLength: 32
+        valor:
+          type: string
+          title: Valor a devolver.
+          pattern: \d{1,10}\.\d{2}
+          description: Amount to return.
+        natureza:
+          $ref: '#/components/schemas/DevolucaoNatureza'
+        descricao:
+          type: string
+          title: Mensagem ao pagador relativa à devolução.
+          maxLength: 140
+          description: The optional `description` field determines a text to be displayed to the payer containing information about the payment return. This text will be filled in, in pacs.004, by the recipient's PSP, in the field RemittanceInformation. The field size in pacs.004 is limited to 140 characters.
+        horario:
+          type: object
+          properties:
+            solicitacao:
+              type: string
+              format: date-time
+              title: Horário de solicitação
+              description: Time when the payment return was requested on the PSP.
+            liquidacao:
+              type: string
+              format: date-time
+              title: Horário de liquidacao
+              description: Time the payment return was settled on the PSP.
+        status:
+          type: string
+          title: Status
+          description: Return status.
+          enum:
+          - EM_PROCESSAMENTO
+          - DEVOLVIDO
+          - NAO_REALIZADO
+        motivo:
+          type: string
+          title: Descrição do status.
+          description: '# Payment Return Status
+
+
+            Optional field that can be used by the receiving PSP to detail the reasons
+
+            the return has reached the status in question.
+
+            It can be used, for example, to detail the reason why the return was not carried out.
+
+            '
+          maxLength: 140
+    PayloadLocation:
+      type: object
+      title: Location do Payload
+      description: Payload location identifier.
+      required:
+      - id
+      - location
+      - tipoCob
+      - criacao
+      properties:
+        id:
+          $ref: '#/components/schemas/PayloadLocationId'
+        location:
+          type: string
+          title: Localização do payload
+          description: Payload location to be provided when creating the collection item.
+          maxLength: 77
+          format: uri
+          example: pix.example.com/qr/v2/2353c790eefb11eaadc10242ac120002
+        tipoCob:
+          type: string
+          title: Tipo da cobrança
+          enum:
+          - cob
+          - cobv
+        criacao:
+          type: string
+          format: date-time
+          title: Data de Criação
+          description: Payload location creation Date and time. Complies with RFC 3339.
+    PayloadLocationCob:
+      type: object
+      title: Location do Payload
+      required:
+      - id
+      - tipoCob
+      description: Identifier of the payload location.
+      properties:
+        id:
+          $ref: '#/components/schemas/PayloadLocationId'
+    CobCompleta:
+      title: Cobrança imediata completa
+      required:
+      - status
+      allOf:
+      - $ref: '#/components/schemas/CobSolicitada'
+      - $ref: '#/components/schemas/CobGerada'
+      - type: object
+        properties:
+          status:
+            type: string
+            title: Bill Status
+            enum:
+            - ATIVA
+            - CONCLUIDA
+            - REMOVIDA_PELO_USUARIO_RECEBEDOR
+            - REMOVIDA_PELO_PSP
+      - type: object
+        properties:
+          pix:
+            type: array
+            title: Pix received
+            items:
+              allOf:
+              - $ref: '#/components/schemas/Pix_2'
+              - type: object
+                properties:
+                  txid:
+                    allOf:
+                    - $ref: '#/components/schemas/TxId_2'
+                    - pattern: '[a-zA-Z0-9]{26,35}'
+    Revisao_2:
+      type: integer
+      format: int32
+      title: Revisão
+      description: '# The `review` field
+
+
+        Denotes the collection review version. Always starts at zero. Always increments 1.
+
+
+        This should increase whenever a collection item is updated.
+
+        The `loc` field change is not considered an update and therefore does not trigger an increment to the version number.
+
+
+        The `loc` field does not change the collection itself.
+
+        It is not necessary to store the history of changes in the `loc` field for a given collection.
+
+        For the other fields of the collection, history is recorded.
+
+        '
+      readOnly: true
+    TxId_2:
+      type: string
+      title: Id da Transação
+      description: "# Transaction identifier\n  Field `txid` determines the transaction identifier for reconciliation purposes. In pacs.008 it is referenced as `TransactionIdentification <txId>` or `idConciliacaoRecebedor`. The txid is retrieved by the payer’s PSP application and, after the payment is confirmed, it is sent to SPI via pacs.008. A pacs.008 is also sent to the receiver’s PSP, containing the txid in addition to all the usual payment  information. Upon receiving the payment with txid, the receiver's PSP may inform the creditor to reconcile. The contents of this field are provided exclusively by the collector, who is the ultimate responsible for them. The txid should be unique by collector’s CPF/CNPJ. The receiving PSP is responsible for validating this rule in the API.\n"
+      pattern: '[a-zA-Z0-9]{26,35}'
+    PixValorTroco_2:
+      type: object
+      properties:
+        troco:
+          type: object
+          required:
+          - valor
+          - modalidadeAgente
+          - prestadorDoServicoDeSaque
+          properties:
+            valor:
+              type: string
+              title: Valor do Troco Pix
+              description: Amount of Change Pix.
+              pattern: \d{1,10}\.\d{2}
+            modalidadeAgente:
+              type: string
+              title: Modalidade do Agente
+              description: '##### Agent Type
+
+                <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr><tr><td>AGPSS</td><td>Agent Withdrawal Service Provider< /td></tr></table>
+
+                '
+              enum:
+              - AGTEC
+              - AGTOT
+              - AGPSS
+            prestadorDoServicoDeSaque:
+              type: string
+              title: Prestador do Serviço de Saque
+              pattern: \d{8}
+              description: Withdrawal Service Provider ISPB
+    CobRevisada:
+      type: object
+      title: Cobrança imediata revisada
+      description: Data sent to create or change Immediate collection via API Pix
+      allOf:
+      - type: object
+        properties:
+          calendario:
+            title: Calendário
+            description: The fields nested under the calendar identifier organize information regarding collection-related dates.
+            allOf:
+            - $ref: '#/components/schemas/CobExpiracao'
+      - type: object
+        properties:
+          devedor:
+            description: The fields nested under object debtor are optional and identify the debtor, i.e., the person or institution who owes the debt. They do not necessarily identify who will effectively make the payment. A CPF can be the debtor, but another CPF effectively makes the payment. Field `devedor.cpf` and field `devedor.cnpj` are not allowed to be completed at the same time. If field `devedor.cnpj` is completed, then, field `devedor.cpf` cannot be completed, and vice-versa. If field `devedor.nome` is completed, then, there must be or a `devedor.cpf` or a field `devedor.cnpj` completed.
+            oneOf:
+            - $ref: '#/components/schemas/PessoaFisica'
+            - $ref: '#/components/schemas/PessoaJuridica_2'
+      - type: object
+        properties:
+          loc:
+            allOf:
+            - $ref: '#/components/schemas/PayloadLocationCob_2'
+      - type: object
+        properties:
+          status:
+            type: string
+            title: Status do registro da cobrança
+            enum:
+            - REMOVIDA_PELO_USUARIO_RECEBEDOR
+      - type: object
+        properties:
+          valor:
+            $ref: '#/components/schemas/CobValor'
+      - $ref: '#/components/schemas/CobBase_2'
+    ParametrosConsultaCob_2:
       type: object
       title: Parâmetros de Consulta de Cobrança
       description: '[DEPRECATED] Parameters used to carry out collection items query.'
@@ -1463,248 +1630,68 @@ components:
         status:
           type: string
           title: Status do registro da cobrança
-          description: Filter by collection status.
+          description: Filter by collection item status.
         paginacao:
           $ref: '#/components/schemas/Paginacao'
-    Devolucao_2:
+    Pix_2:
       type: object
-      title: Devolução
+      title: Pix
       required:
-      - id
-      - rtrId
+      - endToEndId
       - valor
       - horario
-      - status
       properties:
-        id:
-          $ref: '#/components/schemas/DevolucaoId_2'
-        rtrId:
-          type: string
-          title: RtrId
-          description: ReturnIdentification transiting PACS004.
-          example: D12345678202009091000abcde123456
-          pattern: '[a-zA-Z0-9]{32}'
-          minLength: 32
-          maxLength: 32
+        endToEndId:
+          $ref: '#/components/schemas/EndToEndId'
+        txid:
+          allOf:
+          - $ref: '#/components/schemas/TxId_2'
+          - pattern: '[a-zA-Z0-9]{1,35}'
         valor:
           type: string
-          title: Valor a devolver.
+          title: Valor do Pix.
           pattern: \d{1,10}\.\d{2}
-          description: Amount to return.
-        natureza:
-          $ref: '#/components/schemas/DevolucaoNatureza'
-        descricao:
-          type: string
-          title: Mensagem ao pagador relativa à devolução.
-          maxLength: 140
-          description: The optional `description` field determines a text to be displayed to the payer containing information about the return. This text will be filled in, in pacs.004, by the recipient's PSP, in the field RemittanceInformation. The field size in pacs.004 is limited to 140 characters.
-        horario:
+          description: Pix value.
+        componentesValor:
           type: object
-          properties:
-            solicitacao:
-              type: string
-              format: date-time
-              title: Horário de solicitação
-              description: Time at which the return was requested on the PSP.
-            liquidacao:
-              type: string
-              format: date-time
-              title: Horário de liquidacao
-              description: Time the return was settled on the PSP.
-        status:
+          title: Informações sobre o valor do Pix
+          description: "The purpose of this framework is to explain the compositional elements of the Pix value.\n\nStructure rules:\n- The `value` of the Pix is ​​equal to the sum of the `value` fields of the substructures that make up this structure;\n- There cannot be simultaneously a substructure of the `draw` type and another of the `change` type;\n- There is no restriction on the order of substructures.\n\nIn case of withdrawal with withdrawal, you can return\n `original` with value=0.00 (zero) since the sum will be respected, or you can omit\n  the `original` substructure. In the case of change the `original` substructure will always be present.\n\n#### Valid examples:\nExample of valid completions.\n\n- **immediate collection (without cash withdrawal or change)**\n  ```\n  ...\n  \"componentesValor\": [\n   {\n   \"tipo\": \"ORIGINAL\",\n   \"valor\": \"100.00\"\n   }\n   ]\n  ...\n  ```\n- **Immediate collection with cash withdrawal**\n  ```\n  ...\n  \"componentesValor\": [\n   {\n   \"tipo\": \"SAQUE\",\n   \"valor\": \"100.00\"\n   } \n   ]\n  ...\n  ```\n- **Immediate collection with cash withdrawal (it may show type=ORIGINAL and value=0.00)**\n   ```\n   ...\n   \"componentesValor\": [\n   {\n   \"tipo\": \"ORIGINAL\",\n   \"valor\": \"0.00\"\n   },\n   {\n   \"tipo\": \"SAQUE\",\n   \"valor\": \"100.00\"\n   }\n  ]\n  ...\n  ```\n- **Immediate collection with change**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"ORIGINAL\",\n \"valor\": \"80.00\"\n },\n {\n \"tipo\": \"TROCO\",\n \"valor\": \"20.00\"\n }\n ]\n ...\n ```\n - **Immediate collection with change (the order does not matter)**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"TROCO\",\n \"valor\": \"20.00\"\n },\n {\n \"tipo\": \"ORIGINAL\",\n \"valor\": \"80.00\"\n }\n ]\n ...\n ```\n#### Invalid examples:\n Non-exhaustive examples, of invalid completions.\n - **`ORIGINAL` with value higher than 0.00 (zero) and `SAQUE` together**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"ORIGINAL\",\n \"valor\": \"80.00\"\n },\n {\n \"tipo\": \"SAQUE\",\n \"valor\": \"20.00\"\n }\n ]\n ...\n ```\n - **two `SAQUE` elements**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"SAQUE\",\n \"valor\": \"20.00\"\n },\n {\n \"tipo\": \"SAQUE\",\n \"valor\": \"10.00\"\n }\n ]\n ...\n ```\n - **Immediate collection with `SAQUE` and `TROCO`**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"ORIGINAL\",\n \"valor\": \"60.00\"\n },\n {\n \"tipo\": \"SAQUE\",\n \"valor\": \"20.00\"\n },\n {\n \"tipo\": \"TROCO\",\n \"valor\": \"20.00\"\n }\n ]\n ...\n ```"
+          anyOf:
+          - $ref: '#/components/schemas/PixValorOriginal'
+          - $ref: '#/components/schemas/PixValorSaque_2'
+          - $ref: '#/components/schemas/PixValorTroco_2'
+          - $ref: '#/components/schemas/PixValorJuros'
+          - $ref: '#/components/schemas/PixValorMulta'
+          - $ref: '#/components/schemas/PixValorAbatimento'
+          - $ref: '#/components/schemas/PixValorDesconto'
+        chave:
           type: string
-          title: Status
-          description: Return status.
-          enum:
-          - EM_PROCESSAMENTO
-          - DEVOLVIDO
-          - NAO_REALIZADO
-        motivo:
-          type: string
-          title: Descrição do status.
-          description: '# Return Status
+          title: Chave DICT do recebedor
+          description: '# Creditor DICT alias
 
 
-            Optional field that can be used by the receiving PSP to detail the reasons
+            * Creditor alias field as assigned in the respective PACS008.
 
-            the return has reached the status in question.
+            * Aliases types can be: phone, email, cpf/cnpj or EVP.
 
-            It can be used, for example, to detail the reason why the return was not carried out.
+            * The format of the aliases can be found in the section "Formatting DICT aliases in BR Code" of the [Pix Initiation Standards Manual](https://www.bcb.gov.br/estabilidadefinanceira/pix).
 
             '
-          maxLength: 140
-    PayloadLocation_2:
-      type: object
-      title: Location do Payload
-      description: Identifier of the payload location.
-      required:
-      - id
-      - location
-      - tipoCob
-      - criacao
-      properties:
-        id:
-          $ref: '#/components/schemas/PayloadLocationId'
-        location:
-          type: string
-          title: Localização do payload
-          description: Payload location to be provided when creating the collection item.
           maxLength: 77
-          format: uri
-          example: pix.example.com/qr/v2/2353c790eefb11eaadc10242ac120002
-          readOnly: true
-        tipoCob:
-          type: string
-          title: Tipo da cobrança
-          enum:
-          - cob
-          - cobv
-        criacao:
+        horario:
           type: string
           format: date-time
-          title: Creation Date
-          description: Date and time location was created. Complies with RFC 3339.
-          readOnly: true
-    CobValor:
-      type: object
-      title: Valor da cobrança imediata
-      description: Collection item amount.
-      properties:
-        original:
+          title: Horário
+          description: Time the Pix was processed on the PSP.
+        infoPagador:
           type: string
-          title: Valor
-          pattern: \d{1,10}\.\d{2}
-          description: Collection item base amount.
-        modalidadeAlteracao:
-          type: integer
-          format: int32
-          minimum: 0
-          maximum: 1
-          title: Modalidade de alteração
-          description: This determines if the effective due amount of the collection item can be changed by the payer. 0 if not allowed and 1 if allowed. If not provided it will be considered 0.
-        retirada:
-          description: "It is an optional structure related to the concept of receiving cash. Only one grouping at a time is allowed, when there is `draw` there is no `change` and vice versa.\n\nWhen an Immediate collection has a `withdrawal` structure, it ceases to be considered common Pix and becomes a Cash Pix category.\n\nIn order for the completion of the `withdrawal` object to be considered valid, the following rules apply:\n- the `modalidadeAgente` and `providerDoServicoDeSaque` fields are **required**;\n- when `withdrawal` is present, the collection must comply with the following conditions:\n  - The field `valor.original` must be filled with **value equal to 0.00 (zero)**;\n  - The field `valor.modalidadeAlteracao` must have the value 0 (zero) explicitly, or implicitly (by not filling it out).\n- when `change` is present, the collection must comply with the following conditions:\n  - The field `valor.original` must be filled with **value greater than 0.00 (zero)**;\n  - The field `valor.modalidadeAlteracao` must have the value 0 (zero) explicitly, or implicitly (by not filling it out).\n\n**IMPORTANT**: When using `withdrawal` or `change`, it will not be allowed to change the `original.value` received. In the presence of `draw` or `change`, the receipt of the `valor.modalidadeAlteracao` field with value 1 (one) is considered an error.\n\n#### Valid examples:\n   Considering the fields of structure `value` and predicate 'present', the result of which is true when the\n  indicated structure is found, we have:\n   - 1 - **collection with fixed value** (conditions: valor.original > 0 && valor.modalidadeAlteração = 0 &&\n  !present(valor.retirada))\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\"\n   },\n   ...\n   ```\n   - 2 - **collection with changeable value** (conditions: valor.original >= 0.00 && modalidadeAlteração = 1\n  && !present(valor.retirada))\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\",\n   \"modalidadeAlteracao\": 1\n   },\n   ```\n   - 3 - **cash withdrawal with fixed value** (conditions: valor.original = 0.00 && valor.modalidadeAlteração\n  = 0 && presente(valor.retirada.saque) && valor.retirada.saque.valor > 0 &&\n  valor.retirada.saque.modalidadeAlteracao = 0)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\"\n   }\n   }\n   },\n   ...\n   ```\n   - 4 - **cash withdrawal with changeable value** (conditions: valor.original = 0.00 &&\n  valor.modalidadeAlteração = 0 && presente(valor.retirada.saque) && valor.retirada.saque.valor >= 0 &&\n  valor.retirada.saque.modalidadeAlteracao = 1)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\",\n   \"modalidadeAlteracao\": 1,\n   }\n   }\n   },\n   ...\n   ```\n   - 5 - **collection with fixed change** (conditions: valor.original > 0.00 && valor.modalidadeAlteração = 0 &&\n  presente(valor.retirada.troco) && valor.retirada.troco.valor > 0 && valor.retirada.troco.modalidadeAlteracao = 0)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\",\n   \"withdrawal\": {\n   \"change\": {\n   \"value\": \"5.00\"\n   }\n   }\n  \n   },\n   ...\n   ```\n   - 6 - **collection with changeable change** (conditions: valor.original > 0.00 && valor.modalidadeAlteração = 0\n  && present(valor.retirada.troco) && valor.retirada.troco.valor >= 0 && valor.retirada.troco.modalidadeAlteracao = 1)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\",\n   \"change\": {\n   \"value\": \"0.00\",\n   \"modalidadeAlteracao\": 1\n   }\n   },\n   ...\n   ```\n   #### Invalid examples:\n   Below are some examples which **are not valid**. It is worth noting that this listing is not intended to be\n  complete, being just a reference for some possible errors.\n   - 1 - **collection with cash withdrawal and change together** (both of them cannot occur at the same time)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"100.00\",\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"50.00\"\n   },\n   \"change\": {\n   \"value\": \"30.00\"\n   }\n   }\n   },\n   ...\n   ```\n   - 2 - **cash withdrawal with valor.original higher than 0.00 (zero)** (cash withdrawal requires valor.original =\n  0.00)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\",\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\"\n   }\n   }\n   },\n   ...\n   ```\n   - 3 - **change with valor.original equal to 0.00 (zero)** (for having a change, there must be valor.original > 0.00)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"withdrawal\": {\n   \"change\": {\n   \"value\": \"5.00\"\n  \n   }\n   }\n   },\n   ...\n   ```\n   - 4 - **cash withdrawal with changeable valor.original** (the valor.original cannot be changed in the\n  presence of cash withdrawal)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"modalidadeAlteracao\": 1,\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\",\n   \"modalidadeAlteracao\": 1,\n   }\n   }\n   },\n   ...\n   ```\n   - 5 - **change with changeable valor.original** (the valor.original cannot be changed in the presence of change)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"modalidadeAlteracao\": 1,\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\",\n   \"modalidadeAlteracao\": 1,\n   }\n   }\n   },\n   ...\n   ```\n"
-          title: Informações de retirada
-          type: object
-          oneOf:
-          - type: object
-            properties:
-              saque:
-                type: object
-                title: Saque
-                required:
-                - valor
-                - modalidadeAgente
-                - prestadorDoServicoDeSaque
-                description: Information related to the cash withdrawal
-                properties:
-                  valor:
-                    type: string
-                    title: Valor do saque
-                    pattern: \d{1,10}\.\d{2}
-                    description: Value of the cash withdrawal conducted
-                  modalidadeAlteracao:
-                    type: integer
-                    format: int32
-                    minimum: 0
-                    maximum: 1
-                    default: 0
-                    title: Modalidade de alteração do saque
-                    description: Cash withdrawal value change modality. When not completed, the assumed value is 0 (zero).
-                  modalidadeAgente:
-                    type: string
-                    title: Modalidade do Agente
-                    description: '##### Agent Type
-
-                      <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr><tr><td>AGPSS</td><td>Agent Withdrawal Service Provider< /td></tr></table>
-
-                      '
-                    enum:
-                    - AGTEC
-                    - AGTOT
-                    - AGPSS
-                  prestadorDoServicoDeSaque:
-                    type: string
-                    title: Prestador do Serviço de Saque
-                    pattern: \d{8}
-                    description: Withdrawal Service Provider ISPB
-          - type: object
-            properties:
-              troco:
-                type: object
-                title: Troco
-                required:
-                - valor
-                - modalidadeAgente
-                - prestadorDoServicoDeSaque
-                description: Change related information
-                properties:
-                  valor:
-                    type: string
-                    title: Valor do troco
-                    pattern: \d{1,10}\.\d{2}
-                    description: Value of the change conducted
-                  modalidadeAlteracao:
-                    type: integer
-                    format: int32
-                    minimum: 0
-                    maximum: 1
-                    default: 0
-                    title: Modalidade de alteração do troco
-                    description: Change value alteration modality. When not completed, the assumed value is 0 (zero).
-                  modalidadeAgente:
-                    type: string
-                    title: Modalidade do Agente
-                    description: '##### Agent Type
-
-                      <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr><tr><td>AGPSS</td><td>Agent Withdrawal Service Provider< /td></tr></table>
-
-                      '
-                    enum:
-                    - AGTEC
-                    - AGTOT
-                    - AGPSS
-                  prestadorDoServicoDeSaque:
-                    type: string
-                    title: Prestador do Serviço de Saque
-                    pattern: \d{8}
-                    description: Withdrawal Service Provider ISPB
-    CobCompleta:
-      title: Cobrança imediata completa
-      required:
-      - status
-      allOf:
-      - $ref: '#/components/schemas/CobSolicitada'
-      - $ref: '#/components/schemas/CobGerada'
-      - type: object
-        properties:
-          status:
-            type: string
-            title: Bill Status
-            enum:
-            - ATIVA
-            - CONCLUIDA
-            - REMOVIDA_PELO_USUARIO_RECEBEDOR
-            - REMOVIDA_PELO_PSP
-      - type: object
-        properties:
-          pix:
-            type: array
-            title: Pix received
-            items:
-              allOf:
-              - $ref: '#/components/schemas/Pix_2'
-              - type: object
-                properties:
-                  txid:
-                    allOf:
-                    - $ref: '#/components/schemas/TxId_2'
-                    - pattern: '[a-zA-Z0-9]{26,35}'
-    TxId_2:
-      type: string
-      title: Id da Transação
-      description: "# Transaction identifier\n  Field `txid` determines the transaction identifier for reconciliation purposes. In pacs.008 it is referenced as `TransactionIdentification <txId>` or `idConciliacaoRecebedor`. The txid is retrieved by the payer’s PSP application and, after the payment is confirmed, it is sent to SPI via pacs.008. A pacs.008 is also sent to the receiver’s PSP, containing the txid in addition to all the usual payment  information. Upon receiving the payment with txid, the receiver's PSP may inform the creditor to reconcile. The contents of this field are provided exclusively by the collector, who is the ultimate responsible for them. The txid should be unique by collector’s CPF/CNPJ. The receiving PSP is responsible for validating this rule in the API.\n"
-      pattern: '[a-zA-Z0-9]{26,35}'
+          title: Informação livre do pagador
+          maxLength: 140
+        devolucoes:
+          type: array
+          title: Devoluções
+          items:
+            $ref: '#/components/schemas/Devolucao_2'
     PessoaJuridica_2:
       type: object
       required:
@@ -1722,6 +1709,68 @@ components:
           title: Nome
           description: User's Name.
           maxLength: 200
+    CobSolicitada:
+      type: object
+      title: Cobrança imediata solicitada
+      description: Data sent to create or change Immediate collection via API Pix
+      required:
+      - valor
+      - chave
+      - calendario
+      allOf:
+      - type: object
+        properties:
+          calendario:
+            title: Calendário
+            description: The fields nested under the calendar identifier organize information regarding collection-related dates.
+            allOf:
+            - $ref: '#/components/schemas/CobExpiracao'
+      - type: object
+        properties:
+          devedor:
+            description: The fields nested under object debtor are optional and identify the debtor, i.e., the person or institution who owes the debt. They do not necessarily identify who will effectively make the payment. A CPF can be the debtor, but another CPF effectively makes the payment. Field `devedor.cpf` and field `devedor.cnpj` are not allowed to be completed at the same time. If field `devedor.cnpj` is completed, then, field `devedor.cpf` cannot be completed, and vice-versa. If field `devedor.nome` is completed, then, there must be or a `devedor.cpf` or a field `devedor.cnpj` completed.
+            oneOf:
+            - $ref: '#/components/schemas/PessoaFisica'
+            - $ref: '#/components/schemas/PessoaJuridica_2'
+      - type: object
+        properties:
+          loc:
+            allOf:
+            - $ref: '#/components/schemas/PayloadLocationCob_2'
+      - type: object
+        properties:
+          valor:
+            allOf:
+            - $ref: '#/components/schemas/CobValor'
+            - required:
+              - original
+      - $ref: '#/components/schemas/CobBase_2'
+    CobExpiracao:
+      type: object
+      title: Expiração"
+      properties:
+        expiracao:
+          type: integer
+          format: int32
+          title: Tempo de vida da cobrança, especificado em segundos.
+          description: 'Collection item lifetime, specified in seconds from the creation date (Calendario.criacao)
+
+            '
+          example: '3600'
+          default: 86400
+    CobBaseCopiaCola_2:
+      type: object
+      title: Cobrança Base com Copia e Cola
+      description: Attributes common to all Billing entities that have Copy and Paste information
+      allOf:
+      - type: object
+        properties:
+          pixCopiaECola:
+            type: string
+            title: Pix Copia e Cola correspondente à cobrança.
+            description: This field returns the QR code string representation for a copy & paste operation.
+            maxLength: 512
+      - $ref: '#/components/schemas/CobBase_2'
     CobsConsultadas:
       type: object
       title: Cobranças imediatas consultadas
@@ -1741,10 +1790,10 @@ components:
               - status
               - txid
               - idCob
-    PixValorTroco_2:
+    PixValorSaque_2:
       type: object
       properties:
-        troco:
+        saque:
           type: object
           required:
           - valor
@@ -1753,12 +1802,12 @@ components:
           properties:
             valor:
               type: string
-              title: Valor do Troco Pix
-              description: Amount of Change Pix.
+              title: Pix Cashout Value
+              description: PixValor do Saque Pix
               pattern: \d{1,10}\.\d{2}
             modalidadeAgente:
               type: string
-              title: Modalidade do Agente
+              title: AgentModalidade do Agente
               description: '##### Agent Type
 
                 <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr><tr><td>AGPSS</td><td>Agent Withdrawal Service Provider< /td></tr></table>
@@ -1880,114 +1929,214 @@ components:
             allOf:
             - $ref: '#/components/schemas/CobValor'
       - $ref: '#/components/schemas/CobBaseCopiaCola_2'
-    CobBaseCopiaCola_2:
+    DevolucaoId_2:
+      type: string
+      title: Id da location
+      description: Location identifier to be informed in the collection item creation.
+      pattern: '[a-zA-Z0-9]{1,35}'
+    CobValor:
       type: object
-      title: Cobrança Base com Copia e Cola
-      description: Attributes common to all Billing entities that have Copy and Paste information
-      allOf:
-      - type: object
-        properties:
-          pixCopiaECola:
-            type: string
-            title: Pix Copia e Cola correspondente à cobrança.
-            description: This field returns the QR code string representation for a copy & paste operation.
-            maxLength: 512
-      - $ref: '#/components/schemas/CobBase_2'
-    CobSolicitada:
+      title: Valor da cobrança imediata
+      description: Collection item amount.
+      properties:
+        original:
+          type: string
+          title: Valor
+          pattern: \d{1,10}\.\d{2}
+          description: Collection item base amount.
+        modalidadeAlteracao:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 1
+          title: Modalidade de alteração
+          description: This determines if the effective due amount of the collection item can be changed by the payer. 0 if not allowed and 1 if allowed. If not provided it will be considered 0.
+        retirada:
+          description: "It is an optional structure related to the concept of receiving cash. Only one grouping at a time is allowed, when there is `draw` there is no `change` and vice versa.\n\nWhen an Immediate collection has a `withdrawal` structure, it ceases to be considered common Pix and becomes a Cash Pix category.\n\nIn order for the completion of the `withdrawal` object to be considered valid, the following rules apply:\n- the `modalidadeAgente` and `providerDoServicoDeSaque` fields are **required**;\n- when `withdrawal` is present, the collection must comply with the following conditions:\n  - The field `valor.original` must be filled with **value equal to 0.00 (zero)**;\n  - The field `valor.modalidadeAlteracao` must have the value 0 (zero) explicitly, or implicitly (by not filling it out).\n- when `change` is present, the collection must comply with the following conditions:\n  - The field `valor.original` must be filled with **value greater than 0.00 (zero)**;\n  - The field `valor.modalidadeAlteracao` must have the value 0 (zero) explicitly, or implicitly (by not filling it out).\n\n**IMPORTANT**: When using `withdrawal` or `change`, it will not be allowed to change the `original.value` received. In the presence of `draw` or `change`, the receipt of the `valor.modalidadeAlteracao` field with value 1 (one) is considered an error.\n\n#### Valid examples:\n   Considering the fields of structure `value` and predicate 'present', the result of which is true when the\n  indicated structure is found, we have:\n   - 1 - **collection with fixed value** (conditions: valor.original > 0 && valor.modalidadeAlteração = 0 &&\n  !present(valor.retirada))\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\"\n   },\n   ...\n   ```\n   - 2 - **collection with changeable value** (conditions: valor.original >= 0.00 && modalidadeAlteração = 1\n  && !present(valor.retirada))\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\",\n   \"modalidadeAlteracao\": 1\n   },\n   ```\n   - 3 - **cash withdrawal with fixed value** (conditions: valor.original = 0.00 && valor.modalidadeAlteração\n  = 0 && presente(valor.retirada.saque) && valor.retirada.saque.valor > 0 &&\n  valor.retirada.saque.modalidadeAlteracao = 0)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\"\n   }\n   }\n   },\n   ...\n   ```\n   - 4 - **cash withdrawal with changeable value** (conditions: valor.original = 0.00 &&\n  valor.modalidadeAlteração = 0 && presente(valor.retirada.saque) && valor.retirada.saque.valor >= 0 &&\n  valor.retirada.saque.modalidadeAlteracao = 1)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\",\n   \"modalidadeAlteracao\": 1,\n   }\n   }\n   },\n   ...\n   ```\n   - 5 - **collection with fixed change** (conditions: valor.original > 0.00 && valor.modalidadeAlteração = 0 &&\n  presente(valor.retirada.troco) && valor.retirada.troco.valor > 0 && valor.retirada.troco.modalidadeAlteracao = 0)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\",\n   \"withdrawal\": {\n   \"change\": {\n   \"value\": \"5.00\"\n   }\n   }\n  \n   },\n   ...\n   ```\n   - 6 - **collection with changeable change** (conditions: valor.original > 0.00 && valor.modalidadeAlteração = 0\n  && present(valor.retirada.troco) && valor.retirada.troco.valor >= 0 && valor.retirada.troco.modalidadeAlteracao = 1)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\",\n   \"change\": {\n   \"value\": \"0.00\",\n   \"modalidadeAlteracao\": 1\n   }\n   },\n   ...\n   ```\n   #### Invalid examples:\n   Below are some examples which **are not valid**. It is worth noting that this listing is not intended to be\n  complete, being just a reference for some possible errors.\n   - 1 - **collection with cash withdrawal and change together** (both of them cannot occur at the same time)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"100.00\",\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"50.00\"\n   },\n   \"change\": {\n   \"value\": \"30.00\"\n   }\n   }\n   },\n   ...\n   ```\n   - 2 - **cash withdrawal with valor.original higher than 0.00 (zero)** (cash withdrawal requires valor.original =\n  0.00)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"10.00\",\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\"\n   }\n   }\n   },\n   ...\n   ```\n   - 3 - **change with valor.original equal to 0.00 (zero)** (for having a change, there must be valor.original > 0.00)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"withdrawal\": {\n   \"change\": {\n   \"value\": \"5.00\"\n  \n   }\n   }\n   },\n   ...\n   ```\n   - 4 - **cash withdrawal with changeable valor.original** (the valor.original cannot be changed in the\n  presence of cash withdrawal)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"modalidadeAlteracao\": 1,\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\",\n   \"modalidadeAlteracao\": 1,\n   }\n   }\n   },\n   ...\n   ```\n   - 5 - **change with changeable valor.original** (the valor.original cannot be changed in the presence of change)\n   ```\n   ...\n   \"value\": {\n   \"original\": \"0.00\",\n   \"modalidadeAlteracao\": 1,\n   \"withdrawal\": {\n   \"cash withdrawal\": {\n   \"value\": \"5.00\",\n   \"modalidadeAlteracao\": 1,\n   }\n   }\n   },\n   ...\n   ```\n"
+          title: Informações de retirada
+          type: object
+          oneOf:
+          - type: object
+            properties:
+              saque:
+                type: object
+                title: Saque
+                required:
+                - valor
+                - modalidadeAgente
+                - prestadorDoServicoDeSaque
+                description: Information related to the cash withdrawal
+                properties:
+                  valor:
+                    type: string
+                    title: Valor do saque
+                    pattern: \d{1,10}\.\d{2}
+                    description: Value of the cash withdrawal conducted
+                  modalidadeAlteracao:
+                    type: integer
+                    format: int32
+                    minimum: 0
+                    maximum: 1
+                    default: 0
+                    title: Modalidade de alteração do saque
+                    description: Cash withdrawal value change modality. When not completed, the assumed value is 0 (zero).
+                  modalidadeAgente:
+                    type: string
+                    title: Modalidade do Agente
+                    description: '##### Agent Type
+
+                      <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr><tr><td>AGPSS</td><td>Agent Withdrawal Service Provider< /td></tr></table>
+
+                      '
+                    enum:
+                    - AGTEC
+                    - AGTOT
+                    - AGPSS
+                  prestadorDoServicoDeSaque:
+                    type: string
+                    title: Prestador do Serviço de Saque
+                    pattern: \d{8}
+                    description: Withdrawal Service Provider ISPB
+          - type: object
+            properties:
+              troco:
+                type: object
+                title: Troco
+                required:
+                - valor
+                - modalidadeAgente
+                - prestadorDoServicoDeSaque
+                description: Change related information
+                properties:
+                  valor:
+                    type: string
+                    title: Valor do troco
+                    pattern: \d{1,10}\.\d{2}
+                    description: Value of the change conducted
+                  modalidadeAlteracao:
+                    type: integer
+                    format: int32
+                    minimum: 0
+                    maximum: 1
+                    default: 0
+                    title: Modalidade de alteração do troco
+                    description: Change value alteration modality. When not completed, the assumed value is 0 (zero).
+                  modalidadeAgente:
+                    type: string
+                    title: Modalidade do Agente
+                    description: '##### Agent Type
+
+                      <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr><tr><td>AGPSS</td><td>Agent Withdrawal Service Provider< /td></tr></table>
+
+                      '
+                    enum:
+                    - AGTEC
+                    - AGTOT
+                    - AGPSS
+                  prestadorDoServicoDeSaque:
+                    type: string
+                    title: Prestador do Serviço de Saque
+                    pattern: \d{8}
+                    description: Withdrawal Service Provider ISPB
+    Devolucao_2:
       type: object
-      title: Cobrança imediata solicitada
-      description: Data sent to create or change Immediate collection via API Pix
+      title: Devolução
       required:
+      - id
+      - rtrId
       - valor
-      - chave
-      - calendario
-      allOf:
-      - type: object
-        properties:
-          calendario:
-            title: Calendário
-            description: The fields nested under the calendar identifier organize information regarding collection-related dates.
-            allOf:
-            - $ref: '#/components/schemas/CobExpiracao'
-      - type: object
-        properties:
-          devedor:
-            description: The fields nested under object debtor are optional and identify the debtor, i.e., the person or institution who owes the debt. They do not necessarily identify who will effectively make the payment. A CPF can be the debtor, but another CPF effectively makes the payment. Field `devedor.cpf` and field `devedor.cnpj` are not allowed to be completed at the same time. If field `devedor.cnpj` is completed, then, field `devedor.cpf` cannot be completed, and vice-versa. If field `devedor.nome` is completed, then, there must be or a `devedor.cpf` or a field `devedor.cnpj` completed.
-            oneOf:
-            - $ref: '#/components/schemas/PessoaFisica'
-            - $ref: '#/components/schemas/PessoaJuridica_2'
-      - type: object
-        properties:
-          loc:
-            allOf:
-            - $ref: '#/components/schemas/PayloadLocationCob_2'
-      - type: object
-        properties:
-          valor:
-            allOf:
-            - $ref: '#/components/schemas/CobValor'
-            - required:
-              - original
-      - $ref: '#/components/schemas/CobBase_2'
-    Revisao_2:
-      type: integer
-      format: int32
-      title: Revisão
-      description: '# The `review` field
+      - horario
+      - status
+      properties:
+        id:
+          $ref: '#/components/schemas/DevolucaoId_2'
+        rtrId:
+          type: string
+          title: RtrId
+          description: ReturnIdentification transiting PACS004.
+          example: D12345678202009091000abcde123456
+          pattern: '[a-zA-Z0-9]{32}'
+          minLength: 32
+          maxLength: 32
+        valor:
+          type: string
+          title: Valor a devolver.
+          pattern: \d{1,10}\.\d{2}
+          description: Amount to return.
+        natureza:
+          $ref: '#/components/schemas/DevolucaoNatureza'
+        descricao:
+          type: string
+          title: Mensagem ao pagador relativa à devolução.
+          maxLength: 140
+          description: The optional `description` field determines a text to be displayed to the payer containing information about the return. This text will be filled in, in pacs.004, by the recipient's PSP, in the field RemittanceInformation. The field size in pacs.004 is limited to 140 characters.
+        horario:
+          type: object
+          properties:
+            solicitacao:
+              type: string
+              format: date-time
+              title: Horário de solicitação
+              description: Time at which the return was requested on the PSP.
+            liquidacao:
+              type: string
+              format: date-time
+              title: Horário de liquidacao
+              description: Time the return was settled on the PSP.
+        status:
+          type: string
+          title: Status
+          description: Return status.
+          enum:
+          - EM_PROCESSAMENTO
+          - DEVOLVIDO
+          - NAO_REALIZADO
+        motivo:
+          type: string
+          title: Descrição do status.
+          description: '# Return Status
 
 
-        Denotes the collection review version. Always starts at zero. Always increments 1.
+            Optional field that can be used by the receiving PSP to detail the reasons
 
+            the return has reached the status in question.
 
-        This should increase whenever a collection item is updated.
+            It can be used, for example, to detail the reason why the return was not carried out.
 
-        The `loc` field change is not considered an update and therefore does not trigger an increment to the version number.
-
-
-        The `loc` field does not change the collection itself.
-
-        It is not necessary to store the history of changes in the `loc` field for a given collection.
-
-        For the other fields of the collection, history is recorded.
-
-        '
-      readOnly: true
-    CobRevisada:
+            '
+          maxLength: 140
+    PayloadLocation_2:
       type: object
-      title: Cobrança imediata revisada
-      description: Data sent to create or change Immediate collection via API Pix
-      allOf:
-      - type: object
-        properties:
-          calendario:
-            title: Calendário
-            description: The fields nested under the calendar identifier organize information regarding collection-related dates.
-            allOf:
-            - $ref: '#/components/schemas/CobExpiracao'
-      - type: object
-        properties:
-          devedor:
-            description: The fields nested under object debtor are optional and identify the debtor, i.e., the person or institution who owes the debt. They do not necessarily identify who will effectively make the payment. A CPF can be the debtor, but another CPF effectively makes the payment. Field `devedor.cpf` and field `devedor.cnpj` are not allowed to be completed at the same time. If field `devedor.cnpj` is completed, then, field `devedor.cpf` cannot be completed, and vice-versa. If field `devedor.nome` is completed, then, there must be or a `devedor.cpf` or a field `devedor.cnpj` completed.
-            oneOf:
-            - $ref: '#/components/schemas/PessoaFisica'
-            - $ref: '#/components/schemas/PessoaJuridica_2'
-      - type: object
-        properties:
-          loc:
-            allOf:
-            - $ref: '#/components/schemas/PayloadLocationCob_2'
-      - type: object
-        properties:
-          status:
-            type: string
-            title: Status do registro da cobrança
-            enum:
-            - REMOVIDA_PELO_USUARIO_RECEBEDOR
-      - type: object
-        properties:
-          valor:
-            $ref: '#/components/schemas/CobValor'
-      - $ref: '#/components/schemas/CobBase_2'
+      title: Location do Payload
+      description: Identifier of the payload location.
+      required:
+      - id
+      - location
+      - tipoCob
+      - criacao
+      properties:
+        id:
+          $ref: '#/components/schemas/PayloadLocationId'
+        location:
+          type: string
+          title: Localização do payload
+          description: Payload location to be provided when creating the collection item.
+          maxLength: 77
+          format: uri
+          example: pix.example.com/qr/v2/2353c790eefb11eaadc10242ac120002
+          readOnly: true
+        tipoCob:
+          type: string
+          title: Tipo da cobrança
+          enum:
+          - cob
+          - cobv
+        criacao:
+          type: string
+          format: date-time
+          title: Creation Date
+          description: Date and time location was created. Complies with RFC 3339.
+          readOnly: true
     PayloadLocationCob_2:
       type: object
       title: Location do Payload
@@ -1997,172 +2146,7 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/PayloadLocationId'
-    PixValorSaque_2:
-      type: object
-      properties:
-        saque:
-          type: object
-          required:
-          - valor
-          - modalidadeAgente
-          - prestadorDoServicoDeSaque
-          properties:
-            valor:
-              type: string
-              title: Pix Cashout Value
-              description: PixValor do Saque Pix
-              pattern: \d{1,10}\.\d{2}
-            modalidadeAgente:
-              type: string
-              title: AgentModalidade do Agente
-              description: '##### Agent Type
-
-                <table><tr><th>ACRONYM</th><th>Description</th></tr><tr><td>AGTEC</td><td>Business Establishment Agent</td></tr ><tr><td>AGTOT</td><td>Other Type of Legal Entity Agent</td></tr><tr><td>AGPSS</td><td>Agent Withdrawal Service Provider< /td></tr></table>
-
-                '
-              enum:
-              - AGTEC
-              - AGTOT
-              - AGPSS
-            prestadorDoServicoDeSaque:
-              type: string
-              title: Prestador do Serviço de Saque
-              pattern: \d{8}
-              description: Withdrawal Service Provider ISPB
-    Pix_2:
-      type: object
-      title: Pix
-      required:
-      - endToEndId
-      - valor
-      - horario
-      properties:
-        endToEndId:
-          $ref: '#/components/schemas/EndToEndId'
-        txid:
-          allOf:
-          - $ref: '#/components/schemas/TxId_2'
-          - pattern: '[a-zA-Z0-9]{1,35}'
-        valor:
-          type: string
-          title: Valor do Pix.
-          pattern: \d{1,10}\.\d{2}
-          description: Pix value.
-        componentesValor:
-          type: object
-          title: Informações sobre o valor do Pix
-          description: "The purpose of this framework is to explain the compositional elements of the Pix value.\n\nStructure rules:\n- The `value` of the Pix is ​​equal to the sum of the `value` fields of the substructures that make up this structure;\n- There cannot be simultaneously a substructure of the `draw` type and another of the `change` type;\n- There is no restriction on the order of substructures.\n\nIn case of withdrawal with withdrawal, you can return\n `original` with value=0.00 (zero) since the sum will be respected, or you can omit\n  the `original` substructure. In the case of change the `original` substructure will always be present.\n\n#### Valid examples:\nExample of valid completions.\n\n- **immediate collection (without cash withdrawal or change)**\n  ```\n  ...\n  \"componentesValor\": [\n   {\n   \"tipo\": \"ORIGINAL\",\n   \"valor\": \"100.00\"\n   }\n   ]\n  ...\n  ```\n- **Immediate collection with cash withdrawal**\n  ```\n  ...\n  \"componentesValor\": [\n   {\n   \"tipo\": \"SAQUE\",\n   \"valor\": \"100.00\"\n   } \n   ]\n  ...\n  ```\n- **Immediate collection with cash withdrawal (it may show type=ORIGINAL and value=0.00)**\n   ```\n   ...\n   \"componentesValor\": [\n   {\n   \"tipo\": \"ORIGINAL\",\n   \"valor\": \"0.00\"\n   },\n   {\n   \"tipo\": \"SAQUE\",\n   \"valor\": \"100.00\"\n   }\n  ]\n  ...\n  ```\n- **Immediate collection with change**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"ORIGINAL\",\n \"valor\": \"80.00\"\n },\n {\n \"tipo\": \"TROCO\",\n \"valor\": \"20.00\"\n }\n ]\n ...\n ```\n - **Immediate collection with change (the order does not matter)**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"TROCO\",\n \"valor\": \"20.00\"\n },\n {\n \"tipo\": \"ORIGINAL\",\n \"valor\": \"80.00\"\n }\n ]\n ...\n ```\n#### Invalid examples:\n Non-exhaustive examples, of invalid completions.\n - **`ORIGINAL` with value higher than 0.00 (zero) and `SAQUE` together**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"ORIGINAL\",\n \"valor\": \"80.00\"\n },\n {\n \"tipo\": \"SAQUE\",\n \"valor\": \"20.00\"\n }\n ]\n ...\n ```\n - **two `SAQUE` elements**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"SAQUE\",\n \"valor\": \"20.00\"\n },\n {\n \"tipo\": \"SAQUE\",\n \"valor\": \"10.00\"\n }\n ]\n ...\n ```\n - **Immediate collection with `SAQUE` and `TROCO`**\n ```\n ...\n \"componentesValor\": [\n {\n \"tipo\": \"ORIGINAL\",\n \"valor\": \"60.00\"\n },\n {\n \"tipo\": \"SAQUE\",\n \"valor\": \"20.00\"\n },\n {\n \"tipo\": \"TROCO\",\n \"valor\": \"20.00\"\n }\n ]\n ...\n ```"
-          anyOf:
-          - $ref: '#/components/schemas/PixValorOriginal'
-          - $ref: '#/components/schemas/PixValorSaque_2'
-          - $ref: '#/components/schemas/PixValorTroco_2'
-          - $ref: '#/components/schemas/PixValorJuros'
-          - $ref: '#/components/schemas/PixValorMulta'
-          - $ref: '#/components/schemas/PixValorAbatimento'
-          - $ref: '#/components/schemas/PixValorDesconto'
-        chave:
-          type: string
-          title: Chave DICT do recebedor
-          description: '# Creditor DICT alias
-
-
-            * Creditor alias field as assigned in the respective PACS008.
-
-            * Aliases types can be: phone, email, cpf/cnpj or EVP.
-
-            * The format of the aliases can be found in the section "Formatting DICT aliases in BR Code" of the [Pix Initiation Standards Manual](https://www.bcb.gov.br/estabilidadefinanceira/pix).
-
-            '
-          maxLength: 77
-        horario:
-          type: string
-          format: date-time
-          title: Horário
-          description: Time the Pix was processed on the PSP.
-        infoPagador:
-          type: string
-          title: Informação livre do pagador
-          maxLength: 140
-        devolucoes:
-          type: array
-          title: Devoluções
-          items:
-            $ref: '#/components/schemas/Devolucao_2'
-    CobExpiracao:
-      type: object
-      title: Expiração"
-      properties:
-        expiracao:
-          type: integer
-          format: int32
-          title: Tempo de vida da cobrança, especificado em segundos.
-          description: 'Collection item lifetime, specified in seconds from the creation date (Calendario.criacao)
-
-            '
-          example: '3600'
-          default: 86400
-    DevolucaoId_2:
-      type: string
-      title: Id da location
-      description: Location identifier to be informed in the collection item creation.
-      pattern: '[a-zA-Z0-9]{1,35}'
-    ParametrosConsultaCob_2:
-      type: object
-      title: Parâmetros de Consulta de Cobrança
-      description: '[DEPRECATED] Parameters used to carry out collection items query.'
-      required:
-      - inicio
-      - fim
-      - paginacao
-      properties:
-        inicio:
-          type: string
-          format: date-time
-          title: Data de Início
-          description: Starting date used in the query. Complies with RFC 3339.
-          example: '2020-04-01T00:00:00Z'
-        fim:
-          type: string
-          format: date-time
-          title: Data de Fim
-          description: End date used in the query. Complies with RFC 3339.
-          example: '2020-04-01T17:00:00Z'
-        cpf:
-          type: string
-          title: CPF
-          pattern: /^\d{11}$/
-          description: Filter by the CPF of the debtor. It cannot be used at the same time as the CNPJ.
-        cnpj:
-          type: string
-          title: CNPJ
-          pattern: /^\d{14}$/
-          description: Filter by the debtor's CNPJ. It cannot be used at the same time as the CPF.
-        locationPresente:
-          type: boolean
-          description: Filter by the existence of linked location.
-        status:
-          type: string
-          title: Status do registro da cobrança
-          description: Filter by collection item status.
-        paginacao:
-          $ref: '#/components/schemas/Paginacao'
   parameters:
-    ClientId:
-      name: client_id
-      in: query
-      description: Unique reference which was shared during CitiConnect API on-boarding (ClientId-which used during oauth token generation)
-      required: true
-      schema:
-        type: string
-        example: 898918181818181aczta
-    PaymentMethod:
-      name: payment_method
-      in: query
-      description: This field is used to identify method of payment used to initiate a payment.
-      schema:
-        type: string
-        maxLength: 10
-        example: PIX
     ApiVersion:
       name: api_version
       in: query
@@ -2171,6 +2155,22 @@ components:
         type: string
         example: '1.0'
         maxLength: 3
+    Language:
+      name: language
+      in: query
+      description: This field is used to mention language used in request body fields.
+      schema:
+        type: string
+        maxLength: 10
+        example: PT
+    PaymentMethod:
+      name: payment_method
+      in: query
+      description: This field is used to identify method of payment used to initiate a payment.
+      schema:
+        type: string
+        maxLength: 10
+        example: PIX
     CountryCode:
       name: country_code
       in: query
@@ -2180,18 +2180,10 @@ components:
         type: string
         maxLength: 2
         example: BR
-    Language:
-      name: language
-      in: query
-      description: This field is used to mention language used in request body fields.
-      schema:
-        type: string
-        maxLength: 10
-        example: PT
-    ClientId_2:
+    ClientId:
       name: client_id
       in: query
-      description: Unique reference which was shared during CitiConnect API on-boarding(ClientId-which used during oauth token generation)
+      description: Unique reference which was shared during CitiConnect API on-boarding (ClientId-which used during oauth token generation)
       required: true
       schema:
         type: string
@@ -2202,41 +2194,25 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/CNPJ'
-    Status:
-      name: status
+    PaginaAtual:
       in: query
-      schema:
-        type: string
-        title: Status do registro da cobrança
-        description: Filter by collection status.
-    CNPJ:
-      name: cnpj
-      in: query
-      schema:
-        type: string
-        title: CNPJ
-        pattern: ^[0-9]{14}$
-        description: Filter by the debtor's CNPJ. It cannot be used at the same time as the CPF.
-    loteCobVId:
-      name: loteCobVId
-      in: query
+      name: paginacao.paginaAtual
+      required: false
       schema:
         type: integer
         format: int32
-        title: Id do lote de cobrança com vencimento
-        description: Due collection batch id.
-    Revisao:
-      name: revisao
+        title: Página atual
+        minimum: 0
+        default: 0
+        description: Page to be returned by the query. If not informed, the PSP will assume it will be 0.
+    CPF:
+      name: cpf
       in: query
-      required: false
       schema:
-        $ref: '#/components/schemas/Revisao'
-    Inicio:
-      name: inicio
-      in: query
-      required: true
-      schema:
-        $ref: '#/components/schemas/Inicio'
+        type: string
+        title: CPF
+        pattern: ^[0-9]{11}$
+        description: Filter by the CPF of the debtor. It cannot be used at the same time as the CNPJ.
     TxId:
       name: txid
       in: path
@@ -2261,31 +2237,47 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Fim'
-    PaginaAtual:
+    CNPJ:
+      name: cnpj
       in: query
-      name: paginacao.paginaAtual
+      schema:
+        type: string
+        title: CNPJ
+        pattern: ^[0-9]{14}$
+        description: Filter by the debtor's CNPJ. It cannot be used at the same time as the CPF.
+    Inicio:
+      name: inicio
+      in: query
+      required: true
+      schema:
+        $ref: '#/components/schemas/Inicio'
+    Revisao:
+      name: revisao
+      in: query
       required: false
+      schema:
+        $ref: '#/components/schemas/Revisao'
+    Status:
+      name: status
+      in: query
+      schema:
+        type: string
+        title: Status do registro da cobrança
+        description: Filter by collection status.
+    loteCobVId:
+      name: loteCobVId
+      in: query
       schema:
         type: integer
         format: int32
-        title: Página atual
-        minimum: 0
-        default: 0
-        description: Page to be returned by the query. If not informed, the PSP will assume it will be 0.
+        title: Id do lote de cobrança com vencimento
+        description: Due collection batch id.
     LocationPresente:
       name: locationPresente
       in: query
       schema:
         type: boolean
-    CPF:
-      name: cpf
-      in: query
-      schema:
-        type: string
-        title: CPF
-        pattern: ^[0-9]{11}$
-        description: Filter by the CPF of the debtor. It cannot be used at the same time as the CNPJ.
-    ClientId_3:
+    ClientId_2:
       name: client_id
       in: query
       description: Unique reference which was shared during CitiConnect API on-boarding(ClientId-which used during oauth token generation)
@@ -2300,7 +2292,255 @@ components:
         type: string
         title: Status do registro da cobrança
         description: Filter by collection item status.
+    ClientId_3:
+      name: client_id
+      in: query
+      description: Unique reference which was shared during CitiConnect API on-boarding(ClientId-which used during oauth token generation)
+      required: true
+      schema:
+        type: string
+        example: 898918181818181aczta
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            UnauthorizedExampleInPortugese:
+              $ref: '#/components/examples/UnauthorizedExampleInPortugese'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            BadRequestExampleInPortugese:
+              $ref: '#/components/examples/BadRequestExampleInPortugese'
+    CreatedResponse:
+      description: Created
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/BrazilStaticQRCodeResponse'
+          examples:
+            CreatedResponseExample:
+              $ref: '#/components/examples/BrazilStaticQRCodeOKResponseExample'
+    GatewayTimeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            GatewayTimeoutExampleInPortugese:
+              $ref: '#/components/examples/GatewayTimeoutExampleInPortugese'
+    ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            ServiceUnavailableExampleInPortugese:
+              $ref: '#/components/examples/ServiceUnavailableExampleInPortugese'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            ForbiddenExampleInPortugese:
+              $ref: '#/components/examples/ForbiddenExampleInPortugese'
+    MethodNotAllowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            MethodNotAllowedExampleInPortugese:
+              $ref: '#/components/examples/MethodNotAllowedExampleInPortugese'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            InternalServerErrorExampleInPortugese:
+              $ref: '#/components/examples/InternalServerErrorExampleInPortugese'
+    UnsupportedMediaType:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
+          examples:
+            UnsupportedMediaTypeExampleInPortugese:
+              $ref: '#/components/examples/UnsupportedMediaTypeExampleInPortugese'
+    AcessoNegado1:
+      description: Authenticated participant request that violates some authorization rule.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/AcessoNegadoExample2'
+    RequisicaoInvalida:
+      description: Request with invalid format.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/RequisicaoInvalidaCobExample1'
+    CobsVConsultadasResponse:
+      description: Immediate collection data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CobsVConsultadas'
+          examples:
+            getCobs1:
+              $ref: '#/components/examples/getCobsV1'
+    CobVCompletaResponse:
+      description: Immediate collection data with due date.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CobVCompleta'
+          examples:
+            retorno1:
+              $ref: '#/components/examples/cobResponse4'
+    NaoEncontrado:
+      description: Requested resource not found.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/NaoEncontradoExample1'
+    MetodoInvalido:
+      description: Request sent with invalid method
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/MetodoInvalidoExample1'
+    CobVGeradaCreateResponse:
+      description: Collection item with due date created
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CobVGerada'
+          examples:
+            retorno1:
+              $ref: '#/components/examples/cobResponse4'
+    CobVGeradaUpdateResponse:
+      description: Collection item with due date updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CobVGerada'
+          examples:
+            retorno1:
+              $ref: '#/components/examples/cobResponse4'
+    ServicoIndisponivel1:
+      description: Service is not currently available. Requested service may be under maintenance or out of working window.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/ServicoIndisponivelExample2'
+    ServicoIndisponivel:
+      description: Service is not currently available. Requested service may be under maintenance or out of working window.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/ServicoIndisponivelExample1'
+    MidiaInvalida:
+      description: Request sent with unsupported media
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/MidiaInvalidaExample1'
+    AcessoNegado:
+      description: Authenticated participant request that violates some authorization rule.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/AcessoNegadoExample1'
+    CobCompletaResponse:
+      description: Immediate collection data.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CobCompleta'
+          examples:
+            retorno1:
+              $ref: '#/components/examples/cobResponse1'
+            retorno2:
+              $ref: '#/components/examples/cobResponse2'
+            retorno3:
+              $ref: '#/components/examples/cobResponse5'
+            retorno4:
+              $ref: '#/components/examples/cobResponse6'
+            retorno5:
+              $ref: '#/components/examples/cobResponse7'
+    CobGeradaResponse:
+      description: Immediate collection created/updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CobGerada'
+          examples:
+            retorno1:
+              $ref: '#/components/examples/cobResponse3'
+    CobsConsultadasResponse:
+      description: Immediate collection data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CobsConsultadas'
+          examples:
+            getCobs1:
+              $ref: '#/components/examples/getCobs1'
+            getCobs2:
+              $ref: '#/components/examples/getCobs2'
   examples:
+    UnauthorizedExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 401
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
     BrazilStaticQRCodeExample:
       value:
         txid: QR00012346789079769986667
@@ -2310,37 +2550,16 @@ components:
         nomeBeneficiario: John Heten
         cidadeBeneficiario: Sao Paulo
         saque: '1'
-    UnauthorizedExampleInPortugese:
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 401
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
-        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
-    ServiceUnavailableExampleInPortugese:
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 503
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento
-        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
-    ForbiddenExampleInPortugese:
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 403
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
-        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
     BrazilStaticQRCodeOKResponseExample:
       value:
         txid: QR00012346789079769986667
         valor: '120.90'
         qrcode: 00020126580014BR.GOV.BCB.PIX0136115d2b81-1744-4567-867d-ba2fdb47f53c5204000053039865406112.505802BR5925URBANIA
-    InternalServerErrorExampleInPortugese:
+    GatewayTimeoutExampleInPortugese:
       value:
         type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
         title: Serviço Indisponível
-        status: 500
+        status: 504
         detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento
         corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
     UnsupportedMediaTypeExampleInPortugese:
@@ -2352,11 +2571,11 @@ components:
         corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
         violacoes:
         - razao: Midia não suportada
-    GatewayTimeoutExampleInPortugese:
+    InternalServerErrorExampleInPortugese:
       value:
         type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
         title: Serviço Indisponível
-        status: 504
+        status: 500
         detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento
         corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
     MethodNotAllowedExampleInPortugese:
@@ -2378,13 +2597,55 @@ components:
         violacoes:
         - razao: O campo chave não respeita o schema
           propriedade: cobestatico.chave
-    MetodoInvalidoExample1:
-      summary: Request sent with invalid method
+    ServiceUnavailableExampleInPortugese:
       value:
-        type: https://pix.bcb.gov.br/api/v2/error/Metodoinvalido
-        title: Metodo invalido
-        status: 405
-        detail: Requisição enviada com metodo invalido
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+    ForbiddenExampleInPortugese:
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+        corelationId: f481ace0-c3e6-426f-a3a8-f9b3ee279562
+    AcessoNegadoExample1:
+      summary: Example Request 1 Error
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    cobBody4:
+      summary: 'Collection Review Example #2'
+      value:
+        valor:
+          original: '567.89'
+        solicitacaoPagador: Informar cartão fidelidade
+    cobBody7:
+      summary: 'Collection Review Example #1'
+      value:
+        loc:
+          id: 789
+        devedor:
+          logradouro: Alameda Souza, Numero 80, Bairro Braz
+          cidade: Recife
+          uf: PE
+          cep: '70011750'
+          cpf: '12345678909'
+          nome: Francisco da Silva
+        valor:
+          original: '123.45'
+        solicitacaoPagador: Cobrança dos serviços prestados.
+    NaoEncontradoExample1:
+      summary: Example Request 1 Error
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title: Não Encontrado
+        status: 404
+        detail: Entidade não encontrada.
     cobResponse4:
       summary: 'Example of collection due #1'
       value:
@@ -2417,34 +2678,19 @@ components:
           original: '123.45'
         chave: 5f84a4c5-c5cb-4599-9f13-7eb4d419dacc
         solicitacaoPagador: Cobrança dos serviços prestados.
-    cobBody7:
-      summary: 'Collection Review Example #1'
-      value:
-        loc:
-          id: 789
-        devedor:
-          logradouro: Alameda Souza, Numero 80, Bairro Braz
-          cidade: Recife
-          uf: PE
-          cep: '70011750'
-          cpf: '12345678909'
-          nome: Francisco da Silva
-        valor:
-          original: '123.45'
-        solicitacaoPagador: Cobrança dos serviços prestados.
-    NaoEncontradoExample1:
-      summary: Example Request 1 Error
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title: Não Encontrado
-        status: 404
-        detail: Entidade não encontrada.
     ServicoIndisponivelExample2:
       summary: Example Request 1 Error
       value:
         type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
         title: Serviço Indisponível
         status: 500
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+    ServicoIndisponivelExample1:
+      summary: Example Request 1 Error
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
         detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
     cobBody5:
       summary: 'Collection Review Example #3'
@@ -2491,36 +2737,6 @@ components:
             original: '123.45'
           chave: 5f84a4c5-c5cb-4599-9f13-7eb4d419dacc
           solicitacaoPagador: Cobrança dos serviços prestados.
-    AcessoNegadoExample1:
-      summary: Example Request 1 Error
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 403
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
-    ServicoIndisponivelExample1:
-      summary: Example Request 1 Error
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 503
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-    RequisicaoInvalidaCobExample1:
-      summary: 'Example Request Error #1'
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/CobOperacaoInvalida
-        title: Cobrança inválida.
-        status: 400
-        detail: A requisição que busca alterar ou criar uma cobrança para pagamento imediato não respeita o _schema_ ou está semanticamente errada.
-        violacoes:
-        - razao: O campo cob.valor.original não respeita o _schema_.
-          propriedade: cob.valor.original
-    cobBody4:
-      summary: 'Collection Review Example #2'
-      value:
-        valor:
-          original: '567.89'
-        solicitacaoPagador: Informar cartão fidelidade
     cobBody1:
       summary: 'Example of creating a QR code collection #1'
       value:
@@ -2551,13 +2767,23 @@ components:
               valorPerc: '30.00'
         chave: 5f84a4c5-c5cb-4599-9f13-7eb4d419dacc
         solicitacaoPagador: Cobrança dos serviços prestados.
-    AcessoNegadoExample2:
-      summary: Example Request 1 Error
+    MetodoInvalidoExample1:
+      summary: Request sent with invalid method
       value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 401
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+        type: https://pix.bcb.gov.br/api/v2/error/Metodoinvalido
+        title: Metodo invalido
+        status: 405
+        detail: Requisição enviada com metodo invalido
+    RequisicaoInvalidaCobExample1:
+      summary: 'Example Request Error #1'
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/CobOperacaoInvalida
+        title: Cobrança inválida.
+        status: 400
+        detail: A requisição que busca alterar ou criar uma cobrança para pagamento imediato não respeita o _schema_ ou está semanticamente errada.
+        violacoes:
+        - razao: O campo cob.valor.original não respeita o _schema_.
+          propriedade: cob.valor.original
     MidiaInvalidaExample1:
       summary: Request sent with unsupported media
       value:
@@ -2567,6 +2793,335 @@ components:
         detail: Requisição enviada com midia não suportada
         violacoes:
         - razao: Midia não suportada
+    AcessoNegadoExample2:
+      summary: Example Request 1 Error
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 401
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    AcessoNegadoExample1_2:
+      summary: 'Example Request #1 Error'
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    NaoEncontradoExample1_2:
+      summary: 'Example Request #1 Error'
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title: Não Encontrado
+        status: 404
+        detail: Entidade não encontrada.
+    cobResponse7:
+      summary: 'Example #3 of Immediate collection with Cash Pix'
+      value:
+        calendario:
+          criacao: '2020-09-09T20:15:00.358Z'
+          expiracao: 3600
+        txid: 33beb661beda44a8928fef47dbeb2dc5
+        revisao: 0
+        loc:
+          id: 1004
+          location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
+          tipoCob: cob
+        location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
+        status: ATIVA
+        devedor:
+          cnpj: '12345678000195'
+          nome: Empresa de Serviços SA
+        valor:
+          original: '10.00'
+          modalidadeAlteracao: 0
+          retirada:
+            troco:
+              valor: '0.00'
+              modalidadeAlteracao: 1
+              modalidadeAgente: AGPSS
+              prestadorDoServicoDeSaque: '12345678'
+        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
+    cobResponse5:
+      summary: Example of Immediate collection with Cash Pix
+      value:
+        calendario:
+          criacao: '2020-09-09T20:15:00.358Z'
+          expiracao: 3600
+        txid: 33beb661beda44a8928fef47dbeb2dc5
+        revisao: 0
+        loc:
+          id: 1004
+          location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
+          tipoCob: cob
+        location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
+        status: ATIVA
+        devedor:
+          cnpj: '12345678000195'
+          nome: Empresa de Serviços SA
+        valor:
+          original: '0.00'
+          modalidadeAlteracao: 0
+          retirada:
+            saque:
+              valor: '5.00'
+              modalidadeAlteracao: 0
+              modalidadeAgente: AGPSS
+              prestadorDoServicoDeSaque: '12345678'
+        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
+    cobBody3:
+      summary: 'Collection Review Example #1'
+      value:
+        loc:
+          id: 7768
+        devedor:
+          cpf: '12345678909'
+          nome: Francisco da Silva
+        valor:
+          original: '123.45'
+        solicitacaoPagador: Cobrança dos serviços prestados.
+    cobBody9:
+      summary: 'Example #3 of creation of Immediate collection with Cash Pix'
+      value:
+        devedor:
+          cnpj: '12345678000195'
+          nome: Empresa de Serviços SA
+        valor:
+          original: '10.00'
+          modalidadeAlteracao: 0
+          retirada:
+            troco:
+              valor: '0.00'
+              modalidadeAlteracao: 1
+              modalidadeAgente: AGPSS
+              prestadorDoServicoDeSaque: '12345678'
+        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
+    ServicoIndisponivelExample2_2:
+      summary: 'Example Request #1 Error'
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 500
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+    cobResponse1:
+      summary: 'Example #1 of Immediate collection'
+      value:
+        calendario:
+          criacao: '2020-09-09T20:15:00.358Z'
+          expiracao: 3600
+        txid: 7978c0c97ea847e78e8849634473c1f1
+        revisao: 0
+        loc:
+          id: 789
+          location: pix.example.com/qr/9d36b84fc70b478fb95c12729b90ca25
+          tipoCob: cob
+        location: pix.example.com/qr/9d36b84fc70b478fb95c12729b90ca25
+        status: ATIVA
+        devedor:
+          cnpj: '12345678000195'
+          nome: Empresa de Serviços SA
+        valor:
+          original: '37.00'
+          modalidadeAlteracao: 1
+        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
+        solicitacaoPagador: Serviço realizado.
+        infoAdicionais:
+        - nome: Campo 1
+          valor: Informação Adicional1 do PSP-Recebedor
+        - nome: Campo 2
+          valor: Informação Adicional2 do PSP-Recebedor
+    ServicoIndisponivelExample1_2:
+      summary: 'Example Request #1 Error'
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+    cobResponse3:
+      summary: Example
+      value:
+        calendario:
+          criacao: '2020-09-09T20:15:00.358Z'
+          expiracao: 3600
+        txid: 7978c0c97ea847e78e8849634473c1f1
+        revisao: 1
+        loc:
+          id: 7768
+          location: pix.example.com/qr/b1/9d36b84fc70b478fb95c12729b90ca25
+          tipoCob: cob
+        location: pix.example.com/qr/v1/9d36b84fc70b478fb95c12729b90ca25
+        status: ATIVA
+        devedor:
+          cpf: '12345678909'
+          nome: Francisco da Silva
+        valor:
+          original: '123.45'
+          modalidadeAlteracao: 0
+        chave: a1f4102e-a446-4a57-bcce-6fa48899c1d1
+        solicitacaoPagador: Cobrança dos serviços prestados.
+    RequisicaoInvalidaCobExample1_2:
+      summary: 'Example Request #1 Error'
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/CobOperacaoInvalida
+        title: Cobrança inválida.
+        status: 400
+        detail: A requisição que busca alterar ou criar uma cobrança para pagamento imediato não respeita o _schema_ ou está semanticamente errada.
+        violacoes:
+        - razao: O campo cob.valor.original não respeita o _schema_.
+          propriedade: cob.valor.original
+    cobBody6:
+      summary: Example of creation of Immediate collection with Cash Pix
+      value:
+        devedor:
+          cnpj: '12345678000195'
+          nome: Empresa de Serviços SA
+        valor:
+          original: '0.00'
+          modalidadeAlteracao: 0
+          retirada:
+            saque:
+              valor: '5.00'
+              modalidadeAlteracao: 0
+              modalidadeAgente: AGPSS
+              prestadorDoServicoDeSaque: '12345678'
+        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
+    getCobs2:
+      summary: 'Example #2 of Immediate collection Inquiry'
+      value:
+        parametros:
+          inicio: '2020-04-01T00:00:00Z'
+          fim: '2020-04-01T23:59:59Z'
+          paginacao:
+            paginaAtual: 0
+            itensPorPagina: 100
+            quantidadeDePaginas: 1
+            quantidadeTotalDeItens: 1
+        cobs:
+        - calendario:
+            criacao: '2020-09-09T20:15:00.358Z'
+            expiracao: 3600
+          txid: 7978c0c97ea847e78e8849634473c1f1
+          revisao: 1
+          loc:
+            id: 789
+            location: pix.example.com/qr/9d36b84fc70b478fb95c12729b90ca25
+            tipoCob: cob
+          location: pix.example.com/qr/9d36b84fc70b478fb95c12729b90ca25
+          status: ATIVA
+          devedor:
+            cnpj: '12345678000195'
+            nome: Empresa de Serviços SA
+          valor:
+            original: '37.00'
+            modalidadeAlteracao: 1
+          chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
+          solicitacaoPagador: Serviço realizado.
+          infoAdicionais:
+          - nome: Campo 1
+            valor: Informação Adicional1 do PSP-Recebedor
+          - nome: Campo 2
+            valor: Informação Adicional2 do PSP-Recebedor
+    cobResponse6:
+      summary: 'Example #2 of Immediate collection with Cash Pix'
+      value:
+        calendario:
+          criacao: '2020-09-09T20:15:00.358Z'
+          expiracao: 3600
+        txid: 33beb661beda44a8928fef47dbeb2dc5
+        revisao: 0
+        loc:
+          id: 1004
+          location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
+          tipoCob: cob
+        location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
+        status: ATIVA
+        devedor:
+          cnpj: '12345678000195'
+          nome: Empresa de Serviços SA
+        valor:
+          original: '0.00'
+          modalidadeAlteracao: 0
+          retirada:
+            saque:
+              valor: '20.00'
+              modalidadeAlteracao: 1
+              modalidadeAgente: AGPSS
+              prestadorDoServicoDeSaque: '12345678'
+        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
+    cobBody2:
+      summary: 'Example #1 of creating Immediate collection'
+      value:
+        calendario:
+          expiracao: 3600
+        devedor:
+          cnpj: '12345678000195'
+          nome: Empresa de Serviços SA
+        valor:
+          original: '37.00'
+          modalidadeAlteracao: 1
+        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
+        solicitacaoPagador: Serviço realizado.
+        infoAdicionais:
+        - nome: Campo 1
+          valor: Informação Adicional1 do PSP-Recebedor
+        - nome: Campo 2
+          valor: Informação Adicional2 do PSP-Recebedor
+    cobResponse2:
+      summary: 'Example #2 of Immediate collection'
+      value:
+        calendario:
+          criacao: '2020-09-09T20:15:00.358Z'
+          expiracao: 3600
+        txid: 655dfdb1a4514b8fbb58254b958913fb
+        revisao: 1
+        loc:
+          id: 567
+          location: pix.example.com/qr/1dd7f893a58e417287028dc33e21a403
+        location: pix.example.com/qr/1dd7f893a58e417287028dc33e21a403
+        status: CONCLUIDA
+        devedor:
+          cnpj: '12345678000195'
+          nome: Empresa de Serviços SA
+        valor:
+          original: '100.00'
+          modalidadeAlteracao: 0
+        chave: 40a0932d-1918-4eee-845d-35a2da1690dc
+        solicitacaoPagador: Informar cartão fidelidade
+        pix:
+        - endToEndId: E12345678202009091221kkkkkkkkkkk
+          txid: 655dfdb1a4514b8fbb58254b958913fb
+          valor: '110.00'
+          horario: '2020-09-09T20:15:00.358Z'
+          infoPagador: 0123456789
+          devolucoes:
+          - id: 123ABC
+            rtrId: Dxxxxxxxx202009091221kkkkkkkkkkk
+            valor: '10.00'
+            horario:
+              solicitacao: '2020-09-09T20:15:00.358Z'
+            status: EM_PROCESSAMENTO
+    AcessoNegadoExample2_2:
+      summary: 'Example Request #1 Error'
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 401
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    cobBody8:
+      summary: 'Example #2 of creation of immediate collection with Cash Pix'
+      value:
+        devedor:
+          cnpj: '12345678000195'
+          nome: Empresa de Serviços SA
+        valor:
+          original: '0.00'
+          modalidadeAlteracao: 0
+          retirada:
+            saque:
+              valor: '20.00'
+              modalidadeAlteracao: 1
+              modalidadeAgente: AGPSS
+              prestadorDoServicoDeSaque: '12345678'
+        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
     getCobs1:
       summary: 'Example #1 of Immediate collection Inquiry'
       value:
@@ -2706,561 +3261,6 @@ components:
                 modalidadeAgente: AGPSS
                 prestadorDoServicoDeSaque: '12345678'
           chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-    cobBody6:
-      summary: Example of creation of Immediate collection with Cash Pix
-      value:
-        devedor:
-          cnpj: '12345678000195'
-          nome: Empresa de Serviços SA
-        valor:
-          original: '0.00'
-          modalidadeAlteracao: 0
-          retirada:
-            saque:
-              valor: '5.00'
-              modalidadeAlteracao: 0
-              modalidadeAgente: AGPSS
-              prestadorDoServicoDeSaque: '12345678'
-        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-    cobResponse7:
-      summary: 'Example #3 of Immediate collection with Cash Pix'
-      value:
-        calendario:
-          criacao: '2020-09-09T20:15:00.358Z'
-          expiracao: 3600
-        txid: 33beb661beda44a8928fef47dbeb2dc5
-        revisao: 0
-        loc:
-          id: 1004
-          location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
-          tipoCob: cob
-        location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
-        status: ATIVA
-        devedor:
-          cnpj: '12345678000195'
-          nome: Empresa de Serviços SA
-        valor:
-          original: '10.00'
-          modalidadeAlteracao: 0
-          retirada:
-            troco:
-              valor: '0.00'
-              modalidadeAlteracao: 1
-              modalidadeAgente: AGPSS
-              prestadorDoServicoDeSaque: '12345678'
-        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-    cobResponse5:
-      summary: Example of Immediate collection with Cash Pix
-      value:
-        calendario:
-          criacao: '2020-09-09T20:15:00.358Z'
-          expiracao: 3600
-        txid: 33beb661beda44a8928fef47dbeb2dc5
-        revisao: 0
-        loc:
-          id: 1004
-          location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
-          tipoCob: cob
-        location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
-        status: ATIVA
-        devedor:
-          cnpj: '12345678000195'
-          nome: Empresa de Serviços SA
-        valor:
-          original: '0.00'
-          modalidadeAlteracao: 0
-          retirada:
-            saque:
-              valor: '5.00'
-              modalidadeAlteracao: 0
-              modalidadeAgente: AGPSS
-              prestadorDoServicoDeSaque: '12345678'
-        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-    cobResponse2:
-      summary: 'Example #2 of Immediate collection'
-      value:
-        calendario:
-          criacao: '2020-09-09T20:15:00.358Z'
-          expiracao: 3600
-        txid: 655dfdb1a4514b8fbb58254b958913fb
-        revisao: 1
-        loc:
-          id: 567
-          location: pix.example.com/qr/1dd7f893a58e417287028dc33e21a403
-        location: pix.example.com/qr/1dd7f893a58e417287028dc33e21a403
-        status: CONCLUIDA
-        devedor:
-          cnpj: '12345678000195'
-          nome: Empresa de Serviços SA
-        valor:
-          original: '100.00'
-          modalidadeAlteracao: 0
-        chave: 40a0932d-1918-4eee-845d-35a2da1690dc
-        solicitacaoPagador: Informar cartão fidelidade
-        pix:
-        - endToEndId: E12345678202009091221kkkkkkkkkkk
-          txid: 655dfdb1a4514b8fbb58254b958913fb
-          valor: '110.00'
-          horario: '2020-09-09T20:15:00.358Z'
-          infoPagador: 0123456789
-          devolucoes:
-          - id: 123ABC
-            rtrId: Dxxxxxxxx202009091221kkkkkkkkkkk
-            valor: '10.00'
-            horario:
-              solicitacao: '2020-09-09T20:15:00.358Z'
-            status: EM_PROCESSAMENTO
-    NaoEncontradoExample1_2:
-      summary: 'Example Request #1 Error'
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title: Não Encontrado
-        status: 404
-        detail: Entidade não encontrada.
-    ServicoIndisponivelExample2_2:
-      summary: 'Example Request #1 Error'
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 500
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-    cobBody9:
-      summary: 'Example #3 of creation of Immediate collection with Cash Pix'
-      value:
-        devedor:
-          cnpj: '12345678000195'
-          nome: Empresa de Serviços SA
-        valor:
-          original: '10.00'
-          modalidadeAlteracao: 0
-          retirada:
-            troco:
-              valor: '0.00'
-              modalidadeAlteracao: 1
-              modalidadeAgente: AGPSS
-              prestadorDoServicoDeSaque: '12345678'
-        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-    cobResponse1:
-      summary: 'Example #1 of Immediate collection'
-      value:
-        calendario:
-          criacao: '2020-09-09T20:15:00.358Z'
-          expiracao: 3600
-        txid: 7978c0c97ea847e78e8849634473c1f1
-        revisao: 0
-        loc:
-          id: 789
-          location: pix.example.com/qr/9d36b84fc70b478fb95c12729b90ca25
-          tipoCob: cob
-        location: pix.example.com/qr/9d36b84fc70b478fb95c12729b90ca25
-        status: ATIVA
-        devedor:
-          cnpj: '12345678000195'
-          nome: Empresa de Serviços SA
-        valor:
-          original: '37.00'
-          modalidadeAlteracao: 1
-        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-        solicitacaoPagador: Serviço realizado.
-        infoAdicionais:
-        - nome: Campo 1
-          valor: Informação Adicional1 do PSP-Recebedor
-        - nome: Campo 2
-          valor: Informação Adicional2 do PSP-Recebedor
-    cobBody3:
-      summary: 'Collection Review Example #1'
-      value:
-        loc:
-          id: 7768
-        devedor:
-          cpf: '12345678909'
-          nome: Francisco da Silva
-        valor:
-          original: '123.45'
-        solicitacaoPagador: Cobrança dos serviços prestados.
-    AcessoNegadoExample1_2:
-      summary: 'Example Request #1 Error'
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 403
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
-    ServicoIndisponivelExample1_2:
-      summary: 'Example Request #1 Error'
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 503
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-    RequisicaoInvalidaCobExample1_2:
-      summary: 'Example Request #1 Error'
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/CobOperacaoInvalida
-        title: Cobrança inválida.
-        status: 400
-        detail: A requisição que busca alterar ou criar uma cobrança para pagamento imediato não respeita o _schema_ ou está semanticamente errada.
-        violacoes:
-        - razao: O campo cob.valor.original não respeita o _schema_.
-          propriedade: cob.valor.original
-    cobBody2:
-      summary: 'Example #1 of creating Immediate collection'
-      value:
-        calendario:
-          expiracao: 3600
-        devedor:
-          cnpj: '12345678000195'
-          nome: Empresa de Serviços SA
-        valor:
-          original: '37.00'
-          modalidadeAlteracao: 1
-        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-        solicitacaoPagador: Serviço realizado.
-        infoAdicionais:
-        - nome: Campo 1
-          valor: Informação Adicional1 do PSP-Recebedor
-        - nome: Campo 2
-          valor: Informação Adicional2 do PSP-Recebedor
-    AcessoNegadoExample2_2:
-      summary: 'Example Request #1 Error'
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 401
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
-    getCobs2:
-      summary: 'Example #2 of Immediate collection Inquiry'
-      value:
-        parametros:
-          inicio: '2020-04-01T00:00:00Z'
-          fim: '2020-04-01T23:59:59Z'
-          paginacao:
-            paginaAtual: 0
-            itensPorPagina: 100
-            quantidadeDePaginas: 1
-            quantidadeTotalDeItens: 1
-        cobs:
-        - calendario:
-            criacao: '2020-09-09T20:15:00.358Z'
-            expiracao: 3600
-          txid: 7978c0c97ea847e78e8849634473c1f1
-          revisao: 1
-          loc:
-            id: 789
-            location: pix.example.com/qr/9d36b84fc70b478fb95c12729b90ca25
-            tipoCob: cob
-          location: pix.example.com/qr/9d36b84fc70b478fb95c12729b90ca25
-          status: ATIVA
-          devedor:
-            cnpj: '12345678000195'
-            nome: Empresa de Serviços SA
-          valor:
-            original: '37.00'
-            modalidadeAlteracao: 1
-          chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-          solicitacaoPagador: Serviço realizado.
-          infoAdicionais:
-          - nome: Campo 1
-            valor: Informação Adicional1 do PSP-Recebedor
-          - nome: Campo 2
-            valor: Informação Adicional2 do PSP-Recebedor
-    cobBody8:
-      summary: 'Example #2 of creation of immediate collection with Cash Pix'
-      value:
-        devedor:
-          cnpj: '12345678000195'
-          nome: Empresa de Serviços SA
-        valor:
-          original: '0.00'
-          modalidadeAlteracao: 0
-          retirada:
-            saque:
-              valor: '20.00'
-              modalidadeAlteracao: 1
-              modalidadeAgente: AGPSS
-              prestadorDoServicoDeSaque: '12345678'
-        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-    cobResponse6:
-      summary: 'Example #2 of Immediate collection with Cash Pix'
-      value:
-        calendario:
-          criacao: '2020-09-09T20:15:00.358Z'
-          expiracao: 3600
-        txid: 33beb661beda44a8928fef47dbeb2dc5
-        revisao: 0
-        loc:
-          id: 1004
-          location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
-          tipoCob: cob
-        location: pix.example.com/qr/7faa6893c4e64893a503baf0d40af213
-        status: ATIVA
-        devedor:
-          cnpj: '12345678000195'
-          nome: Empresa de Serviços SA
-        valor:
-          original: '0.00'
-          modalidadeAlteracao: 0
-          retirada:
-            saque:
-              valor: '20.00'
-              modalidadeAlteracao: 1
-              modalidadeAgente: AGPSS
-              prestadorDoServicoDeSaque: '12345678'
-        chave: 7d9f0335-8dcc-4054-9bf9-0dbd61d36906
-    cobResponse3:
-      summary: Example
-      value:
-        calendario:
-          criacao: '2020-09-09T20:15:00.358Z'
-          expiracao: 3600
-        txid: 7978c0c97ea847e78e8849634473c1f1
-        revisao: 1
-        loc:
-          id: 7768
-          location: pix.example.com/qr/b1/9d36b84fc70b478fb95c12729b90ca25
-          tipoCob: cob
-        location: pix.example.com/qr/v1/9d36b84fc70b478fb95c12729b90ca25
-        status: ATIVA
-        devedor:
-          cpf: '12345678909'
-          nome: Francisco da Silva
-        valor:
-          original: '123.45'
-          modalidadeAlteracao: 0
-        chave: a1f4102e-a446-4a57-bcce-6fa48899c1d1
-        solicitacaoPagador: Cobrança dos serviços prestados.
-  responses:
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
-          examples:
-            UnauthorizedExampleInPortugese:
-              $ref: '#/components/examples/UnauthorizedExampleInPortugese'
-    MethodNotAllowed:
-      description: Method Not Allowed
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
-          examples:
-            MethodNotAllowedExampleInPortugese:
-              $ref: '#/components/examples/MethodNotAllowedExampleInPortugese'
-    GatewayTimeout:
-      description: Gateway Timeout
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
-          examples:
-            GatewayTimeoutExampleInPortugese:
-              $ref: '#/components/examples/GatewayTimeoutExampleInPortugese'
-    CreatedResponse:
-      description: Created
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/BrazilStaticQRCodeResponse'
-          examples:
-            CreatedResponseExample:
-              $ref: '#/components/examples/BrazilStaticQRCodeOKResponseExample'
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
-          examples:
-            ForbiddenExampleInPortugese:
-              $ref: '#/components/examples/ForbiddenExampleInPortugese'
-    BadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
-          examples:
-            BadRequestExampleInPortugese:
-              $ref: '#/components/examples/BadRequestExampleInPortugese'
-    ServiceUnavailable:
-      description: Service Unavailable
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
-          examples:
-            ServiceUnavailableExampleInPortugese:
-              $ref: '#/components/examples/ServiceUnavailableExampleInPortugese'
-    UnsupportedMediaType:
-      description: Unsupported Media Type
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
-          examples:
-            UnsupportedMediaTypeExampleInPortugese:
-              $ref: '#/components/examples/UnsupportedMediaTypeExampleInPortugese'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/BrazilstaticQRCodeErrorResponse'
-          examples:
-            InternalServerErrorExampleInPortugese:
-              $ref: '#/components/examples/InternalServerErrorExampleInPortugese'
-    NaoEncontrado:
-      description: Requested resource not found.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/NaoEncontradoExample1'
-    CobVGeradaUpdateResponse:
-      description: Collection item with due date updated
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CobVGerada'
-          examples:
-            retorno1:
-              $ref: '#/components/examples/cobResponse4'
-    AcessoNegado1:
-      description: Authenticated participant request that violates some authorization rule.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/AcessoNegadoExample2'
-    CobVCompletaResponse:
-      description: Immediate collection data with due date.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CobVCompleta'
-          examples:
-            retorno1:
-              $ref: '#/components/examples/cobResponse4'
-    ServicoIndisponivel1:
-      description: Service is not currently available. Requested service may be under maintenance or out of working window.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/ServicoIndisponivelExample2'
-    RequisicaoInvalida:
-      description: Request with invalid format.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/RequisicaoInvalidaCobExample1'
-    MetodoInvalido:
-      description: Request sent with invalid method
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/MetodoInvalidoExample1'
-    CobVGeradaCreateResponse:
-      description: Collection item with due date created
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CobVGerada'
-          examples:
-            retorno1:
-              $ref: '#/components/examples/cobResponse4'
-    CobsVConsultadasResponse:
-      description: Immediate collection data
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CobsVConsultadas'
-          examples:
-            getCobs1:
-              $ref: '#/components/examples/getCobsV1'
-    AcessoNegado:
-      description: Authenticated participant request that violates some authorization rule.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/AcessoNegadoExample1'
-    ServicoIndisponivel:
-      description: Service is not currently available. Requested service may be under maintenance or out of working window.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/ServicoIndisponivelExample1'
-    MidiaInvalida:
-      description: Request sent with unsupported media
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/MidiaInvalidaExample1'
-    CobsConsultadasResponse:
-      description: Immediate collection data
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CobsConsultadas'
-          examples:
-            getCobs1:
-              $ref: '#/components/examples/getCobs1'
-            getCobs2:
-              $ref: '#/components/examples/getCobs2'
-    CobCompletaResponse:
-      description: Immediate collection data.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CobCompleta'
-          examples:
-            retorno1:
-              $ref: '#/components/examples/cobResponse1'
-            retorno2:
-              $ref: '#/components/examples/cobResponse2'
-            retorno3:
-              $ref: '#/components/examples/cobResponse5'
-            retorno4:
-              $ref: '#/components/examples/cobResponse6'
-            retorno5:
-              $ref: '#/components/examples/cobResponse7'
-    CobGeradaResponse:
-      description: Immediate collection created/updated
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CobGerada'
-          examples:
-            retorno1:
-              $ref: '#/components/examples/cobResponse3'
   requestBodies:
     CobVBody:
       description: Data for generating the collection item with due date.

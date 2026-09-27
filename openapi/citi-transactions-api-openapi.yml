@@ -99,7 +99,208 @@ paths:
       - oAuth2:
         - /authenticationservices/v1
 components:
+  examples:
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: Method not supported
+          action: please use valid http verb
+          code: CC00001
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: Media type not supported
+          action: please use valid content-type in header
+          code: CC00002
+    Not-Found-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: path-param fundManagerId is mandatory and it cannot be empty
+          action: please provide valid value for fundManagerId
+          code: VC00010
+    Internal-Server-Error-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+          code: CC00004
+    Unauthorized-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        errors:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+  parameters:
+    To-Trade-Date:
+      name: toTradeDate
+      in: query
+      required: true
+      description: The trade date the transaction actually received on the system. If a trade missed cut-off this date is the next available business date after the Booking Date. Date in ISO format(YYYY-MM-DD)
+      schema:
+        type: string
+        format: date
+    Fund-Manager-Id:
+      name: fundManagerId
+      in: path
+      required: true
+      description: The unique identifier for Fund Manager.
+      schema:
+        type: string
+      example: FM001
+    Offset:
+      name: offset
+      in: query
+      description: Offset records by a given number (optional).
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+    From-Trade-Date:
+      name: fromTradeDate
+      in: query
+      required: true
+      description: The trade date the transaction actually received on the system. If a trade missed cut-off this date is the next available business date after the Booking Date. Date in ISO format(YYYY-MM-DD)
+      schema:
+        type: string
+        format: date
+    Account-Id:
+      name: accountId
+      in: query
+      description: The unique ID for a trading Account linked to an Investor.
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      description: The maximum number of records to return.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 5000
+    Client-Id:
+      description: Your unique identification, the same one you use for OAuth token generation, was shared with you by Citi during the CitiConnect API integration.
+      name: client_id
+      in: query
+      required: true
+      schema:
+        type: string
+      example: '54563213246'
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unsupported-Media-Type-Example:
+              $ref: '#/components/examples/Unsupported-Media-Type-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
   schemas:
+    Error-Response:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        errors:
+          type: array
+          title: Error Detail
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+    Error-Detail:
+      type: object
+      title: Error Detail
+      xml:
+        name: errors
+      properties:
+        issue:
+          type: string
+          maxLength: 150
+          description: more details about the issue
+          title: issue
+          xml:
+            name: Issue
+        action:
+          type: string
+          maxLength: 150
+          description: corrective action to be taken to resolve above issue
+          title: action
+          xml:
+            name: Action
+        code:
+          type: string
+          maxLength: 10
+          description: unique code representing the issue
+          title: code
+          xml:
+            name: Code
     Transactions-Response:
       title: TransactionsResponse
       type: object
@@ -291,67 +492,6 @@ components:
           description: The In Specie Flag in a transaction typically indicates whether the transaction involves an in specie transfer.
           type: boolean
       additionalProperties: false
-    Error-Response:
-      type: object
-      title: ErrorResponse
-      xml:
-        name: ErrorResponse
-      properties:
-        ref_id:
-          type: string
-          maxLength: 60
-          description: Unique ID for the Transaction
-          title: ref_id
-          xml:
-            name: RefId
-        errors:
-          type: array
-          title: Error Detail
-          uniqueItems: true
-          items:
-            $ref: '#/components/schemas/Error-Detail'
-    Error-Detail:
-      type: object
-      title: Error Detail
-      xml:
-        name: errors
-      properties:
-        issue:
-          type: string
-          maxLength: 150
-          description: more details about the issue
-          title: issue
-          xml:
-            name: Issue
-        action:
-          type: string
-          maxLength: 150
-          description: corrective action to be taken to resolve above issue
-          title: action
-          xml:
-            name: Action
-        code:
-          type: string
-          maxLength: 10
-          description: unique code representing the issue
-          title: code
-          xml:
-            name: Code
-    Accounts-Transactions:
-      title: AccountsTransactions
-      type: object
-      properties:
-        accountId:
-          title: Account ID
-          type: string
-          description: Provide the unique ID for a trading Account linked to an Investor.
-          maxLength: 35
-        transactions:
-          title: Transactions
-          type: array
-          items:
-            $ref: '#/components/schemas/Transactions-Response'
-      additionalProperties: false
     Get-Transactions-Response:
       title: GetTransactionsResponse
       type: object
@@ -367,118 +507,21 @@ components:
           items:
             $ref: '#/components/schemas/Accounts-Transactions'
       additionalProperties: false
-  responses:
-    Bad-Request:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Bad-Request-Example:
-              $ref: '#/components/examples/Bad-Request-Example'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Unauthorized-Example:
-              $ref: '#/components/examples/Unauthorized-Example'
-    Not-Found:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Not-Found-Example:
-              $ref: '#/components/examples/Not-Found-Example'
-    Method-Not-Allowed:
-      description: Method Not Allowed
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Method-Not-Allowed-Example:
-              $ref: '#/components/examples/Method-Not-Allowed-Example'
-    Unsupported-Media-Type:
-      description: Unsupported Media Type
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Unsupported-Media-Type-Example:
-              $ref: '#/components/examples/Unsupported-Media-Type-Example'
-    Internal-Server-Error:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Internal-Server-Error-Example:
-              $ref: '#/components/examples/Internal-Server-Error-Example'
-  parameters:
-    To-Trade-Date:
-      name: toTradeDate
-      in: query
-      required: true
-      description: The trade date the transaction actually received on the system. If a trade missed cut-off this date is the next available business date after the Booking Date. Date in ISO format(YYYY-MM-DD)
-      schema:
-        type: string
-        format: date
-    Fund-Manager-Id:
-      name: fundManagerId
-      in: path
-      required: true
-      description: The unique identifier for Fund Manager.
-      schema:
-        type: string
-      example: FM001
-    Limit:
-      name: limit
-      in: query
-      description: The maximum number of records to return.
-      required: false
-      schema:
-        type: integer
-        format: int32
-        default: 5000
-    Client-Id:
-      description: Your unique identification, the same one you use for OAuth token generation, was shared with you by Citi during the CitiConnect API integration.
-      name: client_id
-      in: query
-      required: true
-      schema:
-        type: string
-      example: '54563213246'
-    From-Trade-Date:
-      name: fromTradeDate
-      in: query
-      required: true
-      description: The trade date the transaction actually received on the system. If a trade missed cut-off this date is the next available business date after the Booking Date. Date in ISO format(YYYY-MM-DD)
-      schema:
-        type: string
-        format: date
-    Account-Id:
-      name: accountId
-      in: query
-      description: The unique ID for a trading Account linked to an Investor.
-      schema:
-        type: string
-    Offset:
-      name: offset
-      in: query
-      description: Offset records by a given number (optional).
-      required: false
-      schema:
-        type: integer
-        format: int32
-        default: 0
+    Accounts-Transactions:
+      title: AccountsTransactions
+      type: object
+      properties:
+        accountId:
+          title: Account ID
+          type: string
+          description: Provide the unique ID for a trading Account linked to an Investor.
+          maxLength: 35
+        transactions:
+          title: Transactions
+          type: array
+          items:
+            $ref: '#/components/schemas/Transactions-Response'
+      additionalProperties: false
   headers:
     pagination-metadata:
       description: '<br> current_page: current page number<br> total_page: Total number of pages available for your request<br> page_size: Total number of records available in the current page<br> has_more: Any more messages or records expected'
@@ -501,49 +544,6 @@ components:
         title: APIGEE GUID
         examples:
         - 6c29faa6-8e39-4829-b8ce-0ffa32c1a96c
-  examples:
-    Unauthorized-Example:
-      value:
-        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
-        errors:
-        - issue: User not authorized for this functionality
-          action: please use valid credentials to access this functionality
-          code: CC00007
-    Bad-Request-Example:
-      value:
-        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
-        errors:
-        - issue: path-param fundManagerId is mandatory and it cannot be empty
-          action: please provide valid value for fundManagerId
-          code: VC00010
-    Method-Not-Allowed-Example:
-      value:
-        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
-        errors:
-        - issue: Method not supported
-          action: please use valid http verb
-          code: CC00001
-    Internal-Server-Error-Example:
-      value:
-        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
-        errors:
-        - issue: unable to serve your request at this moment
-          action: Please refer to documentation provided or contact support team
-          code: CC00004
-    Not-Found-Example:
-      value:
-        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
-        errors:
-        - issue: Resource that you are searching is not found
-          action: Please use valid resource details
-          code: CC00006
-    Unsupported-Media-Type-Example:
-      value:
-        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
-        errors:
-        - issue: Media type not supported
-          action: please use valid content-type in header
-          code: CC00002
   securitySchemes:
     oAuth2:
       type: oauth2

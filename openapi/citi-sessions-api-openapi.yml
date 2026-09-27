@@ -179,39 +179,92 @@ paths:
         default:
           $ref: '#/components/responses/Internal-Server-Error'
 components:
+  examples:
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: HTTP method is not supported
+          action: Provide valid HTTP method
+          code: CC00001
+    Rate-Limit-Exceeded-Gateway-Error-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: Rate Limit exceeded
+    Not-Found-Gateway-Error-Example:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Method-Not-Allowed-Gateway-Error-Example:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Unsupported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type not supported
+          action: please use valid content-type in header
+          code: CC00002
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: unable to serve your request at this moment
+    Not-Found-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
+    Idempotency-Id-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Idempotency-Id provided is currently being used in another request
+          action: please do not repeat the same request again
+          code: VC00016
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: This server could not verify that you are authorized to access the URL
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+          code: CC00004
+    Bad-Request-Post-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2b921a5ab
+        error_details:
+        - issue: provided value is not within the range for header Merchant-Id
+          action: please provide valid value for header Merchant-Id, size must be between 1 and 40
+          code: VC00012
+    Gateway-Timeout-Gateway-Error-Example:
+      value:
+        httpCode: '504'
+        httpMessage: GATEWAY_TIMEOUT
+        moreInformation: 'Response took longer than timeout: PT50S'
+    Un-Supported-Media-Type-Gateway-Error-Example:
+      value:
+        httpCode: '415'
+        httpMessage: Unsupported Media Type
+        moreInformation: Unsupported Content-Type
   schemas:
-    Session-Update-Request:
-      title: Update Request
-      type: object
-      properties:
-        method:
-          $ref: '#/components/schemas/Method-Session-Update'
-        card:
-          $ref: '#/components/schemas/Session-Get-Status-Card-Notification'
-        ach:
-          $ref: '#/components/schemas/Session-Get-Status-Ach-Notification'
-    Session-Update-Response:
-      title: Update Status Response
-      type: object
-      required:
-      - session
-      - status
-      properties:
-        status:
-          type: string
-          enum:
-          - SUCCESS
-          - FAILED
-          description: A system-generated high level overall result of the transaction/operation.Value must be a member of the following list. The values are case sensitive.
-          title: status
-        session:
-          $ref: '#/components/schemas/Session-Updat-Response'
-        method:
-          $ref: '#/components/schemas/Method-Session-Update'
-        card:
-          $ref: '#/components/schemas/Session-Get-Status-Card-Notification'
-        ach:
-          $ref: '#/components/schemas/Session-Get-Status-Ach-Notification'
     Session-Create-Request:
       title: Create Session Request
       type: object
@@ -227,59 +280,12 @@ components:
           title: id
         session:
           $ref: '#/components/schemas/Session'
-    Session-Status-Response:
-      title: Create Status Response
-      type: object
-      required:
-      - session
-      - status
+    Method-Session-Update:
+      title: Method Session Update
+      description: Session method
       properties:
-        status:
-          type: string
-          enum:
-          - SUCCESS
-          - FAILED
-          description: A system-generated high level overall result of the transaction/operation.Value must be a member of the following list. The values are case sensitive.
-          title: status
-        session:
-          $ref: '#/components/schemas/Session-Get-Response'
-        method:
-          $ref: '#/components/schemas/Method-Session-Update'
-        card:
-          $ref: '#/components/schemas/Session-Get-Status-Card-Notification'
-        ach:
-          $ref: '#/components/schemas/Session-Get-Status-Ach-Notification'
-    Holder-Session-Name:
-      title: Holder Session name
-      description: Session Name
-      properties:
-        first_name:
-          description: first_name.
-          example: PETER
-          maxLength: 50
-          minLength: 1
-          type: string
-          title: first_name
-        last_name:
-          description: last_name.
-          example: A
-          maxLength: 50
-          minLength: 1
-          type: string
-          title: last_name
-    Session-Updat-Response:
-      title: Session
-      type: object
-      required:
-      - id
-      properties:
-        id:
-          description: The identifier for the payment session.You can add request fields to the session using a Hosted Payment Form or wallet provider interaction, or the Update Session operation.
-          type: string
-          minLength: 36
-          maxLength: 37
-          example: SES1234567890123456789012345678
-          title: id
+        holder_name:
+          $ref: '#/components/schemas/Holder-Session-Name'
     Error-Response:
       type: object
       title: Error Response
@@ -294,52 +300,29 @@ components:
           uniqueItems: true
           items:
             $ref: '#/components/schemas/Error-Detail'
-    Session-Get-Response:
-      title: Session
+    Session-Get-Status-Card-Notification:
+      title: Session Get Card
       type: object
-      required:
-      - id
-      - authentication_limit
-      - validity
       properties:
-        id:
-          description: The identifier for the payment session.You can add request fields to the session using a Hosted Payment Form or wallet provider interaction, or the Update Session operation.
+        number:
+          description: Card Number that needs to be tokenized
           type: string
-          minLength: 36
-          maxLength: 37
-          example: SES1234567890123456789012345678
-          title: id
-        authentication_limit:
-          description: The number of operations which may be submitted to the gateway using this session id as a password.This field applies when you write a browser or mobile app that issues operations to the gateway from the device, using the session id as a password.In that case, a payer (or a compromised browser), could issue a large number of requests to the gateway on your behalf, and you could incur unnecessary fees as a result.This field lets you limit your exposure to that risk. The value defaulted by the gateway is suitable for typical payments. There is an upper limit (your operation will be rejected if that limit is exceeded).
+          minLength: 9
+          maxLength: 23
+          example: '4012000033330026'
+          title: number
+        expiry_month:
+          description: Two-digit month in which the payment card expires
+          example: '01'
           type: string
-          pattern: ^(?:[1-9]|1[0-9]|2[0-5])$
-          example: '12'
-          title: authentication_limit
-        validity:
-          description: 'Time till which session id can be used within the authentication limit in minutes(min: 1 minute; max: 25 minutes)'
+          pattern: ^(0?[1-9]|1[0-2])$
+          title: expiry_month
+        expiry_year:
+          description: Two-digit year in which the payment card expires
           type: string
-          pattern: ^(?:[1-9]|1[0-9]|2[0-5])$
-          example: '12'
-          title: validity
-    Gateway-Error-Response:
-      type: object
-      title: GatewayErrorResponse
-      properties:
-        httpCode:
-          type: string
-          maxLength: 3
-          description: Numeric HTTP Staus code
-          title: httpCode
-        httpMessage:
-          type: string
-          maxLength: 128
-          description: HTTP error message
-          title: httpMessage
-        moreInformation:
-          type: string
-          maxLength: 128
-          description: HTTP error message
-          title: httpMessage
+          pattern: ^[0-9]{2,2}$
+          example: '25'
+          title: expiry_year
     Error-Detail:
       type: object
       title: Error Detail
@@ -393,63 +376,21 @@ components:
           maxLength: 44
           example: SES1234567890123456789012345678
           title: access_key
-    Method-Session-Update:
-      title: Method Session Update
-      description: Session method
-      properties:
-        holder_name:
-          $ref: '#/components/schemas/Holder-Session-Name'
-    Session-Get-Status-Card-Notification:
-      title: Session Get Card
-      type: object
-      properties:
-        number:
-          description: Card Number that needs to be tokenized
-          type: string
-          minLength: 9
-          maxLength: 23
-          example: '4012000033330026'
-          title: number
-        expiry_month:
-          description: Two-digit month in which the payment card expires
-          example: '01'
-          type: string
-          pattern: ^(0?[1-9]|1[0-2])$
-          title: expiry_month
-        expiry_year:
-          description: Two-digit year in which the payment card expires
-          type: string
-          pattern: ^[0-9]{2,2}$
-          example: '25'
-          title: expiry_year
-    Session-Create-Response:
-      title: Create Session Response
+    Session-Get-Response:
+      title: Session
       type: object
       required:
       - id
-      - status
-      - session
+      - authentication_limit
+      - validity
       properties:
         id:
-          description: Request Id
+          description: The identifier for the payment session.You can add request fields to the session using a Hosted Payment Form or wallet provider interaction, or the Update Session operation.
           type: string
-          minLength: 1
-          maxLength: 128
-          example: ABC123456
+          minLength: 36
+          maxLength: 37
+          example: SES1234567890123456789012345678
           title: id
-        status:
-          type: string
-          enum:
-          - SUCCESS
-          - FAILED
-          description: A system-generated high level overall result of the transaction/operation.Value must be a member of the following list. The values are case sensitive.
-          title: status
-        session:
-          $ref: '#/components/schemas/Session-Response'
-    Session:
-      title: Session
-      type: object
-      properties:
         authentication_limit:
           description: The number of operations which may be submitted to the gateway using this session id as a password.This field applies when you write a browser or mobile app that issues operations to the gateway from the device, using the session id as a password.In that case, a payer (or a compromised browser), could issue a large number of requests to the gateway on your behalf, and you could incur unnecessary fees as a result.This field lets you limit your exposure to that risk. The value defaulted by the gateway is suitable for typical payments. There is an upper limit (your operation will be rejected if that limit is exceeded).
           type: string
@@ -462,6 +403,81 @@ components:
           pattern: ^(?:[1-9]|1[0-9]|2[0-5])$
           example: '12'
           title: validity
+    Holder-Session-Name:
+      title: Holder Session name
+      description: Session Name
+      properties:
+        first_name:
+          description: first_name.
+          example: PETER
+          maxLength: 50
+          minLength: 1
+          type: string
+          title: first_name
+        last_name:
+          description: last_name.
+          example: A
+          maxLength: 50
+          minLength: 1
+          type: string
+          title: last_name
+    Session-Updat-Response:
+      title: Session
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          description: The identifier for the payment session.You can add request fields to the session using a Hosted Payment Form or wallet provider interaction, or the Update Session operation.
+          type: string
+          minLength: 36
+          maxLength: 37
+          example: SES1234567890123456789012345678
+          title: id
+    Session-Update-Response:
+      title: Update Status Response
+      type: object
+      required:
+      - session
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - SUCCESS
+          - FAILED
+          description: A system-generated high level overall result of the transaction/operation.Value must be a member of the following list. The values are case sensitive.
+          title: status
+        session:
+          $ref: '#/components/schemas/Session-Updat-Response'
+        method:
+          $ref: '#/components/schemas/Method-Session-Update'
+        card:
+          $ref: '#/components/schemas/Session-Get-Status-Card-Notification'
+        ach:
+          $ref: '#/components/schemas/Session-Get-Status-Ach-Notification'
+    Session-Status-Response:
+      title: Create Status Response
+      type: object
+      required:
+      - session
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - SUCCESS
+          - FAILED
+          description: A system-generated high level overall result of the transaction/operation.Value must be a member of the following list. The values are case sensitive.
+          title: status
+        session:
+          $ref: '#/components/schemas/Session-Get-Response'
+        method:
+          $ref: '#/components/schemas/Method-Session-Update'
+        card:
+          $ref: '#/components/schemas/Session-Get-Status-Card-Notification'
+        ach:
+          $ref: '#/components/schemas/Session-Get-Status-Ach-Notification'
     Session-Get-Status-Ach-Notification:
       title: Session Get Ach
       type: object
@@ -488,20 +504,76 @@ components:
           description: An indicator identifying the type of bank account.Consumer (checking or savings), orBusinessFor pre-arranged payments (sourceOfFunds.provided.ach.secCode=PPD) retrieve this information from the payer.If payments were telephone-initiated (sourceOfFunds.provided.ach.secCode=TEL) or internet-initiated (sourceOfFunds.provided.ach.secCode=WEB) you may choose to limit the payer's options (e.g. only support consumer checking accounts), depending on your type of business (e.g. B2C online webshop).
           title: status
           example: CHECKING
+    Gateway-Error-Response:
+      type: object
+      title: GatewayErrorResponse
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Staus code
+          title: httpCode
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+    Session:
+      title: Session
+      type: object
+      properties:
+        authentication_limit:
+          description: The number of operations which may be submitted to the gateway using this session id as a password.This field applies when you write a browser or mobile app that issues operations to the gateway from the device, using the session id as a password.In that case, a payer (or a compromised browser), could issue a large number of requests to the gateway on your behalf, and you could incur unnecessary fees as a result.This field lets you limit your exposure to that risk. The value defaulted by the gateway is suitable for typical payments. There is an upper limit (your operation will be rejected if that limit is exceeded).
+          type: string
+          pattern: ^(?:[1-9]|1[0-9]|2[0-5])$
+          example: '12'
+          title: authentication_limit
+        validity:
+          description: 'Time till which session id can be used within the authentication limit in minutes(min: 1 minute; max: 25 minutes)'
+          type: string
+          pattern: ^(?:[1-9]|1[0-9]|2[0-5])$
+          example: '12'
+          title: validity
+    Session-Create-Response:
+      title: Create Session Response
+      type: object
+      required:
+      - id
+      - status
+      - session
+      properties:
+        id:
+          description: Request Id
+          type: string
+          minLength: 1
+          maxLength: 128
+          example: ABC123456
+          title: id
+        status:
+          type: string
+          enum:
+          - SUCCESS
+          - FAILED
+          description: A system-generated high level overall result of the transaction/operation.Value must be a member of the following list. The values are case sensitive.
+          title: status
+        session:
+          $ref: '#/components/schemas/Session-Response'
+    Session-Update-Request:
+      title: Update Request
+      type: object
+      properties:
+        method:
+          $ref: '#/components/schemas/Method-Session-Update'
+        card:
+          $ref: '#/components/schemas/Session-Get-Status-Card-Notification'
+        ach:
+          $ref: '#/components/schemas/Session-Get-Status-Ach-Notification'
   responses:
-    Gateway-Timeout:
-      description: Gateway Timeout
-      headers:
-        apim-guid:
-          $ref: '#/components/headers/Request-Id'
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Gateway-Error-Response'
-          examples:
-            Gateway-Timeout-Gateway-Error-Example:
-              $ref: '#/components/examples/Gateway-Timeout-Gateway-Error-Example'
     Unauthorized:
       description: Unauthorized
       headers:
@@ -518,6 +590,44 @@ components:
               $ref: '#/components/examples/Unauthorized-Example'
             Unauthorized-Gateway-Error-Example:
               $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Bad-Post-Session-Request:
+      description: Bad Request
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Post-Example'
+    Gateway-Timeout:
+      description: Gateway Timeout
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Gateway-Timeout-Gateway-Error-Example:
+              $ref: '#/components/examples/Gateway-Timeout-Gateway-Error-Example'
+    Rate-Limit-Exceeded:
+      description: Rate Limit Exceeded
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Rate-Limit-Exceeded-Gateway-Error-Example:
+              $ref: '#/components/examples/Rate-Limit-Exceeded-Gateway-Error-Example'
     Not-Found:
       description: Not Found
       headers:
@@ -534,46 +644,6 @@ components:
               $ref: '#/components/examples/Not-Found-Example'
             Not-Found-Gateway-Error-Example:
               $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
-    Bad-Post-Session-Request:
-      description: Bad Request
-      headers:
-        apim-guid:
-          $ref: '#/components/headers/Request-Id'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Bad-Request-Example:
-              $ref: '#/components/examples/Bad-Request-Post-Example'
-    Conflict:
-      description: Conflict
-      headers:
-        apim-guid:
-          $ref: '#/components/headers/Request-Id'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Idempotency-Id-Conflict-Example:
-              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
-    Method-Not-Allowed:
-      description: Method Not Allowed
-      headers:
-        apim-guid:
-          $ref: '#/components/headers/Request-Id'
-      content:
-        application/json:
-          schema:
-            oneOf:
-            - $ref: '#/components/schemas/Gateway-Error-Response'
-            - $ref: '#/components/schemas/Error-Response'
-          examples:
-            Method-Not-Allowed-Service-Error-Example:
-              $ref: '#/components/examples/Method-Not-Allowed-Example'
-            Method-Not-Allowed-Gateway-Error-Example:
-              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
     Unsupported-Media-Type:
       description: Unsupported Media Type
       headers:
@@ -606,8 +676,8 @@ components:
               $ref: '#/components/examples/Internal-Server-Error-Example'
             Internal-Server-Gateway-Error-Example:
               $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
-    Rate-Limit-Exceeded:
-      description: Rate Limit Exceeded
+    Method-Not-Allowed:
+      description: Method Not Allowed
       headers:
         apim-guid:
           $ref: '#/components/headers/Request-Id'
@@ -616,127 +686,26 @@ components:
           schema:
             oneOf:
             - $ref: '#/components/schemas/Gateway-Error-Response'
+            - $ref: '#/components/schemas/Error-Response'
           examples:
-            Rate-Limit-Exceeded-Gateway-Error-Example:
-              $ref: '#/components/examples/Rate-Limit-Exceeded-Gateway-Error-Example'
-  examples:
-    Gateway-Timeout-Gateway-Error-Example:
-      value:
-        httpCode: '504'
-        httpMessage: GATEWAY_TIMEOUT
-        moreInformation: 'Response took longer than timeout: PT50S'
-    Not-Found-Gateway-Error-Example:
-      value:
-        httpCode: '404'
-        httpMessage: Not Found
-        moreInformation: No resources match requested URI
-    Bad-Request-Post-Example:
-      value:
-        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2b921a5ab
-        error_details:
-        - issue: provided value is not within the range for header Merchant-Id
-          action: please provide valid value for header Merchant-Id, size must be between 1 and 40
-          code: VC00012
-    Unauthorized-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: User not authorized for this functionality
-          action: please use valid credentials to access this functionality
-          code: CC00007
-    Idempotency-Id-Conflict-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: Idempotency-Id provided is currently being used in another request
-          action: please do not repeat the same request again
-          code: VC00016
-    Method-Not-Allowed-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: HTTP method is not supported
-          action: Provide valid HTTP method
-          code: CC00001
-    Internal-Server-Error-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: unable to serve your request at this moment
-          action: Please refer to documentation provided or contact support team
-          code: CC00004
-    Not-Found-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627702
-        error_details:
-        - issue: Resource that you are searching is not found
-          action: Please use valid resource details
-          code: CC00006
-    Un-Supported-Media-Type-Gateway-Error-Example:
-      value:
-        httpCode: '415'
-        httpMessage: Unsupported Media Type
-        moreInformation: Unsupported Content-Type
-    Unsupported-Media-Type-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: Media type not supported
-          action: please use valid content-type in header
-          code: CC00002
-    Rate-Limit-Exceeded-Gateway-Error-Example:
-      value:
-        httpCode: '429'
-        httpMessage: Too Many Requests
-        moreInformation: Rate Limit exceeded
-    Unauthorized-Gateway-Error-Example:
-      value:
-        httpCode: '401'
-        httpMessage: Unauthorized
-        moreInformation: This server could not verify that you are authorized to access the URL
-    Method-Not-Allowed-Gateway-Error-Example:
-      value:
-        httpCode: '405'
-        httpMessage: Method Not Allowed
-        moreInformation: The method is not allowed for the requested URL
-    Internal-Server-Gateway-Error-Example:
-      value:
-        httpCode: '500'
-        httpMessage: Internal Server Error
-        moreInformation: unable to serve your request at this moment
+            Method-Not-Allowed-Service-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
+    Conflict:
+      description: Conflict
+      headers:
+        apim-guid:
+          $ref: '#/components/headers/Request-Id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
   parameters:
-    Session-Path-Id:
-      name: id
-      in: path
-      required: true
-      description: Your unique session identification
-      schema:
-        type: string
-        maxLength: 37
-        minLength: 36
-        description: Your unique session identification
-      example: SE12345897456213ytrdghkjksdsds1234567
-    Encrypt-Sign:
-      name: Encrypt-Sign
-      in: header
-      description: Encrypted Sign
-      schema:
-        type: string
-        enum:
-        - N
-        - Y
-        description: Encrypted Sign
-      example: Y
-    Client-Id:
-      in: query
-      name: client_id
-      required: true
-      description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
-      schema:
-        type: string
-        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
-        example: 9a10a5d6-63d4-4885-b6bd-19e79629496d
-    Merchant-Id:
+    Merchant-Token-Id:
       name: Merchant-Id
       in: header
       required: true
@@ -747,7 +716,7 @@ components:
         minLength: 1
         description: Your unique Merchant Identification number
       example: M123456987
-    Merchant-Token-Id:
+    Merchant-Id:
       name: Merchant-Id
       in: header
       required: true
@@ -768,6 +737,17 @@ components:
         maxLength: 128
         description: "Your unique identification for a POST request \n - Maximum length is 128. \n-  CitiConnect API responds with an error (HTTP status 4XX) if your POST request idempotency identification value is a duplicate across a recent history of idempotency identifications in Citi's database. \n- If you don't receive any response (HTTP status 2XX, 4XX or 5XX) from Citi to your POST request and you wish to retry, reinitiate your request with the same idempotency identification to prevent accidental duplicate payment."
       example: a44cbb60-6de4-4edb-9a7a-123414bba3bb
+    Session-Path-Id:
+      name: id
+      in: path
+      required: true
+      description: Your unique session identification
+      schema:
+        type: string
+        maxLength: 37
+        minLength: 36
+        description: Your unique session identification
+      example: SE12345897456213ytrdghkjksdsds1234567
     Session-Id:
       name: session_id
       in: query
@@ -779,6 +759,26 @@ components:
         minLength: 36
         description: Your unique session identification
       example: SE12345897456213ytrdghkjksdsds1234567
+    Client-Id:
+      in: query
+      name: client_id
+      required: true
+      description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+      schema:
+        type: string
+        description: Your unique identification, same as the identification you use for OAuth token generation, Citi shared with you during your CitiConnect API onboarding
+        example: 9a10a5d6-63d4-4885-b6bd-19e79629496d
+    Encrypt-Sign:
+      name: Encrypt-Sign
+      in: header
+      description: Encrypted Sign
+      schema:
+        type: string
+        enum:
+        - N
+        - Y
+        description: Encrypted Sign
+      example: Y
   headers:
     Request-Id:
       schema:

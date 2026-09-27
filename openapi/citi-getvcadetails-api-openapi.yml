@@ -246,26 +246,29 @@ paths:
                 $ref: '#/components/schemas/ResponseCode500'
 components:
   schemas:
-    MerchantId:
+    CurfewTime:
       properties:
-        merchantId:
-          description: Specifies the Merchant ID that should be allowed / disallowed when transacting with the virtual card.<br>Mastercard - Optional<br>Visa - Not applicable
+        startTime:
+          description: Specifies the start time from when the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>`Format:` hh:mm
           type: string
           format: alphanumeric
-          example: 0009876
-          maxLength: 15
-        acquirerId:
-          description: Specifies the Acquirer ID that should be allowed / disallowed when transacting with the virtual card. <br>Mastercard - Optional<br>Visa - Optional
-          type: string
-          format: long
-          example: '123456'
-          maxLength: 6
-        cardAcceptorId:
-          description: Specifies the Card Acceptor ID that should be allowed / disallowed when transacting with the virtual card. <br>Mastercard - Not applicable<br>Visa - Optional
+          example: 01:00
+          maxLength: 5
+        endTime:
+          description: Specifies the end time until which the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>`Format:` hh:mm
           type: string
           format: alphanumeric
-          example: '123456'
-          maxLength: 15
+          example: '22:00'
+          maxLength: 5
+        weekdaysEffective:
+          description: Listing of days to which the time curfew applies.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN<br>
+          type: array
+          items:
+            type: string
+          format: alphanumeric
+          example:
+          - MON
+          - TUE
     GetVcaDetailsInboundRequest:
       properties:
         messageId:
@@ -304,17 +307,110 @@ components:
       required:
       - messageId
       - programId
-    MerchantInfo:
+    ResponseCode500:
       properties:
-        allowed:
-          description: Indicate whether the values in merchantId and acquirerId are allowed or disallowed.<br> True = values provided in merchantId and acquirerId are allowed<br> False = values provided in merchantId and acquirerId are not allowed
-          type: string
-          format: boolean
-          example: 'true'
-        merchantIds:
+        errors:
           type: array
           items:
-            $ref: '#/components/schemas/MerchantId'
+            $ref: '#/components/schemas/ResponseCode'
+    CustomReference:
+      properties:
+        customReferenceLabel:
+          description: Specifies the label of a custom reference field.
+          type: string
+          format: alphanumeric
+          example: Purchase Type
+          maxLength: 50
+        customReferenceValue:
+          description: Specifies the value of a custom reference field.<br><br>Mastercard - Max Length - 80 characters<br>Visa - Max Length - 100 characters'
+          type: string
+          format: alphanumeric
+          example: Airlines
+          maxLength: 100
+    ResponseCode:
+      properties:
+        errorCode:
+          description: which indicates the error code
+          type: string
+          example: GRC0014
+        errorDescription:
+          description: which indicates the error description
+          type: string
+          example: We have encountered an error and couldnot receive your request. Please try again, or contact Citi support if you have any further questions or comments
+    SpendVelocity:
+      properties:
+        cumulativeSpendLimit:
+          description: Limits the overall amount that can be spent on the virtual card account.<br>Mastercard - Allows a maximumm of 14 digits (12 digits to the left of the decimal and 2 digits to the right of the decimal)<br>Visa - Allows a maximumm of 12 digits (10 digits to the left of the decimal and 2 digits to the right of the decimal)
+          type: string
+          format: BigDecimal
+          example: '10000.00'
+          maxLength: 14
+        maxAuth:
+          description: 'Limits the number of authorizations that can be made with a VCA. Mastercard: If set to 0, unlimited authorizations are allowed on the VCA. (0 is not applicable for Visa)'
+          type: string
+          format: long
+          example: '5'
+          maxLength: 19
+        periodType:
+          description: 'Period for which the control values are valid before they reset.<br><br>Mastercard: <br>D = Daily <br>The balances of control parameters enabled for a VCA are reset with their original values every day at 00:00:00.<br><br>M = Monthly<br>The balances of control parameters enabled for a VCA are reset with their original values at the start of every month. <br><br>W = Weekly<br>The balances of control parameters enabled for a VCA are reset with their original values every Monday at 00:00:00.<br><br>Q = Quarterly<br>The balances of control parameters enabled for a VCA are reset with their original values on the first day of every quarter at 00:00:00.<br>  Quarter 1: January 01 - March 31.<br>  Quarter 2: April 01 - June 30.<br>  Quarter 3: July 01 - September 30.<br>  Quarter 4: October 01 - December 31.<br><br>Y = Annually<br>The balances of control parameters enabled for a VCA are reset with their original values every year on January 1st at 00:00:00.<br><br>C = Continuous<br>The balances of control parameters enabled for a VCA are retained continuously for the validity period defined. Balances do not reset with their original values throughout the validity period.<br><br>Visa: <br>1 = Recurring<br>The balances of control parameters enabled for a VCA are reset with their original values on a specified recurring day for every month. <br><br>If you select this periodType, you must also specify the resetDay field. <br><br>2 = Monthly<br>The balances of control parameters enabled for a VCA are reset with their original values at the start of every month. <br><br>3 = Date Range<br>The balances of control parameters enabled for a VCA are retained continuously for the validity period defined. Balances do not reset with their original values throughout the validity period.<br><br>If you select this periodType, you must also specify the validityStartDate and validityEndDate fields.'
+          type: string
+          format: alphanumeric
+          example: D
+          maxLength: 1
+        periodEndDate:
+          description: End date of the current period based on the periodType selected.<br><br>Mastercard - Optional<br>Visa - Not applicable
+          type: string
+          format: alphanumeric
+          example: '2020-11-27'
+          maxLength: 10
+        availableBalance:
+          description: Remaining available amount balance on the VCA
+          type: string
+          format: BigDecimal
+          example: '5000.00'
+        resetDay:
+          description: The day of each month when the control parameter balances should reset to their original value.<br>Mastercard - Not applicable<br>Visa - Optional
+          type: string
+          format: long
+          example: '5'
+          maxLength: 19
+        consumedAmount:
+          description: The amount consumed on the VCA<br>Mastercard - Not applicable<br>Visa - Required
+          type: string
+          format: BigDecimal
+          example: '1100.00'
+        availableCountBalance:
+          description: Remaining available authorization count balance on the VCA<br>Mastercard - Not applicable<br>Visa - Required
+          type: string
+          format: long
+          example: '1235'
+          maxLength: 19
+        consumedCount:
+          description: The number of authorizations consumed on the VCA<br>Mastercard - Not applicable<br>Visa - Required
+          type: string
+          format: long
+          example: '1222'
+          maxLength: 19
+    MerchantId:
+      properties:
+        merchantId:
+          description: Specifies the Merchant ID that should be allowed / disallowed when transacting with the virtual card.<br>Mastercard - Optional<br>Visa - Not applicable
+          type: string
+          format: alphanumeric
+          example: 0009876
+          maxLength: 15
+        acquirerId:
+          description: Specifies the Acquirer ID that should be allowed / disallowed when transacting with the virtual card. <br>Mastercard - Optional<br>Visa - Optional
+          type: string
+          format: long
+          example: '123456'
+          maxLength: 6
+        cardAcceptorId:
+          description: Specifies the Card Acceptor ID that should be allowed / disallowed when transacting with the virtual card. <br>Mastercard - Not applicable<br>Visa - Optional
+          type: string
+          format: alphanumeric
+          example: '123456'
+          maxLength: 15
     ResponseCodes:
       properties:
         errorCode:
@@ -362,42 +458,6 @@ components:
           format: long
           example: '233191'
           maxLength: 19
-    ResponseCode500:
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResponseCode'
-    TimeOfDay:
-      properties:
-        startTime:
-          description: Specifies the start time from when the card can be used each of the specified days.t<br><br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only<br><br>`Format:` hh:mm
-          type: string
-          format: alphanumeric
-          example: 01:00
-          maxLength: 5
-        endTime:
-          description: Specifies the end time until which the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only<br><br>`Format:` hh:mm
-          type: string
-          format: alphanumeric
-          example: '22:00'
-          maxLength: 5
-        weekdayEffective:
-          description: Specifies the day applicable to the start and end times defined.<br>Mastercard - Optional<br>Visa - Optional<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN<br>
-          type: string
-          format: alphanumeric
-          example: WED
-          maxLength: 3
-    ResponseCode:
-      properties:
-        errorCode:
-          description: which indicates the error code
-          type: string
-          example: GRC0014
-        errorDescription:
-          description: which indicates the error description
-          type: string
-          example: We have encountered an error and couldnot receive your request. Please try again, or contact Citi support if you have any further questions or comments
     GetVcaDetailsInboundResponse:
       properties:
         vcaId:
@@ -602,97 +662,37 @@ components:
       - programId
       - expiryDate
       - timeZone
-    CustomReference:
+    MerchantInfo:
       properties:
-        customReferenceLabel:
-          description: Specifies the label of a custom reference field.
+        allowed:
+          description: Indicate whether the values in merchantId and acquirerId are allowed or disallowed.<br> True = values provided in merchantId and acquirerId are allowed<br> False = values provided in merchantId and acquirerId are not allowed
           type: string
-          format: alphanumeric
-          example: Purchase Type
-          maxLength: 50
-        customReferenceValue:
-          description: Specifies the value of a custom reference field.<br><br>Mastercard - Max Length - 80 characters<br>Visa - Max Length - 100 characters'
-          type: string
-          format: alphanumeric
-          example: Airlines
-          maxLength: 100
-    CurfewTime:
+          format: boolean
+          example: 'true'
+        merchantIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/MerchantId'
+    TimeOfDay:
       properties:
         startTime:
-          description: Specifies the start time from when the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>`Format:` hh:mm
+          description: Specifies the start time from when the card can be used each of the specified days.t<br><br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only<br><br>`Format:` hh:mm
           type: string
           format: alphanumeric
           example: 01:00
           maxLength: 5
         endTime:
-          description: Specifies the end time until which the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>`Format:` hh:mm
+          description: Specifies the end time until which the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only<br><br>`Format:` hh:mm
           type: string
           format: alphanumeric
           example: '22:00'
           maxLength: 5
-        weekdaysEffective:
-          description: Listing of days to which the time curfew applies.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN<br>
-          type: array
-          items:
-            type: string
-          format: alphanumeric
-          example:
-          - MON
-          - TUE
-    SpendVelocity:
-      properties:
-        cumulativeSpendLimit:
-          description: Limits the overall amount that can be spent on the virtual card account.<br>Mastercard - Allows a maximumm of 14 digits (12 digits to the left of the decimal and 2 digits to the right of the decimal)<br>Visa - Allows a maximumm of 12 digits (10 digits to the left of the decimal and 2 digits to the right of the decimal)
-          type: string
-          format: BigDecimal
-          example: '10000.00'
-          maxLength: 14
-        maxAuth:
-          description: 'Limits the number of authorizations that can be made with a VCA. Mastercard: If set to 0, unlimited authorizations are allowed on the VCA. (0 is not applicable for Visa)'
-          type: string
-          format: long
-          example: '5'
-          maxLength: 19
-        periodType:
-          description: 'Period for which the control values are valid before they reset.<br><br>Mastercard: <br>D = Daily <br>The balances of control parameters enabled for a VCA are reset with their original values every day at 00:00:00.<br><br>M = Monthly<br>The balances of control parameters enabled for a VCA are reset with their original values at the start of every month. <br><br>W = Weekly<br>The balances of control parameters enabled for a VCA are reset with their original values every Monday at 00:00:00.<br><br>Q = Quarterly<br>The balances of control parameters enabled for a VCA are reset with their original values on the first day of every quarter at 00:00:00.<br>  Quarter 1: January 01 - March 31.<br>  Quarter 2: April 01 - June 30.<br>  Quarter 3: July 01 - September 30.<br>  Quarter 4: October 01 - December 31.<br><br>Y = Annually<br>The balances of control parameters enabled for a VCA are reset with their original values every year on January 1st at 00:00:00.<br><br>C = Continuous<br>The balances of control parameters enabled for a VCA are retained continuously for the validity period defined. Balances do not reset with their original values throughout the validity period.<br><br>Visa: <br>1 = Recurring<br>The balances of control parameters enabled for a VCA are reset with their original values on a specified recurring day for every month. <br><br>If you select this periodType, you must also specify the resetDay field. <br><br>2 = Monthly<br>The balances of control parameters enabled for a VCA are reset with their original values at the start of every month. <br><br>3 = Date Range<br>The balances of control parameters enabled for a VCA are retained continuously for the validity period defined. Balances do not reset with their original values throughout the validity period.<br><br>If you select this periodType, you must also specify the validityStartDate and validityEndDate fields.'
+        weekdayEffective:
+          description: Specifies the day applicable to the start and end times defined.<br>Mastercard - Optional<br>Visa - Optional<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN<br>
           type: string
           format: alphanumeric
-          example: D
-          maxLength: 1
-        periodEndDate:
-          description: End date of the current period based on the periodType selected.<br><br>Mastercard - Optional<br>Visa - Not applicable
-          type: string
-          format: alphanumeric
-          example: '2020-11-27'
-          maxLength: 10
-        availableBalance:
-          description: Remaining available amount balance on the VCA
-          type: string
-          format: BigDecimal
-          example: '5000.00'
-        resetDay:
-          description: The day of each month when the control parameter balances should reset to their original value.<br>Mastercard - Not applicable<br>Visa - Optional
-          type: string
-          format: long
-          example: '5'
-          maxLength: 19
-        consumedAmount:
-          description: The amount consumed on the VCA<br>Mastercard - Not applicable<br>Visa - Required
-          type: string
-          format: BigDecimal
-          example: '1100.00'
-        availableCountBalance:
-          description: Remaining available authorization count balance on the VCA<br>Mastercard - Not applicable<br>Visa - Required
-          type: string
-          format: long
-          example: '1235'
-          maxLength: 19
-        consumedCount:
-          description: The number of authorizations consumed on the VCA<br>Mastercard - Not applicable<br>Visa - Required
-          type: string
-          format: long
-          example: '1222'
-          maxLength: 19
+          example: WED
+          maxLength: 3
   securitySchemes:
     clientCredentials:
       type: oauth2

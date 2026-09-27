@@ -166,31 +166,12 @@ paths:
                 $ref: '#/components/schemas/ErrorMessage'
               example: <root><httpMessage>Internal Server Error</httpMessage><httpCode>500</httpCode><moreInformation>Internal Server Error</moreInformation></root>
 components:
-  parameters:
-    Event-Type:
-      name: Event-Type
-      in: header
-      required: true
-      description: Event Type
-      schema:
-        type: string
-      example: Statements
-    Event-Name:
-      name: Event-Name
-      in: header
-      required: true
-      description: Event Name
-      schema:
-        type: string
-      example: Intraday/End of day Statement
-    Attachment-Encoding:
-      name: Attachment-Encoding
-      in: header
-      description: Indicates that the attachment (the statement file) has been compressed. A value of gzip means the client must decompress the file using the gZip algorithm to access the original statement content. This header is only present when gZip compression is requested in the Initiation and compression is successfully applied on the attachment.
-      schema:
-        type: string
-      example: gzip
   examples:
+    Method-Not-Allowed-Example:
+      value:
+        httpMessage: Method Not Allowed
+        httpCode: 405
+        moreInformation: Please use valid HTTP supported verb only.
     Statement-Request-Example:
       value:
         accountNumber:
@@ -199,44 +180,9 @@ components:
         formatName: CAMT_053_001_02
         fromDate: '2017-04-02T02:02:02.222Z'
         toDate: '2017-04-02T02:02:02.222Z'
-    Un-Supported-Media-Type-Example:
-      value:
-        httpMessage: Unsupported Media Type
-        httpCode: 415
-        moreInformation: Provided content-type is not allowed. Only content-type as application/xml and application/json is accepted, please correct the content-type on the header and try again.
-    Unauthorized-Example:
-      value:
-        httpMessage: Invalid OAuth Token
-        httpCode: 401
-        moreInformation: You are not authorized to access this API. Please send valid credentials for authorization.
     Statement-Response-Example:
       value:
         statementId: '45227678'
-    Bad-Request-Example:
-      value:
-        httpMessage: Bad_Request
-        httpCode: 400
-        moreInformation: Schema Validation Failed.
-    Method-Not-Allowed-Example:
-      value:
-        httpMessage: Method Not Allowed
-        httpCode: 405
-        moreInformation: Please use valid HTTP supported verb only.
-    Ok-Response-Example-Json:
-      value:
-        status:
-          code: 200
-          message: Ok
-          moreInformation: Ok
-        statementId: '45227678'
-        fileCheckSum: 770d285d1505da11034f729484d4d7250b30dde1101730bed129283476715e14fc5835de5d49d3b17c55ba5908bcfb50ab212edc4bb9c7e1ee08a4e03fcc6f4a
-    Error-Response-Example:
-      value:
-        status:
-          code: 500
-          message: INTERNAL SERVER ERROR
-          moreInformation: Unable to serve your request after retrying. Please try again later. If the issue persists, contact support.
-        statementId: '45227690'
     Empty-Response-Example:
       value:
         status:
@@ -244,16 +190,33 @@ components:
           message: STATEMENT_EMPTY
           moreInformation: No results found, Increase the range.
         statementId: '45227689'
-    Internal-Server-Error-Example:
+    Error-Response-Example:
       value:
-        httpMessage: Internal Server Error
-        httpCode: 500
-        moreInformation: Unable to serve your request at this moment. Please try again later.
+        status:
+          code: 500
+          message: INTERNAL SERVER ERROR
+          moreInformation: Unable to serve your request after retrying. Please try again later. If the issue persists, contact support.
+        statementId: '45227690'
+    Un-Supported-Media-Type-Example:
+      value:
+        httpMessage: Unsupported Media Type
+        httpCode: 415
+        moreInformation: Provided content-type is not allowed. Only content-type as application/xml and application/json is accepted, please correct the content-type on the header and try again.
     Not-Found-Example:
       value:
         httpMessage: Not Found
         httpCode: 404
         moreInformation: Please check the URL and try again later.
+    Internal-Server-Error-Example:
+      value:
+        httpMessage: Internal Server Error
+        httpCode: 500
+        moreInformation: Unable to serve your request at this moment. Please try again later.
+    Bad-Request-Example:
+      value:
+        httpMessage: Bad_Request
+        httpCode: 400
+        moreInformation: Schema Validation Failed.
     Ok-Response-Example:
       value:
         xmlns: http://com.citi.citiconnect/services/types/attachments/v2
@@ -263,6 +226,19 @@ components:
           moreInformation: Ok
         statementId: '45227678'
         fileCheckSum: 770d285d1505da11034f729484d4d7250b30dde1101730bed129283476715e14fc5835de5d49d3b17c55ba5908bcfb50ab212edc4bb9c7e1ee08a4e03fcc6f4a
+    Ok-Response-Example-Json:
+      value:
+        status:
+          code: 200
+          message: Ok
+          moreInformation: Ok
+        statementId: '45227678'
+        fileCheckSum: 770d285d1505da11034f729484d4d7250b30dde1101730bed129283476715e14fc5835de5d49d3b17c55ba5908bcfb50ab212edc4bb9c7e1ee08a4e03fcc6f4a
+    Unauthorized-Example:
+      value:
+        httpMessage: Invalid OAuth Token
+        httpCode: 401
+        moreInformation: You are not authorized to access this API. Please send valid credentials for authorization.
   schemas:
     StatementRequest:
       title: StatementRequest
@@ -323,6 +299,24 @@ components:
       - formatName
       - fromDate
       - toDate
+    StatementResponse:
+      title: StatementResponse
+      properties:
+        statementId:
+          description: Unique ID for newly generated statement. This will be used to map with the statement file.
+          title: statementId
+          type: string
+          example: '86756565'
+        xmlns:
+          type: string
+          title: xmlns
+          xml:
+            attribute: true
+          example: http://com.citi.citiconnect/services/types/inquiries/statement/v2
+      required:
+      - statementId
+      xml:
+        name: statementResponse
     ErrorMessage:
       title: ErrorMessage
       properties:
@@ -343,24 +337,6 @@ components:
       - httpCode
       xml:
         name: errormessage
-    StatementResponse:
-      title: StatementResponse
-      properties:
-        statementId:
-          description: Unique ID for newly generated statement. This will be used to map with the statement file.
-          title: statementId
-          type: string
-          example: '86756565'
-        xmlns:
-          type: string
-          title: xmlns
-          xml:
-            attribute: true
-          example: http://com.citi.citiconnect/services/types/inquiries/statement/v2
-      required:
-      - statementId
-      xml:
-        name: statementResponse
     StatementNotificationResponse:
       type: object
       title: StatementNotificationResponse
@@ -414,6 +390,30 @@ components:
       - statementId
       xml:
         name: statementNotificationResponse
+  parameters:
+    Event-Name:
+      name: Event-Name
+      in: header
+      required: true
+      description: Event Name
+      schema:
+        type: string
+      example: Intraday/End of day Statement
+    Attachment-Encoding:
+      name: Attachment-Encoding
+      in: header
+      description: Indicates that the attachment (the statement file) has been compressed. A value of gzip means the client must decompress the file using the gZip algorithm to access the original statement content. This header is only present when gZip compression is requested in the Initiation and compression is successfully applied on the attachment.
+      schema:
+        type: string
+      example: gzip
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Event Type
+      schema:
+        type: string
+      example: Statements
   callbacks:
     Statement-Notification:
       /statement-notification:
