@@ -66,30 +66,13 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    DevolucaoSolicitada:
-      type: object
-      required:
-      - valor
-      properties:
-        valor:
-          type: string
-          title: Valor
-          pattern: \d{1,10}\.\d{2}
-          description: Valor solicitado para devolução. A soma dos valores de todas as devolucões não podem ultrapassar o valor total do Pix.
-        natureza:
-          $ref: '#/components/schemas/DevolucaoSolicitadaNatureza'
-        descricao:
-          type: string
-          title: Mensagem ao pagador relativa à devolução.
-          description: O campo `descricao`, opcional, determina um texto a ser apresentado ao pagador contendo informações sobre a devolução. Esse texto será preenchido, na pacs.004, pelo PSP do recebedor, no campo RemittanceInformation. O tamanho do campo na pacs.004 está limitado a 140 caracteres.
-          maxLength: 140
-    EndToEndId:
+    DevolucaoSolicitadaNatureza:
       type: string
-      title: Id fim a fim da transação
-      description: EndToEndIdentification que transita na PACS002, PACS004 e PACS008
-      pattern: '[a-zA-Z0-9]{32}'
-      minLength: 32
-      maxLength: 32
+      title: Natureza da Devolução Solicitada
+      description: "Indica qual é a natureza da devolução solicitada. Uma solicitação de devolução pelo usuário recebedor pode ser relacionada a um Pix\n comum (com código: `MD06` da pacs.004), ou a um Pix de Saque ou Troco (com códigos possíveis: `MD06` e `SL02` da pacs.004). Na ausência \n deste campo a natureza deve ser interpretada como sendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n- `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum ou ao valor da compra em um Pix Troco (`MD06`);\n- `RETIRADA`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix Saque ou ao valor do troco em um Pix Troco (`SL02`).\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso deve ser: ORIGINAL);\n- Pix Saque: o valor da devolução é limitado ao valor da retirada (a natureza nesse caso deve ser: RETIRADA); e\n- Pix Troco: o valor da devolução é limitado ao valor relativo à compra ou ao troco:\n  - Quando a devolução for referente à compra, o valor limita-se ao valor da compra (a natureza nesse caso deve ser ORIGINAL); e\n  - Quando a devolução for referente ao troco, o valor limita-se ao valor do troco (a natureza nesse caso deve ser RETIRADA).\n"
+      enum:
+      - ORIGINAL
+      - RETIRADA
     Problema:
       type: object
       required:
@@ -187,21 +170,23 @@ components:
 
             '
           maxLength: 140
-    DevolucaoId:
-      type: string
-      title: Id da Devolução
-      description: Id gerado pelo cliente para representar unicamente uma devolução.
-      pattern: '[a-zA-Z0-9]{1,35}'
-    DevolucaoNatureza:
-      type: string
-      title: Natureza da Devolução
-      description: "Indica qual é a natureza da devolução. Uma devolução pode ser relacionada a um Pix comum (com códigos possíveis: `MD06`, `BE08` e `FR01` da pacs.004 e `REFU` da pacs.008), \nou a um Pix de Saque ou Troco (com códigos possíveis:  `MD06` e `SL02` da pacs.004). Na ausência deste campo a natureza deve ser interpretada como \nsendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n  - `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum ou ao valor da compra em um Pix Troco (`MD06`);\n  - `RETIRADA`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix Saque ou ao valor do troco em um Pix Troco (`SL02`);\n  - `MED_OPERACIONAL`: quando a devolução ocorre no âmbito do MED por motivo de falha operacional e se refere a um Pix comum (`BE08`);\n  - `MED_FRAUDE`: quando a devolução ocorre no âmbito do MED por fundada suspeita de fraude e se refere a um Pix comum (`FR01`).\n  - `MED_PIX_AUTOMATICO`: reembolso total ou parcial ao participante do usuário pagador no âmbito do MED (Mecanismo Especial de Devolução) para o Pix Automático pela utilização de recursos próprios para ressarcimento do usuário pagador.(`REFU`);\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso pode ser: ORIGINAL, MED_OPERACIONAL ou MED_FRAUDE);\n- Pix Saque: o valor da devolução é limitado ao valor da retirada (a natureza nesse caso deve ser: RETIRADA); e\n- Pix Troco: o valor da devolução é limitado ao valor relativo à compra ou ao troco:\n  - Quando a devolução for referente à compra, o valor limita-se ao valor da compra (a natureza nesse caso deve ser ORIGINAL); e\n  - Quando a devolução for referente ao troco, o valor limita-se ao valor do troco (a natureza nesse caso deve ser RETIRADA).\n"
-      enum:
-      - ORIGINAL
-      - RETIRADA
-      - MED_OPERACIONAL
-      - MED_FRAUDE
-      - MED_PIX_AUTOMATICO
+    DevolucaoSolicitada:
+      type: object
+      required:
+      - valor
+      properties:
+        valor:
+          type: string
+          title: Valor
+          pattern: \d{1,10}\.\d{2}
+          description: Valor solicitado para devolução. A soma dos valores de todas as devolucões não podem ultrapassar o valor total do Pix.
+        natureza:
+          $ref: '#/components/schemas/DevolucaoSolicitadaNatureza'
+        descricao:
+          type: string
+          title: Mensagem ao pagador relativa à devolução.
+          description: O campo `descricao`, opcional, determina um texto a ser apresentado ao pagador contendo informações sobre a devolução. Esse texto será preenchido, na pacs.004, pelo PSP do recebedor, no campo RemittanceInformation. O tamanho do campo na pacs.004 está limitado a 140 caracteres.
+          maxLength: 140
     Violacao:
       type: object
       title: Violações
@@ -221,14 +206,38 @@ components:
           title: Valor da propriedade
           description: Valor da propriedade
           example: 061996671234
-    DevolucaoSolicitadaNatureza:
+    EndToEndId:
       type: string
-      title: Natureza da Devolução Solicitada
-      description: "Indica qual é a natureza da devolução solicitada. Uma solicitação de devolução pelo usuário recebedor pode ser relacionada a um Pix\n comum (com código: `MD06` da pacs.004), ou a um Pix de Saque ou Troco (com códigos possíveis: `MD06` e `SL02` da pacs.004). Na ausência \n deste campo a natureza deve ser interpretada como sendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n- `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum ou ao valor da compra em um Pix Troco (`MD06`);\n- `RETIRADA`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix Saque ou ao valor do troco em um Pix Troco (`SL02`).\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso deve ser: ORIGINAL);\n- Pix Saque: o valor da devolução é limitado ao valor da retirada (a natureza nesse caso deve ser: RETIRADA); e\n- Pix Troco: o valor da devolução é limitado ao valor relativo à compra ou ao troco:\n  - Quando a devolução for referente à compra, o valor limita-se ao valor da compra (a natureza nesse caso deve ser ORIGINAL); e\n  - Quando a devolução for referente ao troco, o valor limita-se ao valor do troco (a natureza nesse caso deve ser RETIRADA).\n"
+      title: Id fim a fim da transação
+      description: EndToEndIdentification que transita na PACS002, PACS004 e PACS008
+      pattern: '[a-zA-Z0-9]{32}'
+      minLength: 32
+      maxLength: 32
+    DevolucaoNatureza:
+      type: string
+      title: Natureza da Devolução
+      description: "Indica qual é a natureza da devolução. Uma devolução pode ser relacionada a um Pix comum (com códigos possíveis: `MD06`, `BE08` e `FR01` da pacs.004 e `REFU` da pacs.008), \nou a um Pix de Saque ou Troco (com códigos possíveis:  `MD06` e `SL02` da pacs.004). Na ausência deste campo a natureza deve ser interpretada como \nsendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n  - `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum ou ao valor da compra em um Pix Troco (`MD06`);\n  - `RETIRADA`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix Saque ou ao valor do troco em um Pix Troco (`SL02`);\n  - `MED_OPERACIONAL`: quando a devolução ocorre no âmbito do MED por motivo de falha operacional e se refere a um Pix comum (`BE08`);\n  - `MED_FRAUDE`: quando a devolução ocorre no âmbito do MED por fundada suspeita de fraude e se refere a um Pix comum (`FR01`).\n  - `MED_PIX_AUTOMATICO`: reembolso total ou parcial ao participante do usuário pagador no âmbito do MED (Mecanismo Especial de Devolução) para o Pix Automático pela utilização de recursos próprios para ressarcimento do usuário pagador.(`REFU`);\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso pode ser: ORIGINAL, MED_OPERACIONAL ou MED_FRAUDE);\n- Pix Saque: o valor da devolução é limitado ao valor da retirada (a natureza nesse caso deve ser: RETIRADA); e\n- Pix Troco: o valor da devolução é limitado ao valor relativo à compra ou ao troco:\n  - Quando a devolução for referente à compra, o valor limita-se ao valor da compra (a natureza nesse caso deve ser ORIGINAL); e\n  - Quando a devolução for referente ao troco, o valor limita-se ao valor do troco (a natureza nesse caso deve ser RETIRADA).\n"
       enum:
       - ORIGINAL
       - RETIRADA
+      - MED_OPERACIONAL
+      - MED_FRAUDE
+      - MED_PIX_AUTOMATICO
+    DevolucaoId:
+      type: string
+      title: Id da Devolução
+      description: Id gerado pelo cliente para representar unicamente uma devolução.
+      pattern: '[a-zA-Z0-9]{1,35}'
   responses:
+    NaoEncontrado:
+      description: Recurso solicitado não foi encontrado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/NaoEncontradoExample1'
     AcessoNegado:
       description: Requisição de participante autenticado que viola alguma regra de autorização.
       content:
@@ -247,16 +256,25 @@ components:
           examples:
             exemplo1:
               $ref: '#/components/examples/ServicoIndisponivelExample1'
-    NaoEncontrado:
-      description: Recurso solicitado não foi encontrado.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/NaoEncontradoExample1'
   examples:
+    ServicoIndisponivelExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+    AcessoNegadoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    devolucaoSolicitada1:
+      summary: Exemplo de solicitação de devolução 1
+      value:
+        valor: '7.89'
     RequisicaoInvalidaDevolucaoExample1:
       summary: Exemplo de erro da requisição 1
       value:
@@ -273,24 +291,6 @@ components:
         horario:
           solicitacao: '2020-09-11T15:25:59.411Z'
         status: EM_PROCESSAMENTO
-    ServicoIndisponivelExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 503
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-    devolucaoSolicitada1:
-      summary: Exemplo de solicitação de devolução 1
-      value:
-        valor: '7.89'
-    AcessoNegadoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 403
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
     NaoEncontradoExample1:
       summary: Exemplo de erro da requisição 1
       value:

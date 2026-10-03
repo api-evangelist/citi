@@ -366,25 +366,78 @@ paths:
         required: true
 components:
   schemas:
-    TokenActivationRequest:
+    InvalidTokenActivationResponse:
       type: object
       required:
-      - digital_wallet_token
-      - encrypted_data
-      - issuer_risk_assessment
-      - wallet_provider_profile
+      - errors
       properties:
-        digital_wallet_token:
-          $ref: '#/components/schemas/digital%5fwallet%5ftoken%5fhash'
-        issuer_risk_assessment:
-          $ref: '#/components/schemas/issuer%5frisk%5fassessment'
-        wallet_provider_profile:
-          $ref: '#/components/schemas/wallet%5fprovider%5fprofile'
-        encrypted_data:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+          minItems: 1
+    ErrorMessage:
+      type: object
+      required:
+      - errorCode
+      - errorDescription
+      properties:
+        errorCode:
           type: string
-          description: Encrypted data for token activation (encrypted value should align with card_details schema) using JWE/JWS algorithim.
-        card_details:
-          $ref: '#/components/schemas/card%5fdetails'
+          description: Error code to be sent to the client,
+          minLength: 1
+          maxLength: 10
+        errorDescription:
+          type: string
+          description: Error description to be sent to the client.
+          minLength: 1
+          maxLength: 255
+      description: List of error code and description to be sent to the client.
+    MethodNotAllowedResponse:
+      type: object
+      required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+      properties:
+        httpCode:
+          type: string
+          example: '405'
+          description: Error code to be sent to the client.
+          minLength: 1
+          maxLength: 10
+        httpMessage:
+          type: string
+          example: Method Not Allowed
+          description: Error message to be sent to the client.
+          minLength: 1
+          maxLength: 255
+        moreInformation:
+          type: string
+          example: Requested HTTP operation is not supported
+          description: More details related to the error to be sent to the client.
+          minLength: 1
+          maxLength: 255
+    InternalServerErrorResponse:
+      type: object
+      required:
+      - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+          minItems: 1
+    InvalidSendPassCodeResponse:
+      type: object
+      required:
+      - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+          minItems: 1
     TokenActivationResponse:
       type: object
       required:
@@ -476,121 +529,7 @@ components:
             required:
             - stepup_type
             - stepup_value
-    UnAuthorizedResponse:
-      type: object
-      required:
-      - httpCode
-      - httpMessage
-      - moreInformation
-      properties:
-        httpCode:
-          type: string
-          example: '401'
-          description: Error code to be sent to the client.
-          minLength: 1
-          maxLength: 10
-        httpMessage:
-          type: string
-          example: Unauthorized
-          description: Error message to be sent to the client.
-          minLength: 1
-          maxLength: 255
-        moreInformation:
-          type: string
-          example: Access Denied
-          description: More details related to the error to be sent to the client.
-          minLength: 1
-          maxLength: 255
-    ErrorMessage:
-      type: object
-      required:
-      - errorCode
-      - errorDescription
-      properties:
-        errorCode:
-          type: string
-          description: Error code to be sent to the client,
-          minLength: 1
-          maxLength: 10
-        errorDescription:
-          type: string
-          description: Error description to be sent to the client.
-          minLength: 1
-          maxLength: 255
-      description: List of error code and description to be sent to the client.
-    SelectedStepUpOption:
-      type: object
-      required:
-      - stepup_type
-      - stepup_value
-      properties:
-        token:
-          type: string
-          example: 12514e5a-0072-43f5-bc52-9f79377f27cc
-          description: Customer provided identifier for a specific step-up option. For simplicity, the value can be the same as the stepup_type while sending unique stepup_type(s) (like user has only one phone number, one email-id etc).
-          minLength: 1
-          maxLength: 36
-        stepup_type:
-          type: string
-          example: OTP_SMS
-          description: Type of step-up options. Possible values are <br><br>OTP_SMS.
-          minLength: 1
-          maxLength: 255
-        stepup_value:
-          type: string
-          example: 1-800-555-1212
-          description: Specific value for the step-up option. Phone/email should be masked if customer will be sending out SMS. For call center, an example is +1-800-555-1212. For OTP_SMS an example is +1******3175. For OTP_Email, m******e@marqeta.com, for IOS, 4RA9TRQ7CL.com.marqeta.dwdemo and for Android com.marqeta.dwdemo
-          minLength: 1
-          maxLength: 100
-    InvalidSendPassCodeResponse:
-      type: object
-      required:
-      - errors
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorMessage'
-          minItems: 1
-    InitialEligibilityCheckRequest:
-      type: object
-      required:
-      - encrypted_data
-      - wallet_provider_profile
-      properties:
-        encrypted_data:
-          type: string
-          description: Encrypted Card data for initial eligibility check (encrypted value should align with card_token_service_provider_dtls schema)
-        card_service_provider_dtls:
-          $ref: '#/components/schemas/card%5ftoken%5fservice%5fprovider%5fdtls'
-        wallet_provider_profile:
-          $ref: '#/components/schemas/WalletProviderProfile'
-    MethodNotAllowedResponse:
-      type: object
-      required:
-      - httpCode
-      - httpMessage
-      - moreInformation
-      properties:
-        httpCode:
-          type: string
-          example: '405'
-          description: Error code to be sent to the client.
-          minLength: 1
-          maxLength: 10
-        httpMessage:
-          type: string
-          example: Method Not Allowed
-          description: Error message to be sent to the client.
-          minLength: 1
-          maxLength: 255
-        moreInformation:
-          type: string
-          example: Requested HTTP operation is not supported
-          description: More details related to the error to be sent to the client.
-          minLength: 1
-          maxLength: 255
-    InvalidTokenActivationResponse:
+    InvalidInitialEligibilityCheckResponse:
       type: object
       required:
       - errors
@@ -626,6 +565,97 @@ components:
           description: Pseudo customer friendly name for the token requestor. For programmatic purposes, use token requestor ID which is not subject to change.<br>Possible values are <br><br>APPLE_PAY<br>GOOGLE_PAY
         selected_option:
           $ref: '#/components/schemas/SelectedStepUpOption'
+    UnAuthorizedResponse:
+      type: object
+      required:
+      - httpCode
+      - httpMessage
+      - moreInformation
+      properties:
+        httpCode:
+          type: string
+          example: '401'
+          description: Error code to be sent to the client.
+          minLength: 1
+          maxLength: 10
+        httpMessage:
+          type: string
+          example: Unauthorized
+          description: Error message to be sent to the client.
+          minLength: 1
+          maxLength: 255
+        moreInformation:
+          type: string
+          example: Access Denied
+          description: More details related to the error to be sent to the client.
+          minLength: 1
+          maxLength: 255
+    WalletProviderProfile:
+      type: object
+      required:
+      - pan_source
+      properties:
+        pan_source:
+          type: string
+          example: MOBILE_BANKING_APP
+          description: Possible values are <br><br>KEY_ENTERED<br>ON_FILE<br>MOBILE_BANKING_APP
+      description: Wallet Provider profile data for initial eligibility check
+    SelectedStepUpOption:
+      type: object
+      required:
+      - stepup_type
+      - stepup_value
+      properties:
+        token:
+          type: string
+          example: 12514e5a-0072-43f5-bc52-9f79377f27cc
+          description: Customer provided identifier for a specific step-up option. For simplicity, the value can be the same as the stepup_type while sending unique stepup_type(s) (like user has only one phone number, one email-id etc).
+          minLength: 1
+          maxLength: 36
+        stepup_type:
+          type: string
+          example: OTP_SMS
+          description: Type of step-up options. Possible values are <br><br>OTP_SMS.
+          minLength: 1
+          maxLength: 255
+        stepup_value:
+          type: string
+          example: 1-800-555-1212
+          description: Specific value for the step-up option. Phone/email should be masked if customer will be sending out SMS. For call center, an example is +1-800-555-1212. For OTP_SMS an example is +1******3175. For OTP_Email, m******e@marqeta.com, for IOS, 4RA9TRQ7CL.com.marqeta.dwdemo and for Android com.marqeta.dwdemo
+          minLength: 1
+          maxLength: 100
+    TokenActivationRequest:
+      type: object
+      required:
+      - digital_wallet_token
+      - encrypted_data
+      - issuer_risk_assessment
+      - wallet_provider_profile
+      properties:
+        digital_wallet_token:
+          $ref: '#/components/schemas/digital%5fwallet%5ftoken%5fhash'
+        issuer_risk_assessment:
+          $ref: '#/components/schemas/issuer%5frisk%5fassessment'
+        wallet_provider_profile:
+          $ref: '#/components/schemas/wallet%5fprovider%5fprofile'
+        encrypted_data:
+          type: string
+          description: Encrypted data for token activation (encrypted value should align with card_details schema) using JWE/JWS algorithim.
+        card_details:
+          $ref: '#/components/schemas/card%5fdetails'
+    InitialEligibilityCheckRequest:
+      type: object
+      required:
+      - encrypted_data
+      - wallet_provider_profile
+      properties:
+        encrypted_data:
+          type: string
+          description: Encrypted Card data for initial eligibility check (encrypted value should align with card_token_service_provider_dtls schema)
+        card_service_provider_dtls:
+          $ref: '#/components/schemas/card%5ftoken%5fservice%5fprovider%5fdtls'
+        wallet_provider_profile:
+          $ref: '#/components/schemas/WalletProviderProfile'
     InitialEligibilityCheckResponse:
       type: object
       required:
@@ -657,36 +687,6 @@ components:
           example: Token Activation
           description: Optional card_art_id which will specify subsequent metadata to be used during the request (T+C, card art, etc). Known as `profileID` by Visa.
           maxLength: 255
-    InternalServerErrorResponse:
-      type: object
-      required:
-      - errors
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorMessage'
-          minItems: 1
-    InvalidInitialEligibilityCheckResponse:
-      type: object
-      required:
-      - errors
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorMessage'
-          minItems: 1
-    WalletProviderProfile:
-      type: object
-      required:
-      - pan_source
-      properties:
-        pan_source:
-          type: string
-          example: MOBILE_BANKING_APP
-          description: Possible values are <br><br>KEY_ENTERED<br>ON_FILE<br>MOBILE_BANKING_APP
-      description: Wallet Provider profile data for initial eligibility check
   securitySchemes:
     clientCredentials:
       type: oauth2

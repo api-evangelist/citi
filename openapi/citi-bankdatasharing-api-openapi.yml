@@ -211,7 +211,133 @@ paths:
       - oAuth:
         - authenticationservices/v1
 components:
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Common-Error-Response'
+          examples:
+            Unauthorized-Service-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Service-Error-Example'
+            Unauthorized-Gateway-Error-Example:
+              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Common-Error-Response'
+          examples:
+            Un-Supported-Media-Type-Gateway-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Gateway-Error-Example'
+            Un-Supported-Media-Type-Service-Error-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Service-Error-Example'
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Common-Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+            Bad-Request-Example-From-Date:
+              $ref: '#/components/examples/Bad-Request-Example-From-Date'
+            Bad-Request-Example-Account-Ref:
+              $ref: '#/components/examples/Bad-Request-Example-Account-Ref'
+            Bad-Request-Example-Limit:
+              $ref: '#/components/examples/Bad-Request-Example-Limit'
+            Bad-Request-Gateway-Error-Example:
+              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
+    Gateway-Timeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Gateway-Timeout-Example:
+              $ref: '#/components/examples/Gateway-Timeout-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Common-Error-Response'
+          examples:
+            Method-Not-Allowed-Gateway-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
+            Method-Not-Allowed-Service-Error-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Service-Error-Example'
+    Too-Many-Requests:
+      description: Too Many Requests - Rate limit exceeded. Retry after the specified time.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Too-Many-Requests-Gateway-Example:
+              $ref: '#/components/examples/Too-Many-Requests-Gateway-Example'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Service-Error-Response'
+          examples:
+            Forbidden-Service-Example:
+              $ref: '#/components/examples/Forbidden-Service-Example'
+    Service-Unavailable:
+      description: Service Unavailable - The server is temporarily unable to  handle the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Service-Unavailable-Gateway-Example:
+              $ref: '#/components/examples/Service-Unavailable-Gateway-Example'
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Common-Error-Response'
+          examples:
+            Internal-Server-Service-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Service-Error-Example'
+            Internal-Server-Gateway-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Gateway-Error-Response'
+          examples:
+            Not-Found-Gateway-Error-Example:
+              $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
   schemas:
+    Account-Name:
+      type: string
+      description: Name or title assigned to the account. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
+      title: Account Name
+      example: CITIBANK NA
+    Country-Code:
+      type: string
+      description: ISO country code for the jurisdiction of the branch or account location. <br>- For GET Account, this parameter is required. <br>- For GET Balance, this parameter is not required. <br>- For GET Transaction, this parameter is not required.
+      title: Country Code
+      example: US
     Balance-Information:
       title: Balance Information
       description: Response containing balance information returned to the TPP for one or more accounts.
@@ -225,44 +351,176 @@ components:
           description: Balance Details.
           items:
             $ref: '#/components/schemas/Account'
-    Account-Ref:
+    Accounts-Info:
+      title: Accounts Information
+      description: Account identification and context details associated with the returned transactions.
+      required:
+      - account_ref
+      type: object
+      properties:
+        account_ref:
+          $ref: '#/components/schemas/Account-Ref'
+        account_number:
+          type: string
+          description: Citi's corporate client's account number.
+          title: Account Number
+          example: '0000001007'
+        account_name:
+          type: string
+          description: Title given to the specific account.
+          title: Account Name
+          example: CITIBANK NA
+        branch_name:
+          type: string
+          description: Name of the local bank location offering financial services.
+          title: Branch Name
+          example: DOMINICAN REPUBLIC CITIBANK
+        branch_number:
+          type: string
+          description: Number of the local bank located where the branch offers financial services.
+          title: Branch Number
+          example: '214'
+        transaction_details:
+          type: array
+          title: transactions details
+          description: Transactions Details.
+          items:
+            $ref: '#/components/schemas/Transaction-Details'
+    Transaction-Information:
+      title: Transaction Information
+      description: Response containing transaction data returned to the TPP based on the requested filters.
+      type: object
+      properties:
+        consent_id:
+          $ref: '#/components/schemas/Consent-Id'
+        transactions:
+          type: array
+          title: transactions
+          description: Transactions Details.
+          items:
+            $ref: '#/components/schemas/Accounts-Info'
+    Legal-Entity:
       type: string
-      description: '**This parameter is required for GET Transactions and optional for GET Accounts and GET Balances.** Unique reference assigned to an account; when omitted (where optional), data is returned for all accounts linked to the client_id.'
-      title: Account Identifier
-      example: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
-    Bank-Rte-Id:
+      description: Legal entity name associated with the account (individual, corporate, or institution). <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
+      title: Legal Entity
+      example: ASIA 4.6
+    Common-Error-Response:
+      title: Common Error Response
+      description: Wrapper schema for responses that may return either gateway or service error payloads.
+      oneOf:
+      - $ref: '#/components/schemas/Gateway-Error-Response'
+      - $ref: '#/components/schemas/Service-Error-Response'
+    Currency-Code:
       type: string
-      description: Routing identifier for the servicing bank or branch. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is not required. <br>- For GET Transaction, this parameter is not required.
-      title: Bank Routing Code
-      example: '042000013'
-    Branch-Name:
-      type: string
-      description: Name of the branch or local bank location servicing the account. <br>* For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
-      title: Branch Name
-      example: Central Branch
+      pattern: ^[A-Z]{3}$
+      description: Three-letter currency code defined by ISO 4217. <br>- For GET Account, this parameter is required. <br>- For GET Balance, this parameter is required. <br>- For GET Transaction, this parameter is not required.
+      title: Currency Code
+      example: TRY
     Account-Category:
       type: string
       description: Account category value describing the account class (for example, debit/credit category representations). <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is not required. <br>- For GET Transaction, this parameter is not required.
       title: Account Category
       example: INTRN
-    Accounts-Information:
-      title: AccountsInformation
-      description: Response containing account-level information returned to the TPP based on the requested filters.
+    Overdraft-Details:
+      title: Overdraft Details
       type: object
+      description: Overdraft-related values associated with the reported account balance.
       properties:
-        consent_id:
-          $ref: '#/components/schemas/Consent-Id'
-        account_details:
+        overdraft_amount:
+          pattern: ^\d{1,18}$|^\d{1,18}\.\d{1,5}$
+          type: number
+          description: This field shows the portion of your balance that is currently utilizing an approved overdraft limit. If your account is not in overdraft, this will typically be zero.
+          title: Overdraft Amount
+          example: 13.21
+    Service-Error-Response:
+      type: object
+      title: ServiceErrorResponse
+      description: Error payload returned when the backend service cannot process a validly routed TPP request.
+      required:
+      - error_details
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the transaction.
+          title: Identification Reference
+        error_details:
           type: array
-          title: Account Details
-          description: Fetch and provide the account details based on the filter parameters received in the request from the client.
           items:
-            $ref: '#/components/schemas/Account-Details'
-    Branch-Code:
+            $ref: '#/components/schemas/Error-Detail'
+          title: The details of the error.
+    Account-Number:
       type: string
-      description: Unique code identifying the servicing branch location. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
-      title: Branch Code
-      example: '234'
+      minimum: 1
+      maximum: 35
+      description: Account number of Citi's corporate client account. <br>- For GET Account, this parameter is required. <br>- For GET Balance, this parameter is required. <br>- For GET Transaction, this parameter is optional.
+      title: Account Number.
+      example: TR123456789012345678901234
+    Account:
+      title: Balance information per account
+      description: Account context and associated balance records within the balances response.
+      type: object
+      required:
+      - account_ref
+      properties:
+        account_ref:
+          $ref: '#/components/schemas/Account-Ref'
+        account_number:
+          $ref: '#/components/schemas/Account-Number'
+        currency_code:
+          $ref: '#/components/schemas/Currency-Code'
+        account_name:
+          $ref: '#/components/schemas/Account-Name'
+        account_type:
+          $ref: '#/components/schemas/Account-Type'
+        branch_code:
+          $ref: '#/components/schemas/Branch-Code'
+        legal_entity:
+          $ref: '#/components/schemas/Legal-Entity'
+        branch_name:
+          $ref: '#/components/schemas/Branch-Name'
+        balance:
+          type: array
+          title: transactions details
+          description: Transactions Details.
+          items:
+            $ref: '#/components/schemas/Balance'
+    Bank-Rte-Id:
+      type: string
+      description: Routing identifier for the servicing bank or branch. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is not required. <br>- For GET Transaction, this parameter is not required.
+      title: Bank Routing Code
+      example: '042000013'
+    Account-Opening-Date:
+      type: string
+      description: Date and time when the account was originally opened. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is not required. <br>* For GET Transaction, this parameter is not required.
+      title: Account Opening Date
+      format: date-time
+      example: '2024-03-17T10:30:00Z'
+    Gateway-Error-Response:
+      type: object
+      title: Gateway-Error-Response
+      description: This refers to an issue encountered by an API Gateway handling the request.
+      required:
+      - httpCode
+      properties:
+        httpCode:
+          type: string
+          maxLength: 3
+          description: Numeric HTTP Status code
+          title: httpCode
+          example: '400'
+        httpMessage:
+          type: string
+          maxLength: 128
+          description: HTTP error message
+          title: httpMessage
+          example: Bad Request
+        moreInformation:
+          type: string
+          maxLength: 128
+          description: Additional information with HTTP error message
+          title: moreInformation
+          example: please provide valid value for request
     Transaction-Details:
       title: TransactionDetails
       description: Detailed transaction record for an account entry returned by the transactions endpoint.
@@ -437,213 +695,6 @@ components:
           description: Swift transaction code. Examples include 'FEX', 'MSC', 'TRF', 'INTR'
           title: swift transaction code
           example: INTR
-    Currency-Code:
-      type: string
-      pattern: ^[A-Z]{3}$
-      description: Three-letter currency code defined by ISO 4217. <br>- For GET Account, this parameter is required. <br>- For GET Balance, this parameter is required. <br>- For GET Transaction, this parameter is not required.
-      title: Currency Code
-      example: TRY
-    Gateway-Error-Response:
-      type: object
-      title: Gateway-Error-Response
-      description: This refers to an issue encountered by an API Gateway handling the request.
-      required:
-      - httpCode
-      properties:
-        httpCode:
-          type: string
-          maxLength: 3
-          description: Numeric HTTP Status code
-          title: httpCode
-          example: '400'
-        httpMessage:
-          type: string
-          maxLength: 128
-          description: HTTP error message
-          title: httpMessage
-          example: Bad Request
-        moreInformation:
-          type: string
-          maxLength: 128
-          description: Additional information with HTTP error message
-          title: moreInformation
-          example: please provide valid value for request
-    Overdraft-Details:
-      title: Overdraft Details
-      type: object
-      description: Overdraft-related values associated with the reported account balance.
-      properties:
-        overdraft_amount:
-          pattern: ^\d{1,18}$|^\d{1,18}\.\d{1,5}$
-          type: number
-          description: This field shows the portion of your balance that is currently utilizing an approved overdraft limit. If your account is not in overdraft, this will typically be zero.
-          title: Overdraft Amount
-          example: 13.21
-    Transaction-Information:
-      title: Transaction Information
-      description: Response containing transaction data returned to the TPP based on the requested filters.
-      type: object
-      properties:
-        consent_id:
-          $ref: '#/components/schemas/Consent-Id'
-        transactions:
-          type: array
-          title: transactions
-          description: Transactions Details.
-          items:
-            $ref: '#/components/schemas/Accounts-Info'
-    Service-Error-Response:
-      type: object
-      title: ServiceErrorResponse
-      description: Error payload returned when the backend service cannot process a validly routed TPP request.
-      required:
-      - error_details
-      properties:
-        ref_id:
-          type: string
-          maxLength: 60
-          description: Unique ID for the transaction.
-          title: Identification Reference
-        error_details:
-          type: array
-          items:
-            $ref: '#/components/schemas/Error-Detail'
-          title: The details of the error.
-    Account-Type:
-      type: string
-      minimum: 1
-      maximum: 242
-      description: Classification of the financial account. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
-      title: Account Type
-      example: 2-Saving
-    Consent-Id:
-      type: string
-      description: Unique identifier of the account information consent used to authorize TPP data access.
-      title: Consent Identifier
-      example: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
-    Iban-Account-Number:
-      type: string
-      description: International Bank Account Number (IBAN) used to identify the account in cross-border and domestic contexts where applicable. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is not required. <br>- For GET Transaction, this parameter is not required.
-      title: IBAN Account Number
-      example: FI21 1234 5698 7654 3210
-    Account-Name:
-      type: string
-      description: Name or title assigned to the account. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
-      title: Account Name
-      example: CITIBANK NA
-    Accounts-Info:
-      title: Accounts Information
-      description: Account identification and context details associated with the returned transactions.
-      required:
-      - account_ref
-      type: object
-      properties:
-        account_ref:
-          $ref: '#/components/schemas/Account-Ref'
-        account_number:
-          type: string
-          description: Citi's corporate client's account number.
-          title: Account Number
-          example: '0000001007'
-        account_name:
-          type: string
-          description: Title given to the specific account.
-          title: Account Name
-          example: CITIBANK NA
-        branch_name:
-          type: string
-          description: Name of the local bank location offering financial services.
-          title: Branch Name
-          example: DOMINICAN REPUBLIC CITIBANK
-        branch_number:
-          type: string
-          description: Number of the local bank located where the branch offers financial services.
-          title: Branch Number
-          example: '214'
-        transaction_details:
-          type: array
-          title: transactions details
-          description: Transactions Details.
-          items:
-            $ref: '#/components/schemas/Transaction-Details'
-    Legal-Entity:
-      type: string
-      description: Legal entity name associated with the account (individual, corporate, or institution). <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
-      title: Legal Entity
-      example: ASIA 4.6
-    Account-Opening-Date:
-      type: string
-      description: Date and time when the account was originally opened. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is not required. <br>* For GET Transaction, this parameter is not required.
-      title: Account Opening Date
-      format: date-time
-      example: '2024-03-17T10:30:00Z'
-    Common-Error-Response:
-      title: Common Error Response
-      description: Wrapper schema for responses that may return either gateway or service error payloads.
-      oneOf:
-      - $ref: '#/components/schemas/Gateway-Error-Response'
-      - $ref: '#/components/schemas/Service-Error-Response'
-    Error-Detail:
-      type: object
-      title: The details of the error.
-      description: Detailed issue information for a service error, including reason, remediation, and code.
-      properties:
-        issue:
-          type: string
-          maxLength: 200
-          description: More details about the issue.
-          title: issue
-        action:
-          type: string
-          maxLength: 350
-          description: Corrective action to be taken to resolve the issue.
-          title: action
-        code:
-          type: string
-          maxLength: 8
-          description: System-generated unique code for the issue.
-          title: code
-    Account-Number:
-      type: string
-      minimum: 1
-      maximum: 35
-      description: Account number of Citi's corporate client account. <br>- For GET Account, this parameter is required. <br>- For GET Balance, this parameter is required. <br>- For GET Transaction, this parameter is optional.
-      title: Account Number.
-      example: TR123456789012345678901234
-    Account:
-      title: Balance information per account
-      description: Account context and associated balance records within the balances response.
-      type: object
-      required:
-      - account_ref
-      properties:
-        account_ref:
-          $ref: '#/components/schemas/Account-Ref'
-        account_number:
-          $ref: '#/components/schemas/Account-Number'
-        currency_code:
-          $ref: '#/components/schemas/Currency-Code'
-        account_name:
-          $ref: '#/components/schemas/Account-Name'
-        account_type:
-          $ref: '#/components/schemas/Account-Type'
-        branch_code:
-          $ref: '#/components/schemas/Branch-Code'
-        legal_entity:
-          $ref: '#/components/schemas/Legal-Entity'
-        branch_name:
-          $ref: '#/components/schemas/Branch-Name'
-        balance:
-          type: array
-          title: transactions details
-          description: Transactions Details.
-          items:
-            $ref: '#/components/schemas/Balance'
-    Country-Code:
-      type: string
-      description: ISO country code for the jurisdiction of the branch or account location. <br>- For GET Account, this parameter is required. <br>- For GET Balance, this parameter is not required. <br>- For GET Transaction, this parameter is not required.
-      title: Country Code
-      example: US
     Balance:
       title: Balance Details per account
       description: Balance metrics for a specific account as returned by the balances endpoint.
@@ -795,11 +846,71 @@ components:
           example: '2024-03-17T10:30:00Z'
         overdraft_details:
           $ref: '#/components/schemas/Overdraft-Details'
+    Branch-Code:
+      type: string
+      description: Unique code identifying the servicing branch location. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
+      title: Branch Code
+      example: '234'
+    Error-Detail:
+      type: object
+      title: The details of the error.
+      description: Detailed issue information for a service error, including reason, remediation, and code.
+      properties:
+        issue:
+          type: string
+          maxLength: 200
+          description: More details about the issue.
+          title: issue
+        action:
+          type: string
+          maxLength: 350
+          description: Corrective action to be taken to resolve the issue.
+          title: action
+        code:
+          type: string
+          maxLength: 8
+          description: System-generated unique code for the issue.
+          title: code
+    Accounts-Information:
+      title: AccountsInformation
+      description: Response containing account-level information returned to the TPP based on the requested filters.
+      type: object
+      properties:
+        consent_id:
+          $ref: '#/components/schemas/Consent-Id'
+        account_details:
+          type: array
+          title: Account Details
+          description: Fetch and provide the account details based on the filter parameters received in the request from the client.
+          items:
+            $ref: '#/components/schemas/Account-Details'
+    Consent-Id:
+      type: string
+      description: Unique identifier of the account information consent used to authorize TPP data access.
+      title: Consent Identifier
+      example: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
+    Branch-Name:
+      type: string
+      description: Name of the branch or local bank location servicing the account. <br>* For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
+      title: Branch Name
+      example: Central Branch
+    Account-Type:
+      type: string
+      minimum: 1
+      maximum: 242
+      description: Classification of the financial account. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is optional. <br>- For GET Transaction, this parameter is not required.
+      title: Account Type
+      example: 2-Saving
     Status:
       type: string
       description: Current lifecycle status of the account (for example, Open or Closed). <br>- For GET Account, this parameter is required. <br>- For GET Balance, this parameter is not required. <br>- For GET transaction, this parameter is not required.
       title: Status
       example: Open
+    Account-Ref:
+      type: string
+      description: '**This parameter is required for GET Transactions and optional for GET Accounts and GET Balances.** Unique reference assigned to an account; when omitted (where optional), data is returned for all accounts linked to the client_id.'
+      title: Account Identifier
+      example: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
     Account-Details:
       title: Account Details
       description: Detailed attributes of a single account included in the accounts response.
@@ -835,137 +946,12 @@ components:
           $ref: '#/components/schemas/Country-Code'
         bank_rte_id:
           $ref: '#/components/schemas/Bank-Rte-Id'
-  responses:
-    Gateway-Timeout:
-      description: Gateway Timeout
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Gateway-Error-Response'
-          examples:
-            Gateway-Timeout-Example:
-              $ref: '#/components/examples/Gateway-Timeout-Example'
-    Unsupported-Media-Type:
-      description: Unsupported Media Type
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Common-Error-Response'
-          examples:
-            Un-Supported-Media-Type-Gateway-Error-Example:
-              $ref: '#/components/examples/Un-Supported-Media-Type-Gateway-Error-Example'
-            Un-Supported-Media-Type-Service-Error-Example:
-              $ref: '#/components/examples/Un-Supported-Media-Type-Service-Error-Example'
-    Not-Found:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Gateway-Error-Response'
-          examples:
-            Not-Found-Gateway-Error-Example:
-              $ref: '#/components/examples/Not-Found-Gateway-Error-Example'
-    Conflict:
-      description: Conflict
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Service-Error-Response'
-          examples:
-            Idempotency-Id-Conflict-Example:
-              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
-    Service-Unavailable:
-      description: Service Unavailable - The server is temporarily unable to  handle the request.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Gateway-Error-Response'
-          examples:
-            Service-Unavailable-Gateway-Example:
-              $ref: '#/components/examples/Service-Unavailable-Gateway-Example'
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Service-Error-Response'
-          examples:
-            Forbidden-Service-Example:
-              $ref: '#/components/examples/Forbidden-Service-Example'
-    Internal-Server-Error:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Common-Error-Response'
-          examples:
-            Internal-Server-Service-Error-Example:
-              $ref: '#/components/examples/Internal-Server-Service-Error-Example'
-            Internal-Server-Gateway-Error-Example:
-              $ref: '#/components/examples/Internal-Server-Gateway-Error-Example'
-    Method-Not-Allowed:
-      description: Method Not Allowed
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Common-Error-Response'
-          examples:
-            Method-Not-Allowed-Gateway-Error-Example:
-              $ref: '#/components/examples/Method-Not-Allowed-Gateway-Error-Example'
-            Method-Not-Allowed-Service-Error-Example:
-              $ref: '#/components/examples/Method-Not-Allowed-Service-Error-Example'
-    Bad-Request:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Common-Error-Response'
-          examples:
-            Bad-Request-Example:
-              $ref: '#/components/examples/Bad-Request-Example'
-            Bad-Request-Example-From-Date:
-              $ref: '#/components/examples/Bad-Request-Example-From-Date'
-            Bad-Request-Example-Account-Ref:
-              $ref: '#/components/examples/Bad-Request-Example-Account-Ref'
-            Bad-Request-Example-Limit:
-              $ref: '#/components/examples/Bad-Request-Example-Limit'
-            Bad-Request-Gateway-Error-Example:
-              $ref: '#/components/examples/Bad-Request-Gateway-Error-Example'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Common-Error-Response'
-          examples:
-            Unauthorized-Service-Error-Example:
-              $ref: '#/components/examples/Unauthorized-Service-Error-Example'
-            Unauthorized-Gateway-Error-Example:
-              $ref: '#/components/examples/Unauthorized-Gateway-Error-Example'
-    Too-Many-Requests:
-      description: Too Many Requests - Rate limit exceeded. Retry after the specified time.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Gateway-Error-Response'
-          examples:
-            Too-Many-Requests-Gateway-Example:
-              $ref: '#/components/examples/Too-Many-Requests-Gateway-Example'
+    Iban-Account-Number:
+      type: string
+      description: International Bank Account Number (IBAN) used to identify the account in cross-border and domestic contexts where applicable. <br>- For GET Account, this parameter is optional. <br>- For GET Balance, this parameter is not required. <br>- For GET Transaction, this parameter is not required.
+      title: IBAN Account Number
+      example: FI21 1234 5698 7654 3210
   examples:
-    Method-Not-Allowed-Service-Error-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627901
-        error_details:
-        - issue: Method not supported
-          action: Method not supported for this endpoint, please use valid http verb
-          code: CC00001
-    Bad-Request-Example-From-Date:
-      value:
-        ref_id: 344d0f3f-4x55-7g99-8b2c-0cf2a921a5ac
-        error_details:
-        - code: VC00012
-          issue: Balance date(s) out of range
-          action: From date or To date should not be greater than 180 days from current date.
     Un-Supported-Media-Type-Service-Error-Example:
       value:
         ref_id: ec689822-9864-4c4d-9d68-222467627902
@@ -973,36 +959,18 @@ components:
         - issue: Media type not supported
           action: please use valid content-type in header
           code: CC00002
-    Unauthorized-Gateway-Error-Example:
+    Forbidden-Service-Example:
       value:
-        httpCode: '401'
-        httpMessage: Unauthorized
-        moreInformation: The server could not verify that you are authorized to access the URL
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - code: CC00008
+          issue: User does not have privilege to access this functionality.
+          action: Please reach out to support team to enable this feature.
     Un-Supported-Media-Type-Gateway-Error-Example:
       value:
         httpCode: '415'
         httpMessage: Unsupported Media Type
         moreInformation: Unsupported Content-Type application/octet-stream
-    Too-Many-Requests-Gateway-Example:
-      value:
-        httpCode: '429'
-        httpMessage: Too Many Requests
-        moreInformation: Rate Limit exceeded
-    Not-Found-Gateway-Error-Example:
-      value:
-        httpCode: '404'
-        httpMessage: Not Found
-        moreInformation: No resources match requested URI
-    Gateway-Timeout-Example:
-      value:
-        httpCode: '504'
-        httpMessage: Gateway Timeout
-        moreInformation: 'Response took longer than timeout: PTxxS'
-    Bad-Request-Gateway-Error-Example:
-      value:
-        httpCode: '400'
-        httpMessage: Bad Request
-        moreInformation: please provide valid value for request
     Transaction-Response:
       value:
         consent_id: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
@@ -1043,6 +1011,113 @@ components:
             credit_debit_mark: D
             transaction_actual_time: '2024-04-22T00:00:00.000+00:00'
             swift_transaction_code: INTR
+    Gateway-Timeout-Example:
+      value:
+        httpCode: '504'
+        httpMessage: Gateway Timeout
+        moreInformation: 'Response took longer than timeout: PTxxS'
+    Unauthorized-Gateway-Error-Example:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: The server could not verify that you are authorized to access the URL
+    Balance-Response-Intraday-Base-Ccy:
+      value:
+        consent_id: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
+        balances:
+        - account_ref: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
+          account_number: TR123456789012345678901234
+          currency_code: TRY
+          account_name: CITIBANK NA
+          account_type: 2-Saving
+          branch_code: '234'
+          legal_entity: ASIA 4.6
+          branch_name: Central Branch
+          balance:
+          - equivalent_currency_code: TRY
+            opening_available_balance: 460.3
+            intraday_available_balance: 460.3
+            opening_ledger_balance: 460.3
+            intraday_ledger_balance: 460.3
+            total_credit_amount: 0
+            total_debit_amount: 0
+            net_amount: 10.01
+            statement_date: '2024-03-17T10:30:00Z'
+            eod_date: '2024-03-17T10:30:00Z'
+            fx_rate: 4.1
+            effective_rate: 4.1
+            last_entry_date: '2024-03-17T10:30:00Z'
+            overdraft_details:
+              overdraft_amount: 13.21
+    Service-Unavailable-Gateway-Example:
+      value:
+        httpCode: '503'
+        httpMessage: Service is temporarily unavailable
+        moreInformation: Retry the request after some time
+    Unauthorized-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: User not authorized for this functionality
+          action: please use valid credentials to access this functionality
+          code: CC00007
+    Method-Not-Allowed-Gateway-Error-Example:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Idempotency-Id-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Idempotency-Id provided is currently being used in another request
+          action: please do not repeat the same request again
+    Bad-Request-Example-Account-Ref:
+      value:
+        ref_id: 344d0f3f-4x55-7g99-8b2c-0cf2a921a5ac
+        error_details:
+        - code: VC00012
+          issue: The account reference number is invalid
+          action: Please provide a valid value and retry.
+    Internal-Server-Gateway-Error-Example:
+      value:
+        httpCode: '500'
+        httpMessage: Internal Server Error
+        moreInformation: Internal Server Error
+    Account-Response:
+      value:
+        consent_id: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
+        account_details:
+        - account_ref: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
+          account_number: TR123456789012345678901234
+          base_currency_code: TRY
+          account_name: CITIBANK NA
+          account_type: 2-Saving
+          branch_code: '234'
+          legal_entity: ASIA 4.6
+          branch_name: Central Branch
+          iban_account_number: FI21 1234 5698 7654 3210
+          client_name: Jacky Smith
+          account_category: INTRN
+          status: Open
+          account_opening_date: '2024-03-17T10:30:00Z'
+          country_code: US
+          bank_rte_id: '042000013'
+    Not-Found-Gateway-Error-Example:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Too-Many-Requests-Gateway-Example:
+      value:
+        httpCode: '429'
+        httpMessage: Too Many Requests
+        moreInformation: Rate Limit exceeded
+    Bad-Request-Gateway-Error-Example:
+      value:
+        httpCode: '400'
+        httpMessage: Bad Request
+        moreInformation: please provide valid value for request
     Balance-Response-Eod-Base-Ccy:
       value:
         consent_id: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
@@ -1071,7 +1146,14 @@ components:
             last_entry_date: '2024-03-17T10:30:00Z'
             overdraft_details:
               overdraft_amount: 13.21
-    Balance-Response-Intraday-Base-Ccy:
+    Bad-Request-Example-From-Date:
+      value:
+        ref_id: 344d0f3f-4x55-7g99-8b2c-0cf2a921a5ac
+        error_details:
+        - code: VC00012
+          issue: Balance date(s) out of range
+          action: From date or To date should not be greater than 180 days from current date.
+    Balance-Response-Intraday-Eqv-Ccy:
       value:
         consent_id: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
         balances:
@@ -1092,10 +1174,17 @@ components:
             total_credit_amount: 0
             total_debit_amount: 0
             net_amount: 10.01
+            opening_available_balance_eqv_ccy: 10.1
+            intraday_available_balance_eqv_ccy: 10.1
+            opening_ledger_balance_eqv_ccy: 10.1
+            intraday_ledger_balance_eqv_ccy: 10.1
+            total_credit_amount_eqv_ccy: 0
+            total_debit_amount_eqv_ccy: 0
             statement_date: '2024-03-17T10:30:00Z'
             eod_date: '2024-03-17T10:30:00Z'
             fx_rate: 4.1
             effective_rate: 4.1
+            intraday_last_update_date_time: '2024-03-17T10:30:00Z'
             last_entry_date: '2024-03-17T10:30:00Z'
             overdraft_details:
               overdraft_amount: 13.21
@@ -1133,102 +1222,6 @@ components:
             last_entry_date: '2024-03-17T10:30:00Z'
             overdraft_details:
               overdraft_amount: 13.21
-    Forbidden-Service-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - code: CC00008
-          issue: User does not have privilege to access this functionality.
-          action: Please reach out to support team to enable this feature.
-    Service-Unavailable-Gateway-Example:
-      value:
-        httpCode: '503'
-        httpMessage: Service is temporarily unavailable
-        moreInformation: Retry the request after some time
-    Method-Not-Allowed-Gateway-Error-Example:
-      value:
-        httpCode: '405'
-        httpMessage: Method Not Allowed
-        moreInformation: The method is not allowed for the requested URL
-    Internal-Server-Gateway-Error-Example:
-      value:
-        httpCode: '500'
-        httpMessage: Internal Server Error
-        moreInformation: Internal Server Error
-    Idempotency-Id-Conflict-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: Idempotency-Id provided is currently being used in another request
-          action: please do not repeat the same request again
-    Balance-Response-Intraday-Eqv-Ccy:
-      value:
-        consent_id: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
-        balances:
-        - account_ref: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
-          account_number: TR123456789012345678901234
-          currency_code: TRY
-          account_name: CITIBANK NA
-          account_type: 2-Saving
-          branch_code: '234'
-          legal_entity: ASIA 4.6
-          branch_name: Central Branch
-          balance:
-          - equivalent_currency_code: TRY
-            opening_available_balance: 460.3
-            intraday_available_balance: 460.3
-            opening_ledger_balance: 460.3
-            intraday_ledger_balance: 460.3
-            total_credit_amount: 0
-            total_debit_amount: 0
-            net_amount: 10.01
-            opening_available_balance_eqv_ccy: 10.1
-            intraday_available_balance_eqv_ccy: 10.1
-            opening_ledger_balance_eqv_ccy: 10.1
-            intraday_ledger_balance_eqv_ccy: 10.1
-            total_credit_amount_eqv_ccy: 0
-            total_debit_amount_eqv_ccy: 0
-            statement_date: '2024-03-17T10:30:00Z'
-            eod_date: '2024-03-17T10:30:00Z'
-            fx_rate: 4.1
-            effective_rate: 4.1
-            intraday_last_update_date_time: '2024-03-17T10:30:00Z'
-            last_entry_date: '2024-03-17T10:30:00Z'
-            overdraft_details:
-              overdraft_amount: 13.21
-    Account-Response:
-      value:
-        consent_id: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
-        account_details:
-        - account_ref: 22SDKJ29DJW32EDJ3EJ2E3JIU8SDDS2
-          account_number: TR123456789012345678901234
-          base_currency_code: TRY
-          account_name: CITIBANK NA
-          account_type: 2-Saving
-          branch_code: '234'
-          legal_entity: ASIA 4.6
-          branch_name: Central Branch
-          iban_account_number: FI21 1234 5698 7654 3210
-          client_name: Jacky Smith
-          account_category: INTRN
-          status: Open
-          account_opening_date: '2024-03-17T10:30:00Z'
-          country_code: US
-          bank_rte_id: '042000013'
-    Bad-Request-Example-Limit:
-      value:
-        ref_id: 344d0f3f-4x55-7g99-8b2c-0cf2a921a5ac
-        error_details:
-        - code: VC00012
-          issue: provided value is not within the range for query-param limit.
-          action: please provide valid value for query-param limit, must be greater than or equal to 1.
-    Bad-Request-Example-Account-Ref:
-      value:
-        ref_id: 344d0f3f-4x55-7g99-8b2c-0cf2a921a5ac
-        error_details:
-        - code: VC00012
-          issue: The account reference number is invalid
-          action: Please provide a valid value and retry.
     Bad-Request-Example:
       value:
         ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
@@ -1236,6 +1229,13 @@ components:
         - code: VC00012
           issue: The provided value is not within the range for header_account.branch_code parameter
           action: Please provide a valid value for the header_account.branch_code parameter, size must be between 3 and 4.
+    Method-Not-Allowed-Service-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        error_details:
+        - issue: Method not supported
+          action: Method not supported for this endpoint, please use valid http verb
+          code: CC00001
     Internal-Server-Service-Error-Example:
       value:
         ref_id: ec689822-9864-4c4d-9d68-222467627902
@@ -1243,50 +1243,32 @@ components:
         - issue: unable to serve your request at this moment
           action: Please refer to documentation provided or contact support team
           code: CC00004
-    Unauthorized-Service-Error-Example:
+    Bad-Request-Example-Limit:
       value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        ref_id: 344d0f3f-4x55-7g99-8b2c-0cf2a921a5ac
         error_details:
-        - issue: User not authorized for this functionality
-          action: please use valid credentials to access this functionality
-          code: CC00007
+        - code: VC00012
+          issue: provided value is not within the range for query-param limit.
+          action: please provide valid value for query-param limit, must be greater than or equal to 1.
   parameters:
-    Bank-Reference:
+    Branch-Code:
       in: query
-      name: bank_reference
-      description: Transaction identification generated by bank.
+      name: branch_code
+      description: Accounts branch code.
       schema:
-        type: string
+        maxLength: 35
         minLength: 1
-        maxLength: 16
-        example: 1L00IF2BCWUZF09
-        title: Bank reference Number
-    Account-Ref:
+        type: string
+        title: Branch Identifier
+    Currency-Code:
       in: query
-      name: account_ref
-      description: '**This parameter is optional for GET Accounts and conditional mandatory for GET Balances. For historical balances it is mandatory and for current balances it is optional.** Account Reference number is the unique identifier created for each account. If this parameter is not used, all accounts associated with `Consent-Id` are returned.'
+      name: currency_code
+      description: Currency code in which client wanted to see their balance.
       schema:
         maxLength: 40
         minLength: 5
         type: string
-        title: Account Reference Identifier
-    To-Date:
-      in: query
-      name: to_date
-      description: End date of the balance range to be retrieved from which balances should be fetched. This date should always be a past date. The maximum data retrieved is 180 days for historical balances. If from_date is passed and to_date is not passed, then the current date minus one day is considered as to_date.
-      schema:
-        type: string
-        title: To Date
-        pattern: ^(?:(?:(?:19|20)\d{2})-(?:(?:0[13578]|1[02])-(?:31|30|[0-2]\d)|(?:0[469]|11)-(?:30|[0-2]\d)|02-(?:29|[0-2]\d))|(?:19|20)(?:[02468][048]|[13579][26])-02-29)$
-        example: '2024-01-26'
-    Page-No:
-      in: query
-      name: page_no
-      description: You can input a page number and receive the data specific to a requested page. Page number is determined based on pagination metadata received in the response header of the initial request.
-      schema:
-        minimum: 1
-        type: integer
-        title: Page Number
+        title: Account currency code
     Debit-Credit-Indicator:
       in: query
       name: debit_credit_indicator
@@ -1298,34 +1280,14 @@ components:
         - D
         - C
         - ALL
-    Branch-Code:
+    Page-No:
       in: query
-      name: branch_code
-      description: Accounts branch code.
+      name: page_no
+      description: You can input a page number and receive the data specific to a requested page. Page number is determined based on pagination metadata received in the response header of the initial request.
       schema:
-        maxLength: 35
-        minLength: 1
-        type: string
-        title: Branch Identifier
-    Request-ID:
-      in: header
-      name: Request-ID
-      required: true
-      schema:
-        type: string
-        title: Request-ID
-        minLength: 1
-        maxLength: 36
-      description: The request identifier specific to the call determined by the PSP initiating the request.
-    Date:
-      in: header
-      name: Date
-      required: true
-      schema:
-        type: string
-        title: <day-name>, <day> <month> <year> <hour>:<minute>:<second> GMT
-        pattern: (Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} GMT$
-      description: 'Date and time when the request is created/sent by the TPP. <br> <br> <b> Format: </b> day-name, day month year hour:minute:second GMT <br> (for example, Mon, 8 Jul 2026 14:25:30 GMT).'
+        minimum: 1
+        type: integer
+        title: Page Number
     Uetr:
       in: query
       name: uetr
@@ -1337,44 +1299,6 @@ components:
         maxLength: 40
         pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
       example: 0c4fb98b-d77a-4468-96bb-0c88b3b8f75a
-    Currency-Code:
-      in: query
-      name: currency_code
-      description: Currency code in which client wanted to see their balance.
-      schema:
-        maxLength: 40
-        minLength: 5
-        type: string
-        title: Account currency code
-    PSU-IP-Address:
-      in: header
-      name: PSU-IP-Address
-      required: true
-      schema:
-        type: string
-        title: PSU-IP-Address
-        minLength: 1
-        maxLength: 15
-      description: PSU-IP address of the payment service user (ipv4). Required if the consent_id is used in the request.
-    Consent-Id:
-      in: query
-      name: consent_id
-      description: '**Unique identifier for the consent. This parameter is optional.**'
-      required: true
-      schema:
-        maxLength: 128
-        minLength: 1
-        type: string
-        title: Consent Id
-    From-Date:
-      in: query
-      name: from_date
-      description: Start date of the balance range to be retrieved from which balances should be fetched. This date should always be a past date. The maximum data retrieved is 180 days for historical balances. If to_date is passed and from_date is not passed, then the date mentioned in to_date is also considered as from_date. If both from_date and to_date are null, real-time balance is retrieved.
-      schema:
-        type: string
-        title: From Date
-        pattern: ^(?:(?:(?:19|20)\d{2})-(?:(?:0[13578]|1[02])-(?:31|30|[0-2]\d)|(?:0[469]|11)-(?:30|[0-2]\d)|02-(?:29|[0-2]\d))|(?:19|20)(?:[02468][048]|[13579][26])-02-29)$
-        example: '2024-01-26'
     TPP-Code:
       in: header
       name: TPP-Code
@@ -1386,6 +1310,15 @@ components:
         maxLength: 4
         pattern: '[0-9][0-9][0-9][0-9]'
       description: The code of the Authorized Payment Service Provider sending the request. Required if the consent_id is used.
+    Account-Ref:
+      in: query
+      name: account_ref
+      description: '**This parameter is optional for GET Accounts and conditional mandatory for GET Balances. For historical balances it is mandatory and for current balances it is optional.** Account Reference number is the unique identifier created for each account. If this parameter is not used, all accounts associated with `Consent-Id` are returned.'
+      schema:
+        maxLength: 40
+        minLength: 5
+        type: string
+        title: Account Reference Identifier
     Sort-Type:
       in: query
       name: sort_type
@@ -1396,6 +1329,61 @@ components:
         enum:
         - DESC
         - ASC
+    Request-ID:
+      in: header
+      name: Request-ID
+      required: true
+      schema:
+        type: string
+        title: Request-ID
+        minLength: 1
+        maxLength: 36
+      description: The request identifier specific to the call determined by the PSP initiating the request.
+    Consent-Id:
+      in: query
+      name: consent_id
+      description: '**Unique identifier for the consent. This parameter is optional.**'
+      required: true
+      schema:
+        maxLength: 128
+        minLength: 1
+        type: string
+        title: Consent Id
+    Date:
+      in: header
+      name: Date
+      required: true
+      schema:
+        type: string
+        title: <day-name>, <day> <month> <year> <hour>:<minute>:<second> GMT
+        pattern: (Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} GMT$
+      description: 'Date and time when the request is created/sent by the TPP. <br> <br> <b> Format: </b> day-name, day month year hour:minute:second GMT <br> (for example, Mon, 8 Jul 2026 14:25:30 GMT).'
+    Sort-By:
+      in: query
+      name: sort_by
+      description: This parameter contains one or more sort criteria. For GET Account, allowed enum value is `accountRef`.For GET Balance, allowed enum value is `accountRef`.For GET transaction, allowed enum values are `transactionNumber`, `amount`, and `transactionActualTime`.
+      schema:
+        type: string
+        title: Sorting Criteria
+    To-Date:
+      in: query
+      name: to_date
+      description: End date of the balance range to be retrieved from which balances should be fetched. This date should always be a past date. The maximum data retrieved is 180 days for historical balances. If from_date is passed and to_date is not passed, then the current date minus one day is considered as to_date.
+      schema:
+        type: string
+        title: To Date
+        pattern: ^(?:(?:(?:19|20)\d{2})-(?:(?:0[13578]|1[02])-(?:31|30|[0-2]\d)|(?:0[469]|11)-(?:30|[0-2]\d)|02-(?:29|[0-2]\d))|(?:19|20)(?:[02468][048]|[13579][26])-02-29)$
+        example: '2024-01-26'
+    PSU-IP-Address:
+      in: header
+      name: PSU-IP-Address
+      required: true
+      schema:
+        type: string
+        title: PSU-IP-Address
+        minLength: 1
+        maxLength: 15
+      description: PSU-IP address of the payment service user (ipv4). Required if the consent_id is used in the request.
     End-To-End-Id:
       in: query
       name: end_to_end_id
@@ -1406,13 +1394,15 @@ components:
         maxLength: 54
         example: 1L00IF2BCWUZF09
         title: End To End Identification Number
-    Sort-By:
+    From-Date:
       in: query
-      name: sort_by
-      description: This parameter contains one or more sort criteria. For GET Account, allowed enum value is `accountRef`.For GET Balance, allowed enum value is `accountRef`.For GET transaction, allowed enum values are `transactionNumber`, `amount`, and `transactionActualTime`.
+      name: from_date
+      description: Start date of the balance range to be retrieved from which balances should be fetched. This date should always be a past date. The maximum data retrieved is 180 days for historical balances. If to_date is passed and from_date is not passed, then the date mentioned in to_date is also considered as from_date. If both from_date and to_date are null, real-time balance is retrieved.
       schema:
         type: string
-        title: Sorting Criteria
+        title: From Date
+        pattern: ^(?:(?:(?:19|20)\d{2})-(?:(?:0[13578]|1[02])-(?:31|30|[0-2]\d)|(?:0[469]|11)-(?:30|[0-2]\d)|02-(?:29|[0-2]\d))|(?:19|20)(?:[02468][048]|[13579][26])-02-29)$
+        example: '2024-01-26'
     Limit:
       in: query
       name: limit
@@ -1422,6 +1412,16 @@ components:
         minimum: 1
         type: integer
         title: Limit
+    Bank-Reference:
+      in: query
+      name: bank_reference
+      description: Transaction identification generated by bank.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 16
+        example: 1L00IF2BCWUZF09
+        title: Bank reference Number
   headers:
     Pagination-Metadata:
       description: '<br> current_page: current page number<br> total_page: Total number of pages available for your request<br> page_size: Total number of records available in the current page<br> has_more: Any more messages or records expected'

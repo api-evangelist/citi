@@ -299,20 +299,202 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    CobRStatus:
+    CobRAtualizacao:
       type: object
-      title: Status da Cobrança Recorrente
+      title: Histórico de Atualização da Cobrança Recorrente
+      required:
+      - atualizacao
       properties:
+        atualizacao:
+          type: array
+          title: Histórico de Status
+          description: Histórico das mudanças de status das cobranças recorrentes.
+          items:
+            type: object
+            required:
+            - status
+            - data
+            properties:
+              status:
+                type: string
+                title: Status da cobrança
+                description: Status da cobrança.
+                enum:
+                - CRIADA
+                - ATIVA
+                - CONCLUIDA
+                - EXPIRADA
+                - REJEITADA
+                - CANCELADA
+              data:
+                type: string
+                format: date-time
+                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
+        encerramento:
+          type: object
+          title: Detalhamento do encerramento da cobrança.
+          oneOf:
+          - type: object
+            properties:
+              cancelamento:
+                type: object
+                title: Informações sobre o cancelamento da cobrança
+                required:
+                - solicitante
+                - codigo
+                - descricao
+                description: Informações sobre o cancelamento da cobrança
+                properties:
+                  solicitante:
+                    type: string
+                    title: Solicitante do cancelamento
+                    enum:
+                    - PSP_PAGADOR
+                    - USUARIO_PAGADOR
+                    - PSP_RECEBEDOR
+                    - USUARIO_RECEBEDOR
+                  codigo:
+                    type: string
+                    title: Código do cancelamento
+                    description: Código do cancelamento. Corresponde ao código de cancelamento presente no catálogo de mensagens.
+                    maxLength: 4
+                    enum:
+                    - ACCT
+                    - BLCK
+                    - CCLD
+                    - FAIL
+                    - OTHR
+                    - SLBD
+                    - SLCR
+                  descricao:
+                    type: string
+                    title: Descricao do cancelamento
+                    description: Descricao da causa do cancelamento
+                    maxLength: 105
+          - type: object
+            properties:
+              rejeicao:
+                type: object
+                title: Informações sobre a rejeição da cobrança
+                required:
+                - codigo
+                - descricao
+                description: Informações sobre a rejeição da cobrança
+                properties:
+                  codigo:
+                    type: string
+                    title: Código da rejeição
+                    description: Código da rejeição. Corresponde ao código de rejeição presente no catálogo de mensagens.
+                    maxLength: 4
+                    enum:
+                    - AB10
+                    - AC05
+                    - AC06
+                    - AM02
+                    - AM09
+                    - DENC
+                    - DS27
+                    - DTED
+                    - DTNT
+                    - FBRD
+                    - IRNT
+                    - MIDI
+                    - MSUC
+                    - NIEC
+                    - NIPA
+                    - NITX
+                    - QUNT
+                    - RC09
+                    - UDEI
+                  descricao:
+                    type: string
+                    title: Descricao da rejeição
+                    description: Descricao da causa da rejeição
+                    maxLength: 105
+    TxId:
+      type: string
+      title: Id da Transação
+      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
+      pattern: '[a-zA-Z0-9]{26,35}'
+      minLength: 26
+      maxLength: 35
+    ParametrosConsultaCobR:
+      type: object
+      title: Parâmetros de Consulta de Cobrança
+      description: Parâmetros utilizados para a realização de uma consulta de cobranças.
+      required:
+      - inicio
+      - fim
+      - paginacao
+      properties:
+        inicio:
+          type: string
+          format: date-time
+          title: Data de Início
+          description: Data inicial utilizada na consulta. Respeita RFC 3339.
+          example: '2020-04-01T00:00:00Z'
+        fim:
+          type: string
+          format: date-time
+          title: Data de Fim
+          description: Data de fim utilizada na consulta. Respeita RFC 3339.
+          example: '2020-04-01T17:00:00Z'
+        idRec:
+          $ref: '#/components/schemas/RecId'
+        cpf:
+          type: string
+          title: CPF
+          pattern: /^\d{11}$/
+          description: Filtro pelo CPF do devedor. Não pode ser utilizado ao mesmo tempo que o CNPJ.
+        cnpj:
+          type: string
+          title: CNPJ
+          pattern: /^\d{14}$/
+          description: Filtro pelo CNPJ do devedor. Não pode ser utilizado ao mesmo tempo que o CPF.
         status:
           type: string
           title: Status do registro da cobrança
-          enum:
-          - CRIADA
-          - ATIVA
-          - CONCLUIDA
-          - EXPIRADA
-          - REJEITADA
-          - CANCELADA
+          description: Filtro pelo status das cobranças.
+        recebedor:
+          type: object
+          title: Recebedor
+          properties:
+            convenio:
+              type: string
+              title: Convênio
+              description: Convênio entre usuário e participante recebedor.
+              maxLength: 60
+        paginacao:
+          $ref: '#/components/schemas/Paginacao'
+    DevolucaoNaturezaPixAutomatico:
+      type: string
+      title: Natureza da Devolução
+      description: "Indica qual é a natureza da devolução. Uma devolução pode ser relacionada a um Pix comum (com códigos possíveis: `MD06` e `FR01` da pacs.004 e `REFU` da pacs.008). Na ausência deste campo a natureza deve ser interpretada como \nsendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n  - `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum (`MD06`);\n  - `MED_FRAUDE`: quando a devolução ocorre no âmbito do MED (Mecanismo Especial de Devolução) por fundada suspeita de fraude e se refere a um Pix comum (`FR01`).\n  - `MED_PIX_AUTOMATICO`: reembolso total ou parcial ao participante do usuário pagador no âmbito do MED (Mecanismo Especial de Devolução) para o Pix Automático pela utilização de recursos próprios para ressarcimento do usuário pagador.(`REFU`);\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso pode ser: ORIGINAL, MED_PIX_AUTOMATICO ou MED_FRAUDE);\n"
+      enum:
+      - ORIGINAL
+      - MED_PIX_AUTOMATICO
+      - MED_FRAUDE
+    Inicio:
+      type: string
+      format: date-time
+      title: Data de início
+      description: Filtra os registros cuja data de criação seja maior ou igual que a data de início. Respeita RFC 3339.
+    CobRSolicitada:
+      type: object
+      title: Cobrança Recorrente Solicitada
+      required:
+      - idRec
+      - calendario
+      - valor
+      - recebedor
+      description: Dados enviados para criação da cobrança recorrente via API Pix
+      allOf:
+      - type: object
+        properties:
+          idRec:
+            $ref: '#/components/schemas/RecId'
+      - $ref: '#/components/schemas/CobRBase'
+      - $ref: '#/components/schemas/DadosDevedorRecorrencia'
     PessoaJuridicaRecorrencia:
       type: object
       required:
@@ -439,22 +621,47 @@ components:
                     title: Descricao da rejeição
                     description: Descricao da causa da rejeição
                     maxLength: 105
-    CobRSolicitada:
+    Paginacao:
       type: object
-      title: Cobrança Recorrente Solicitada
+      title: Paginação
       required:
-      - idRec
-      - calendario
-      - valor
-      - recebedor
-      description: Dados enviados para criação da cobrança recorrente via API Pix
-      allOf:
-      - type: object
-        properties:
-          idRec:
-            $ref: '#/components/schemas/RecId'
-      - $ref: '#/components/schemas/CobRBase'
-      - $ref: '#/components/schemas/DadosDevedorRecorrencia'
+      - paginaAtual
+      - itensPorPagina
+      - quantidadeDePaginas
+      - quantidadeTotalDeItens
+      properties:
+        paginaAtual:
+          type: integer
+          title: Página atual
+          description: Número da página recuperada.
+          minimum: 0
+        itensPorPagina:
+          type: integer
+          title: Itens por página
+          description: Quantidade de registros retornado na página.
+          minimum: 1
+        quantidadeDePaginas:
+          type: integer
+          title: Quantidade de páginas
+          description: Quantidade de páginas disponíveis para consulta.
+          minimum: 1
+        quantidadeTotalDeItens:
+          type: integer
+          title: Quantidade total de itens
+          description: Quantidade total de itens disponíveis de acordo com os parâmetros informados.
+          minimum: 0
+    CobRConfiguracao:
+      type: object
+      title: Configuração da Cobrança Recorrente
+      required:
+      - politicaRetentativa
+      properties:
+        politicaRetentativa:
+          type: string
+          title: Política de retentativa da cobrança recorrente
+          enum:
+          - NAO_PERMITE
+          - PERMITE_3R_7D
     PixAutomatico:
       type: object
       title: Pix
@@ -489,19 +696,14 @@ components:
           title: Devoluções
           items:
             $ref: '#/components/schemas/DevolucaoPixAutomatico'
-    DevolucaoId:
+    RecId:
       type: string
-      title: Id da Devolução
-      description: Id gerado pelo cliente para representar unicamente uma devolução.
-      pattern: '[a-zA-Z0-9]{1,35}'
-    DevolucaoNaturezaPixAutomatico:
-      type: string
-      title: Natureza da Devolução
-      description: "Indica qual é a natureza da devolução. Uma devolução pode ser relacionada a um Pix comum (com códigos possíveis: `MD06` e `FR01` da pacs.004 e `REFU` da pacs.008). Na ausência deste campo a natureza deve ser interpretada como \nsendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n  - `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum (`MD06`);\n  - `MED_FRAUDE`: quando a devolução ocorre no âmbito do MED (Mecanismo Especial de Devolução) por fundada suspeita de fraude e se refere a um Pix comum (`FR01`).\n  - `MED_PIX_AUTOMATICO`: reembolso total ou parcial ao participante do usuário pagador no âmbito do MED (Mecanismo Especial de Devolução) para o Pix Automático pela utilização de recursos próprios para ressarcimento do usuário pagador.(`REFU`);\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso pode ser: ORIGINAL, MED_PIX_AUTOMATICO ou MED_FRAUDE);\n"
-      enum:
-      - ORIGINAL
-      - MED_PIX_AUTOMATICO
-      - MED_FRAUDE
+      title: ID Recorrência
+      description: "# Identificador da Recorrência\n\nRegra de formação:\n- RAxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; \"case sensitive\", isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - \"R\":  fixo (1 caractere). \"R\" para a recorrência criada dentro do Pix;\n  - \"A\": identificação da possibilidade de novas tentativas, sendo possíveis os valores \"R\" ou \"N\" (1 caractere). \"R\" caso a recorrência permita novas tentativas de pagamento pós vencimento, ou \"N\" caso não permita novas tentativas.\n  - \"xxxxxxxx\":  identificação do agente que presta serviço para o usuário recebedor que gerou o <Id>, podendo ser: o ISPB do participante direto, o ISPB do participante indireto ou os 8 primeiros dígitos do CNPJ do prestador de serviço de iniciação (8 caracteres numéricos [0-9]);\n  - \"yyyyMMdd\":  data (8 caracteres) de criação da recorrência;\n  - \"kkkkkkkkkkk\": sequencial criado pelo agente que gerou o <Id> (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada \"yyyyMMdd\".\n\nDessa forma, o ID da recorrência deve ser formado de acordo com um dos tipos a seguir:\n- \"RRxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que permite novas tentativas de pagamento pós vencimento; ou\n- \"RNxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que não permite novas tentativas de pagamento pós vencimento.”\n"
+      pattern: '[a-zA-Z0-9]{29}'
+      minLength: 29
+      maxLength: 29
+      example: RR1234567820240115abcdefghijk
     DadosBancariosRecebedor:
       type: object
       required:
@@ -528,69 +730,22 @@ components:
           description: Número da agência do usuário recebedor.
           minLength: 1
           maxLength: 4
-    ParametrosConsultaCobR:
+    CobRStatusRevisada:
       type: object
-      title: Parâmetros de Consulta de Cobrança
-      description: Parâmetros utilizados para a realização de uma consulta de cobranças.
-      required:
-      - inicio
-      - fim
-      - paginacao
+      title: Status da Cobrança Recorrente
       properties:
-        inicio:
-          type: string
-          format: date-time
-          title: Data de Início
-          description: Data inicial utilizada na consulta. Respeita RFC 3339.
-          example: '2020-04-01T00:00:00Z'
-        fim:
-          type: string
-          format: date-time
-          title: Data de Fim
-          description: Data de fim utilizada na consulta. Respeita RFC 3339.
-          example: '2020-04-01T17:00:00Z'
-        idRec:
-          $ref: '#/components/schemas/RecId'
-        cpf:
-          type: string
-          title: CPF
-          pattern: /^\d{11}$/
-          description: Filtro pelo CPF do devedor. Não pode ser utilizado ao mesmo tempo que o CNPJ.
-        cnpj:
-          type: string
-          title: CNPJ
-          pattern: /^\d{14}$/
-          description: Filtro pelo CNPJ do devedor. Não pode ser utilizado ao mesmo tempo que o CPF.
         status:
           type: string
           title: Status do registro da cobrança
-          description: Filtro pelo status das cobranças.
-        recebedor:
-          type: object
-          title: Recebedor
-          properties:
-            convenio:
-              type: string
-              title: Convênio
-              description: Convênio entre usuário e participante recebedor.
-              maxLength: 60
-        paginacao:
-          $ref: '#/components/schemas/Paginacao'
-    RecId:
+          enum:
+          - CANCELADA
+    EndToEndId:
       type: string
-      title: ID Recorrência
-      description: "# Identificador da Recorrência\n\nRegra de formação:\n- RAxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; \"case sensitive\", isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - \"R\":  fixo (1 caractere). \"R\" para a recorrência criada dentro do Pix;\n  - \"A\": identificação da possibilidade de novas tentativas, sendo possíveis os valores \"R\" ou \"N\" (1 caractere). \"R\" caso a recorrência permita novas tentativas de pagamento pós vencimento, ou \"N\" caso não permita novas tentativas.\n  - \"xxxxxxxx\":  identificação do agente que presta serviço para o usuário recebedor que gerou o <Id>, podendo ser: o ISPB do participante direto, o ISPB do participante indireto ou os 8 primeiros dígitos do CNPJ do prestador de serviço de iniciação (8 caracteres numéricos [0-9]);\n  - \"yyyyMMdd\":  data (8 caracteres) de criação da recorrência;\n  - \"kkkkkkkkkkk\": sequencial criado pelo agente que gerou o <Id> (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada \"yyyyMMdd\".\n\nDessa forma, o ID da recorrência deve ser formado de acordo com um dos tipos a seguir:\n- \"RRxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que permite novas tentativas de pagamento pós vencimento; ou\n- \"RNxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que não permite novas tentativas de pagamento pós vencimento.”\n"
-      pattern: '[a-zA-Z0-9]{29}'
-      minLength: 29
-      maxLength: 29
-      example: RR1234567820240115abcdefghijk
-    TxId:
-      type: string
-      title: Id da Transação
-      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
-      pattern: '[a-zA-Z0-9]{26,35}'
-      minLength: 26
-      maxLength: 35
+      title: Id fim a fim da transação
+      description: EndToEndIdentification que transita na PACS002, PACS004 e PACS008
+      pattern: '[a-zA-Z0-9]{32}'
+      minLength: 32
+      maxLength: 32
     DadosComplementaresPessoa:
       type: object
       properties:
@@ -666,18 +821,21 @@ components:
           description: O objeto recebedor organiza as informações sobre o recebedor da cobrança.
           allOf:
           - $ref: '#/components/schemas/DadosBancariosRecebedor'
-    Inicio:
-      type: string
-      format: date-time
-      title: Data de início
-      description: Filtra os registros cuja data de criação seja maior ou igual que a data de início. Respeita RFC 3339.
-    EndToEndId:
-      type: string
-      title: Id fim a fim da transação
-      description: EndToEndIdentification que transita na PACS002, PACS004 e PACS008
-      pattern: '[a-zA-Z0-9]{32}'
-      minLength: 32
-      maxLength: 32
+    CobsRConsultadas:
+      type: object
+      title: Cobranças recorrentes consultadas
+      required:
+      - parametros
+      - cobsr
+      properties:
+        parametros:
+          $ref: '#/components/schemas/ParametrosConsultaCobR'
+        cobsr:
+          type: array
+          title: Lista de cobranças
+          items:
+            allOf:
+            - $ref: '#/components/schemas/CobRCompleta'
     Violacao:
       type: object
       title: Violações
@@ -703,56 +861,6 @@ components:
       description: Dados enviados para revisão da cobrança recorrente via API Pix
       allOf:
       - $ref: '#/components/schemas/CobRStatusRevisada'
-    CobRGerada:
-      type: object
-      title: Cobrança Recorrente Gerada
-      required:
-      - idRec
-      - txid
-      - status
-      - valor
-      - recebedor
-      - calendario
-      description: Dados criados ou alterados da cobrança recorrente via API Pix
-      allOf:
-      - type: object
-        properties:
-          idRec:
-            $ref: '#/components/schemas/RecId'
-      - type: object
-        properties:
-          txid:
-            $ref: '#/components/schemas/TxId'
-      - $ref: '#/components/schemas/CobRBase'
-      - type: object
-        properties:
-          calendario:
-            type: object
-            required:
-            - criacao
-            properties:
-              criacao:
-                type: string
-                format: date
-                title: Data de criação da cobrança
-                description: Trata-se de uma data, no formato `YYYY-MM-DD`, segundo ISO 8601. É a data de criação da cobrança.
-                example: '2023-04-01'
-      - type: object
-        properties:
-          recebedor:
-            allOf:
-            - $ref: '#/components/schemas/PessoaJuridicaRecorrencia'
-      - $ref: '#/components/schemas/CobRStatus'
-      - $ref: '#/components/schemas/DadosDevedorRecorrencia'
-    CobRStatusRevisada:
-      type: object
-      title: Status da Cobrança Recorrente
-      properties:
-        status:
-          type: string
-          title: Status do registro da cobrança
-          enum:
-          - CANCELADA
     Fim:
       type: string
       format: date-time
@@ -811,36 +919,25 @@ components:
                     - pattern: '[a-zA-Z0-9]{26,35}'
       - $ref: '#/components/schemas/CobRAtualizacao'
       - $ref: '#/components/schemas/CobRTentativas'
-    Problema:
+    DevolucaoId:
+      type: string
+      title: Id da Devolução
+      description: Id gerado pelo cliente para representar unicamente uma devolução.
+      pattern: '[a-zA-Z0-9]{1,35}'
+    CobRStatus:
       type: object
-      required:
-      - type
-      - title
-      - status
+      title: Status da Cobrança Recorrente
       properties:
-        type:
-          type: string
-          format: uri
-          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
-          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title:
-          type: string
-          description: Descrição resumida do problema.
-          example: Not found
         status:
-          type: integer
-          description: Código HTTP do status retornado.
-          example: 404
-        detail:
           type: string
-          description: Descrição completa do problema.
-        correlationId:
-          type: string
-          description: Identificador de correlação do problema para fins de suporte
-        violacoes:
-          type: array
-          items:
-            $ref: '#/components/schemas/Violacao'
+          title: Status do registro da cobrança
+          enum:
+          - CRIADA
+          - ATIVA
+          - CONCLUIDA
+          - EXPIRADA
+          - REJEITADA
+          - CANCELADA
     DevolucaoPixAutomatico:
       type: object
       title: Devolução
@@ -908,6 +1005,36 @@ components:
 
             '
           maxLength: 140
+    Problema:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
+          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title:
+          type: string
+          description: Descrição resumida do problema.
+          example: Not found
+        status:
+          type: integer
+          description: Código HTTP do status retornado.
+          example: 404
+        detail:
+          type: string
+          description: Descrição completa do problema.
+        correlationId:
+          type: string
+          description: Identificador de correlação do problema para fins de suporte
+        violacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violacao'
     DadosDevedorRecorrencia:
       type: object
       properties:
@@ -924,184 +1051,48 @@ components:
                 example: customer.raj2024@gmail.com
                 description: Email do usuário.
           - $ref: '#/components/schemas/DadosComplementaresPessoa'
-    CobRAtualizacao:
+    CobRGerada:
       type: object
-      title: Histórico de Atualização da Cobrança Recorrente
+      title: Cobrança Recorrente Gerada
       required:
-      - atualizacao
-      properties:
-        atualizacao:
-          type: array
-          title: Histórico de Status
-          description: Histórico das mudanças de status das cobranças recorrentes.
-          items:
+      - idRec
+      - txid
+      - status
+      - valor
+      - recebedor
+      - calendario
+      description: Dados criados ou alterados da cobrança recorrente via API Pix
+      allOf:
+      - type: object
+        properties:
+          idRec:
+            $ref: '#/components/schemas/RecId'
+      - type: object
+        properties:
+          txid:
+            $ref: '#/components/schemas/TxId'
+      - $ref: '#/components/schemas/CobRBase'
+      - type: object
+        properties:
+          calendario:
             type: object
             required:
-            - status
-            - data
+            - criacao
             properties:
-              status:
+              criacao:
                 type: string
-                title: Status da cobrança
-                description: Status da cobrança.
-                enum:
-                - CRIADA
-                - ATIVA
-                - CONCLUIDA
-                - EXPIRADA
-                - REJEITADA
-                - CANCELADA
-              data:
-                type: string
-                format: date-time
-                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
-        encerramento:
-          type: object
-          title: Detalhamento do encerramento da cobrança.
-          oneOf:
-          - type: object
-            properties:
-              cancelamento:
-                type: object
-                title: Informações sobre o cancelamento da cobrança
-                required:
-                - solicitante
-                - codigo
-                - descricao
-                description: Informações sobre o cancelamento da cobrança
-                properties:
-                  solicitante:
-                    type: string
-                    title: Solicitante do cancelamento
-                    enum:
-                    - PSP_PAGADOR
-                    - USUARIO_PAGADOR
-                    - PSP_RECEBEDOR
-                    - USUARIO_RECEBEDOR
-                  codigo:
-                    type: string
-                    title: Código do cancelamento
-                    description: Código do cancelamento. Corresponde ao código de cancelamento presente no catálogo de mensagens.
-                    maxLength: 4
-                    enum:
-                    - ACCT
-                    - BLCK
-                    - CCLD
-                    - FAIL
-                    - OTHR
-                    - SLBD
-                    - SLCR
-                  descricao:
-                    type: string
-                    title: Descricao do cancelamento
-                    description: Descricao da causa do cancelamento
-                    maxLength: 105
-          - type: object
-            properties:
-              rejeicao:
-                type: object
-                title: Informações sobre a rejeição da cobrança
-                required:
-                - codigo
-                - descricao
-                description: Informações sobre a rejeição da cobrança
-                properties:
-                  codigo:
-                    type: string
-                    title: Código da rejeição
-                    description: Código da rejeição. Corresponde ao código de rejeição presente no catálogo de mensagens.
-                    maxLength: 4
-                    enum:
-                    - AB10
-                    - AC05
-                    - AC06
-                    - AM02
-                    - AM09
-                    - DENC
-                    - DS27
-                    - DTED
-                    - DTNT
-                    - FBRD
-                    - IRNT
-                    - MIDI
-                    - MSUC
-                    - NIEC
-                    - NIPA
-                    - NITX
-                    - QUNT
-                    - RC09
-                    - UDEI
-                  descricao:
-                    type: string
-                    title: Descricao da rejeição
-                    description: Descricao da causa da rejeição
-                    maxLength: 105
-    Paginacao:
-      type: object
-      title: Paginação
-      required:
-      - paginaAtual
-      - itensPorPagina
-      - quantidadeDePaginas
-      - quantidadeTotalDeItens
-      properties:
-        paginaAtual:
-          type: integer
-          title: Página atual
-          description: Número da página recuperada.
-          minimum: 0
-        itensPorPagina:
-          type: integer
-          title: Itens por página
-          description: Quantidade de registros retornado na página.
-          minimum: 1
-        quantidadeDePaginas:
-          type: integer
-          title: Quantidade de páginas
-          description: Quantidade de páginas disponíveis para consulta.
-          minimum: 1
-        quantidadeTotalDeItens:
-          type: integer
-          title: Quantidade total de itens
-          description: Quantidade total de itens disponíveis de acordo com os parâmetros informados.
-          minimum: 0
-    CobRConfiguracao:
-      type: object
-      title: Configuração da Cobrança Recorrente
-      required:
-      - politicaRetentativa
-      properties:
-        politicaRetentativa:
-          type: string
-          title: Política de retentativa da cobrança recorrente
-          enum:
-          - NAO_PERMITE
-          - PERMITE_3R_7D
-    CobsRConsultadas:
-      type: object
-      title: Cobranças recorrentes consultadas
-      required:
-      - parametros
-      - cobsr
-      properties:
-        parametros:
-          $ref: '#/components/schemas/ParametrosConsultaCobR'
-        cobsr:
-          type: array
-          title: Lista de cobranças
-          items:
+                format: date
+                title: Data de criação da cobrança
+                description: Trata-se de uma data, no formato `YYYY-MM-DD`, segundo ISO 8601. É a data de criação da cobrança.
+                example: '2023-04-01'
+      - type: object
+        properties:
+          recebedor:
             allOf:
-            - $ref: '#/components/schemas/CobRCompleta'
+            - $ref: '#/components/schemas/PessoaJuridicaRecorrencia'
+      - $ref: '#/components/schemas/CobRStatus'
+      - $ref: '#/components/schemas/DadosDevedorRecorrencia'
   responses:
-    ServicoIndisponivel:
-      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/ServicoIndisponivelExample1'
     NaoEncontrado:
       description: Recurso solicitado não foi encontrado.
       content:
@@ -1120,7 +1111,150 @@ components:
           examples:
             exemplo1:
               $ref: '#/components/examples/AcessoNegadoExample1'
+    ServicoIndisponivel:
+      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/ServicoIndisponivelExample1'
+  requestBodies:
+    CobRBody:
+      description: Dados para geração da cobrança recorrente.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CobRSolicitada'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/cobRBody1'
+    CobRBodyRevisada:
+      description: Dados para geração da cobrança.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CobRRevisada'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/cobRBody2'
+  parameters:
+    paginaAtual:
+      in: query
+      name: paginacao.paginaAtual
+      required: false
+      schema:
+        type: integer
+        format: int32
+        title: Página atual
+        minimum: 0
+        default: 0
+        description: Página a ser retornada pela consulta. Se não for informada, o PSP assumirá que será 0.
+    Client-Id:
+      in: query
+      name: client_id
+      required: true
+      description: Sua identificação exclusiva, a mesma que você usa para geração de token OAuth, o Citi compartilhou com você durante a integração da API do CitiConnect
+      schema:
+        type: string
+        description: Sua identificação exclusiva, a mesma que você usa para geração de token OAuth, o Citi compartilhou com você durante a integração da API do CitiConnect
+        example: 9a10a5d6-63d4-4885-b6bd-19e79629496d
+    itensPorPagina:
+      in: query
+      name: paginacao.itensPorPagina
+      required: false
+      schema:
+        type: integer
+        format: int32
+        title: Itens por Página
+        minimum: 1
+        maximum: 1000
+        default: 100
+        description: Quantidade máxima de registros retornados em cada página. Apenas a última página pode conter uma quantidade menor de registros.
   examples:
+    getCobR1:
+      summary: Exemplo de retorno da consulta de cobranças recorrentes 1
+      value:
+        parametros:
+          inicio: '2024-04-01T00:00:00Z'
+          fim: '2024-12-01T23:59:59Z'
+          paginacao:
+            paginaAtual: 0
+            itensPorPagina: 100
+            quantidadeDePaginas: 1
+            quantidadeTotalDeItens: 1
+        cobsr:
+        - idRec: RR123456782024061999000566354
+          txid: 7f733863543b4a16b516d839bd4bc34e
+          calendario:
+            criacao: '2024-05-20'
+            dataDeVencimento: '2024-06-20'
+          valor:
+            original: '50.33'
+          status: ATIVA
+          ajusteDiaUtil: false
+          politicaRetentativa: PERMITE_3R_7D
+          devedor:
+            cep: 63259-740
+            cidade: Campinas
+            email: beltrano.silva@mail.com
+            logradouro: Rua Gonçalves Dias 605
+            uf: SP
+          recebedor:
+            conta: '997182'
+            tipoConta: CORRENTE
+          tentativas:
+          - dataLiquidacao: '2024-06-20'
+            tipo: AGND
+            status: AGENDADA
+            endToEndId: E12345678202406201221abcdef12345
+            atualizacao:
+            - data: '2024-05-21T10:40:16.730Z'
+              status: SOLICITADA
+            - data: '2024-05-21T17:08:00.520Z'
+              status: AGENDADA
+          atualizacao:
+          - data: '2024-05-20T14:47:29.470Z'
+            status: CRIADA
+          - data: '2024-05-21T10:18:20.120Z'
+            status: ATIVA
+    NaoEncontradoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title: Não Encontrado
+        status: 404
+        detail: Entidade não encontrada.
+    cobRResponse2:
+      summary: Exemplo de cobrança recorrente 1
+      value:
+        idRec: RR1234567820240115abcdefghijk
+        txid: 3136957d93134f2184b369e8f1c0729d
+        infoAdicional: Serviços de Streamming de Música e Filmes.
+        calendario:
+          criacao: '2024-04-01'
+          dataDeVencimento: '2024-04-15'
+        valor:
+          original: '106.07'
+        status: CRIADA
+        politicaRetentativa: PERMITE_3R_7D
+        ajusteDiaUtil: false
+        devedor:
+          cep: 89256-140
+          cidade: Uberlândia
+          email: sebastiao.tavares@mail.com
+          logradouro: Alameda Franco 1056
+          uf: MG
+        recebedor:
+          agencia: '9708'
+          conta: 012682
+          tipoConta: CORRENTE
+        atualizacao:
+        - data: '2024-04-01T14:47:29.470Z'
+          status: CRIADA
     AcessoNegadoExample1:
       summary: Exemplo de erro da requisição 1
       value:
@@ -1169,6 +1303,50 @@ components:
           status: ATIVA
         - data: '2024-05-26T10:18:20.120Z'
           status: CANCELADA
+    OperacaoInvalidaCobRExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/CobROperacaoInvalida
+        title: Operação inválida.
+        status: 400
+        detail: A cobrança não respeita o schema.
+        violacoes:
+        - razao: O objeto cobr.calendario não respeita o schema.
+          propriedade: cobr.calendario
+    OperacaoInvalidaCobRExample2:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/CobROperacaoInvalida
+        title: Operação inválida.
+        status: 400
+        detail: Não é possível cancelar uma cobrança em uma data igual ou maior que a data prevista da primeira tentativa de liquidação.
+    cobRResponse1:
+      summary: Exemplo de cobrança recorrente 1
+      value:
+        idRec: RR1234567820240115abcdefghijk
+        txid: 3136957d93134f2184b369e8f1c0729d
+        infoAdicional: Serviços de Streamming de Música e Filmes.
+        calendario:
+          criacao: '2024-04-01'
+          dataDeVencimento: '2024-04-15'
+        status: CRIADA
+        valor:
+          original: '106.07'
+        politicaRetentativa: PERMITE_3R_7D
+        ajusteDiaUtil: false
+        devedor:
+          cep: 89256-140
+          cidade: Uberlândia
+          email: sebastiao.tavares@mail.com
+          logradouro: Alameda Franco 1056
+          uf: MG
+        recebedor:
+          agencia: '9708'
+          conta: 012682
+          tipoConta: CORRENTE
+        atualizacao:
+        - data: '2024-04-01T14:47:29.470Z'
+          status: CRIADA
     cobRResponse3:
       summary: Exemplo de cobrança recorrente 2
       value:
@@ -1206,16 +1384,10 @@ components:
           status: CRIADA
         - data: '2024-05-21T10:18:20.120Z'
           status: ATIVA
-    OperacaoInvalidaCobRExample1:
-      summary: Exemplo de erro da requisição 1
+    cobRBody2:
+      summary: Exemplo de revisão de cobrança recorrente 1
       value:
-        type: https://pix.bcb.gov.br/api/v2/error/CobROperacaoInvalida
-        title: Operação inválida.
-        status: 400
-        detail: A cobrança não respeita o schema.
-        violacoes:
-        - razao: O objeto cobr.calendario não respeita o schema.
-          propriedade: cobr.calendario
+        status: CANCELADA
     RequisicaoInvalidaCobRTentativaExample1:
       summary: Exemplo de erro da requisição 1
       value:
@@ -1223,58 +1395,6 @@ components:
         title: Cobrança não encontrada.
         status: 400
         detail: A política configurada na recorrência não permite retentativa de cobrança.
-    OperacaoInvalidaCobRExample2:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/CobROperacaoInvalida
-        title: Operação inválida.
-        status: 400
-        detail: Não é possível cancelar uma cobrança em uma data igual ou maior que a data prevista da primeira tentativa de liquidação.
-    NaoEncontradoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title: Não Encontrado
-        status: 404
-        detail: Entidade não encontrada.
-    ServicoIndisponivelExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 503
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-    cobRBody2:
-      summary: Exemplo de revisão de cobrança recorrente 1
-      value:
-        status: CANCELADA
-    cobRResponse2:
-      summary: Exemplo de cobrança recorrente 1
-      value:
-        idRec: RR1234567820240115abcdefghijk
-        txid: 3136957d93134f2184b369e8f1c0729d
-        infoAdicional: Serviços de Streamming de Música e Filmes.
-        calendario:
-          criacao: '2024-04-01'
-          dataDeVencimento: '2024-04-15'
-        valor:
-          original: '106.07'
-        status: CRIADA
-        politicaRetentativa: PERMITE_3R_7D
-        ajusteDiaUtil: false
-        devedor:
-          cep: 89256-140
-          cidade: Uberlândia
-          email: sebastiao.tavares@mail.com
-          logradouro: Alameda Franco 1056
-          uf: MG
-        recebedor:
-          agencia: '9708'
-          conta: 012682
-          tipoConta: CORRENTE
-        atualizacao:
-        - data: '2024-04-01T14:47:29.470Z'
-          status: CRIADA
     cobRBody1:
       summary: Exemplo de criação de cobrança recorrente 1
       value:
@@ -1295,133 +1415,13 @@ components:
           agencia: '9708'
           conta: 012682
           tipoConta: CORRENTE
-    getCobR1:
-      summary: Exemplo de retorno da consulta de cobranças recorrentes 1
+    ServicoIndisponivelExample1:
+      summary: Exemplo de erro da requisição 1
       value:
-        parametros:
-          inicio: '2024-04-01T00:00:00Z'
-          fim: '2024-12-01T23:59:59Z'
-          paginacao:
-            paginaAtual: 0
-            itensPorPagina: 100
-            quantidadeDePaginas: 1
-            quantidadeTotalDeItens: 1
-        cobsr:
-        - idRec: RR123456782024061999000566354
-          txid: 7f733863543b4a16b516d839bd4bc34e
-          calendario:
-            criacao: '2024-05-20'
-            dataDeVencimento: '2024-06-20'
-          valor:
-            original: '50.33'
-          status: ATIVA
-          ajusteDiaUtil: false
-          politicaRetentativa: PERMITE_3R_7D
-          devedor:
-            cep: 63259-740
-            cidade: Campinas
-            email: beltrano.silva@mail.com
-            logradouro: Rua Gonçalves Dias 605
-            uf: SP
-          recebedor:
-            conta: '997182'
-            tipoConta: CORRENTE
-          tentativas:
-          - dataLiquidacao: '2024-06-20'
-            tipo: AGND
-            status: AGENDADA
-            endToEndId: E12345678202406201221abcdef12345
-            atualizacao:
-            - data: '2024-05-21T10:40:16.730Z'
-              status: SOLICITADA
-            - data: '2024-05-21T17:08:00.520Z'
-              status: AGENDADA
-          atualizacao:
-          - data: '2024-05-20T14:47:29.470Z'
-            status: CRIADA
-          - data: '2024-05-21T10:18:20.120Z'
-            status: ATIVA
-    cobRResponse1:
-      summary: Exemplo de cobrança recorrente 1
-      value:
-        idRec: RR1234567820240115abcdefghijk
-        txid: 3136957d93134f2184b369e8f1c0729d
-        infoAdicional: Serviços de Streamming de Música e Filmes.
-        calendario:
-          criacao: '2024-04-01'
-          dataDeVencimento: '2024-04-15'
-        status: CRIADA
-        valor:
-          original: '106.07'
-        politicaRetentativa: PERMITE_3R_7D
-        ajusteDiaUtil: false
-        devedor:
-          cep: 89256-140
-          cidade: Uberlândia
-          email: sebastiao.tavares@mail.com
-          logradouro: Alameda Franco 1056
-          uf: MG
-        recebedor:
-          agencia: '9708'
-          conta: 012682
-          tipoConta: CORRENTE
-        atualizacao:
-        - data: '2024-04-01T14:47:29.470Z'
-          status: CRIADA
-  requestBodies:
-    CobRBody:
-      description: Dados para geração da cobrança recorrente.
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CobRSolicitada'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/cobRBody1'
-    CobRBodyRevisada:
-      description: Dados para geração da cobrança.
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CobRRevisada'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/cobRBody2'
-  parameters:
-    paginaAtual:
-      in: query
-      name: paginacao.paginaAtual
-      required: false
-      schema:
-        type: integer
-        format: int32
-        title: Página atual
-        minimum: 0
-        default: 0
-        description: Página a ser retornada pela consulta. Se não for informada, o PSP assumirá que será 0.
-    itensPorPagina:
-      in: query
-      name: paginacao.itensPorPagina
-      required: false
-      schema:
-        type: integer
-        format: int32
-        title: Itens por Página
-        minimum: 1
-        maximum: 1000
-        default: 100
-        description: Quantidade máxima de registros retornados em cada página. Apenas a última página pode conter uma quantidade menor de registros.
-    Client-Id:
-      in: query
-      name: client_id
-      required: true
-      description: Sua identificação exclusiva, a mesma que você usa para geração de token OAuth, o Citi compartilhou com você durante a integração da API do CitiConnect
-      schema:
-        type: string
-        description: Sua identificação exclusiva, a mesma que você usa para geração de token OAuth, o Citi compartilhou com você durante a integração da API do CitiConnect
-        example: 9a10a5d6-63d4-4885-b6bd-19e79629496d
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
   securitySchemes:
     OAuth2:
       type: oauth2

@@ -59,6 +59,13 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
+    TxId:
+      type: string
+      title: Id da Transação
+      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
+      pattern: '[a-zA-Z0-9]{26,35}'
+      minLength: 26
+      maxLength: 35
     RecNotification:
       type: object
       title: Recorrência Notificada
@@ -76,21 +83,6 @@ components:
       - $ref: '#/components/schemas/RecAtualizacao'
       - $ref: '#/components/schemas/RecEncerramento'
       - $ref: '#/components/schemas/RecAtivacao'
-    RecStatus:
-      type: object
-      title: Status da Recorrência
-      required:
-      - status
-      properties:
-        status:
-          type: string
-          title: Status do registro da recorrência
-          enum:
-          - CRIADA
-          - APROVADA
-          - REJEITADA
-          - EXPIRADA
-          - CANCELADA
     RecId:
       type: string
       title: ID Recorrência
@@ -99,141 +91,6 @@ components:
       minLength: 29
       maxLength: 29
       example: RR1234567820240115abcdefghijk
-    TxId:
-      type: string
-      title: Id da Transação
-      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
-      pattern: '[a-zA-Z0-9]{26,35}'
-      minLength: 26
-      maxLength: 35
-    RecAtualizacao:
-      type: object
-      title: Histórico de atualização da recorrência.
-      required:
-      - atualizacao
-      properties:
-        atualizacao:
-          type: array
-          title: Histórico de Status
-          description: Histórico das mudanças de status da recorrência.
-          items:
-            type: object
-            required:
-            - status
-            - data
-            properties:
-              status:
-                type: string
-                title: Status da recorrência
-                description: Status da recorrência.
-                enum:
-                - CRIADA
-                - APROVADA
-                - REJEITADA
-                - EXPIRADA
-                - CANCELADA
-              data:
-                type: string
-                format: date-time
-                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
-    WebhookRecSolicitado:
-      type: object
-      title: Webhook Solicitado
-      allOf:
-      - $ref: '#/components/schemas/WebhookRecBase'
-    Violacao:
-      type: object
-      title: Violações
-      properties:
-        razao:
-          type: string
-          title: Descrição do erro
-          description: Descrição do erro
-          example: Valor da cobrança não pode ser 0.00
-        propriedade:
-          type: string
-          title: Nome da propriedade
-          description: Nome da propriedade
-          example: cob.chave
-        valor:
-          type: string
-          title: Valor da propriedade
-          description: Valor da propriedade
-          example: 061996671234
-    Problema:
-      type: object
-      required:
-      - type
-      - title
-      - status
-      properties:
-        type:
-          type: string
-          format: uri
-          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
-          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title:
-          type: string
-          description: Descrição resumida do problema.
-          example: Not found
-        status:
-          type: integer
-          description: Código HTTP do status retornado.
-          example: 404
-        detail:
-          type: string
-          description: Descrição completa do problema.
-        correlationId:
-          type: string
-          description: Identificador de correlação do problema para fins de suporte
-        violacoes:
-          type: array
-          items:
-            $ref: '#/components/schemas/Violacao'
-    WebhookRecBase:
-      type: object
-      required:
-      - webhookUrl
-      title: Webhook Base
-      properties:
-        webhookUrl:
-          type: string
-          title: URL Webhook
-          format: uri
-          example: https://pix.example.com/api/webhookrec/
-    RecAtivacao:
-      type: object
-      title: Dados relacionados à confirmação da ativação da recorrência.
-      properties:
-        ativacao:
-          type: object
-          title: Dados relacionados à confirmação da ativação da recorrência.
-          required:
-          - tipoJornada
-          description: Dados relacionados à confirmação da ativação da recorrência.
-          properties:
-            tipoJornada:
-              type: string
-              title: Jornada de ativação
-              description: "Dado relacionado ao caminho percorrido pelo processo de adesão a recorrência pelo usuário pagador, os valores possíveis são:\n  - JORNADA_1: Usuário pagador aceitou a recorrência através de notificação externa ao ecossistema\n  - JORNADA_2: Usuário pagador aceitou a recorrência através de leitura de QR Code de recorrência\n  - JORNADA_3: Usuário pagador iniciou a recorrência através de leitura de QR Code composto e pagamento de cobrança imediata. O uso desta jornada torna obrigatório o preenchimento da informação dadosJornada.txid\n  - JORNADA_4: Usuário pagador escolheu aderir à recorrência através de leitura de QR Code composto relacionado à cobrança com vencimento ou estática relacionada a um contrato vigente\n  - AGUARDANDO_DEFINICAO: Valor inicial posterior a criação e anterior a ativação da recorrência.\n"
-              enum:
-              - JORNADA_1
-              - JORNADA_2
-              - JORNADA_3
-              - JORNADA_4
-              - AGUARDANDO_DEFINICAO
-            dadosJornada:
-              type: object
-              title: Dados de confirmação da jornada e início da recorrência
-              oneOf:
-              - type: object
-                title: Cobrança imediata vinculada à Jornada 3
-                required:
-                - txid
-                description: Dado de preenchimento obrigatório quando utilizada a Jornada 3. Este campo deve ser removido pelo PSP Recebedor quando a ativação for realizada pelas jornadas 1, 2 ou 4.
-                properties:
-                  txid:
-                    $ref: '#/components/schemas/TxId'
     RecEncerramento:
       type: object
       title: Detalhamento do encerramento da recorrência.
@@ -303,16 +160,150 @@ components:
                     title: Descricao do cancelamento
                     description: Descricao do cancelamento.
                     maxLength: 105
+    RecAtivacao:
+      type: object
+      title: Dados relacionados à confirmação da ativação da recorrência.
+      properties:
+        ativacao:
+          type: object
+          title: Dados relacionados à confirmação da ativação da recorrência.
+          required:
+          - tipoJornada
+          description: Dados relacionados à confirmação da ativação da recorrência.
+          properties:
+            tipoJornada:
+              type: string
+              title: Jornada de ativação
+              description: "Dado relacionado ao caminho percorrido pelo processo de adesão a recorrência pelo usuário pagador, os valores possíveis são:\n  - JORNADA_1: Usuário pagador aceitou a recorrência através de notificação externa ao ecossistema\n  - JORNADA_2: Usuário pagador aceitou a recorrência através de leitura de QR Code de recorrência\n  - JORNADA_3: Usuário pagador iniciou a recorrência através de leitura de QR Code composto e pagamento de cobrança imediata. O uso desta jornada torna obrigatório o preenchimento da informação dadosJornada.txid\n  - JORNADA_4: Usuário pagador escolheu aderir à recorrência através de leitura de QR Code composto relacionado à cobrança com vencimento ou estática relacionada a um contrato vigente\n  - AGUARDANDO_DEFINICAO: Valor inicial posterior a criação e anterior a ativação da recorrência.\n"
+              enum:
+              - JORNADA_1
+              - JORNADA_2
+              - JORNADA_3
+              - JORNADA_4
+              - AGUARDANDO_DEFINICAO
+            dadosJornada:
+              type: object
+              title: Dados de confirmação da jornada e início da recorrência
+              oneOf:
+              - type: object
+                title: Cobrança imediata vinculada à Jornada 3
+                required:
+                - txid
+                description: Dado de preenchimento obrigatório quando utilizada a Jornada 3. Este campo deve ser removido pelo PSP Recebedor quando a ativação for realizada pelas jornadas 1, 2 ou 4.
+                properties:
+                  txid:
+                    $ref: '#/components/schemas/TxId'
+    WebhookRecSolicitado:
+      type: object
+      title: Webhook Solicitado
+      allOf:
+      - $ref: '#/components/schemas/WebhookRecBase'
+    Violacao:
+      type: object
+      title: Violações
+      properties:
+        razao:
+          type: string
+          title: Descrição do erro
+          description: Descrição do erro
+          example: Valor da cobrança não pode ser 0.00
+        propriedade:
+          type: string
+          title: Nome da propriedade
+          description: Nome da propriedade
+          example: cob.chave
+        valor:
+          type: string
+          title: Valor da propriedade
+          description: Valor da propriedade
+          example: 061996671234
+    RecStatus:
+      type: object
+      title: Status da Recorrência
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          title: Status do registro da recorrência
+          enum:
+          - CRIADA
+          - APROVADA
+          - REJEITADA
+          - EXPIRADA
+          - CANCELADA
+    RecAtualizacao:
+      type: object
+      title: Histórico de atualização da recorrência.
+      required:
+      - atualizacao
+      properties:
+        atualizacao:
+          type: array
+          title: Histórico de Status
+          description: Histórico das mudanças de status da recorrência.
+          items:
+            type: object
+            required:
+            - status
+            - data
+            properties:
+              status:
+                type: string
+                title: Status da recorrência
+                description: Status da recorrência.
+                enum:
+                - CRIADA
+                - APROVADA
+                - REJEITADA
+                - EXPIRADA
+                - CANCELADA
+              data:
+                type: string
+                format: date-time
+                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
+    WebhookRecBase:
+      type: object
+      required:
+      - webhookUrl
+      title: Webhook Base
+      properties:
+        webhookUrl:
+          type: string
+          title: URL Webhook
+          format: uri
+          example: https://pix.example.com/api/webhookrec/
+    Problema:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
+          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title:
+          type: string
+          description: Descrição resumida do problema.
+          example: Not found
+        status:
+          type: integer
+          description: Código HTTP do status retornado.
+          example: 404
+        detail:
+          type: string
+          description: Descrição completa do problema.
+        correlationId:
+          type: string
+          description: Identificador de correlação do problema para fins de suporte
+        violacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violacao'
   responses:
-    ServicoIndisponivel:
-      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/ServicoIndisponivelExample1'
     NaoEncontrado:
       description: Recurso solicitado não foi encontrado.
       content:
@@ -331,18 +322,16 @@ components:
           examples:
             exemplo1:
               $ref: '#/components/examples/AcessoNegadoExample1'
+    ServicoIndisponivel:
+      description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/ServicoIndisponivelExample1'
   examples:
-    AcessoNegadoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 403
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
-    recWebhookBody1:
-      summary: Exemplo de criação de webhook de recorrência
-      value:
-        webhookUrl: https://usuario.recebedor.com/api/webhookrec/
     NaoEncontradoExample1:
       summary: Exemplo de erro da requisição 1
       value:
@@ -350,6 +339,17 @@ components:
         title: Não Encontrado
         status: 404
         detail: Entidade não encontrada.
+    recWebhookBody1:
+      summary: Exemplo de criação de webhook de recorrência
+      value:
+        webhookUrl: https://usuario.recebedor.com/api/webhookrec/
+    AcessoNegadoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
     RequisicaoInvalidaWebhookExample1:
       summary: Exemplo de erro da requisição 1
       value:

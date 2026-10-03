@@ -274,76 +274,6 @@ paths:
       security:
       - clientCredentials: []
 components:
-  examples:
-    Virtual-Account-Activation-Response:
-      value:
-        request_id: 560-c6aa-4061-9038-bdb53da20d1084976
-        status: success
-        message: Request accepted Successfully
-    Virtual-Account-Reservation-Response:
-      value:
-        request_id: 560-c6aa-4061-9038-bdb53da20d1084973
-        status: success
-        message: Request accepted Successfully
-    Virtual-Account-Modify-Request:
-      value:
-        virtual_account_number: '54390868'
-        action: Modify
-        branch_code: '920'
-        account_description: VA Account
-        tax_payer_id: '12345678'
-        address:
-          address_line_1: Robn Society
-          address_line_2: Ring Road
-          address_line_3: RJ, Surat-395010
-          address_line_4: Gujarat
-    Virtual-Account-Delete-Request:
-      value:
-        request_id: 912-1b37-449a-9e1a-3401d7ab7d8384945
-        status: success
-        message: Request accepted Successfully
-    Virtual-Account-Get-Response:
-      value:
-        request_id: b8f-d8e5-4a48-ad13-5d1ec8bb32e858066
-        status: success
-        message: Request accepted Successfully
-    Modify-Virtual-Account-Response:
-      value:
-        request_id: 560-c6aa-4061-9038-bdb53da20d1084984
-        status: success
-        message: Request accepted Successfully
-    Virtual-Account-Activation-Request:
-      value:
-        api_version: '1.0'
-        action: activation
-        branch_code: '920'
-        virtual_header_account: '54444598'
-        contact_first_name: RAVI6
-        contact_last_name: SATPUTE6
-        contact_email: raviksatpute6@citi.com
-        contact_phone: +91-9762615353
-        accounts:
-        - virtual_header_account: '54444598'
-          virtual_account_number: '54535799'
-          alternate_account_number: '54535799'
-          reporting_account_number: '54444598'
-          tax_identification_number: '12345678'
-          purpose_of_virtual_account: C
-          name: David
-          address_line_1: address
-          virtual_account_balance_display_option: Y
-          balance_control_option: O
-    Virtual-Account-Reservation-Request:
-      value:
-        api_version: '1.0'
-        action: reservation
-        branch_code: '920'
-        number_of_accounts_required: 4
-        virtual_header_account: '54444598'
-        contact_first_name: RAVI6
-        contact_last_name: SATPUTE6
-        contact_email: raviksatpute6@citi.com
-        contact_phone: +91-9762615353
   responses:
     Unauthorized:
       description: Unauthorized
@@ -373,20 +303,6 @@ components:
             httpCode: '415'
             httpMessage: Unsupported Media Type
             moreInformation: Unsupported Content-Type
-    Internal-Server-Error:
-      description: Internal Server Error
-      content:
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example: <ErrorMessage><httpCode>500</httpCode><httpMessage>Internal Server Error</httpMessage><moreInformation>Internal Server Error</moreInformation></ErrorMessage>
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            httpCode: '500'
-            httpMessage: Internal Server Error
-            moreInformation: Internal Server Error
     Method-Not-Allowed:
       description: Method Not Allowed
       content:
@@ -419,7 +335,115 @@ components:
             error_details:
             - issue: invalid value provided for property branch code
               action: please provide valid value for property branch code
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example: <ErrorMessage><httpCode>500</httpCode><httpMessage>Internal Server Error</httpMessage><moreInformation>Internal Server Error</moreInformation></ErrorMessage>
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            httpCode: '500'
+            httpMessage: Internal Server Error
+            moreInformation: Internal Server Error
   schemas:
+    UpdateVirtualAccounts:
+      required:
+      - action
+      - branch_code
+      - virtual_account_number
+      properties:
+        account_description:
+          type: string
+          xml:
+            name: AccountDescription
+          description: Description for the previously mentioned virtual account. <br><br> This parameter is conditional if the action = 'Modify'.
+          maxLength: 105
+        action:
+          type: string
+          xml:
+            name: Action
+          description: 'Type of action that will be applied to virtual account. Actions that can be chosen are: <br>- CreditDebitPreferences<br>- Reopen<br>- Modify'
+          enum:
+          - CreditDebitPreferences
+          - Reopen
+          - Modify
+        address:
+          type: object
+          allOf:
+          - $ref: '#/components/schemas/AddressDetails'
+        branch_code:
+          type: string
+          xml:
+            name: BranchCode
+          description: Citi internal branch code associated with a virtual account number.
+          maxLength: 4
+        credit_debit_preferences:
+          type: object
+          allOf:
+          - $ref: '#/components/schemas/CreditDebitPreference'
+        tax_payer_id:
+          type: string
+          xml:
+            name: TaxPayerId
+          description: Tax payer ID to which entity the previously mentioned virtual account is assigned to.<br><br>This parameter is mandatory only when the action = 'Modify'.
+          maxLength: 10
+        virtual_account_number:
+          type: string
+          xml:
+            name: VirtualAccountNumber
+          description: specifies the virtual account that has to be updated.
+          maxLength: 40
+      xml:
+        name: UpdateVirtualAccounts
+    AddressDetails:
+      type: object
+      properties:
+        address_line_1:
+          type: string
+          xml:
+            name: AddressLine1
+          description: AddressLine-1 is to be provided by client, Information that locates and identifies a specific address, as defined by postal services, presented in free-form text.
+          maxLength: 105
+        address_line_2:
+          type: string
+          xml:
+            name: AddressLine2
+          description: AddressLine-2 is to be provided by client, Information that locates and identifies a specific address, as defined by postal services, presented in free-form text.
+          maxLength: 105
+        address_line_3:
+          type: string
+          xml:
+            name: AddressLine3
+          description: AddressLine-3 is to be provided by client, Information that locates and identifies a specific address, as defined by postal services, presented in free-form text.
+          maxLength: 105
+        address_line_4:
+          type: string
+          xml:
+            name: AddressLine4
+          description: AddressLine-4 is to be provided by client, Information that locates and identifies a specific address, as defined by postal services, presented in free-form text.
+          maxLength: 105
+      description: Address Details of the entity to which the previously mentioned Virtual Account is assigned to.<br><br> This parameter is conditionally mandatory only for action = 'Modify'.
+    CreditDebitPreference:
+      type: object
+      properties:
+        disallow_credit:
+          type: string
+          xml:
+            name: DisallowCredit
+          description: Indicative parameter as No 'N' or Yes 'Y' to disallow or Allow Credit posting for the previously mentioned Virtual Account
+          minLength: 1
+          maxLength: 10
+        disallow_debit:
+          type: string
+          xml:
+            name: DisallowDebit
+          description: Indicative parameter as No 'N' or Yes 'Y' to disallow or Allow Debit posting for the previously mentioned Virtual Account
+          minLength: 1
+          maxLength: 10
     ErrorDetail:
       type: object
       properties:
@@ -514,47 +538,53 @@ components:
           description: Physical account in a VAM structure.
           maxLength: 40
       description: Describes the Virtual Account Creation APIs request parameters.
-    CreditDebitPreference:
-      type: object
+    ErrorResponse:
       properties:
-        disallow_credit:
+        code:
           type: string
           xml:
-            name: DisallowCredit
-          description: Indicative parameter as No 'N' or Yes 'Y' to disallow or Allow Credit posting for the previously mentioned Virtual Account
-          minLength: 1
+            name: Code
+          description: The code which categorize the https error, to compile recognize at application, i.e. CC00003,CC00004,CC00005 etc
           maxLength: 10
-        disallow_debit:
-          type: string
+          pattern: \w*\W*
+        error_details:
+          type: array
           xml:
-            name: DisallowDebit
-          description: Indicative parameter as No 'N' or Yes 'Y' to disallow or Allow Debit posting for the previously mentioned Virtual Account
-          minLength: 1
-          maxLength: 10
-    VirtualAccountResponse:
-      required:
-      - message
-      - request_id
-      - status
-      properties:
+            name: ErrorDetails
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          maxItems: 10
         message:
           type: string
           xml:
             name: Message
-          description: Detailed response description for given request.
-          maxLength: 400
-        request_id:
+          description: message for error
+          maxLength: 60
+          pattern: \w*\W*
+        ref_id:
           type: string
           xml:
-            name: RequestId
-          description: Auto-generated unique identification assigned for the request.
-          maxLength: 40
+            name: RefId
+          description: unique reference ID for a particular request
+          maxLength: 60
+          pattern: \w*\W*
         status:
           type: string
           xml:
             name: Status
-          description: Status of the request.
-          maxLength: 20
+          description: https status code
+          maxLength: 3
+          pattern: \w*\W*
+        httpMessage:
+          type: string
+        httpCode:
+          type: string
+        moreInformation:
+          type: string
+      xml:
+        name: ErrorMessage
+      description: Description of Error
     Account:
       type: object
       required:
@@ -664,130 +694,100 @@ components:
           maxLength: 40
       xml:
         name: Account
-    ErrorResponse:
+    VirtualAccountResponse:
+      required:
+      - message
+      - request_id
+      - status
       properties:
-        code:
-          type: string
-          xml:
-            name: Code
-          description: The code which categorize the https error, to compile recognize at application, i.e. CC00003,CC00004,CC00005 etc
-          maxLength: 10
-          pattern: \w*\W*
-        error_details:
-          type: array
-          xml:
-            name: ErrorDetails
-            wrapped: true
-          items:
-            $ref: '#/components/schemas/ErrorDetail'
-          maxItems: 10
         message:
           type: string
           xml:
             name: Message
-          description: message for error
-          maxLength: 60
-          pattern: \w*\W*
-        ref_id:
+          description: Detailed response description for given request.
+          maxLength: 400
+        request_id:
           type: string
           xml:
-            name: RefId
-          description: unique reference ID for a particular request
-          maxLength: 60
-          pattern: \w*\W*
+            name: RequestId
+          description: Auto-generated unique identification assigned for the request.
+          maxLength: 40
         status:
           type: string
           xml:
             name: Status
-          description: https status code
-          maxLength: 3
-          pattern: \w*\W*
-        httpMessage:
-          type: string
-        httpCode:
-          type: string
-        moreInformation:
-          type: string
-      xml:
-        name: ErrorMessage
-      description: Description of Error
-    UpdateVirtualAccounts:
-      required:
-      - action
-      - branch_code
-      - virtual_account_number
-      properties:
-        account_description:
-          type: string
-          xml:
-            name: AccountDescription
-          description: Description for the previously mentioned virtual account. <br><br> This parameter is conditional if the action = 'Modify'.
-          maxLength: 105
-        action:
-          type: string
-          xml:
-            name: Action
-          description: 'Type of action that will be applied to virtual account. Actions that can be chosen are: <br>- CreditDebitPreferences<br>- Reopen<br>- Modify'
-          enum:
-          - CreditDebitPreferences
-          - Reopen
-          - Modify
+          description: Status of the request.
+          maxLength: 20
+  examples:
+    Modify-Virtual-Account-Response:
+      value:
+        request_id: 560-c6aa-4061-9038-bdb53da20d1084984
+        status: success
+        message: Request accepted Successfully
+    Virtual-Account-Activation-Request:
+      value:
+        api_version: '1.0'
+        action: activation
+        branch_code: '920'
+        virtual_header_account: '54444598'
+        contact_first_name: RAVI6
+        contact_last_name: SATPUTE6
+        contact_email: raviksatpute6@citi.com
+        contact_phone: +91-9762615353
+        accounts:
+        - virtual_header_account: '54444598'
+          virtual_account_number: '54535799'
+          alternate_account_number: '54535799'
+          reporting_account_number: '54444598'
+          tax_identification_number: '12345678'
+          purpose_of_virtual_account: C
+          name: David
+          address_line_1: address
+          virtual_account_balance_display_option: Y
+          balance_control_option: O
+    Virtual-Account-Get-Response:
+      value:
+        request_id: b8f-d8e5-4a48-ad13-5d1ec8bb32e858066
+        status: success
+        message: Request accepted Successfully
+    Virtual-Account-Activation-Response:
+      value:
+        request_id: 560-c6aa-4061-9038-bdb53da20d1084976
+        status: success
+        message: Request accepted Successfully
+    Virtual-Account-Modify-Request:
+      value:
+        virtual_account_number: '54390868'
+        action: Modify
+        branch_code: '920'
+        account_description: VA Account
+        tax_payer_id: '12345678'
         address:
-          type: object
-          allOf:
-          - $ref: '#/components/schemas/AddressDetails'
-        branch_code:
-          type: string
-          xml:
-            name: BranchCode
-          description: Citi internal branch code associated with a virtual account number.
-          maxLength: 4
-        credit_debit_preferences:
-          type: object
-          allOf:
-          - $ref: '#/components/schemas/CreditDebitPreference'
-        tax_payer_id:
-          type: string
-          xml:
-            name: TaxPayerId
-          description: Tax payer ID to which entity the previously mentioned virtual account is assigned to.<br><br>This parameter is mandatory only when the action = 'Modify'.
-          maxLength: 10
-        virtual_account_number:
-          type: string
-          xml:
-            name: VirtualAccountNumber
-          description: specifies the virtual account that has to be updated.
-          maxLength: 40
-      xml:
-        name: UpdateVirtualAccounts
-    AddressDetails:
-      type: object
-      properties:
-        address_line_1:
-          type: string
-          xml:
-            name: AddressLine1
-          description: AddressLine-1 is to be provided by client, Information that locates and identifies a specific address, as defined by postal services, presented in free-form text.
-          maxLength: 105
-        address_line_2:
-          type: string
-          xml:
-            name: AddressLine2
-          description: AddressLine-2 is to be provided by client, Information that locates and identifies a specific address, as defined by postal services, presented in free-form text.
-          maxLength: 105
-        address_line_3:
-          type: string
-          xml:
-            name: AddressLine3
-          description: AddressLine-3 is to be provided by client, Information that locates and identifies a specific address, as defined by postal services, presented in free-form text.
-          maxLength: 105
-        address_line_4:
-          type: string
-          xml:
-            name: AddressLine4
-          description: AddressLine-4 is to be provided by client, Information that locates and identifies a specific address, as defined by postal services, presented in free-form text.
-          maxLength: 105
-      description: Address Details of the entity to which the previously mentioned Virtual Account is assigned to.<br><br> This parameter is conditionally mandatory only for action = 'Modify'.
+          address_line_1: Robn Society
+          address_line_2: Ring Road
+          address_line_3: RJ, Surat-395010
+          address_line_4: Gujarat
+    Virtual-Account-Delete-Request:
+      value:
+        request_id: 912-1b37-449a-9e1a-3401d7ab7d8384945
+        status: success
+        message: Request accepted Successfully
+    Virtual-Account-Reservation-Request:
+      value:
+        api_version: '1.0'
+        action: reservation
+        branch_code: '920'
+        number_of_accounts_required: 4
+        virtual_header_account: '54444598'
+        contact_first_name: RAVI6
+        contact_last_name: SATPUTE6
+        contact_email: raviksatpute6@citi.com
+        contact_phone: +91-9762615353
+    Virtual-Account-Reservation-Response:
+      value:
+        request_id: 560-c6aa-4061-9038-bdb53da20d1084973
+        status: success
+        message: Request accepted Successfully
   securitySchemes:
     clientCredentials:
       description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.
