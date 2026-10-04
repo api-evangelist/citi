@@ -200,26 +200,22 @@ paths:
                 responseMessage: Internal Server Error. Please try again or contact Citi support.
 components:
   schemas:
-    NotificationResponseMessage:
+    CurfewTime:
       type: object
       properties:
-        httpResponse:
-          type: integer
-          format: int64
-          description: Notification response status code.
-        responseMessage:
+        startTime:
           type: string
-          description: Notification response message.
-    MerchantId:
-      type: object
-      properties:
-        merchantId:
+          description: Specifies the start time until which the virtual card account can be used on the particular day specified in weekDaysEffective. Format - 24-hour format<br>Mastercard - Optional<br>Visa - Not applicable
+        endTime:
           type: string
-          description: Specifies the Merchant ID that should be allowed / disallowed when transacting with the virtual card. Must always be provided in combination with a Acquirer ID.
-        acquirerId:
-          type: string
-          maxLength: 15
-          description: Specifies the Acquirer ID that should be allowed / disallowed when transacting with the virtual card.<br>Mastercard - Not applicable<br>Visa - Optional
+          description: Specifies the end time until which the virtual card account can be used on the particular day specified in weekDaysEffective. Format - 24-hour format<br>Mastercard - Optional<br>Visa - Not applicable
+        weekdaysEffective:
+          type: array
+          description: 'Specifies the day applied to start and end times.<br>Mastercard - Optional<br>Visa - Not applicable<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN
+
+            '
+          items:
+            type: string
     VcaCreateResponse:
       type: object
       properties:
@@ -353,15 +349,50 @@ components:
         standInVca:
           type: boolean
           description: Indicates whether the VCA details returned are generated from the VCA platform, or a pre-generated VCA from Citi. If "true" is returned then the VCA returned is a pre-generated VCA from Citi. If "false" is returned or if the field is not returned then the VCA returned is from the backend VCA platform.
-    CustomReference:
+    MerchantId:
       type: object
       properties:
-        customReferenceValue:
+        merchantId:
           type: string
-          description: 'Specifies the label of a custom reference field. Mastercard: All field labels included in the template used for this virtual card account request should be included.'
-        customReferenceLabel:
+          description: Specifies the Merchant ID that should be allowed / disallowed when transacting with the virtual card. Must always be provided in combination with a Acquirer ID.
+        acquirerId:
           type: string
-          description: 'Specifies the value of a custom reference field. Mastercard: If the template used for this VCA request identifies a given custom reference field as required, then the value provided in this field cannot be blank.'
+          maxLength: 15
+          description: Specifies the Acquirer ID that should be allowed / disallowed when transacting with the virtual card.<br>Mastercard - Not applicable<br>Visa - Optional
+    TimeOfDay:
+      type: object
+      properties:
+        startTime:
+          type: string
+          description: Specifies the start time from which the virtual card account can be used on the particular day specified in weekDaysEffective. Format - 24-hour format.<br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only.
+        endTime:
+          type: string
+          description: Specifies the end time until which the virtual card account can be used on the particular day specified in weekDaysEffective. Format - 24-hour format.<br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only.
+        weekdayEffective:
+          type: string
+          description: 'Specifies the day applicable to the start and end times defined.<br>Mastercard - Optional<br>Visa - Optional<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN
+
+            '
+    WebhookRequest:
+      type: object
+      properties:
+        eventType:
+          type: string
+          enum:
+          - VCA CREATE
+          description: Client Requested API Name.
+        eventStatus:
+          type: string
+          enum:
+          - CREATED
+          - PENDING
+          - FAILED
+          description: <b>CREATED</b> - Virtual card is created and the details are available. </br><b>PENDING</b> - Required Additional document to create the virtual card. </br><b>FAILED</b> - Unable to process your request. Please try again, or contact Citi support if you have any further questions or comments.
+        alertMessage:
+          type: string
+          description: <b>CREATED</b> - VCA Issuance for {Third Party Entity/Individual name} is completed successfully. </br><b>FAILED</b> - We are unable to issue a VCA for {Third Party Entity/Individual name} at this time. Please try your request again. If this issue persists, please contact Citi support for assistance. </br><b>PENDING</b> - VCA Issuance for {Third Party Entity/Individual name} is pending review. Citi Cards Clients Services will get in touch with you to process further.
+        payload:
+          $ref: '#/components/schemas/VcaCreateResponse'
     SpendVelocityResponse:
       type: object
       properties:
@@ -383,20 +414,25 @@ components:
         resetDay:
           type: number
           description: Select a number between 1-28 to identify the day each month when the control parameter balances should reset to their original value. This field is only applicable if periodType was defined as "1".
-    TimeOfDay:
+    CustomReference:
       type: object
       properties:
-        startTime:
+        customReferenceValue:
           type: string
-          description: Specifies the start time from which the virtual card account can be used on the particular day specified in weekDaysEffective. Format - 24-hour format.<br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only.
-        endTime:
+          description: 'Specifies the label of a custom reference field. Mastercard: All field labels included in the template used for this virtual card account request should be included.'
+        customReferenceLabel:
           type: string
-          description: Specifies the end time until which the virtual card account can be used on the particular day specified in weekDaysEffective. Format - 24-hour format.<br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only.
-        weekdayEffective:
+          description: 'Specifies the value of a custom reference field. Mastercard: If the template used for this VCA request identifies a given custom reference field as required, then the value provided in this field cannot be blank.'
+    NotificationResponseMessage:
+      type: object
+      properties:
+        httpResponse:
+          type: integer
+          format: int64
+          description: Notification response status code.
+        responseMessage:
           type: string
-          description: 'Specifies the day applicable to the start and end times defined.<br>Mastercard - Optional<br>Visa - Optional<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN
-
-            '
+          description: Notification response message.
     MerchantIdResponse:
       type: object
       properties:
@@ -411,42 +447,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MerchantId'
-    CurfewTime:
-      type: object
-      properties:
-        startTime:
-          type: string
-          description: Specifies the start time until which the virtual card account can be used on the particular day specified in weekDaysEffective. Format - 24-hour format<br>Mastercard - Optional<br>Visa - Not applicable
-        endTime:
-          type: string
-          description: Specifies the end time until which the virtual card account can be used on the particular day specified in weekDaysEffective. Format - 24-hour format<br>Mastercard - Optional<br>Visa - Not applicable
-        weekdaysEffective:
-          type: array
-          description: 'Specifies the day applied to start and end times.<br>Mastercard - Optional<br>Visa - Not applicable<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN
-
-            '
-          items:
-            type: string
-    WebhookRequest:
-      type: object
-      properties:
-        eventType:
-          type: string
-          enum:
-          - VCA CREATE
-          description: Client Requested API Name.
-        eventStatus:
-          type: string
-          enum:
-          - CREATED
-          - PENDING
-          - FAILED
-          description: <b>CREATED</b> - Virtual card is created and the details are available. </br><b>PENDING</b> - Required Additional document to create the virtual card. </br><b>FAILED</b> - Unable to process your request. Please try again, or contact Citi support if you have any further questions or comments.
-        alertMessage:
-          type: string
-          description: <b>CREATED</b> - VCA Issuance for {Third Party Entity/Individual name} is completed successfully. </br><b>FAILED</b> - We are unable to issue a VCA for {Third Party Entity/Individual name} at this time. Please try your request again. If this issue persists, please contact Citi support for assistance. </br><b>PENDING</b> - VCA Issuance for {Third Party Entity/Individual name} is pending review. Citi Cards Clients Services will get in touch with you to process further.
-        payload:
-          $ref: '#/components/schemas/VcaCreateResponse'
   securitySchemes:
     BasicAuth:
       type: http

@@ -94,6 +94,20 @@ paths:
       - Create
 components:
   schemas:
+    CurfewTime:
+      type: object
+      properties:
+        startTime:
+          type: string
+          description: Specifies the end time until which the virtual card account can be used on the particular day specified in weekDaysEffective.
+        endTime:
+          type: string
+          description: Specifies the end time until which the virtual card account can be used on the particular day specified in weekDaysEffective.
+        weekdaysEffective:
+          type: array
+          description: Specifies the day applicable to the start and end times defined.
+          items:
+            type: string
     ErrorMessage:
       type: object
       properties:
@@ -267,6 +281,151 @@ components:
           type: integer
           format: int64
           description: Specifies the Acquirer ID that should be allowed / disallowed when transacting with the virtual card. Must always be provided in combination with a Merchant ID.
+    MerchantIdResponse:
+      type: object
+      properties:
+        allowed:
+          type: boolean
+          description: Indicate whether the values in merchantId and acquirerId are allowed or disallowed.True = values provided in merchantId and acquirerId are allowed,False = values provided in merchantId and acquirerId are not allowed
+        cardAcceptorId:
+          type: string
+          description: Specifies the Card Acceptor ID that should be allowed / disallowed when transacting with the virtual card
+        merchantIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/MerchantId'
+    CreateVirtualCardFailureResponse:
+      type: object
+      properties:
+        vcaId:
+          type: string
+          description: A reference number that uniquely identifies the virtual card account.
+        cardImage:
+          type: string
+          description: A visual representation of the virtual card account front and back.
+        currencyCode:
+          type: string
+          description: Currency Code in which VCA amounts are expressed.
+        timeZone:
+          type: string
+          description: Defines the time zone applicable for any date or time parameters within controls set for a VCA.
+        virtualCardAccountNumber:
+          type: string
+          description: The virtual card account number to use for transactions.
+        expiryDate:
+          type: string
+          description: 'Expiry Date of the virtual card account. '
+        securityCode:
+          type: string
+          description: The security code (i.e. cvv) corresponding to the virtual card accunt.
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+        programId:
+          type: string
+          description: Unique ID of the company record defined in the virtual cards system.
+        messageId:
+          type: string
+          description: Unique ID of the API message sent. The messageId will be provided back in the corresponding response. The ID can be used for investigation and troubleshooting. The ID must be unique per integration.
+        mccGrouping:
+          type: array
+          description: Limits authorizations to defined Merchant Category Codes.
+          items:
+            type: string
+        currencyType:
+          type: string
+          description: Defines the type of the VCA currency. - Value B stands for Billing Currency which indicates that the VCA currency is equal to the billing currency of the underlying funding source. - Value M stands for Merchant Currency which indicates that the VCA currency is expressed in merchant currency and not in billing currency.
+        paymentBeneficiaryId:
+          type: number
+          description: Uniquely identifies the payment beneficiary for which the virtual card is created.
+        paymentBeneficiaryEmails:
+          type: array
+          description: Specifies up to five email addresses to which the virtual card account details should be delivered. Email addresses specified in the request will not override any default email addresses specified in the virtual card application.
+          items:
+            type: string
+        customReference:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomReference'
+        templateId:
+          type: number
+          description: Identifies the template that was setup in the VCA system and that should be used for this virtual card.The template setup in the VCA system defines which controls, custom data fields and MCC groupings can be used.
+        cumulativeSpendLimit:
+          type: number
+          format: bigdecimal
+          description: 'Limits the overall amount spend on the virtual card account. '
+        enableSpendVelocityControl:
+          type: boolean
+          description: Limits the frequency and total cumulative amount of authorizations performed on the VCA within a specified period.
+        spendVelocity:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpendVelocityResponse'
+        enableValidityPeriodControl:
+          type: boolean
+          description: 'Limits authorization activity to a specific time period. '
+        validityStartDate:
+          type: string
+          description: Identifies the date from which the virtual card account can be used for transactions.
+        validityEndDate:
+          type: string
+          description: Identifies the date until which the virtual card account can be used for transactions.
+        enableAmountRangeControl:
+          type: boolean
+          description: Approves a transaction only if the requested amount for authorization is equal to or greater than the Minimum Amount and less than or equal to the Maximum Amount.
+        maxAmount:
+          type: number
+          format: bigdecimal
+          description: Identifies the maximum allowed transaction amount.
+        minAmount:
+          type: number
+          format: bigdecimal
+          description: Identifies the minimum allowed transaction amount.
+        enableTransactionLimitControl:
+          type: boolean
+          description: Limits individual transactions to a maximum amount.
+        amountLimit:
+          type: number
+          format: bigdecimal
+          description: Identifies the maximum allowed transaction amount.
+        enableCurfewControl:
+          type: boolean
+          description: Limits authorization activity to a single time period for each day selected.
+        curfewTime:
+          $ref: '#/components/schemas/CurfewTime'
+        enableTimeOfDayControl:
+          type: boolean
+          description: 'Limits authorization request to defined time periods each day. '
+        timeOfDay:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeOfDay'
+        enableAgingVelocityControl:
+          type: boolean
+          description: Sets a cumulative amount and keeps track of the current remaining balance. Allows the requester to age off approved authorization requests that have not been cleared by the merchant after a defined number of days.
+        authorizationHoldDays:
+          type: number
+          format: long
+          description: Identifies the number of days after which an authorization gets aged off if no matching clearing record was received.
+        enableGeographyControl:
+          type: boolean
+          description: 'Limits authorization requests to a defined geographic location. '
+        countryCodes:
+          type: array
+          description: Defines the merchant country in which the VCA can be used.
+          items:
+            type: string
+        allowed:
+          type: boolean
+          description: Indicate whether the values in countryCode are allowed or disallowed.
+        enableMerchantIdControl:
+          type: boolean
+          description: Limits authorizations to a particular merchant using the Merchant ID and Acquirer ID (Mastercard) or Card Acceptor ID (Visa).
+        merchantInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/MerchantIdResponse'
     CreateVirtualCardResponse:
       type: object
       properties:
@@ -404,147 +563,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MerchantIdResponse'
-    CustomReference:
-      type: object
-      properties:
-        customReferenceValue:
-          type: string
-          description: 'Specifies the label of a custom reference field.Mastercard: All field labels included in the template used for this virtual card account request should be included.'
-        customReferenceLabel:
-          type: string
-          description: 'Specifies the value of a custom reference field. Mastercard: If the template used for this VCA request identifies a given custom reference field as required, then the value provided in this field cannot be blank.'
-    CreateVirtualCardFailureResponse:
-      type: object
-      properties:
-        vcaId:
-          type: string
-          description: A reference number that uniquely identifies the virtual card account.
-        cardImage:
-          type: string
-          description: A visual representation of the virtual card account front and back.
-        currencyCode:
-          type: string
-          description: Currency Code in which VCA amounts are expressed.
-        timeZone:
-          type: string
-          description: Defines the time zone applicable for any date or time parameters within controls set for a VCA.
-        virtualCardAccountNumber:
-          type: string
-          description: The virtual card account number to use for transactions.
-        expiryDate:
-          type: string
-          description: 'Expiry Date of the virtual card account. '
-        securityCode:
-          type: string
-          description: The security code (i.e. cvv) corresponding to the virtual card accunt.
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorMessage'
-        programId:
-          type: string
-          description: Unique ID of the company record defined in the virtual cards system.
-        messageId:
-          type: string
-          description: Unique ID of the API message sent. The messageId will be provided back in the corresponding response. The ID can be used for investigation and troubleshooting. The ID must be unique per integration.
-        mccGrouping:
-          type: array
-          description: Limits authorizations to defined Merchant Category Codes.
-          items:
-            type: string
-        currencyType:
-          type: string
-          description: Defines the type of the VCA currency. - Value B stands for Billing Currency which indicates that the VCA currency is equal to the billing currency of the underlying funding source. - Value M stands for Merchant Currency which indicates that the VCA currency is expressed in merchant currency and not in billing currency.
-        paymentBeneficiaryId:
-          type: number
-          description: Uniquely identifies the payment beneficiary for which the virtual card is created.
-        paymentBeneficiaryEmails:
-          type: array
-          description: Specifies up to five email addresses to which the virtual card account details should be delivered. Email addresses specified in the request will not override any default email addresses specified in the virtual card application.
-          items:
-            type: string
-        customReference:
-          type: array
-          items:
-            $ref: '#/components/schemas/CustomReference'
-        templateId:
-          type: number
-          description: Identifies the template that was setup in the VCA system and that should be used for this virtual card.The template setup in the VCA system defines which controls, custom data fields and MCC groupings can be used.
-        cumulativeSpendLimit:
-          type: number
-          format: bigdecimal
-          description: 'Limits the overall amount spend on the virtual card account. '
-        enableSpendVelocityControl:
-          type: boolean
-          description: Limits the frequency and total cumulative amount of authorizations performed on the VCA within a specified period.
-        spendVelocity:
-          type: array
-          items:
-            $ref: '#/components/schemas/SpendVelocityResponse'
-        enableValidityPeriodControl:
-          type: boolean
-          description: 'Limits authorization activity to a specific time period. '
-        validityStartDate:
-          type: string
-          description: Identifies the date from which the virtual card account can be used for transactions.
-        validityEndDate:
-          type: string
-          description: Identifies the date until which the virtual card account can be used for transactions.
-        enableAmountRangeControl:
-          type: boolean
-          description: Approves a transaction only if the requested amount for authorization is equal to or greater than the Minimum Amount and less than or equal to the Maximum Amount.
-        maxAmount:
-          type: number
-          format: bigdecimal
-          description: Identifies the maximum allowed transaction amount.
-        minAmount:
-          type: number
-          format: bigdecimal
-          description: Identifies the minimum allowed transaction amount.
-        enableTransactionLimitControl:
-          type: boolean
-          description: Limits individual transactions to a maximum amount.
-        amountLimit:
-          type: number
-          format: bigdecimal
-          description: Identifies the maximum allowed transaction amount.
-        enableCurfewControl:
-          type: boolean
-          description: Limits authorization activity to a single time period for each day selected.
-        curfewTime:
-          $ref: '#/components/schemas/CurfewTime'
-        enableTimeOfDayControl:
-          type: boolean
-          description: 'Limits authorization request to defined time periods each day. '
-        timeOfDay:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimeOfDay'
-        enableAgingVelocityControl:
-          type: boolean
-          description: Sets a cumulative amount and keeps track of the current remaining balance. Allows the requester to age off approved authorization requests that have not been cleared by the merchant after a defined number of days.
-        authorizationHoldDays:
-          type: number
-          format: long
-          description: Identifies the number of days after which an authorization gets aged off if no matching clearing record was received.
-        enableGeographyControl:
-          type: boolean
-          description: 'Limits authorization requests to a defined geographic location. '
-        countryCodes:
-          type: array
-          description: Defines the merchant country in which the VCA can be used.
-          items:
-            type: string
-        allowed:
-          type: boolean
-          description: Indicate whether the values in countryCode are allowed or disallowed.
-        enableMerchantIdControl:
-          type: boolean
-          description: Limits authorizations to a particular merchant using the Merchant ID and Acquirer ID (Mastercard) or Card Acceptor ID (Visa).
-        merchantInfo:
-          type: array
-          items:
-            $ref: '#/components/schemas/MerchantIdResponse'
     SpendVelocityResponse:
       type: object
       properties:
@@ -565,6 +583,15 @@ components:
         periodEndDate:
           type: string
           description: End date of the current period based on the periodType selected.
+    CustomReference:
+      type: object
+      properties:
+        customReferenceValue:
+          type: string
+          description: 'Specifies the label of a custom reference field.Mastercard: All field labels included in the template used for this virtual card account request should be included.'
+        customReferenceLabel:
+          type: string
+          description: 'Specifies the value of a custom reference field. Mastercard: If the template used for this VCA request identifies a given custom reference field as required, then the value provided in this field cannot be blank.'
     CreateVirtualCardRequest:
       type: object
       properties:
@@ -710,18 +737,6 @@ components:
           description: Limits authorizations to a particular merchant using the Merchant ID and Acquirer ID (Mastercard) or Card Acceptor ID (Visa).
         merchantId:
           $ref: '#/components/schemas/MerchantIdRequest'
-    TimeOfDay:
-      type: object
-      properties:
-        startTime:
-          type: string
-          description: Specifies the start time from which the virtual card account can be used on the particular day specified in weekDaysEffective.
-        endTime:
-          type: string
-          description: Specifies the end time until which the virtual card account can be used on the particular day specified in weekDaysEffective.
-        weekdayEffective:
-          type: string
-          description: Specifies the day applicable to the start and end times defined.
     MerchantIdRequest:
       type: object
       properties:
@@ -738,33 +753,18 @@ components:
           type: integer
           format: int64
           description: Specifies the Acquirer ID that should be allowed / disallowed when transacting with the virtual card. Must always be provided in combination with a Merchant ID.
-    MerchantIdResponse:
-      type: object
-      properties:
-        allowed:
-          type: boolean
-          description: Indicate whether the values in merchantId and acquirerId are allowed or disallowed.True = values provided in merchantId and acquirerId are allowed,False = values provided in merchantId and acquirerId are not allowed
-        cardAcceptorId:
-          type: string
-          description: Specifies the Card Acceptor ID that should be allowed / disallowed when transacting with the virtual card
-        merchantIds:
-          type: array
-          items:
-            $ref: '#/components/schemas/MerchantId'
-    CurfewTime:
+    TimeOfDay:
       type: object
       properties:
         startTime:
           type: string
-          description: Specifies the end time until which the virtual card account can be used on the particular day specified in weekDaysEffective.
+          description: Specifies the start time from which the virtual card account can be used on the particular day specified in weekDaysEffective.
         endTime:
           type: string
           description: Specifies the end time until which the virtual card account can be used on the particular day specified in weekDaysEffective.
-        weekdaysEffective:
-          type: array
+        weekdayEffective:
+          type: string
           description: Specifies the day applicable to the start and end times defined.
-          items:
-            type: string
     SpendVelocityRequest:
       type: object
       properties:

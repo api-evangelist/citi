@@ -268,44 +268,208 @@ paths:
       tags:
       - Direct Debits
 components:
+  parameters:
+    End-To-End-Id:
+      name: end_to_end_id
+      in: query
+      required: true
+      description: This parameter is to inquire the current status of the initiated direct debit transaction,which client send as part of direct debit initiation request. Either end_to_end_id or uetr should be passed.
+      schema:
+        type: string
+        pattern: ^[A-Z0-9]{1,35}?$
+        example: AUD001X8
+    Idempotency-Id:
+      name: Idempotency-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+        example: a44cbb60123414bba3bb
+      description: Your unique identification for a POST request for CitiConnect API to perform idempotency check. Same `client_ID` is to be maintained by the client, if client wants to retry request within 48 hours.
+    Country:
+      name: country
+      in: query
+      required: true
+      description: This parameter specifies the country for which the direct debit transaction is initiated
+      schema:
+        type: string
+        pattern: ^[A-Z]{2}?$
+        example: AU
+    Client-Id:
+      name: client_id
+      in: query
+      description: Unique reference which was shared during CitiConnect API on-boarding (`ClientId` which used during oauth token generation).
+      required: true
+      schema:
+        type: string
+        example: 4683fd9f-03fe-4268-b5da-93bf8203fd91
+    Uetr:
+      name: uetr
+      in: query
+      required: true
+      description: This parameter is to inquire the current status of initiated direct debit transaction, which client receive as part of direct debit initiation response. Either uetr or end_to_end_id should be passed.
+      schema:
+        type: string
+        pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+        example: e82540a1-bab9-41f3-b17a-f9b3ee27983f
+  examples:
+    Internal-Server-Error:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - code: CC00004
+          issue: unable to serve your request at this moment
+          action: Please refer to documentation provided or contact support team
+    Unsupported-Media-Type:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - code: CC00002
+          issue: Media type not supported
+          action: please use valid content-type in header
+    Gateway-Method-Not-Allowed:
+      value:
+        httpCode: '405'
+        httpMessage: Method Not Allowed
+        moreInformation: The method is not allowed for the requested URL
+    Forbidden:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - code: CC00008
+          issue: User does not have privilege to access this functionality
+          action: please reach out to support team to enable this feature
+    Method-Not-Allowed:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - code: CC00001
+          issue: Method not supported
+          action: please use valid http verb
+    Not-Found:
+      value:
+        httpCode: '404'
+        httpMessage: Not Found
+        moreInformation: No resources match requested URI
+    Gateway-Un-Authorized:
+      value:
+        httpCode: '401'
+        httpMessage: Unauthorized
+        moreInformation: Invalid client identification
+    Idempotency-Duplication:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        errors:
+        - code: VC00016
+          issue: Idempotency-Id provided is currently being used in another request
+          action: please do not repeat the same request again
+    Too-Many-Request:
+      value:
+        status: '429'
+        message: Requests are exceeding the allowed limit
+    Gateway-Internal-Server-Error:
+      value:
+        status: '500'
+        message: Internal Server Error
+    Un-Authorized:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627901
+        errors:
+        - code: CC00007
+          issue: User does not have authorization to access
+          action: Please use valid credentials to acccess this functionality
+  responses:
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            InternalServerError:
+              $ref: '#/components/examples/Internal-Server-Error'
+            GatewayInternalServerError:
+              $ref: '#/components/examples/Gateway-Internal-Server-Error'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Apim-Error'
+          examples:
+            UnsupportedMediaType:
+              $ref: '#/components/examples/Unsupported-Media-Type'
+    Too-Many-Request:
+      description: Too Many Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Apim-Json-Error'
+          examples:
+            TooManyRequest:
+              $ref: '#/components/examples/Too-Many-Request'
+    Idempotency-Duplication:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            IdempotencyDuplicationExample:
+              $ref: '#/components/examples/Idempotency-Duplication'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Forbidden:
+              $ref: '#/components/examples/Forbidden'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            MethodNotAllowed:
+              $ref: '#/components/examples/Method-Not-Allowed'
+            GatewayMethodNotAllowed:
+              $ref: '#/components/examples/Gateway-Method-Not-Allowed'
+    Un-Authorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized:
+              $ref: '#/components/examples/Un-Authorized'
+            GatewayUnauthorized:
+              $ref: '#/components/examples/Gateway-Un-Authorized'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Apim-Error'
+          examples:
+            NotFound:
+              $ref: '#/components/examples/Not-Found'
   schemas:
-    Error-Detail:
-      title: ErrorDetail
+    Mandate-Details:
+      title: MandateDetails
       type: object
       properties:
-        code:
-          title: code
+        mandate_id:
+          title: mandate_id
           type: string
-          maxLength: 7
-          description: Unique ID for the error code
-        issue:
-          title: issue
-          type: string
-          maxLength: 200
-          description: more details about the  issue
-        action:
-          title: action
-          type: string
-          maxLength: 350
-          description: corrective action to be taken to resolve above issue
-    Ultimate:
-      title: Ultimate
-      type: object
-      properties:
-        ultimate_creditor_name:
-          title: ultimate_creditor_name
-          type: string
+          description: Specify unique identification, as assigned by the clearing scheme, to unambiguously identify the mandate.<BR> This parameter is mandatory for Australia.
           minLength: 1
           maxLength: 35
-          description: Specify the name by which the ultimate creditor is known and which is usually used to identify that party.<BR> This parameter is mandatory for Australia, If Purporse = PENS and `unique_superannuation_code` and `unique_superannuation_identification` parameters are present.
-          example: Australia
-        ultimate_debtor_name:
-          title: ultimate_debtor_name
-          type: string
-          minLength: 1
-          maxLength: 35
-          description: Specify the name by which the ultimate debtor is known and which is usually used to identify that party.
-          example: Australia
+          example: ADDAES100C3
     Debtor:
       title: Debtor
       type: object
@@ -408,6 +572,18 @@ components:
           $ref: '#/components/schemas/Mandate-Details'
         ultimate:
           $ref: '#/components/schemas/Ultimate'
+    Apim-Json-Error:
+      title: ApimJsonError
+      type: object
+      properties:
+        status:
+          title: status
+          type: string
+          description: Http status code of this API response
+        message:
+          title: message
+          type: string
+          description: Short message about the issue
     Transaction:
       title: Transaction
       type: object
@@ -481,18 +657,39 @@ components:
           description: Specifies a character string with a maximum length of 35 ASCII printable characters.<BR>for Australia. If Purporse = PENS, then `unique_superannuation_code` and `unique_superannuation_identification` should be mandatory, else both parameters or optional even the Purpose = PENS.
           minLength: 1
           maxLength: 35
-    Apim-Json-Error:
-      title: ApimJsonError
+    Method:
+      title: Method
       type: object
+      required:
+      - country
+      - instructed_currency
+      - payment_method
+      - payment_type
       properties:
-        status:
-          title: status
+        country:
+          title: country
           type: string
-          description: Http status code of this API response
-        message:
-          title: message
+          description: Specify the country code where the collection request has been originated.
+          pattern: ^[A-Z]{2}?$
+          example: AU
+        instructed_currency:
+          title: instructed_currency
           type: string
-          description: Short message about the issue
+          description: Specify the collection account currency. for Australia accepted value = AUD.
+          pattern: ^[A-Z]{3}?$
+          example: AUD
+        payment_method:
+          title: payment_method
+          type: string
+          enum:
+          - IP
+          description: Specifies the means of payment that will be used to move the amount of money.<BR> IP - Instant Payment
+        payment_type:
+          title: payment_type
+          type: string
+          enum:
+          - DD
+          description: Set of elements used to further specify the type of transaction. <BR> DD - Direct Debit
     Initiating-Party:
       title: InitiatingParty
       type: object
@@ -532,53 +729,6 @@ components:
           maxLength: 35
           description: Specify the value of an organization/private identification. <br> This parameter is mandatory for Australia.
           example: AU1SACITIAU2XXXX
-    Method:
-      title: Method
-      type: object
-      required:
-      - country
-      - instructed_currency
-      - payment_method
-      - payment_type
-      properties:
-        country:
-          title: country
-          type: string
-          description: Specify the country code where the collection request has been originated.
-          pattern: ^[A-Z]{2}?$
-          example: AU
-        instructed_currency:
-          title: instructed_currency
-          type: string
-          description: Specify the collection account currency. for Australia accepted value = AUD.
-          pattern: ^[A-Z]{3}?$
-          example: AUD
-        payment_method:
-          title: payment_method
-          type: string
-          enum:
-          - IP
-          description: Specifies the means of payment that will be used to move the amount of money.<BR> IP - Instant Payment
-        payment_type:
-          title: payment_type
-          type: string
-          enum:
-          - DD
-          description: Set of elements used to further specify the type of transaction. <BR> DD - Direct Debit
-    Error-Response:
-      title: ErrorResponse
-      type: object
-      properties:
-        ref_id:
-          title: ref_id
-          type: string
-          maxLength: 60
-          description: Unique ID for the Transaction
-        error_details:
-          title: error_details
-          type: array
-          items:
-            $ref: '#/components/schemas/Error-Detail'
     Reason:
       title: Reason
       type: object
@@ -591,35 +741,56 @@ components:
           title: issue
           type: string
           description: This parameter will have description for the reason code.
-    Transaction-Status:
-      title: TransactionStatus
+    Ultimate:
+      title: Ultimate
       type: object
       properties:
-        status:
-          title: status
+        ultimate_creditor_name:
+          title: ultimate_creditor_name
           type: string
-          maxLength: 4
-          description: This parameter will have the current status of the iniated direct debit transaction. Possible vaule ACCC, ACSC, ACSP, PDNG and RJCT
-        status_date_time:
-          title: status_date_time
-          type: string
-          description: This parameter will have the date and time of the last updated status (YYYY-MM-DDTHH:MM:SS.SSSZ).
-          pattern: ^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3})Z$
-        reason:
-          type: array
-          items:
-            $ref: '#/components/schemas/Reason'
-    Mandate-Details:
-      title: MandateDetails
-      type: object
-      properties:
-        mandate_id:
-          title: mandate_id
-          type: string
-          description: Specify unique identification, as assigned by the clearing scheme, to unambiguously identify the mandate.<BR> This parameter is mandatory for Australia.
           minLength: 1
           maxLength: 35
-          example: ADDAES100C3
+          description: Specify the name by which the ultimate creditor is known and which is usually used to identify that party.<BR> This parameter is mandatory for Australia, If Purporse = PENS and `unique_superannuation_code` and `unique_superannuation_identification` parameters are present.
+          example: Australia
+        ultimate_debtor_name:
+          title: ultimate_debtor_name
+          type: string
+          minLength: 1
+          maxLength: 35
+          description: Specify the name by which the ultimate debtor is known and which is usually used to identify that party.
+          example: Australia
+    Idd-Response:
+      title: IddResponse
+      type: object
+      properties:
+        debtor:
+          $ref: '#/components/schemas/Debtor'
+        creditor:
+          $ref: '#/components/schemas/Creditor'
+        initiating_party:
+          $ref: '#/components/schemas/Initiating-Party'
+        method:
+          $ref: '#/components/schemas/Method'
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+        mandate_details:
+          $ref: '#/components/schemas/Mandate-Details'
+        ultimate:
+          $ref: '#/components/schemas/Ultimate'
+        transaction_status:
+          title: IddResponseTransactionStatus
+          type: object
+          properties:
+            status:
+              title: status
+              type: string
+              maxLength: 4
+              description: This parameter will have the current status of the iniated direct debit transaction. Possible vaule ACCC, ACSC, ACSP, PDNG and RJCT
+            status_date_time:
+              title: status_date_time
+              type: string
+              description: This parameter will have the date and time of the last updated status (YYYY-MM-DDTHH:MM:SS.SSSZ).
+              pattern: ^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3})Z$
     Creditor:
       title: Creditor
       type: object
@@ -696,6 +867,61 @@ components:
           description: Specify the code allocated to a financial institution by the ISO 9362 Registration Authority as described in ISO 9362 Banking - Banking telecommunication messages - Business identifier code (BIC) <BR> Mandatory for Australia.
           pattern: ^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3}){0,1}?$
           example: MUM0IN0M00D
+    Transaction-Status:
+      title: TransactionStatus
+      type: object
+      properties:
+        status:
+          title: status
+          type: string
+          maxLength: 4
+          description: This parameter will have the current status of the iniated direct debit transaction. Possible vaule ACCC, ACSC, ACSP, PDNG and RJCT
+        status_date_time:
+          title: status_date_time
+          type: string
+          description: This parameter will have the date and time of the last updated status (YYYY-MM-DDTHH:MM:SS.SSSZ).
+          pattern: ^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3})Z$
+        reason:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reason'
+    Error-Detail:
+      title: ErrorDetail
+      type: object
+      properties:
+        code:
+          title: code
+          type: string
+          maxLength: 7
+          description: Unique ID for the error code
+        issue:
+          title: issue
+          type: string
+          maxLength: 200
+          description: more details about the  issue
+        action:
+          title: action
+          type: string
+          maxLength: 350
+          description: corrective action to be taken to resolve above issue
+    Apim-Error:
+      title: ApimError
+      type: object
+      properties:
+        httpCode:
+          title: httpCode
+          type: string
+          description: http staus code of this API
+        httpMessage:
+          title: httpMessage
+          type: string
+          description: short message about the issue
+        moreInformation:
+          title: moreInformation
+          type: string
+          description: more information about the issue
+      xml:
+        name: Errormessage
     Idd-Inquire-Response:
       title: IddInquireResponse
       type: object
@@ -716,246 +942,20 @@ components:
           $ref: '#/components/schemas/Ultimate'
         transaction_status:
           $ref: '#/components/schemas/Transaction-Status'
-    Idd-Response:
-      title: IddResponse
+    Error-Response:
+      title: ErrorResponse
       type: object
       properties:
-        debtor:
-          $ref: '#/components/schemas/Debtor'
-        creditor:
-          $ref: '#/components/schemas/Creditor'
-        initiating_party:
-          $ref: '#/components/schemas/Initiating-Party'
-        method:
-          $ref: '#/components/schemas/Method'
-        transaction:
-          $ref: '#/components/schemas/Transaction'
-        mandate_details:
-          $ref: '#/components/schemas/Mandate-Details'
-        ultimate:
-          $ref: '#/components/schemas/Ultimate'
-        transaction_status:
-          title: IddResponseTransactionStatus
-          type: object
-          properties:
-            status:
-              title: status
-              type: string
-              maxLength: 4
-              description: This parameter will have the current status of the iniated direct debit transaction. Possible vaule ACCC, ACSC, ACSP, PDNG and RJCT
-            status_date_time:
-              title: status_date_time
-              type: string
-              description: This parameter will have the date and time of the last updated status (YYYY-MM-DDTHH:MM:SS.SSSZ).
-              pattern: ^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3})Z$
-    Apim-Error:
-      title: ApimError
-      type: object
-      properties:
-        httpCode:
-          title: httpCode
+        ref_id:
+          title: ref_id
           type: string
-          description: http staus code of this API
-        httpMessage:
-          title: httpMessage
-          type: string
-          description: short message about the issue
-        moreInformation:
-          title: moreInformation
-          type: string
-          description: more information about the issue
-      xml:
-        name: Errormessage
-  responses:
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Forbidden:
-              $ref: '#/components/examples/Forbidden'
-    Idempotency-Duplication:
-      description: Conflict
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            IdempotencyDuplicationExample:
-              $ref: '#/components/examples/Idempotency-Duplication'
-    Unsupported-Media-Type:
-      description: Unsupported Media Type
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Apim-Error'
-          examples:
-            UnsupportedMediaType:
-              $ref: '#/components/examples/Unsupported-Media-Type'
-    Too-Many-Request:
-      description: Too Many Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Apim-Json-Error'
-          examples:
-            TooManyRequest:
-              $ref: '#/components/examples/Too-Many-Request'
-    Method-Not-Allowed:
-      description: Method Not Allowed
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            MethodNotAllowed:
-              $ref: '#/components/examples/Method-Not-Allowed'
-            GatewayMethodNotAllowed:
-              $ref: '#/components/examples/Gateway-Method-Not-Allowed'
-    Un-Authorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Unauthorized:
-              $ref: '#/components/examples/Un-Authorized'
-            GatewayUnauthorized:
-              $ref: '#/components/examples/Gateway-Un-Authorized'
-    Internal-Server-Error:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            InternalServerError:
-              $ref: '#/components/examples/Internal-Server-Error'
-            GatewayInternalServerError:
-              $ref: '#/components/examples/Gateway-Internal-Server-Error'
-    Not-Found:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Apim-Error'
-          examples:
-            NotFound:
-              $ref: '#/components/examples/Not-Found'
-  examples:
-    Gateway-Internal-Server-Error:
-      value:
-        status: '500'
-        message: Internal Server Error
-    Forbidden:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
+          maxLength: 60
+          description: Unique ID for the Transaction
         error_details:
-        - code: CC00008
-          issue: User does not have privilege to access this functionality
-          action: please reach out to support team to enable this feature
-    Un-Authorized:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627901
-        errors:
-        - code: CC00007
-          issue: User does not have authorization to access
-          action: Please use valid credentials to acccess this functionality
-    Gateway-Method-Not-Allowed:
-      value:
-        httpCode: '405'
-        httpMessage: Method Not Allowed
-        moreInformation: The method is not allowed for the requested URL
-    Too-Many-Request:
-      value:
-        status: '429'
-        message: Requests are exceeding the allowed limit
-    Method-Not-Allowed:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - code: CC00001
-          issue: Method not supported
-          action: please use valid http verb
-    Internal-Server-Error:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - code: CC00004
-          issue: unable to serve your request at this moment
-          action: Please refer to documentation provided or contact support team
-    Unsupported-Media-Type:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - code: CC00002
-          issue: Media type not supported
-          action: please use valid content-type in header
-    Idempotency-Duplication:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        errors:
-        - code: VC00016
-          issue: Idempotency-Id provided is currently being used in another request
-          action: please do not repeat the same request again
-    Gateway-Un-Authorized:
-      value:
-        httpCode: '401'
-        httpMessage: Unauthorized
-        moreInformation: Invalid client identification
-    Not-Found:
-      value:
-        httpCode: '404'
-        httpMessage: Not Found
-        moreInformation: No resources match requested URI
-  parameters:
-    Uetr:
-      name: uetr
-      in: query
-      required: true
-      description: This parameter is to inquire the current status of initiated direct debit transaction, which client receive as part of direct debit initiation response. Either uetr or end_to_end_id should be passed.
-      schema:
-        type: string
-        pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
-        example: e82540a1-bab9-41f3-b17a-f9b3ee27983f
-    End-To-End-Id:
-      name: end_to_end_id
-      in: query
-      required: true
-      description: This parameter is to inquire the current status of the initiated direct debit transaction,which client send as part of direct debit initiation request. Either end_to_end_id or uetr should be passed.
-      schema:
-        type: string
-        pattern: ^[A-Z0-9]{1,35}?$
-        example: AUD001X8
-    Idempotency-Id:
-      name: Idempotency-Id
-      in: header
-      required: true
-      schema:
-        type: string
-        maxLength: 128
-        example: a44cbb60123414bba3bb
-      description: Your unique identification for a POST request for CitiConnect API to perform idempotency check. Same `client_ID` is to be maintained by the client, if client wants to retry request within 48 hours.
-    Client-Id:
-      name: client_id
-      in: query
-      description: Unique reference which was shared during CitiConnect API on-boarding (`ClientId` which used during oauth token generation).
-      required: true
-      schema:
-        type: string
-        example: 4683fd9f-03fe-4268-b5da-93bf8203fd91
-    Country:
-      name: country
-      in: query
-      required: true
-      description: This parameter specifies the country for which the direct debit transaction is initiated
-      schema:
-        type: string
-        pattern: ^[A-Z]{2}?$
-        example: AU
+          title: error_details
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Detail'
   securitySchemes:
     clientCredentials:
       description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.

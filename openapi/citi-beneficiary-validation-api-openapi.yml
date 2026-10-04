@@ -513,162 +513,421 @@ paths:
       operationId: getBeneficiaryDetails
       summary: Retrieve the Beneficiary details for a given debit and credit account number of…
 components:
-  responses:
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Unauthorized-Example:
-              $ref: '#/components/examples/Unauthorized-Example'
-    Conflict-Pay2China:
-      description: Conflict
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Idempotency-Id-Conflict-Example:
-              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
-            Duplicate-Payment-Conflict-Example:
-              $ref: '#/components/examples/Duplicate-Payment-Conflict-Example'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Idempotency-Id-Conflict-Example:
-              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
-            Duplicate-Payment-Conflict-Example:
-              $ref: '#/components/examples/Duplicate-Payment-Conflict-Example'
-    Unauthorized-Pay2China:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Unauthorized-Example:
-              $ref: '#/components/examples/Unauthorized-Example'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Unauthorized-Example:
-              $ref: '#/components/examples/Unauthorized-Example'
-    Bad-Request-Pay2China:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Bad-Request-Example:
-              $ref: '#/components/examples/Bad-Request-Example'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Bad-Request-Example:
-              $ref: '#/components/examples/Bad-Request-Example'
-    Method-Not-Allowed:
-      description: Method Not Allowed
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Method-Not-Allowed-Example:
-              $ref: '#/components/examples/Method-Not-Allowed-Example'
-    Bad-Request:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Bad-Request-Example:
-              $ref: '#/components/examples/Bad-Request-Example'
-    Method-Not-Allowed-Pay2China:
-      description: Method Not Allowed
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Method-Not-Allowed-Example:
-              $ref: '#/components/examples/Method-Not-Allowed-Example'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Method-Not-Allowed-Example:
-              $ref: '#/components/examples/Method-Not-Allowed-Example'
-    Internal-Server-Error:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Internal-Server-Error-Example:
-              $ref: '#/components/examples/Internal-Server-Error-Example'
-    Internal-Server-Error-Pay2China:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Internal-Server-Error-Example:
-              $ref: '#/components/examples/Internal-Server-Error-Example'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Internal-Server-Error-Example:
-              $ref: '#/components/examples/Internal-Server-Error-Example'
-    Not-Found-Pay2China:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Not-Found-Example:
-              $ref: '#/components/examples/Not-Found-Example'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Not-Found-Example:
-              $ref: '#/components/examples/Not-Found-Example'
-    Not-Found:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Not-Found-Example:
-              $ref: '#/components/examples/Not-Found-Example'
-    Unsupported-Media-Type-Pay2China:
-      description: Unsupported Media Type
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Un-Supported-Media-Type-Example:
-              $ref: '#/components/examples/Un-Supported-Media-Type-Example'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Un-Supported-Media-Type-Example:
-              $ref: '#/components/examples/Un-Supported-Media-Type-Example'
   schemas:
+    Initial-Beneficiary-Validation-Response:
+      xml:
+        name: InitialBeneficiaryValidationResponse
+      type: object
+      title: InitialBeneficiaryValidationResponse
+      properties:
+        end_to_end_id:
+          xml:
+            name: EndToEndId
+          type: string
+          description: "Client provided reference number. \n - For India IMPS and UPI, this field is mandatory and max length is 16 \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n- For Pay2China, this field is not applicable"
+          minLength: 1
+          maxLength: 35
+          title: end_to_end_id
+        uetr:
+          xml:
+            name: Uetr
+          type: string
+          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
+          description: UUID v4 format unique end-to-end transaction reference
+          title: uetr
+        debtor:
+          xml:
+            name: Debtor
+          type: object
+          title: debtor
+          properties:
+            account:
+              xml:
+                name: Account
+              type: string
+              description: "Bank account held with CITI \n - For India IMPS and UPI , this field is mandatory and max length is 34 \n - For US EWS, this field is mandatory and max length is 40 \n - For UK, this field is mandatory and max length is 40 \n - For IN PAN, this field is mandatory and max length is 40 \n - For Pay2China, this field is mandatory and max length is 40"
+              minLength: 1
+              maxLength: 40
+              title: account
+            name:
+              xml:
+                name: Name
+              type: string
+              description: "Debtor Account Name.\n - For India IMPS and UPI ,this field is mandatory and max length is 99 \n - For US EWS,this field is optional and max length is 140 \n - For UK,this field is optional and max length is 140 \n - For IN PAN,this field is optional and max length is 140 \n - For Pay2China, this field is optional and max length is 140"
+              minLength: 1
+              maxLength: 140
+              title: name
+            proxy_id:
+              xml:
+                name: ProxyId
+              type: string
+              description: "Remitter Proxy ID.\n - For India,this field is mandatory for UPI only and max length is 255 \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n - For Pay2China, this field is not applicable"
+              minLength: 1
+              maxLength: 255
+              title: proxy_id
+            ultimate_debtor:
+              xml:
+                name: UltimateDebtor
+              type: object
+              title: ultimate_debtor
+              properties:
+                name:
+                  xml:
+                    name: Name
+                  type: string
+                  description: "Ultimate debtor name. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For Pay2China, this field is optional and the max length is 140"
+                  minLength: 1
+                  maxLength: 140
+                  title: ultimate_debtor_name
+                account:
+                  xml:
+                    name: Account
+                  type: string
+                  description: "Beneficiary Owner Id/Legal Rep id. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n - For Pay2China, this field is mandatory and the max length is 35"
+                  minLength: 1
+                  maxLength: 35
+                  title: ultimate_debtor_account
+          required:
+          - account
+        creditor:
+          xml:
+            name: Creditor
+          type: object
+          title: creditor
+          properties:
+            id:
+              xml:
+                name: Id
+              type: string
+              description: "Creditor Id. \n - For IMPS India,this field is not applicable \n - For UPI India, this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable. \n - For Pay2China, this field is merchant ID. It is mandatory and the max length is 32"
+              minLength: 1
+              maxLength: 35
+              title: id
+            account:
+              xml:
+                name: Account
+              type: string
+              description: "Creditor Account Number. \n - For IMPS India,this field is mandatory and max length is 34 \n - For UPI India, this field is optional and length should be 34 \n - For US EWS,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For UK,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN,this field is not applicable \n - For Pay2China, this field is optional and max length is 32"
+              minLength: 1
+              maxLength: 40
+              title: account
+            name:
+              xml:
+                name: Name
+              type: string
+              description: "Creditor Account Name.\n - For India IMPS and UPI,this field is optional and max length is 99 \n - For US EWS,this field is mandatory and max length is 87. Please provide first middle(if any) last name in this sequence with spaces \n - For UK,this field is mandatory and max length is 87. Please provide first middle(if any) last name in this sequence with spaces \n - For IN PAN,this field is mandatory and max length is 85. Please provide first middle(if any) last name in this sequence with spaces \n - For Pay2China, this field is merchant name. It is a conditional field. It is mandatory for first time onboarding and max length is 128"
+              minLength: 1
+              maxLength: 140
+              title: name
+            father_name:
+              xml:
+                name: FatherName
+              type: string
+              description: "Creditor' Father's Name.\n - For India IMPS and UPI,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is optional and max length is 75. Please provide first middle(if any) last name in this sequence with spaces \n - For Pay2China,this field is not applicable"
+              minLength: 1
+              maxLength: 140
+              title: father_name
+            bank_id:
+              xml:
+                name: BankId
+              type: string
+              description: "Receiving Financial Institution BIC.\n - For IMPS India,this field is mandatory and length should be 11 \n - For UPI India,this field is optional and length should be 11 \n - For US EWS,this field is mandatory and length should be 9 if routing/clearing code is populated \n - For UK,this field is mandatory and length should be 8 or 11 character if bic (including branch code) is sent \n - For IN PAN,this field is not applicable \n - For Pay2China, this field is optional and max length is 64"
+              minLength: 1
+              maxLength: 35
+              title: bank_id
+            bank_name:
+              xml:
+                name: BankName
+              type: string
+              description: "Receiving Financial Institution Name. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n - For Pay2China, this is an optional field and max length is 128"
+              minLength: 1
+              maxLength: 140
+              title: bank_name
+            proxy_id:
+              xml:
+                name: ProxyId
+              type: string
+              description: "Creditor Proxy ID \n - For India,this field is mandatory for UPI only and max length is 255 (UPI ID or Mobile number can be passed).If mobile number is passed it should be greater than or equal to 6 and less than or equal to 16 \n - For US EWS,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For UK,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client\n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
+              minLength: 1
+              maxLength: 255
+              title: proxy_id
+            proxy_type:
+              xml:
+                name: ProxyType
+              type: string
+              description: "Creditor Proxy type \n - For India,this field is optional for UPI only if mobile number needs to be passed in creditor.proxy_id  \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n- MBNO - Mobile Number  \n- SHID - Scheme identification number (eg. VPA ID) \n - For IN Pay2China,this field is not applicable "
+              enum:
+              - MBNO
+              - SHID
+              title: proxy_type
+            wallet:
+              xml:
+                name: Wallet
+              type: string
+              description: "Creditor wallet details \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For UK,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: wallet
+            IBAN:
+              xml:
+                name: Iban
+              type: string
+              description: "Creditor IBAN number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For UK,this field is conditional and max length is 34.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
+              minLength: 1
+              maxLength: 40
+              title: IBAN
+            address_lines:
+              xml:
+                name: AddressLines
+              type: array
+              description: "Creditor's address lines \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional and allowed 2 lines with each line max length of 40 \n - For UK, this field is optional and allowed 2 lines with each line max length of 40 \n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
+              items:
+                $ref: '#/components/schemas/Address'
+              title: address_lines
+            street_name:
+              xml:
+                name: StreetName
+              maxLength: 70
+              minLength: 1
+              type: string
+              description: "Creditor's street_name \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 70 \n - For UK, this field is optional with max length 70 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
+              title: street_name
+            building_number:
+              xml:
+                name: BuildingNumber
+              maxLength: 16
+              minLength: 1
+              type: string
+              description: "Creditor's building_number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 16 \n - For UK, this field is optional with max length 16 \n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
+              title: building_number
+            postal_code:
+              xml:
+                name: PostalCode
+              maxLength: 16
+              minLength: 1
+              type: string
+              description: "Creditor's postal_code \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 10 \n - For UK, this field is optional with max length 16 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
+              title: postal_code
+            city:
+              xml:
+                name: City
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: "Creditor's city \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 25 \n - For UK, this field is optional with max length 35 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
+              title: city
+            state:
+              xml:
+                name: State
+              maxLength: 35
+              minLength: 1
+              type: string
+              description: "Creditor's state \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 25 \n - For UK, this field is optional with max length 35 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
+              title: state
+            country:
+              xml:
+                name: Country
+              type: string
+              description: "Creditor's country \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 2 \n - For UK, this field is optional with max length 2 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
+              pattern: ^[A-Z]{2,2}$
+              title: country
+            birth_date:
+              xml:
+                name: BirthDate
+              type: string
+              format: date
+              description: "ISO 8601 (YYYY-MM-DD), Creditor's birth date \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional \n - For UK, this field is optional \n - For IN PAN,this field is mandatory \n - For IN Pay2China,this field is not applicable"
+              title: birth_date
+            home_phone_number:
+              xml:
+                name: HomePhoneNumber
+              maxLength: 34
+              minLength: 6
+              type: string
+              description: "Creditor's home phone number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 10 \n - For UK, this field is optional with max length 34 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
+              title: home_phone_number
+            work_phone_number:
+              xml:
+                name: WorkPhoneNumber
+              maxLength: 34
+              minLength: 6
+              type: string
+              description: "Creditor's work phone number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 10 \n - For UK, this field is optional with max length 34 \n - For IN PAN,this field is not applicable \n - For Pay2China, this is a conditional field. It is mandatory for first time onboarding and max length is 32"
+              title: work_phone_number
+            beneficial_owner:
+              xml:
+                name: BeneficialOwner
+              type: object
+              title: beneficial_owner
+              properties:
+                name:
+                  xml:
+                    name: Name
+                  type: string
+                  description: "Beneficiary Owner Name/Legal Rep name. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For Pay2China, this is a conditional field. If the document.entity is business, this field should present for first time onboarding. If document.entity is Personal, this fields is not application and the max length is 32"
+                  minLength: 1
+                  maxLength: 140
+                  title: owner_name
+                id:
+                  xml:
+                    name: Id
+                  type: string
+                  description: "Beneficiary Owner Id/Legal Rep id. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n - For Pay2China, this is a conditional field. If the document.entity is business, this filed should present for first time onboarding. If document.entity is Personal, this fields is not application and max length is 32"
+                  minLength: 1
+                  maxLength: 35
+                  title: owner_id
+            document:
+              xml:
+                name: Document
+              type: object
+              title: document
+              properties:
+                entity:
+                  xml:
+                    name: Entity
+                  type: string
+                  description: "Whether the document belongs to Business or Individual \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n- For US EWS,this field is optional \n- For UK,this field is optional \n - For IN PAN,this field is not applicable \n - For Pay2China, this is a Mandatory field."
+                  enum:
+                  - BUSINESS
+                  - PERSONAL
+                  title: entity
+                type:
+                  xml:
+                    name: Type
+                  type: string
+                  description: "Whether the document belongs to Business or Individual \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n- For US EWS,this field is optional \n- For UK,this field is optional \n - For IN PAN,this field is mandatory with applicable value  TXID  \n - For Pay2China, this field is conditional. It is mandatory for first time onboarding. If the document.entity is Business, this filed value should be EMPL. If document.entity is Personal, this fields value should be NIDN \n- Personal Code values \n- ARNU  AlienRegistrationNumber \n- CCPT PassportNumber \n- CUST CustomerIdentificationNumber \n- DRLC  DriversLicenseNumber \n- EMPL EmployeeIdentificationNumber \n- NIDN  NationalIdentityNumber \n- SOSE SocialSecurityNumber \n- TELE  TelephoneNumber \n- TXID TaxIdentificationNumber \n- POID PersonCommercialIdentification \n - Corporate Code values \n- BANK BankPartyIdentification \n- CBID  Central Bank Identification Number \n- CHID Clearing Identification Number \n- COID CountryIdentificationCode \n- CUST CustomerNumber \n- DUNS Data Universal Numbering System \n- EMPL  EmployerIdentificationNumber \n- GS1G  GS1GLNIdentifier \n- SREN  SIREN \n- SRET SIRET \n- TXID  Tax Identification Number"
+                  enum:
+                  - ARNU
+                  - CCPT
+                  - CUST
+                  - DRLC
+                  - EMPL
+                  - NIDN
+                  - SOSE
+                  - TELE
+                  - TXID
+                  - POID
+                  - BANK
+                  - CBID
+                  - CHID
+                  - COID
+                  - DUNS
+                  - GS1G
+                  - SREN
+                  - SRET
+                  title: type
+                number:
+                  xml:
+                    name: Number
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+                  description: "Creditor's document number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 28 \n - For UK, this field is optional with max length 35 \n - For IN PAN,this field is mandatory with max length 10\n - For Pay2China, this field is conditional. It is mandatory for first time onboarding and max length is 20"
+                  title: number
+                state:
+                  xml:
+                    name: State
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+                  description: "Creditor's document state \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 6 \n - For UK, this field is optional with max length 35 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
+                  title: state
+        method:
+          xml:
+            name: Method
+          type: object
+          title: method
+          properties:
+            country:
+              xml:
+                name: Country
+              type: string
+              description: ISO 3166 Alpha-2 code for the transaction country
+              enum:
+              - IN
+              - US
+              - GB
+              - CN
+              title: country
+            method:
+              xml:
+                name: Method
+              type: string
+              description: Method specified by the debtor for the validation
+              enum:
+              - IMPS
+              - UPI
+              - BANKACCOUNT
+              - IBAN
+              - CARD
+              - PAYMENTID
+              - ID
+              - MERCHANTID
+              title: method
+            type:
+              xml:
+                name: Type
+              type: string
+              description: "Message type (e.g., CT for credit transfer,AER for Account Enquiry Request) \n - For India,this field is mandatory and allowed value is AER \n - For US EWS,this field is mandatory \n- For UK,this field is mandatory \n- Ownership - Account ownership is limited to validation of correct owner , hence the account number or equivalent ( i.e Virtual account) and Name \n- Attributes- Attributes define the properties of the object , for an account the properties should include Status , type of account, status of account , the address of the account  etc. \n- Structure - Structure refers to the mod 97 and the length as per the country of IBAN \n- TAXID-  Validation of individual or corporate tax id/tax documentation \n - For Pay2China, this field is mandatory with the value Ownership"
+              enum:
+              - AER
+              - Structure
+              - Ownership
+              - Attributes
+              - TAXID
+              title: type
+            penny_test:
+              xml:
+                name: PennyTest
+              type: string
+              description: "This field enables selection of penny,non-penny or both validations \n- Applicable for IN IMPS"
+              enum:
+              - NONPENNY
+              - PENNY
+              - BOTH
+              title: penny_test
+          required:
+          - country
+          - method
+          - type
+        creation_date_time:
+          xml:
+            name: CreationDateTime
+          type: string
+          format: date-time
+          description: Request Creation Date and Time in UTC generated by CitiConnect API UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ)
+          title: creation_date_time
+        status:
+          xml:
+            name: Status
+          type: object
+          title: status
+          properties:
+            date_time:
+              xml:
+                name: DateTime
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time of transaction status"
+              title: date_time
+            code:
+              xml:
+                name: Code
+              type: string
+              description: ISO 20022 acknowledegment status code
+              enum:
+              - ACTC
+              title: code
+            description:
+              xml:
+                name: Description
+              type: string
+              description: "Status code description \n- ACTC - Accepted"
+              title: description
+          required:
+          - code
+          - description
+          - date_time
     Final-Beneficiary-Validation-Response:
       xml:
         name: FinalBeneficiaryValidationResponse
@@ -1408,6 +1667,13 @@ components:
       - uetr
       - method
       - status
+    Address:
+      type: string
+      maxLength: 70
+      minLength: 1
+      maxItems: 7
+      description: Address
+      title: Address
     Error-Detail:
       type: object
       title: ErrorDetail
@@ -1435,453 +1701,6 @@ components:
           maxLength: 8
           description: unique code representing the issue
           title: code
-    Unstructured:
-      type: string
-      maxLength: 140
-      minLength: 1
-      description: Unstructured remitance information
-      title: Unstructured
-    Address:
-      type: string
-      maxLength: 70
-      minLength: 1
-      maxItems: 7
-      description: Address
-      title: Address
-    Error-Response:
-      type: object
-      title: ErrorResponse
-      xml:
-        name: ErrorResponse
-      properties:
-        ref_id:
-          type: string
-          maxLength: 60
-          description: Unique ID for the Transaction
-          title: ref_id
-          xml:
-            name: RefId
-        error_details:
-          type: array
-          items:
-            $ref: '#/components/schemas/Error-Detail'
-          title: error_details
-          xml:
-            name: Errordetails
-    Initial-Beneficiary-Validation-Response:
-      xml:
-        name: InitialBeneficiaryValidationResponse
-      type: object
-      title: InitialBeneficiaryValidationResponse
-      properties:
-        end_to_end_id:
-          xml:
-            name: EndToEndId
-          type: string
-          description: "Client provided reference number. \n - For India IMPS and UPI, this field is mandatory and max length is 16 \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n- For Pay2China, this field is not applicable"
-          minLength: 1
-          maxLength: 35
-          title: end_to_end_id
-        uetr:
-          xml:
-            name: Uetr
-          type: string
-          pattern: ^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$
-          description: UUID v4 format unique end-to-end transaction reference
-          title: uetr
-        debtor:
-          xml:
-            name: Debtor
-          type: object
-          title: debtor
-          properties:
-            account:
-              xml:
-                name: Account
-              type: string
-              description: "Bank account held with CITI \n - For India IMPS and UPI , this field is mandatory and max length is 34 \n - For US EWS, this field is mandatory and max length is 40 \n - For UK, this field is mandatory and max length is 40 \n - For IN PAN, this field is mandatory and max length is 40 \n - For Pay2China, this field is mandatory and max length is 40"
-              minLength: 1
-              maxLength: 40
-              title: account
-            name:
-              xml:
-                name: Name
-              type: string
-              description: "Debtor Account Name.\n - For India IMPS and UPI ,this field is mandatory and max length is 99 \n - For US EWS,this field is optional and max length is 140 \n - For UK,this field is optional and max length is 140 \n - For IN PAN,this field is optional and max length is 140 \n - For Pay2China, this field is optional and max length is 140"
-              minLength: 1
-              maxLength: 140
-              title: name
-            proxy_id:
-              xml:
-                name: ProxyId
-              type: string
-              description: "Remitter Proxy ID.\n - For India,this field is mandatory for UPI only and max length is 255 \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n - For Pay2China, this field is not applicable"
-              minLength: 1
-              maxLength: 255
-              title: proxy_id
-            ultimate_debtor:
-              xml:
-                name: UltimateDebtor
-              type: object
-              title: ultimate_debtor
-              properties:
-                name:
-                  xml:
-                    name: Name
-                  type: string
-                  description: "Ultimate debtor name. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For Pay2China, this field is optional and the max length is 140"
-                  minLength: 1
-                  maxLength: 140
-                  title: ultimate_debtor_name
-                account:
-                  xml:
-                    name: Account
-                  type: string
-                  description: "Beneficiary Owner Id/Legal Rep id. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n - For Pay2China, this field is mandatory and the max length is 35"
-                  minLength: 1
-                  maxLength: 35
-                  title: ultimate_debtor_account
-          required:
-          - account
-        creditor:
-          xml:
-            name: Creditor
-          type: object
-          title: creditor
-          properties:
-            id:
-              xml:
-                name: Id
-              type: string
-              description: "Creditor Id. \n - For IMPS India,this field is not applicable \n - For UPI India, this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable. \n - For Pay2China, this field is merchant ID. It is mandatory and the max length is 32"
-              minLength: 1
-              maxLength: 35
-              title: id
-            account:
-              xml:
-                name: Account
-              type: string
-              description: "Creditor Account Number. \n - For IMPS India,this field is mandatory and max length is 34 \n - For UPI India, this field is optional and length should be 34 \n - For US EWS,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For UK,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN,this field is not applicable \n - For Pay2China, this field is optional and max length is 32"
-              minLength: 1
-              maxLength: 40
-              title: account
-            name:
-              xml:
-                name: Name
-              type: string
-              description: "Creditor Account Name.\n - For India IMPS and UPI,this field is optional and max length is 99 \n - For US EWS,this field is mandatory and max length is 87. Please provide first middle(if any) last name in this sequence with spaces \n - For UK,this field is mandatory and max length is 87. Please provide first middle(if any) last name in this sequence with spaces \n - For IN PAN,this field is mandatory and max length is 85. Please provide first middle(if any) last name in this sequence with spaces \n - For Pay2China, this field is merchant name. It is a conditional field. It is mandatory for first time onboarding and max length is 128"
-              minLength: 1
-              maxLength: 140
-              title: name
-            father_name:
-              xml:
-                name: FatherName
-              type: string
-              description: "Creditor' Father's Name.\n - For India IMPS and UPI,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is optional and max length is 75. Please provide first middle(if any) last name in this sequence with spaces \n - For Pay2China,this field is not applicable"
-              minLength: 1
-              maxLength: 140
-              title: father_name
-            bank_id:
-              xml:
-                name: BankId
-              type: string
-              description: "Receiving Financial Institution BIC.\n - For IMPS India,this field is mandatory and length should be 11 \n - For UPI India,this field is optional and length should be 11 \n - For US EWS,this field is mandatory and length should be 9 if routing/clearing code is populated \n - For UK,this field is mandatory and length should be 8 or 11 character if bic (including branch code) is sent \n - For IN PAN,this field is not applicable \n - For Pay2China, this field is optional and max length is 64"
-              minLength: 1
-              maxLength: 35
-              title: bank_id
-            bank_name:
-              xml:
-                name: BankName
-              type: string
-              description: "Receiving Financial Institution Name. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n - For Pay2China, this is an optional field and max length is 128"
-              minLength: 1
-              maxLength: 140
-              title: bank_name
-            proxy_id:
-              xml:
-                name: ProxyId
-              type: string
-              description: "Creditor Proxy ID \n - For India,this field is mandatory for UPI only and max length is 255 (UPI ID or Mobile number can be passed).If mobile number is passed it should be greater than or equal to 6 and less than or equal to 16 \n - For US EWS,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For UK,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client\n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
-              minLength: 1
-              maxLength: 255
-              title: proxy_id
-            proxy_type:
-              xml:
-                name: ProxyType
-              type: string
-              description: "Creditor Proxy type \n - For India,this field is optional for UPI only if mobile number needs to be passed in creditor.proxy_id  \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n- MBNO - Mobile Number  \n- SHID - Scheme identification number (eg. VPA ID) \n - For IN Pay2China,this field is not applicable "
-              enum:
-              - MBNO
-              - SHID
-              title: proxy_type
-            wallet:
-              xml:
-                name: Wallet
-              type: string
-              description: "Creditor wallet details \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For UK,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
-              minLength: 1
-              maxLength: 40
-              title: wallet
-            IBAN:
-              xml:
-                name: Iban
-              type: string
-              description: "Creditor IBAN number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS,this field is conditional and max length is 17.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For UK,this field is conditional and max length is 34.Either creditor.account or creditor.proxy_id or creditor.wallet or creditor.IBAN should be passed by client \n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
-              minLength: 1
-              maxLength: 40
-              title: IBAN
-            address_lines:
-              xml:
-                name: AddressLines
-              type: array
-              description: "Creditor's address lines \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional and allowed 2 lines with each line max length of 40 \n - For UK, this field is optional and allowed 2 lines with each line max length of 40 \n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
-              items:
-                $ref: '#/components/schemas/Address'
-              title: address_lines
-            street_name:
-              xml:
-                name: StreetName
-              maxLength: 70
-              minLength: 1
-              type: string
-              description: "Creditor's street_name \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 70 \n - For UK, this field is optional with max length 70 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
-              title: street_name
-            building_number:
-              xml:
-                name: BuildingNumber
-              maxLength: 16
-              minLength: 1
-              type: string
-              description: "Creditor's building_number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 16 \n - For UK, this field is optional with max length 16 \n - For IN PAN,this field is not applicable  \n - For IN Pay2China,this field is not applicable"
-              title: building_number
-            postal_code:
-              xml:
-                name: PostalCode
-              maxLength: 16
-              minLength: 1
-              type: string
-              description: "Creditor's postal_code \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 10 \n - For UK, this field is optional with max length 16 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
-              title: postal_code
-            city:
-              xml:
-                name: City
-              maxLength: 35
-              minLength: 1
-              type: string
-              description: "Creditor's city \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 25 \n - For UK, this field is optional with max length 35 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
-              title: city
-            state:
-              xml:
-                name: State
-              maxLength: 35
-              minLength: 1
-              type: string
-              description: "Creditor's state \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 25 \n - For UK, this field is optional with max length 35 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
-              title: state
-            country:
-              xml:
-                name: Country
-              type: string
-              description: "Creditor's country \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 2 \n - For UK, this field is optional with max length 2 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
-              pattern: ^[A-Z]{2,2}$
-              title: country
-            birth_date:
-              xml:
-                name: BirthDate
-              type: string
-              format: date
-              description: "ISO 8601 (YYYY-MM-DD), Creditor's birth date \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional \n - For UK, this field is optional \n - For IN PAN,this field is mandatory \n - For IN Pay2China,this field is not applicable"
-              title: birth_date
-            home_phone_number:
-              xml:
-                name: HomePhoneNumber
-              maxLength: 34
-              minLength: 6
-              type: string
-              description: "Creditor's home phone number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 10 \n - For UK, this field is optional with max length 34 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
-              title: home_phone_number
-            work_phone_number:
-              xml:
-                name: WorkPhoneNumber
-              maxLength: 34
-              minLength: 6
-              type: string
-              description: "Creditor's work phone number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 10 \n - For UK, this field is optional with max length 34 \n - For IN PAN,this field is not applicable \n - For Pay2China, this is a conditional field. It is mandatory for first time onboarding and max length is 32"
-              title: work_phone_number
-            beneficial_owner:
-              xml:
-                name: BeneficialOwner
-              type: object
-              title: beneficial_owner
-              properties:
-                name:
-                  xml:
-                    name: Name
-                  type: string
-                  description: "Beneficiary Owner Name/Legal Rep name. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For Pay2China, this is a conditional field. If the document.entity is business, this field should present for first time onboarding. If document.entity is Personal, this fields is not application and the max length is 32"
-                  minLength: 1
-                  maxLength: 140
-                  title: owner_name
-                id:
-                  xml:
-                    name: Id
-                  type: string
-                  description: "Beneficiary Owner Id/Legal Rep id. \n - For IMPS India,this field is not applicable \n - For UPI India,this field is not applicable \n - For US EWS,this field is not applicable \n - For UK,this field is not applicable \n - For IN PAN,this field is not applicable \n - For Pay2China, this is a conditional field. If the document.entity is business, this filed should present for first time onboarding. If document.entity is Personal, this fields is not application and max length is 32"
-                  minLength: 1
-                  maxLength: 35
-                  title: owner_id
-            document:
-              xml:
-                name: Document
-              type: object
-              title: document
-              properties:
-                entity:
-                  xml:
-                    name: Entity
-                  type: string
-                  description: "Whether the document belongs to Business or Individual \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n- For US EWS,this field is optional \n- For UK,this field is optional \n - For IN PAN,this field is not applicable \n - For Pay2China, this is a Mandatory field."
-                  enum:
-                  - BUSINESS
-                  - PERSONAL
-                  title: entity
-                type:
-                  xml:
-                    name: Type
-                  type: string
-                  description: "Whether the document belongs to Business or Individual \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n- For US EWS,this field is optional \n- For UK,this field is optional \n - For IN PAN,this field is mandatory with applicable value  TXID  \n - For Pay2China, this field is conditional. It is mandatory for first time onboarding. If the document.entity is Business, this filed value should be EMPL. If document.entity is Personal, this fields value should be NIDN \n- Personal Code values \n- ARNU  AlienRegistrationNumber \n- CCPT PassportNumber \n- CUST CustomerIdentificationNumber \n- DRLC  DriversLicenseNumber \n- EMPL EmployeeIdentificationNumber \n- NIDN  NationalIdentityNumber \n- SOSE SocialSecurityNumber \n- TELE  TelephoneNumber \n- TXID TaxIdentificationNumber \n- POID PersonCommercialIdentification \n - Corporate Code values \n- BANK BankPartyIdentification \n- CBID  Central Bank Identification Number \n- CHID Clearing Identification Number \n- COID CountryIdentificationCode \n- CUST CustomerNumber \n- DUNS Data Universal Numbering System \n- EMPL  EmployerIdentificationNumber \n- GS1G  GS1GLNIdentifier \n- SREN  SIREN \n- SRET SIRET \n- TXID  Tax Identification Number"
-                  enum:
-                  - ARNU
-                  - CCPT
-                  - CUST
-                  - DRLC
-                  - EMPL
-                  - NIDN
-                  - SOSE
-                  - TELE
-                  - TXID
-                  - POID
-                  - BANK
-                  - CBID
-                  - CHID
-                  - COID
-                  - DUNS
-                  - GS1G
-                  - SREN
-                  - SRET
-                  title: type
-                number:
-                  xml:
-                    name: Number
-                  maxLength: 35
-                  minLength: 1
-                  type: string
-                  description: "Creditor's document number \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 28 \n - For UK, this field is optional with max length 35 \n - For IN PAN,this field is mandatory with max length 10\n - For Pay2China, this field is conditional. It is mandatory for first time onboarding and max length is 20"
-                  title: number
-                state:
-                  xml:
-                    name: State
-                  maxLength: 35
-                  minLength: 1
-                  type: string
-                  description: "Creditor's document state \n - For India IMPS,this field is not applicable \n - For India UPI,this field is not applicable \n - For US EWS, this field is optional with max length 6 \n - For UK, this field is optional with max length 35 \n - For IN PAN,this field is not applicable \n - For IN Pay2China,this field is not applicable"
-                  title: state
-        method:
-          xml:
-            name: Method
-          type: object
-          title: method
-          properties:
-            country:
-              xml:
-                name: Country
-              type: string
-              description: ISO 3166 Alpha-2 code for the transaction country
-              enum:
-              - IN
-              - US
-              - GB
-              - CN
-              title: country
-            method:
-              xml:
-                name: Method
-              type: string
-              description: Method specified by the debtor for the validation
-              enum:
-              - IMPS
-              - UPI
-              - BANKACCOUNT
-              - IBAN
-              - CARD
-              - PAYMENTID
-              - ID
-              - MERCHANTID
-              title: method
-            type:
-              xml:
-                name: Type
-              type: string
-              description: "Message type (e.g., CT for credit transfer,AER for Account Enquiry Request) \n - For India,this field is mandatory and allowed value is AER \n - For US EWS,this field is mandatory \n- For UK,this field is mandatory \n- Ownership - Account ownership is limited to validation of correct owner , hence the account number or equivalent ( i.e Virtual account) and Name \n- Attributes- Attributes define the properties of the object , for an account the properties should include Status , type of account, status of account , the address of the account  etc. \n- Structure - Structure refers to the mod 97 and the length as per the country of IBAN \n- TAXID-  Validation of individual or corporate tax id/tax documentation \n - For Pay2China, this field is mandatory with the value Ownership"
-              enum:
-              - AER
-              - Structure
-              - Ownership
-              - Attributes
-              - TAXID
-              title: type
-            penny_test:
-              xml:
-                name: PennyTest
-              type: string
-              description: "This field enables selection of penny,non-penny or both validations \n- Applicable for IN IMPS"
-              enum:
-              - NONPENNY
-              - PENNY
-              - BOTH
-              title: penny_test
-          required:
-          - country
-          - method
-          - type
-        creation_date_time:
-          xml:
-            name: CreationDateTime
-          type: string
-          format: date-time
-          description: Request Creation Date and Time in UTC generated by CitiConnect API UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ)
-          title: creation_date_time
-        status:
-          xml:
-            name: Status
-          type: object
-          title: status
-          properties:
-            date_time:
-              xml:
-                name: DateTime
-              type: string
-              format: date-time
-              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Date time of transaction status"
-              title: date_time
-            code:
-              xml:
-                name: Code
-              type: string
-              description: ISO 20022 acknowledegment status code
-              enum:
-              - ACTC
-              title: code
-            description:
-              xml:
-                name: Description
-              type: string
-              description: "Status code description \n- ACTC - Accepted"
-              title: description
-          required:
-          - code
-          - description
-          - date_time
     Beneficiary-Validation-Request:
       xml:
         name: BeneficiaryValidationRequest
@@ -2261,6 +2080,49 @@ components:
           - country
           - method
           - type
+    Unstructured:
+      type: string
+      maxLength: 140
+      minLength: 1
+      description: Unstructured remitance information
+      title: Unstructured
+    Error-Response:
+      type: object
+      title: ErrorResponse
+      xml:
+        name: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+          xml:
+            name: RefId
+        error_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+          title: error_details
+          xml:
+            name: Errordetails
+    ErrorDetail:
+      properties:
+        code:
+          description: Unique ID for the error code
+          maxLength: 7
+          type: string
+        issue:
+          title: issue
+          description: more details about the  issue
+          maxLength: 200
+          type: string
+        action:
+          title: action
+          description: corrective action to be taken to resolve above issue
+          maxLength: 350
+          type: string
+      type: object
     ErrorResponse:
       properties:
         ref_id:
@@ -2274,50 +2136,33 @@ components:
             $ref: '#/components/schemas/ErrorDetail'
           type: array
       type: object
-    AdditionalInformation:
+    LookupStatusInformation:
       type: object
       properties:
-        end_to_end_id:
+        lookup_reference:
           type: string
-          description: 'Unique identification assigned by the initiating party to unambiguously identify the transaction which can be used for reconciliation or to link tasks relating to the transaction. It can be included in several messages related to the transaction.
-
-            '
-          maxLength: 32
+          description: unique reference number of the request.This is e2e tracking reference from CCD. It will be provided by Concord.
+          maxLength: 35
           xml:
-            name: EndtoEndId
-        value_date:
+            name: LkUpRef
+        lookup_response_status:
           type: string
-          description: 'Requested execution date post alias resolution when the payment needs to be processed for settlement, format would be YYYYMMDD.
-
-            '
-          maxLength: 8
+          description: status(SUCCESS / FAILURE) of the request and get processed successfully. If account exist then status is SUCCESS else FAILURE.
+          maxLength: 10
           xml:
-            name: ValueDate
-        proxy_status:
+            name: Status
+        status_code:
           type: string
-          description: 'Describes the status of Alias/Proxy - whether Active, Inactive or Deleted
-
-            '
-          maxLength: 20
+          description: Response status of validation-Complete with data from Status Validation.
+          maxLength: 3
           xml:
-            name: ProxySts
-        banelco_flag:
+            name: StCod
+        status_message:
           type: string
-          description: 'Flag will be ''Y'' for successfull search/validation & ''N'' for failure case.
-
-            '
-          maxLength: 1
+          description: Response message of validation-Complete with data from Message Validation.
+          maxLength: 100
           xml:
-            name: BanFlag
-        clearing_system_id:
-          title: clearing_system_id
-          type: string
-          description: 'Unique reference, as assigned by a clearing system.
-
-            '
-          maxLength: 16
-          xml:
-            name: ClrSysId
+            name: StMessage
     AccountInfo:
       type: object
       properties:
@@ -2626,51 +2471,739 @@ components:
             name: LookupStatusInformation
       xml:
         name: BeneficiaryValidationResponse
-    ErrorDetail:
-      properties:
-        code:
-          description: Unique ID for the error code
-          maxLength: 7
-          type: string
-        issue:
-          title: issue
-          description: more details about the  issue
-          maxLength: 200
-          type: string
-        action:
-          title: action
-          description: corrective action to be taken to resolve above issue
-          maxLength: 350
-          type: string
-      type: object
-    LookupStatusInformation:
+    AdditionalInformation:
       type: object
       properties:
-        lookup_reference:
+        end_to_end_id:
           type: string
-          description: unique reference number of the request.This is e2e tracking reference from CCD. It will be provided by Concord.
-          maxLength: 35
+          description: 'Unique identification assigned by the initiating party to unambiguously identify the transaction which can be used for reconciliation or to link tasks relating to the transaction. It can be included in several messages related to the transaction.
+
+            '
+          maxLength: 32
           xml:
-            name: LkUpRef
-        lookup_response_status:
+            name: EndtoEndId
+        value_date:
           type: string
-          description: status(SUCCESS / FAILURE) of the request and get processed successfully. If account exist then status is SUCCESS else FAILURE.
-          maxLength: 10
+          description: 'Requested execution date post alias resolution when the payment needs to be processed for settlement, format would be YYYYMMDD.
+
+            '
+          maxLength: 8
           xml:
-            name: Status
-        status_code:
+            name: ValueDate
+        proxy_status:
           type: string
-          description: Response status of validation-Complete with data from Status Validation.
-          maxLength: 3
+          description: 'Describes the status of Alias/Proxy - whether Active, Inactive or Deleted
+
+            '
+          maxLength: 20
           xml:
-            name: StCod
-        status_message:
+            name: ProxySts
+        banelco_flag:
           type: string
-          description: Response message of validation-Complete with data from Message Validation.
-          maxLength: 100
+          description: 'Flag will be ''Y'' for successfull search/validation & ''N'' for failure case.
+
+            '
+          maxLength: 1
           xml:
-            name: StMessage
+            name: BanFlag
+        clearing_system_id:
+          title: clearing_system_id
+          type: string
+          description: 'Unique reference, as assigned by a clearing system.
+
+            '
+          maxLength: 16
+          xml:
+            name: ClrSysId
   examples:
+    In-Beneficiary-Validation-Request-Penny:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+        method:
+          country: IN
+          method: IMPS
+          type: AER
+          penny_test: PENNY
+    UK-Initial-Beneficiary-Validation-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          account: '927393445'
+          name: Leo
+          bank_id: FGHJ09890
+          address_lines:
+          - ABCD#WERT
+          street_name: 1515 3rd Street
+          building_number: A1234
+          postal_code: '94158'
+          city: Manchester
+          state: Leeds
+          country: UK
+          birth_date: '1950-09-26'
+          home_phone_number: +92-80808009
+          document:
+            entity: PERSONAL
+            type: CCPT
+            number: M7891234
+            state: Dublin
+        method:
+          country: GB
+          method: BANKACCOUNT
+          type: Ownership
+        status:
+          date_time: '2024-01-10T08:59:10.489Z'
+          code: ACTC
+          description: Accepted
+        creation_date_time: '2023-05-02T08:23:49.554Z'
+    Pay2China-Initial-Beneficiary-Validation-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667222f
+        debtor:
+          account: P39023128
+          name: Das
+          ultimate_debtor:
+            name: Ethan
+            account: '403653000011'
+        creditor:
+          id: M20220520100001
+          work_phone_number: '19988886666'
+          beneficial_owner:
+            name: Dino
+            id: '330001202219817201'
+          document:
+            entity: BUSINESS
+            type: EMPL
+            number: 91330100799655058B
+        method:
+          country: CN
+          method: MERCHANTID
+          type: Ownership
+        status:
+          date_time: '2024-01-10T08:59:10.489Z'
+          code: ACTC
+          description: Accepted
+    Pay2China-Final-Beneficiary-Validation-Positive-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667222f
+        debtor:
+          account: P39023128
+          name: Das
+          ultimate_debtor:
+            name: Ethan
+            account: '403653000011'
+        creditor:
+          id: M20220520100001
+          work_phone_number: '19988886666'
+          beneficial_owner:
+            name: Dino
+            id: '330001202219817201'
+          document:
+            entity: BUSINESS
+            type: EMPL
+            number: 91330100799655058B
+        method:
+          country: CN
+          method: MERCHANTID
+          type: Ownership
+        creation_date_time: '2024-09-10T08:23:49.111Z'
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+        response:
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          mxid:
+            number_validation: MATCH
+    In-Initial-Beneficiary-Validation-Response-Non-Penny:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+        method:
+          country: IN
+          method: IMPS
+          type: AER
+          penny_test: NONPENNY
+        creation_date_time: '2023-09-10T08:23:49.112Z'
+        status:
+          date_time: '2023-01-10T08:59:10.489Z'
+          code: ACTC
+          description: Accepted
+    Upi-In-Mobile-Number-Beneficiary-Validation-Request:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+          proxy_id: lbem0028@citibank
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+          proxy_id: '9809056489'
+          proxy_type: MBNO
+        method:
+          country: IN
+          method: UPI
+          type: AER
+    In-Final-Beneficiary-Validation-Response-Penny:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+        creditor:
+          account: '927393908'
+          name: Mathew
+          resolved_name: Simon
+        method:
+          method: IMPS
+          type: AER
+          country: IN
+          network: IMPS
+          instructed_currency: INR
+          penny_test: PENNY
+        transaction:
+          purpose: SALA
+          type: debit
+          value_date: '2024-02-23'
+          instructed_amount: '1'
+          unstructured_remittance_info:
+          - Penny Testing for <End_to_End_ID>
+          batch_id: '1234'
+        creation_date_time: '2023-09-11T08:23:49.112Z'
+        local_reference: 7634an78543
+        network_id: '209323283934'
+        status:
+          date_time: '2023-01-10T08:59:12.489Z'
+          code: ACCC
+          description: Completed
+    Upi-In-Final-UPI-ID-Beneficiary-Validation-Response:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+          proxy_id: lbem0028@citibank
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+          proxy_id: hailey21@okbank
+          proxy_type: SHID
+          resolved_name: Simon
+          upi_id: urik@okaxil
+        method:
+          method: UPI
+          type: AER
+          country: IN
+          network: UPI
+        creation_date_time: '2023-09-11T08:23:49.112Z'
+        local_reference: 7634an78543
+        network_id: '209323283934'
+        status:
+          date_time: '2023-01-10T08:59:12.489Z'
+          code: ACCC
+          description: Completed
+    US-EWS-Initial-Beneficiary-Validation-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          account: '927393445'
+          name: Leo
+          bank_id: FGHJ09890
+          address_lines:
+          - ABCD#WERT
+          street_name: 1515 3rd Street
+          building_number: A1234
+          postal_code: '94158'
+          city: San Francisco
+          state: CA
+          country: US
+          birth_date: '1950-09-26'
+          home_phone_number: +92-80808009
+          document:
+            entity: PERSONAL
+            type: CCPT
+            number: M7891234
+            state: Dublin
+        method:
+          country: US
+          method: BANKACCOUNT
+          type: Ownership
+        status:
+          date_time: '2024-01-10T08:59:10.489Z'
+          code: ACTC
+          description: Accepted
+        creation_date_time: '2023-05-02T08:23:49.554Z'
+    In-Final-Beneficiary-Validation-Response-Non-Penny:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+        creditor:
+          account: '927393908'
+          name: Mathew
+          resolved_name: Simon
+        method:
+          method: IMPS
+          type: AER
+          country: IN
+          network: IMPS
+          penny_test: NONPENNY
+        creation_date_time: '2023-09-11T08:23:49.112Z'
+        local_reference: 7634an78543
+        network_id: '209323283934'
+        status:
+          date_time: '2023-01-10T08:59:12.489Z'
+          code: ACCC
+          description: Completed
+    Upi-In-UPI-ID-Beneficiary-Validation-Request:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+          proxy_id: lbem0028@citibank
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+          proxy_id: hailey21@okbank
+          proxy_type: SHID
+        method:
+          country: IN
+          method: UPI
+          type: AER
+    UK-Beneficiary-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          account: '927393445'
+          name: Leo
+          bank_id: FGHJ09890
+          address_lines:
+          - ABCD#WERT
+          street_name: 1515 3rd Street
+          building_number: A1234
+          postal_code: '94158'
+          city: Manchester
+          state: Leeds
+          country: UK
+          birth_date: '1950-09-26'
+          home_phone_number: +92-80808009
+          document:
+            entity: PERSONAL
+            type: CCPT
+            number: M7891234
+            state: Dublin
+        method:
+          country: GB
+          method: BANKACCOUNT
+          type: Ownership
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+        - issue: instructed_amount is missing
+          action: Provide valid instructed_amount
+          code: VC00010
+    Pay2China-Final-Beneficiary-Validation-Negative-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667222f
+        debtor:
+          account: P39023128
+          name: Das
+          ultimate_debtor:
+            name: Ethan
+            account: '403653000011'
+        creditor:
+          id: M20220520100001
+          work_phone_number: '19988886666'
+          beneficial_owner:
+            name: Dino
+            id: '330001202219817201'
+          document:
+            entity: BUSINESS
+            type: EMPL
+            number: 91330100799655058B
+        method:
+          country: CN
+          method: MERCHANTID
+          type: Ownership
+        creation_date_time: '2024-09-10T08:23:49.112Z'
+        status:
+          code: RJCT
+          description: Rejected
+          date_time: '2024-09-10T08:23:49.111Z'
+        reasons:
+          code: '9001'
+          description: request parameter [creditor.beneficial_owner_id] format error
+        response:
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          mxid:
+            number_validation: MISMATCH
+    Upi-In-Final-Mobile-Number-Beneficiary-Validation-Response:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+          proxy_id: lbem0028@citibank
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+          proxy_id: '9809056489'
+          proxy_type: MBNO
+          resolved_name: Simon
+          upi_id: urik@okaxil
+        method:
+          method: UPI
+          type: AER
+          country: IN
+          network: UPI
+        creation_date_time: '2023-09-11T08:23:49.112Z'
+        local_reference: 7634an78543
+        network_id: '209323283934'
+        status:
+          date_time: '2023-01-10T08:59:12.489Z'
+          code: ACCC
+          description: Completed
+    Internal-Server-Error-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request was not processed
+          code: CC00004
+    Duplicate-Payment-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: duplicate request. same request is being processed in another request
+          action: please do not repeat the same request again
+          code: VC00017
+    IN-PAN-Final-Validation-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        creditor:
+          document:
+            number: WERHJ9012B
+        method:
+          country: IN
+          method: ID
+          type: TAXID
+        response:
+          type: HR
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          txid:
+            number_validation: MATCH
+            name_validation: MATCH
+            father_name_validation: MATCH
+            date_of_birth_validation: MATCH
+            status: E
+            seeding_status: Y
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+        creation_date_time: '2023-05-02T08:23:49.554Z'
+    In-Beneficiary-Validation-Request-Non-Penny:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+        method:
+          country: IN
+          method: IMPS
+          type: AER
+          penny_test: NONPENNY
+    Upi-In-Mobile-Number-Initial-Beneficiary-Validation-Response:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+          proxy_id: lbem0028@citibank
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+          proxy_id: '9809056489'
+          proxy_type: MBNO
+        method:
+          country: IN
+          method: UPI
+          type: AER
+        creation_date_time: '2023-09-10T08:23:49.112Z'
+        status:
+          date_time: '2023-01-10T08:59:10.489Z'
+          code: ACTC
+          description: Accepted
+    Upi-In-Final-Mobile-Number-Beneficiary-Validation-Penny-Testing-Response:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+          proxy_id: lbem0028@citibank
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+          proxy_id: '9809056489'
+          proxy_type: MBNO
+          resolved_name: Simon
+          upi_id: urik@okaxil
+        method:
+          method: UPI
+          type: AER
+          country: IN
+          network: UPI
+          instructed_currency: INR
+        transaction:
+          purpose: SALA
+          type: debit
+          value_date: '2024-02-23'
+          instructed_amount: '1'
+          unstructured_remittance_info:
+          - Penny Testing for <End_to_End_ID>
+          batch_id: '1234'
+        creation_date_time: '2023-09-11T08:23:49.112Z'
+        local_reference: 7634an78543
+        network_id: '209323283934'
+        status:
+          date_time: '2023-01-10T08:59:12.489Z'
+          code: ACCC
+          description: Completed
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: HTTP method is not supported
+          action: Provide valid HTTP method
+          code: CC00001
+    Upi-In-Initial-Beneficiary-Validation-Response:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+          proxy_id: lbem0028@citibank
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+          proxy_id: lbem0028@citibank
+        method:
+          country: IN
+          method: UPI
+          type: AER
+        creation_date_time: '2023-09-10T08:23:49.112Z'
+        status:
+          date_time: '2023-01-10T08:59:10.489Z'
+          code: ACTC
+          description: Accepted
+    Un-Supported-Media-Type-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Media type is invalid
+          action: Provide valid media type
+          code: CC00002
+    Upi-In-Beneficiary-Validation-Request:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+          proxy_id: lbem0028@citibank
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+          proxy_id: lbem0028@citibank
+        method:
+          country: IN
+          method: UPI
+          type: AER
+    US-EWS-Final-Beneficiary-Validation-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        creditor:
+          account: '927393445'
+        method:
+          country: US
+          method: BANKACCOUNT
+          type: Ownership
+        response:
+          type: HR
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          validation_risk_score: HIGH
+          account:
+            number_validation: MATCH
+            name_validation: MATCH
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+        creation_date_time: '2023-05-02T08:23:49.554Z'
+    Pay2China-Beneficiary-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667222f
+        debtor:
+          account: P39023128
+          name: Das
+          ultimate_debtor:
+            name: Ethan
+            account: '403653000011'
+        creditor:
+          id: M20220520100001
+          work_phone_number: '19988886666'
+          beneficial_owner:
+            name: Dino
+            id: '330001202219817201'
+          document:
+            entity: BUSINESS
+            type: EMPL
+            number: 91330100799655058B
+        method:
+          country: CN
+          method: MERCHANTID
+          type: Ownership
+    IN-PAN-Validation-Request:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393890'
+          name: Hopkin
+        creditor:
+          name: Leo
+          father_name: Moss
+          birth_date: '1950-09-26'
+          document:
+            type: TXID
+            number: WERHJ9012B
+        method:
+          country: IN
+          method: ID
+          type: TAXID
+    Unauthorized-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: Request is not authorized
+          action: Try again with valid credentials
+          code: CC00007
+    UK-Final-Beneficiary-Validation-Response:
+      value:
+        uetr: 921a9445-97df-4118-9a55-68d14667656f
+        creditor:
+          account: '927393445'
+        method:
+          country: GB
+          method: BANKACCOUNT
+          type: Ownership
+        response:
+          type: HR
+          data_date_time: '2023-09-10T08:23:49.112Z'
+          validation_risk_score: HIGH
+          account:
+            number_validation: MATCH
+            name_validation: MATCH
+        status:
+          code: ACCC
+          description: Completed
+          date_time: '2024-09-10T08:23:49.112Z'
+        creation_date_time: '2023-05-02T08:23:49.554Z'
+    In-Initial-Beneficiary-Validation-Response-Penny:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          account: '927393038'
+          name: John
+        creditor:
+          account: '927393908'
+          name: Mathew
+          bank_id: FGHJ0985026
+        method:
+          country: IN
+          method: IMPS
+          type: AER
+          penny_test: PENNY
+        creation_date_time: '2023-09-10T08:23:49.112Z'
+        status:
+          date_time: '2023-01-10T08:59:10.489Z'
+          code: ACTC
+          description: Accepted
+    Upi-In-Final-Beneficiary-Validation-Response:
+      value:
+        end_to_end_id: r/434SKtUcd01
+        uetr: 921a9445-97df-4118-9a55-68d14667624c
+        debtor:
+          proxy_id: lbem0028@citibank
+        creditor:
+          proxy_id: lbem0028@citibank
+          name: Mathew
+          resolved_name: Simon
+        method:
+          method: UPI
+          type: AER
+          country: IN
+          network: UPI
+        creation_date_time: '2023-09-11T08:23:49.112Z'
+        local_reference: 7634an78543
+        network_id: '209323283934'
+        status:
+          date_time: '2023-01-10T08:59:12.489Z'
+          code: ACCC
+          description: Completed
+    Not-Found-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
     US-EWS-Beneficiary-Validation-Request:
       value:
         uetr: 921a9445-97df-4118-9a55-68d14667624c
@@ -2723,301 +3256,6 @@ components:
           date_time: '2023-01-10T08:59:10.489Z'
           code: ACTC
           description: Accepted
-    Pay2China-Initial-Beneficiary-Validation-Response:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667222f
-        debtor:
-          account: P39023128
-          name: Das
-          ultimate_debtor:
-            name: Ethan
-            account: '403653000011'
-        creditor:
-          id: M20220520100001
-          work_phone_number: '19988886666'
-          beneficial_owner:
-            name: Dino
-            id: '330001202219817201'
-          document:
-            entity: BUSINESS
-            type: EMPL
-            number: 91330100799655058B
-        method:
-          country: CN
-          method: MERCHANTID
-          type: Ownership
-        status:
-          date_time: '2024-01-10T08:59:10.489Z'
-          code: ACTC
-          description: Accepted
-    Pay2China-Final-Beneficiary-Validation-Negative-Response:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667222f
-        debtor:
-          account: P39023128
-          name: Das
-          ultimate_debtor:
-            name: Ethan
-            account: '403653000011'
-        creditor:
-          id: M20220520100001
-          work_phone_number: '19988886666'
-          beneficial_owner:
-            name: Dino
-            id: '330001202219817201'
-          document:
-            entity: BUSINESS
-            type: EMPL
-            number: 91330100799655058B
-        method:
-          country: CN
-          method: MERCHANTID
-          type: Ownership
-        creation_date_time: '2024-09-10T08:23:49.112Z'
-        status:
-          code: RJCT
-          description: Rejected
-          date_time: '2024-09-10T08:23:49.111Z'
-        reasons:
-          code: '9001'
-          description: request parameter [creditor.beneficial_owner_id] format error
-        response:
-          data_date_time: '2023-09-10T08:23:49.112Z'
-          mxid:
-            number_validation: MISMATCH
-    In-Final-Beneficiary-Validation-Response-Non-Penny:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-        creditor:
-          account: '927393908'
-          name: Mathew
-          resolved_name: Simon
-        method:
-          method: IMPS
-          type: AER
-          country: IN
-          network: IMPS
-          penny_test: NONPENNY
-        creation_date_time: '2023-09-11T08:23:49.112Z'
-        local_reference: 7634an78543
-        network_id: '209323283934'
-        status:
-          date_time: '2023-01-10T08:59:12.489Z'
-          code: ACCC
-          description: Completed
-    In-Initial-Beneficiary-Validation-Response-Penny:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-        method:
-          country: IN
-          method: IMPS
-          type: AER
-          penny_test: PENNY
-        creation_date_time: '2023-09-10T08:23:49.112Z'
-        status:
-          date_time: '2023-01-10T08:59:10.489Z'
-          code: ACTC
-          description: Accepted
-    Upi-In-Final-Beneficiary-Validation-Response:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          proxy_id: lbem0028@citibank
-        creditor:
-          proxy_id: lbem0028@citibank
-          name: Mathew
-          resolved_name: Simon
-        method:
-          method: UPI
-          type: AER
-          country: IN
-          network: UPI
-        creation_date_time: '2023-09-11T08:23:49.112Z'
-        local_reference: 7634an78543
-        network_id: '209323283934'
-        status:
-          date_time: '2023-01-10T08:59:12.489Z'
-          code: ACCC
-          description: Completed
-    US-EWS-Final-Beneficiary-Validation-Response:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        creditor:
-          account: '927393445'
-        method:
-          country: US
-          method: BANKACCOUNT
-          type: Ownership
-        response:
-          type: HR
-          data_date_time: '2023-09-10T08:23:49.112Z'
-          validation_risk_score: HIGH
-          account:
-            number_validation: MATCH
-            name_validation: MATCH
-        status:
-          code: ACCC
-          description: Completed
-          date_time: '2024-09-10T08:23:49.112Z'
-        creation_date_time: '2023-05-02T08:23:49.554Z'
-    Pay2China-Beneficiary-Validation-Request:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667222f
-        debtor:
-          account: P39023128
-          name: Das
-          ultimate_debtor:
-            name: Ethan
-            account: '403653000011'
-        creditor:
-          id: M20220520100001
-          work_phone_number: '19988886666'
-          beneficial_owner:
-            name: Dino
-            id: '330001202219817201'
-          document:
-            entity: BUSINESS
-            type: EMPL
-            number: 91330100799655058B
-        method:
-          country: CN
-          method: MERCHANTID
-          type: Ownership
-    Upi-In-Initial-Beneficiary-Validation-Response:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-          proxy_id: lbem0028@citibank
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-          proxy_id: lbem0028@citibank
-        method:
-          country: IN
-          method: UPI
-          type: AER
-        creation_date_time: '2023-09-10T08:23:49.112Z'
-        status:
-          date_time: '2023-01-10T08:59:10.489Z'
-          code: ACTC
-          description: Accepted
-    US-EWS-Initial-Beneficiary-Validation-Response:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393890'
-          name: Hopkin
-        creditor:
-          account: '927393445'
-          name: Leo
-          bank_id: FGHJ09890
-          address_lines:
-          - ABCD#WERT
-          street_name: 1515 3rd Street
-          building_number: A1234
-          postal_code: '94158'
-          city: San Francisco
-          state: CA
-          country: US
-          birth_date: '1950-09-26'
-          home_phone_number: +92-80808009
-          document:
-            entity: PERSONAL
-            type: CCPT
-            number: M7891234
-            state: Dublin
-        method:
-          country: US
-          method: BANKACCOUNT
-          type: Ownership
-        status:
-          date_time: '2024-01-10T08:59:10.489Z'
-          code: ACTC
-          description: Accepted
-        creation_date_time: '2023-05-02T08:23:49.554Z'
-    In-Initial-Beneficiary-Validation-Response-Non-Penny:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-        method:
-          country: IN
-          method: IMPS
-          type: AER
-          penny_test: NONPENNY
-        creation_date_time: '2023-09-10T08:23:49.112Z'
-        status:
-          date_time: '2023-01-10T08:59:10.489Z'
-          code: ACTC
-          description: Accepted
-    In-Final-Beneficiary-Validation-Response-Penny:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-        creditor:
-          account: '927393908'
-          name: Mathew
-          resolved_name: Simon
-        method:
-          method: IMPS
-          type: AER
-          country: IN
-          network: IMPS
-          instructed_currency: INR
-          penny_test: PENNY
-        transaction:
-          purpose: SALA
-          type: debit
-          value_date: '2024-02-23'
-          instructed_amount: '1'
-          unstructured_remittance_info:
-          - Penny Testing for <End_to_End_ID>
-          batch_id: '1234'
-        creation_date_time: '2023-09-11T08:23:49.112Z'
-        local_reference: 7634an78543
-        network_id: '209323283934'
-        status:
-          date_time: '2023-01-10T08:59:12.489Z'
-          code: ACCC
-          description: Completed
-    Not-Found-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627702
-        error_details:
-        - issue: Resource that you are searching is not found
-          action: Please use valid resource details
-          code: CC00006
-    Method-Not-Allowed-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: HTTP method is not supported
-          action: Provide valid HTTP method
-          code: CC00001
     IN-PAN-Initial-Validation-Response:
       value:
         uetr: 921a9445-97df-4118-9a55-68d14667624c
@@ -3040,202 +3278,6 @@ components:
           code: ACTC
           description: Accepted
         creation_date_time: '2023-05-02T08:23:49.554Z'
-    IN-PAN-Validation-Request:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393890'
-          name: Hopkin
-        creditor:
-          name: Leo
-          father_name: Moss
-          birth_date: '1950-09-26'
-          document:
-            type: TXID
-            number: WERHJ9012B
-        method:
-          country: IN
-          method: ID
-          type: TAXID
-    Bad-Request-Example:
-      value:
-        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
-        error_details:
-        - issue: instructed_amount is missing
-          action: Provide valid instructed_amount
-          code: VC00010
-    Upi-In-Mobile-Number-Beneficiary-Validation-Request:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-          proxy_id: lbem0028@citibank
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-          proxy_id: '9809056489'
-          proxy_type: MBNO
-        method:
-          country: IN
-          method: UPI
-          type: AER
-    Unauthorized-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: Request is not authorized
-          action: Try again with valid credentials
-          code: CC00007
-    Upi-In-Mobile-Number-Initial-Beneficiary-Validation-Response:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-          proxy_id: lbem0028@citibank
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-          proxy_id: '9809056489'
-          proxy_type: MBNO
-        method:
-          country: IN
-          method: UPI
-          type: AER
-        creation_date_time: '2023-09-10T08:23:49.112Z'
-        status:
-          date_time: '2023-01-10T08:59:10.489Z'
-          code: ACTC
-          description: Accepted
-    Upi-In-Beneficiary-Validation-Request:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-          proxy_id: lbem0028@citibank
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-          proxy_id: lbem0028@citibank
-        method:
-          country: IN
-          method: UPI
-          type: AER
-    Pay2China-Final-Beneficiary-Validation-Positive-Response:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667222f
-        debtor:
-          account: P39023128
-          name: Das
-          ultimate_debtor:
-            name: Ethan
-            account: '403653000011'
-        creditor:
-          id: M20220520100001
-          work_phone_number: '19988886666'
-          beneficial_owner:
-            name: Dino
-            id: '330001202219817201'
-          document:
-            entity: BUSINESS
-            type: EMPL
-            number: 91330100799655058B
-        method:
-          country: CN
-          method: MERCHANTID
-          type: Ownership
-        creation_date_time: '2024-09-10T08:23:49.111Z'
-        status:
-          code: ACCC
-          description: Completed
-          date_time: '2024-09-10T08:23:49.112Z'
-        response:
-          data_date_time: '2023-09-10T08:23:49.112Z'
-          mxid:
-            number_validation: MATCH
-    Upi-In-UPI-ID-Beneficiary-Validation-Request:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-          proxy_id: lbem0028@citibank
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-          proxy_id: hailey21@okbank
-          proxy_type: SHID
-        method:
-          country: IN
-          method: UPI
-          type: AER
-    Upi-In-Final-Mobile-Number-Beneficiary-Validation-Response:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-          proxy_id: lbem0028@citibank
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-          proxy_id: '9809056489'
-          proxy_type: MBNO
-          resolved_name: Simon
-          upi_id: urik@okaxil
-        method:
-          method: UPI
-          type: AER
-          country: IN
-          network: UPI
-        creation_date_time: '2023-09-11T08:23:49.112Z'
-        local_reference: 7634an78543
-        network_id: '209323283934'
-        status:
-          date_time: '2023-01-10T08:59:12.489Z'
-          code: ACCC
-          description: Completed
-    UK-Beneficiary-Validation-Request:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667656f
-        debtor:
-          account: '927393890'
-          name: Hopkin
-        creditor:
-          account: '927393445'
-          name: Leo
-          bank_id: FGHJ09890
-          address_lines:
-          - ABCD#WERT
-          street_name: 1515 3rd Street
-          building_number: A1234
-          postal_code: '94158'
-          city: Manchester
-          state: Leeds
-          country: UK
-          birth_date: '1950-09-26'
-          home_phone_number: +92-80808009
-          document:
-            entity: PERSONAL
-            type: CCPT
-            number: M7891234
-            state: Dublin
-        method:
-          country: GB
-          method: BANKACCOUNT
-          type: Ownership
     Idempotency-Id-Conflict-Example:
       value:
         ref_id: ec689822-9864-4c4d-9d68-222467627902
@@ -3243,203 +3285,161 @@ components:
         - issue: Idempotency-Id provided is currently being used in another request
           action: please do not repeat the same request again
           code: VC00016
-    Upi-In-Final-UPI-ID-Beneficiary-Validation-Response:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-          proxy_id: lbem0028@citibank
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-          proxy_id: hailey21@okbank
-          proxy_type: SHID
-          resolved_name: Simon
-          upi_id: urik@okaxil
-        method:
-          method: UPI
-          type: AER
-          country: IN
-          network: UPI
-        creation_date_time: '2023-09-11T08:23:49.112Z'
-        local_reference: 7634an78543
-        network_id: '209323283934'
-        status:
-          date_time: '2023-01-10T08:59:12.489Z'
-          code: ACCC
-          description: Completed
-    Internal-Server-Error-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: Request was not processed
-          code: CC00004
-    UK-Final-Beneficiary-Validation-Response:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667656f
-        creditor:
-          account: '927393445'
-        method:
-          country: GB
-          method: BANKACCOUNT
-          type: Ownership
-        response:
-          type: HR
-          data_date_time: '2023-09-10T08:23:49.112Z'
-          validation_risk_score: HIGH
-          account:
-            number_validation: MATCH
-            name_validation: MATCH
-        status:
-          code: ACCC
-          description: Completed
-          date_time: '2024-09-10T08:23:49.112Z'
-        creation_date_time: '2023-05-02T08:23:49.554Z'
-    Upi-In-Final-Mobile-Number-Beneficiary-Validation-Penny-Testing-Response:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-          proxy_id: lbem0028@citibank
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-          proxy_id: '9809056489'
-          proxy_type: MBNO
-          resolved_name: Simon
-          upi_id: urik@okaxil
-        method:
-          method: UPI
-          type: AER
-          country: IN
-          network: UPI
-          instructed_currency: INR
-        transaction:
-          purpose: SALA
-          type: debit
-          value_date: '2024-02-23'
-          instructed_amount: '1'
-          unstructured_remittance_info:
-          - Penny Testing for <End_to_End_ID>
-          batch_id: '1234'
-        creation_date_time: '2023-09-11T08:23:49.112Z'
-        local_reference: 7634an78543
-        network_id: '209323283934'
-        status:
-          date_time: '2023-01-10T08:59:12.489Z'
-          code: ACCC
-          description: Completed
-    In-Beneficiary-Validation-Request-Non-Penny:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-        method:
-          country: IN
-          method: IMPS
-          type: AER
-          penny_test: NONPENNY
-    Duplicate-Payment-Conflict-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: duplicate request. same request is being processed in another request
-          action: please do not repeat the same request again
-          code: VC00017
-    Un-Supported-Media-Type-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: Media type is invalid
-          action: Provide valid media type
-          code: CC00002
-    In-Beneficiary-Validation-Request-Penny:
-      value:
-        end_to_end_id: r/434SKtUcd01
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        debtor:
-          account: '927393038'
-          name: John
-        creditor:
-          account: '927393908'
-          name: Mathew
-          bank_id: FGHJ0985026
-        method:
-          country: IN
-          method: IMPS
-          type: AER
-          penny_test: PENNY
-    IN-PAN-Final-Validation-Response:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667624c
-        creditor:
-          document:
-            number: WERHJ9012B
-        method:
-          country: IN
-          method: ID
-          type: TAXID
-        response:
-          type: HR
-          data_date_time: '2023-09-10T08:23:49.112Z'
-          txid:
-            number_validation: MATCH
-            name_validation: MATCH
-            father_name_validation: MATCH
-            date_of_birth_validation: MATCH
-            status: E
-            seeding_status: Y
-        status:
-          code: ACCC
-          description: Completed
-          date_time: '2024-09-10T08:23:49.112Z'
-        creation_date_time: '2023-05-02T08:23:49.554Z'
-    UK-Initial-Beneficiary-Validation-Response:
-      value:
-        uetr: 921a9445-97df-4118-9a55-68d14667656f
-        debtor:
-          account: '927393890'
-          name: Hopkin
-        creditor:
-          account: '927393445'
-          name: Leo
-          bank_id: FGHJ09890
-          address_lines:
-          - ABCD#WERT
-          street_name: 1515 3rd Street
-          building_number: A1234
-          postal_code: '94158'
-          city: Manchester
-          state: Leeds
-          country: UK
-          birth_date: '1950-09-26'
-          home_phone_number: +92-80808009
-          document:
-            entity: PERSONAL
-            type: CCPT
-            number: M7891234
-            state: Dublin
-        method:
-          country: GB
-          method: BANKACCOUNT
-          type: Ownership
-        status:
-          date_time: '2024-01-10T08:59:10.489Z'
-          code: ACTC
-          description: Accepted
-        creation_date_time: '2023-05-02T08:23:49.554Z'
+  responses:
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+    Conflict-Pay2China:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+            Duplicate-Payment-Conflict-Example:
+              $ref: '#/components/examples/Duplicate-Payment-Conflict-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+            Duplicate-Payment-Conflict-Example:
+              $ref: '#/components/examples/Duplicate-Payment-Conflict-Example'
+    Internal-Server-Error-Pay2China:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Unauthorized-Pay2China:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found-Pay2China:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Bad-Request-Pay2China:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Unsupported-Media-Type-Pay2China:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Un-Supported-Media-Type-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Un-Supported-Media-Type-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Example'
+    Method-Not-Allowed-Pay2China:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
   securitySchemes:
     oAuth2:
       type: oauth2

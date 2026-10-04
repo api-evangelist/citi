@@ -454,43 +454,113 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    Frequency1Code:
+    Max16Text:
+      maxLength: 16
+      minLength: 1
       type: string
-      description: 'Original frequency that has been modified.<br><br><b>YEAR</b> : Event takes place every year or once a year. <br><br><b>MNTH</b> : Event takes place every month or once a month. <br><br><b>QURT</b> : Event takes place every three months or four times a year. <br><br><b>MIAN</b> : Event takes place every six months or two times a year.<br><br><b>WEEK</b> : Event takes place once a week. <br><br><b>DAIL</b> : Event takes place every day. <br><br><b>ADHO</b> : Event takes place on request or as necessary. <br><br><b>INDA</b> : Event takes place several times a day.'
-      enum:
-      - YEAR
-      - MNTH
-      - QURT
-      - MIAN
-      - WEEK
-      - DAIL
-      - ADHO
-      - INDA
-    ActiveOrHistoricCurrencyAndAmount:
+    CountryCode:
+      pattern: '[A-Z]{2,2}'
+      type: string
+      description: Nation with its own government. The code is checked against the list of country names obtained from the United Nations (ISO 3166, Alpha-2 code).
+    CashAccount16:
       required:
-      - Ccy
+      - Id
       type: object
       properties:
         Ccy:
           type: object
-          description: Currency code. Passed as the tag attribute.The unit of currency is explicit and compliant with ISO 4217
+          description: Identification of the currency in which the account is held.
           allOf:
           - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
-        $:
-          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount_SimpleType'
-    ActiveOrHistoricCurrencyAndAmountStatusInquiry:
+        Id:
+          $ref: '#/components/schemas/AccountIdentification4Choice'
+        Nm:
+          type: object
+          description: Name of the account, as assigned by the account servicing institution, in agreement with the account owner in order to provide an additional means of identification of the account.
+          allOf:
+          - $ref: '#/components/schemas/Max70Text'
+        Tp:
+          $ref: '#/components/schemas/CashAccountType2'
+    Max140Text:
+      maxLength: 140
+      minLength: 1
+      type: string
+    GenericOrganisationIdentification1:
       required:
-      - Amt
-      - Ccy
+      - Id
       type: object
       properties:
-        Ccy:
+        Id:
+          maxLength: 35
+          minLength: 1
+          type: string
+        SchmeNm:
           type: object
-          description: Currency code.
           allOf:
-          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
-        Amt:
-          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount_SimpleTypeStatusInquiry'
+          - $ref: '#/components/schemas/OrganisationIdentificationSchemeName1Choice'
+        Issr:
+          maxLength: 35
+          minLength: 1
+          type: string
+      description: Unique identification of an organisation, as assigned by an institution, using an identification scheme.
+    GroupHeader36:
+      required:
+      - CreDtTm
+      - MsgId
+      type: object
+      properties:
+        CreDtTm:
+          type: string
+          description: Date and time at which the message was created.
+          format: date-time
+        FwdgAgt:
+          type: object
+          description: Financial institution that receives the instruction from the initiating party and forwards it to the next agent in the payment chain.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        DbtrAgt:
+          type: object
+          description: Financial institution servicing an account for the debtor.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        CdtrAgt:
+          type: object
+          description: Financial institution servicing an account for the creditor.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        InitgPty:
+          type: object
+          description: Party that initiates the status message.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        MsgId:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Point to point reference, as assigned by the instructing party, and sent to the next party in the chain to unambiguously identify the message.
+      description: Set of characteristics shared by all individual transactions included in the message.
+    PersonIdentificationSchemeName1Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Specifies the external person identification scheme name code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
+        Prtry:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Description of Propreitary
+      description: Either Code or Proprietary is required
+    AccountIdentification4Choice:
+      type: object
+      properties:
+        IBAN:
+          $ref: '#/components/schemas/IBAN2007Identifier'
+        Othr:
+          $ref: '#/components/schemas/GenericAccountIdentification1'
+      description: Unique and unambiguous identification for the account between the account owner and the account servicer. Either iban or Othr field value should be passed on request.
     TransactionIndividualStatus3Code:
       type: string
       description: 'Common transaction status for all individual transactions reported.<br><br><b>ACTC</b> : Authentication and syntactical and semantical validation are successful. <br><br><b>RJCT</b> : Payment initiation or individual transaction included in the payment initiation has been rejected.<br><br><b>PDNG</b> : Payment initiation or individual transaction included in the payment initiation is pending. Further checks and status update will be performed.<br><br><b>ACCP</b> : Preceding check of technical validation was successful. Customer profile check was also successful.<br><br><b>ACSP</b> : All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution.<br><br><b>ACSC</b> : Settlement on the debtor''s account has been completed. Usage : this can be used by the first agent to report to the debtor that the transaction has been completed. Warning : this status is provided for transaction status reasons, not for financial information. It can only be used after bilateral agreement<br><br><b>ACWC</b> : Instruction is accepted but a change will be made, such as date or remittance not sent.'
@@ -502,385 +572,63 @@ components:
       - ACSP
       - ACSC
       - ACWC
-    PhoneNumber:
-      pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
-      type: string
-    Max140Text:
-      maxLength: 140
-      minLength: 1
-      type: string
-    AmountType3Choice:
+    PersonIdentification5:
       type: object
       properties:
-        EqvtAmt:
-          $ref: '#/components/schemas/EquivalentAmount2'
-        InstdAmt:
-          type: object
-          description: Amount of money to be moved between the debtor and creditor, before deduction of charges, expressed in the currency as ordered by the initiating party.
-          allOf:
-          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
-      description: Amount of money to be moved between the debtor and creditor, before deduction of charges, expressed in the currency as ordered by the initiating party. Either EqvtAmt or InstdAmt field value should be passed on request.
-    ContactDetails2:
-      type: object
-      properties:
-        EmailAdr:
-          type: object
-          description: Address for electronic mail (e-mail).
-          allOf:
-          - $ref: '#/components/schemas/Max2048Text'
-        FaxNb:
-          type: object
-          description: Collection of information that identifies a FAX number, as defined by telecom services.
-          allOf:
-          - $ref: '#/components/schemas/PhoneNumber'
-        MobNb:
-          type: object
-          description: Collection of information that identifies a mobile phone number, as defined by telecom services.
-          allOf:
-          - $ref: '#/components/schemas/PhoneNumber'
-        Nm:
-          type: object
-          description: Name by which a party is known and which is usually used to identify that party.
-          allOf:
-          - $ref: '#/components/schemas/Max140Text'
-        NmPrfx:
-          $ref: '#/components/schemas/NamePrefix1Code'
+        DtAndPlcOfBirth:
+          $ref: '#/components/schemas/DateAndPlaceOfBirth'
         Othr:
-          type: object
-          description: Contact details in another form.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        PhneNb:
-          type: object
-          description: Collection of information that identifies a phone number, as defined by telecom services.
-          allOf:
-          - $ref: '#/components/schemas/PhoneNumber'
-      description: Set of elements used to indicate how to contact the party.
-    OrganisationIdentificationSchemeName1Choice:
-      type: object
-      properties:
-        Cd:
-          maxLength: 4
-          minLength: 1
-          type: string
-          description: Specifies the external organisation identification scheme name code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
-        Prtry:
-          maxLength: 35
-          minLength: 1
-          type: string
-          description: Description for Proprietary
-      description: Name of the identification scheme.Sets of elements to identify a name of the organisation identification scheme. Either Code or Proprietary is required
-    TransactionGroupStatus3Code:
-      type: string
-      description: 'Specifies the status of a group of transactions.<br><br><b>ACTC</b> : Authentication and syntactical and semantical validation are successful. <br><br><b>RCVD</b> : Payment initiation has been received by the receiving agent. <br><br><b>PART</b> : A number of transactions have been accepted, whereas another number of transactions have not yet achieved ''accepted'' status. <br><br><b>RJCT</b> : Payment initiation or individual transaction included in the payment initiation has been rejected.<br><br><b>PDNG</b> : Payment initiation or individual transaction included in the payment initiation is pending. Further checks and status update will be performed.<br><br><b>ACCP</b> : Preceding check of technical validation was successful. Customer profile check was also successful.<br><br><b>ACSP</b> : All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution.<br><br><b>ACSC</b> : Settlement on the debtor''s account has been completed. Usage : this can be used by the first agent to report to the debtor that the transaction has been completed. Warning : this status is provided for transaction status reasons, not for financial information. It can only be used after bilateral agreement<br><br><b>ACWC</b> : Instruction is accepted but a change will be made, such as date or remittance not sent.'
-      enum:
-      - ACTC
-      - RCVD
-      - PART
-      - RJCT
-      - PDNG
-      - ACCP
-      - ACSP
-      - ACSC
-      - ACWC
-    PostalAddress6:
-      type: object
-      properties:
-        AdrLine:
-          maxItems: 7
           type: array
-          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+          description: Unique identification of a person, as assigned by an institution, using an identification scheme.
           items:
-            $ref: '#/components/schemas/Max70Text'
-        AdrTp:
-          type: string
-          description: 'Identifies the nature of the postal address.<br><br><b>ADDR</b> : Address is the complete postal address. <br><br><b>PBOX</b> : Address is a postal office (PO) box. <br><br><b>HOME</b> : Address is the home address. <br><br><b>BIZZ</b> : Address is the business address.<br><br><b>MLTO</b> : Address is the address to which mail is sent.<br><br><b>DLVY</b> : Address is the address to which delivery is to take place.'
-          enum:
-          - ADDR
-          - PBOX
-          - HOME
-          - BIZZ
-          - MLTO
-          - DLVY
-        BldgNb:
+            $ref: '#/components/schemas/GenericPersonIdentification1'
+      description: Unique and unambiguous identification of a person, for example a passport.
+    PaymentTransactionInformation25:
+      type: object
+      properties:
+        StsId:
           type: object
-          description: Number that identifies the position of a building on a street.
-          allOf:
-          - $ref: '#/components/schemas/Max16Text'
-        Ctry:
-          $ref: '#/components/schemas/CountryCode'
-        CtrySubDvsn:
-          type: object
-          description: Identifies a subdivision of a country such as state, region, county.
+          description: Unique identification, as assigned by an instructing party for an instructed party, to unambiguously identify the reported status.
           allOf:
           - $ref: '#/components/schemas/Max35Text'
-        Dept:
+        OrgnlInstrId:
           type: object
-          description: Identification of a division of a large organisation or building.
-          allOf:
-          - $ref: '#/components/schemas/Max70Text'
-        PstCd:
-          type: object
-          description: Identifier consisting of a group of letters and/or numbers that is added to a postal address to assist the sorting of mail.
-          allOf:
-          - $ref: '#/components/schemas/Max16Text'
-        StrtNm:
-          type: object
-          description: Name of a street or thoroughfare.
-          allOf:
-          - $ref: '#/components/schemas/Max70Text'
-        SubDept:
-          type: object
-          description: Identification of a sub-division of a large organisation or building.
-          allOf:
-          - $ref: '#/components/schemas/Max70Text'
-        TwnNm:
-          type: object
-          description: Name of a built-up area, with defined boundaries, and a local government.
+          description: Unique identification, as assigned by the original instructing party for the original instructed party, to unambiguously identify the original instruction.
           allOf:
           - $ref: '#/components/schemas/Max35Text'
-      description: Information that locates and identifies a specific address, as defined by postal services.
-    CategoryPurpose1Choice:
-      type: object
-      properties:
-        Cd:
-          maxLength: 4
-          minLength: 1
-          type: string
-          description: Category purpose, as published in an external category purpose code list.
-        Prtry:
+        OrgnlEndToEndId:
           type: object
-          description: Category purpose, in a proprietary form.
+          description: Unique identification, as assigned by the original initiating party, to unambiguously identify the original transaction.
           allOf:
           - $ref: '#/components/schemas/Max35Text'
-      description: Specifies the high level purpose of the instruction based on a set of pre-defined categories. Either Code or Proprietary field value should be passed in request.
-    SettlementMethod1Code:
-      type: string
-      description: 'Method used to settle the (batch of) payment instructions. <br><br><b>INDA</b> : Settlement is done by the agent instructed to execute a payment instruction. <br><br><b>INGA</b> : Settlement is done by the agent instructing and forwarding the payment to the next party in the payment chain. <br><br><b>COVE</b> : Settlement is done through a cover payment. <br><br><b>CLRG</b> : Settlement is done through a payment clearing system.'
-      enum:
-      - INDA
-      - INGA
-      - COVE
-      - CLRG
-    AccountIdentification4Choice:
-      type: object
-      properties:
-        IBAN:
-          $ref: '#/components/schemas/IBAN2007Identifier'
-        Othr:
-          $ref: '#/components/schemas/GenericAccountIdentification1'
-      description: Unique and unambiguous identification for the account between the account owner and the account servicer. Either iban or Othr field value should be passed on request.
-    ClearingSystemMemberIdentification2:
-      required:
-      - MmbId
-      type: object
-      properties:
-        ClrSysId:
-          type: object
-          properties:
-            Cd:
-              maxLength: 5
-              minLength: 1
-              type: string
-              description: It Specifies the clearing system identification code, as published in an external clearing system identification code list.
-            Prtry:
-              type: object
-              description: Identification code for a clearing system, that has not yet been identified in the list of clearing systems.
-              allOf:
-              - $ref: '#/components/schemas/Max35Text'
-          description: Specification of a pre-agreed offering between clearing agents or the channel through which the payment instruction is processed.Either from Code Or Proprietary is required
-        MmbId:
-          type: object
-          description: Identification of a member of a clearing system.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-      description: Information used to identify a member within a clearing system.
-    FinancialIdentificationSchemeName1Choice:
-      type: object
-      properties:
-        Cd:
-          maxLength: 4
-          minLength: 1
-          type: string
-          description: Specifies the external financial institution identification scheme name code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
-        Prtry:
-          type: object
-          description: Name of the identification scheme, in a free text form.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-      description: Name of the identification scheme. Either Code or Proprietary field value should be passed on request.
-    IBAN2007Identifier:
-      pattern: ^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$
-      type: string
-      description: '>- International Bank Account Number (IBAN) - identifier used internationally by financial institutions to uniquely identify the account of a customer. Further specifications of the format and content of the IBAN can be found in the standard ISO 13616 "Banking and related financial services - International Bank Account Number (IBAN)" version 1997-10-01, or later revisions.'
-    StatusReason6Choice:
-      type: object
-      properties:
-        Cd:
-          maxLength: 4
-          minLength: 1
-          type: string
-          description: Reason for the status, as published in an external reason code list.
-        Prtry:
-          type: object
-          description: Reason for the status, in a proprietary form.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-      description: Specifies the reason for the status report. Either Code or Proprietary field value should be passed on request.
-    paymentStatusInquiryResponse:
-      type: string
-      description: 'Base64 encoded string of ISO XML the response follows ISOXML urn:iso:std:iso:20022:tech:xsd:pain.002.001.03   https://www.iso20022.org/message/14361/download or #/definitions/Pain002'
-      format: byte
-      example: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxEb2N1bWVudCB4bWxucz0idXJuOmlzbzpzdGQ6aXNvOjIwMDIyOnRlY2g6eHNkOnBhaW4uMDAyLjAwMS4wMyI+DQoJPENzdG1yUG10U3RzUnB0Pg0KCQk8R3JwSGRyPg0KCQkJPE1zZ0lkPkNJVElCQU5LLzIwMTkxMjExLVBTUi85NDE0MTYxNzc8L01zZ0lkPg0KCQkJPENyZUR0VG0+MjAxOS0xMi0xMVQwNjoyNDo1MjwvQ3JlRHRUbT4NCgkJCTxJbml0Z1B0eT4NCgkJCQk8SWQ+DQoJCQkJCTxPcmdJZD48QklDT3JCRUk+Q0lUSVVTMzM8L0JJQ09yQkVJPjwvT3JnSWQ+DQoJCQkJPC9JZD4NCgkJCTwvSW5pdGdQdHk+DQoJCTwvR3JwSGRyPg0KCQk8T3JnbmxHcnBJbmZBbmRTdHM+DQoJCQk8T3JnbmxNc2dJZD5Nc2dJZGZmZ2g8L09yZ25sTXNnSWQ+DQoJCQk8T3JnbmxNc2dObUlkPnBhaW4uMDA3LjAwMS4wOTwvT3JnbmxNc2dObUlkPg0KCQkJPE9yZ25sQ3JlRHRUbT4yMDE5LTEyLTExVDEyOjAwOjAwPC9PcmdubENyZUR0VG0+DQoJCQk8T3JnbmxOYk9mVHhzPjE8L09yZ25sTmJPZlR4cz4NCgkJPC9PcmdubEdycEluZkFuZFN0cz4NCgkJPE9yZ25sUG10SW5mQW5kU3RzPg0KCQkJPE9yZ25sUG10SW5mSWQ+NDU2ODc5NjwvT3JnbmxQbXRJbmZJZD4NCgkJCTxUeEluZkFuZFN0cz4NCgkJCQk8T3JnbmxFbmRUb0VuZElkPjIwMTkxMjA5Q0lUSVNHUzBCUlQyMTAxNjMwPC9PcmdubEVuZFRvRW5kSWQ+DQoJCQkJPFR4U3RzPkFDVEM8L1R4U3RzPg0KCQkJPC9UeEluZkFuZFN0cz4NCgkJPC9PcmdubFBtdEluZkFuZFN0cz4NCgk8L0NzdG1yUG10U3RzUnB0Pg0KPC9Eb2N1bWVudD4=
-      xml:
-        name: paymentStatusInquiryResponse
-    SettlementInformation13:
-      required:
-      - SttlmMtd
-      type: object
-      properties:
-        SttlmMtd:
-          $ref: '#/components/schemas/SettlementMethod1Code'
-        SttlmAcct:
-          type: object
-          description: A specific purpose account used to post debit and credit entries as a result of the transaction.
-          allOf:
-          - $ref: '#/components/schemas/CashAccount16'
-        InstgRmbrsmntAgtAcct:
-          type: object
-          description: Unambiguous identification of the account of the instructing reimbursement agent account at its servicing agent in the payment chain.
-          allOf:
-          - $ref: '#/components/schemas/CashAccount16'
-        InstdRmbrsmntAgtAcct:
-          type: object
-          description: Unambiguous identification of the account of the instructed reimbursement agent account at its servicing agent in the payment chain.
-          allOf:
-          - $ref: '#/components/schemas/CashAccount16'
-        ThrdRmbrsmntAgtAcct:
-          type: object
-          description: Unambiguous identification of the account of the third reimbursement agent account at its servicing agent in the payment chain.
-          allOf:
-          - $ref: '#/components/schemas/CashAccount16'
-        InstgRmbrsmntAgt:
-          type: object
-          description: Agent through which the instructing agent will reimburse the instructed agent.
-          allOf:
-          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
-        InstdRmbrsmntAgt:
-          type: object
-          description: Agent at which the instructed agent will be reimbursed.
-          allOf:
-          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
-        ThrdRmbrsmntAgt:
-          type: object
-          description: Agent at which the instructed agent will be reimbursed.
-          allOf:
-          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
-        ClrSys:
-          $ref: '#/components/schemas/ClearingSystemIdentification3Choice'
-      description: Specifies the details on how the settlement of the original transaction(s) between the instructing agent and the instructed agent was completed.
-    AmendmentInformationDetails6:
-      type: object
-      properties:
-        OrgnlMndtId:
-          type: object
-          description: Unique identification, as assigned by the creditor, to unambiguously identify the original mandate.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        OrgnlCdtrSchmeId:
-          type: object
-          description: Original creditor scheme identification that has been modified.
-          allOf:
-          - $ref: '#/components/schemas/PartyIdentification32'
-        OrgnlDbtr:
-          type: object
-          description: Original debtor that has been modified.
-          allOf:
-          - $ref: '#/components/schemas/PartyIdentification32'
-        OrgnlDbtrAcct:
-          type: object
-          description: Original debtor account that has been modified.
-          allOf:
-          - $ref: '#/components/schemas/CashAccount16'
-        OrgnlDbtrAgt:
-          type: object
-          description: Original debtor agent that has been modified.
-          allOf:
-          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
-        OrgnlDbtrAgtAcct:
-          type: object
-          description: Original debtor agent account that has been modified.
-          allOf:
-          - $ref: '#/components/schemas/CashAccount16'
-        OrgnlCdtrAgt:
-          type: object
-          description: Original creditor agent that has been modified.
-          allOf:
-          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
-        OrgnlCdtrAgtAcct:
-          type: object
-          description: Original creditor agent acount that has been modified.
-          allOf:
-          - $ref: '#/components/schemas/CashAccount16'
-        OrgnlFnlColltnDt:
-          type: string
-          description: Original final collection date that has been modified.
-          format: date
-        OrgnlFrqcy:
-          $ref: '#/components/schemas/Frequency1Code'
-      description: List of mandate elements that have been modified.
-    FinancialInstitutionIdentification7:
-      type: object
-      properties:
-        BIC:
-          pattern: '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
-          type: string
-          description: Code allocated to a financial institution by the ISO 9362 Registration Authority as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".
-        ClrSysMmbId:
-          $ref: '#/components/schemas/ClearingSystemMemberIdentification2'
-        Nm:
-          type: object
-          description: Name by which an agent is known and which is usually used to identify that agent.
-          allOf:
-          - $ref: '#/components/schemas/Max140Text'
-        Othr:
-          $ref: '#/components/schemas/GenericFinancialIdentification1'
-        PstlAdr:
-          $ref: '#/components/schemas/PostalAddress6'
-      description: Unique and unambiguous identification of a financial institution, as assigned under an internationally recognised or proprietary identification scheme.
-    Document:
-      type: object
-      properties:
-        CstmrPmtStsRpt:
-          $ref: '#/components/schemas/CustomerPaymentStatusReportV03'
-    ISODate:
-      type: string
-      format: date
-    DocumentType3Code:
-      type: string
-      description: 'Type of creditor reference, in a coded form.<br><br><b>RADM</b> : Document is a remittance advice sent separately from the current transaction. <br><br><b>RPIN</b> : Document is a linked payment instruction to which the current payment instruction is related, for example, in a cover scenario. <br><br><b>FXDR</b> : Document is a pre-agreed or pre-arranged foreign exchange transaction to which the payment transaction refers. <br><br><b>DISP</b> : Document is a dispatch advice. <br><br><b>PUOR</b> : Document is a purchase order <br><br><b>SCOR</b> : Document is a structured communication reference provided by the creditor to identify the referred transaction.'
-      enum:
-      - RADM
-      - RPIN
-      - FXDR
-      - DISP
-      - PUOR
-      - SCOR
-    StatusReasonInformation8:
-      type: object
-      properties:
-        Orgtr:
-          type: object
-          description: Party that issues the status.
-          allOf:
-          - $ref: '#/components/schemas/PartyIdentification32'
-        Rsn:
-          $ref: '#/components/schemas/StatusReason6Choice'
-        AddtlInf:
+        TxSts:
+          $ref: '#/components/schemas/TransactionIndividualStatus3Code'
+        StsRsnInf:
           type: array
-          description: Further details on the status reason.
+          description: Set of elements used to provide detailed information on the status reason.
           items:
-            $ref: '#/components/schemas/Max105Text'
+            $ref: '#/components/schemas/StatusReasonInformation8'
+        ChrgsInf:
+          type: array
+          description: Provides information on the charges related to the processing of the rejection of the instruction.
+          items:
+            $ref: '#/components/schemas/ChargesInformation5'
+        AccptncDtTm:
+          type: string
+          description: Point in time when the payment order from the initiating party meets the processing conditions of the account servicing agent. This means that the account servicing agent has received the payment order and has applied checks such as authorisation, availability of funds.
+          format: date-time
+        AcctSvcrRef:
+          type: object
+          description: Unique reference, as assigned by the account servicing institution, to unambiguously identify the instruction.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        ClrSysRef:
+          type: object
+          description: Unique reference, as assigned by a clearing system, to unambiguously identify the instruction.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlTxRef:
+          $ref: '#/components/schemas/OriginalTransactionReference13'
     disclosure_request:
       type: object
       properties:
@@ -1031,6 +779,16 @@ components:
             flagFutureDated: N
             flagODE: Y
             beneDeductFeeType: F
+    DocumentType3Code:
+      type: string
+      description: 'Type of creditor reference, in a coded form.<br><br><b>RADM</b> : Document is a remittance advice sent separately from the current transaction. <br><br><b>RPIN</b> : Document is a linked payment instruction to which the current payment instruction is related, for example, in a cover scenario. <br><br><b>FXDR</b> : Document is a pre-agreed or pre-arranged foreign exchange transaction to which the payment transaction refers. <br><br><b>DISP</b> : Document is a dispatch advice. <br><br><b>PUOR</b> : Document is a purchase order <br><br><b>SCOR</b> : Document is a structured communication reference provided by the creditor to identify the referred transaction.'
+      enum:
+      - RADM
+      - RPIN
+      - FXDR
+      - DISP
+      - PUOR
+      - SCOR
     PartyIdentification32:
       type: object
       properties:
@@ -1056,166 +814,22 @@ components:
           - $ref: '#/components/schemas/CountryCode'
         CtctDtls:
           $ref: '#/components/schemas/ContactDetails2'
-    GenericOrganisationIdentification1:
-      required:
-      - Id
-      type: object
-      properties:
-        Id:
-          maxLength: 35
-          minLength: 1
-          type: string
-        SchmeNm:
-          type: object
-          allOf:
-          - $ref: '#/components/schemas/OrganisationIdentificationSchemeName1Choice'
-        Issr:
-          maxLength: 35
-          minLength: 1
-          type: string
-      description: Unique identification of an organisation, as assigned by an institution, using an identification scheme.
-    CreditDebitCode:
+    IBAN2007Identifier:
+      pattern: ^[A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30}$
       type: string
-      description: 'Specifies whether the adjustment must be subtracted or added to the total amount.<br><br><b>CRDT</b> : Operation is an increase. <br><br><b>DBIT</b> : Operation is a decrease.'
+      description: '>- International Bank Account Number (IBAN) - identifier used internationally by financial institutions to uniquely identify the account of a customer. Further specifications of the format and content of the IBAN can be found in the standard ISO 13616 "Banking and related financial services - International Bank Account Number (IBAN)" version 1997-10-01, or later revisions.'
+    Frequency1Code:
+      type: string
+      description: 'Original frequency that has been modified.<br><br><b>YEAR</b> : Event takes place every year or once a year. <br><br><b>MNTH</b> : Event takes place every month or once a month. <br><br><b>QURT</b> : Event takes place every three months or four times a year. <br><br><b>MIAN</b> : Event takes place every six months or two times a year.<br><br><b>WEEK</b> : Event takes place once a week. <br><br><b>DAIL</b> : Event takes place every day. <br><br><b>ADHO</b> : Event takes place on request or as necessary. <br><br><b>INDA</b> : Event takes place several times a day.'
       enum:
-      - CRDT
-      - DBIT
-    CustomerPaymentStatusReportV03:
-      required:
-      - GrpHdr
-      - OrgnlGrpInfAndSts
-      type: object
-      properties:
-        GrpHdr:
-          $ref: '#/components/schemas/GroupHeader36'
-        OrgnlGrpInfAndSts:
-          $ref: '#/components/schemas/OriginalGroupInformation20'
-        OrgnlPmtInfAndSts:
-          type: array
-          description: Information concerning the original payment information, to which the status report message refers.
-          items:
-            $ref: '#/components/schemas/OriginalPaymentInformation1'
-    Max35Text:
-      maxLength: 35
-      minLength: 1
-      type: string
-    CashAccountType2:
-      type: object
-      properties:
-        Cd:
-          $ref: '#/components/schemas/CashAccountType4Code'
-        Prtry:
-          type: object
-          description: Nature or use of the account in a proprietary form.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-      description: Specifies the nature, or use of the account. Either Code or Proprietary field value should be passed on request.
-    ClearingSystemIdentification3Choice:
-      type: object
-      properties:
-        Cd:
-          maxLength: 3
-          minLength: 1
-          type: string
-          description: Infrastructure through which the payment instruction is processed, as published in an external clearing system identification code list.Specifies the cash clearing system, as published in an external cash clearing system code list.
-        Prtry:
-          type: object
-          description: Clearing system identification in a proprietary form.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-      description: Specification of a pre-agreed offering between clearing agents or the channel through which the payment instruction is processed. Either Code or Proprietary field value should be passed in request.
-    DocumentAdjustment1:
-      required:
-      - Amt
-      type: object
-      properties:
-        AddtlInf:
-          type: object
-          description: Provides further details on the document adjustment.
-          allOf:
-          - $ref: '#/components/schemas/Max140Text'
-        Amt:
-          type: object
-          description: Amount of money of the document adjustment.
-          allOf:
-          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
-        CdtDbtInd:
-          $ref: '#/components/schemas/CreditDebitCode'
-        Rsn:
-          type: object
-          description: Specifies the reason for the adjustment.
-          allOf:
-          - $ref: '#/components/schemas/Max4Text'
-    Max70Text:
-      maxLength: 70
-      minLength: 1
-      type: string
-    Priority2Code:
-      type: string
-      description: 'Indicator of the urgency or order of importance that the instructing party would like the instructed party to apply to the processing of the instruction.<br><br><b>HIGH</b> : Priority level is high. <br><br><b>NORM</b> : Priority level is normal.'
-      enum:
-      - HIGH
-      - NORM
-    OrganisationIdentification4:
-      type: object
-      properties:
-        BICOrBEI:
-          pattern: '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
-          type: string
-          description: Code allocated to a financial institution or non financial institution by the ISO 9362 Registration Authority as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".
-        Othr:
-          type: array
-          description: Unique identification of an organisation, as assigned by an institution, using an identification scheme.
-          items:
-            $ref: '#/components/schemas/GenericOrganisationIdentification1'
-      description: Unique and unambiguous way to identify an organisation.
-    ServiceLevel8Choice:
-      type: object
-      properties:
-        Cd:
-          maxLength: 4
-          minLength: 1
-          type: string
-          description: Specifies the external service level code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
-        Prtry:
-          type: object
-          description: Specifies a pre-agreed service or level of service between the parties, as a proprietary code.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-      description: Agreement under which or rules under which the transaction should be processed. Either code or proprietary field values should be sent in request.
-    PersonIdentification5:
-      type: object
-      properties:
-        DtAndPlcOfBirth:
-          $ref: '#/components/schemas/DateAndPlaceOfBirth'
-        Othr:
-          type: array
-          description: Unique identification of a person, as assigned by an institution, using an identification scheme.
-          items:
-            $ref: '#/components/schemas/GenericPersonIdentification1'
-      description: Unique and unambiguous identification of a person, for example a passport.
-    Max4Text:
-      maxLength: 4
-      minLength: 1
-      type: string
-    LocalInstrument2Choice:
-      type: object
-      properties:
-        Cd:
-          type: object
-          description: Specifies the external local instrument code in the format of character string with a maximum length of 35 characters.The list of valid codes is an external code list published separately.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        Prtry:
-          type: object
-          description: Specifies the local instrument, as a proprietary code.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-      description: User community specific instrument. Either Code or Proprietary field value should be passed in request.
-    ActiveOrHistoricCurrencyAndAmount_SimpleType:
-      maxLength: 18
-      type: string
-      description: 'The number of fractional digits (or minor unit of currency) must comply with ISO 4217. Note: The decimal separator is a dot.A number of monetary units specified in an active or a historic currency where the unit of currency is explicit and compliant with ISO 4217. The number of fractional digits should be 5.'
+      - YEAR
+      - MNTH
+      - QURT
+      - MIAN
+      - WEEK
+      - DAIL
+      - ADHO
+      - INDA
     GenericAccountIdentification1:
       required:
       - Id
@@ -1237,125 +851,74 @@ components:
           allOf:
           - $ref: '#/components/schemas/FinancialIdentificationSchemeName1Choice'
       description: Unique identification of an account, as assigned by the account servicer, using an identification scheme.
-    ActiveOrHistoricCurrencyAndAmount_SimpleTypeStatusInquiry:
-      type: string
-      description: Upto 3 fraction digits allowed
-    Max16Text:
-      maxLength: 16
-      minLength: 1
-      type: string
-    PaymentTransactionInformation25:
+    disclosure_response:
       type: object
       properties:
-        StsId:
+        out:
+          required:
+          - deliveryDate
+          - disclosureDate
+          - feeType
+          - otherFees
+          - returnCode
+          - returnMessage
+          - totalTaxes
+          - uniqueIdentifier
           type: object
-          description: Unique identification, as assigned by an instructing party for an instructed party, to unambiguously identify the reported status.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        OrgnlInstrId:
-          type: object
-          description: Unique identification, as assigned by the original instructing party for the original instructed party, to unambiguously identify the original instruction.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        OrgnlEndToEndId:
-          type: object
-          description: Unique identification, as assigned by the original initiating party, to unambiguously identify the original transaction.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        TxSts:
-          $ref: '#/components/schemas/TransactionIndividualStatus3Code'
-        StsRsnInf:
-          type: array
-          description: Set of elements used to provide detailed information on the status reason.
-          items:
-            $ref: '#/components/schemas/StatusReasonInformation8'
-        ChrgsInf:
-          type: array
-          description: Provides information on the charges related to the processing of the rejection of the instruction.
-          items:
-            $ref: '#/components/schemas/ChargesInformation5'
-        AccptncDtTm:
-          type: string
-          description: Point in time when the payment order from the initiating party meets the processing conditions of the account servicing agent. This means that the account servicing agent has received the payment order and has applied checks such as authorisation, availability of funds.
-          format: date-time
-        AcctSvcrRef:
-          type: object
-          description: Unique reference, as assigned by the account servicing institution, to unambiguously identify the instruction.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        ClrSysRef:
-          type: object
-          description: Unique reference, as assigned by a clearing system, to unambiguously identify the instruction.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        OrgnlTxRef:
-          $ref: '#/components/schemas/OriginalTransactionReference13'
-    ValidationRequest:
-      required:
-      - paymentBase64
-      type: object
-      properties:
-        paymentBase64:
-          type: string
-          description: 'paymentBase64: ISO XML V3 (pain.001.001.03) file has to be converted to Base64 format and passed in <Request><paymentBase64> tags. Based on the use case, you should use one of the ISO schema. Use PACS schema for financial institutions and PAIN format for non-financial clients. ISO schema can be refered from below URL
-
-            pain.001.001.03 - https://www.iso20022.org/message/14316/download or #/definitions/Pain001
-
-            '
-          example: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjxEb2N1bWVudCB4bWxuczp4c2k9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4bWxucz0idXJuOmlzbzpzdGQ6aXNvOjIwMDIyOnRlY2g6eHNkOnBhaW4uMDAxLjAwMS4wMyI+DQogIDxDc3RtckNkdFRyZkluaXRuPg0KICAgIDxHcnBIZHI+DQogICAgICA8TXNnSWQ+R0JQMTYxMTE0Njk0ODY5PC9Nc2dJZD4NCiAgICAgIDxDcmVEdFRtPjIwMTctMDYtMDJUMTA6MTc6NTU8L0NyZUR0VG0+DQogICAgICA8TmJPZlR4cz4xPC9OYk9mVHhzPg0KICAgICAgPEN0cmxTdW0+MS4wMDwvQ3RybFN1bT4NCiAgICAgIDxJbml0Z1B0eT4NCiAgICAgICAgPE5tPkh1ZHNvbiBBZHZpc29ycyBFdXJvcGUgTHRkPC9ObT4NCiAgICAgIDwvSW5pdGdQdHk+DQogICAgPC9HcnBIZHI+DQogICAgPFBtdEluZj4NCiAgICAgIDxQbXRJbmZJZD4xNDAxNzQ5OCBGdW5kIFRyYW5zZmVyIERvbWVzdGljPC9QbXRJbmZJZD4NCiAgICAgIDxQbXRNdGQ+VFJGPC9QbXRNdGQ+DQogICAgICA8TmJPZlR4cz4xPC9OYk9mVHhzPg0KICAgICAgPEN0cmxTdW0+MS4wMDwvQ3RybFN1bT4NCiAgICAgIDxQbXRUcEluZj4NCiAgICAgICAgPFN2Y0x2bD4NCiAgICAgICAgICA8Q2Q+VVJHUDwvQ2Q+DQogICAgICAgIDwvU3ZjTHZsPg0KICAgICAgPC9QbXRUcEluZj4NCiAgICAgIDxSZXFkRXhjdG5EdD4yMDE5LTA4LTIwPC9SZXFkRXhjdG5EdD4NCiAgICAgIDxEYnRyPg0KICAgICAgICA8Tm0+Q0lUSUJBTksgRS1CVVNJTkVTUyBFVVIgRFVNIERFTU88L05tPg0KICAgICAgICA8UHN0bEFkcj4NCiAgICAgICAgICA8Q3RyeT5HQjwvQ3RyeT4NCiAgICAgICAgPC9Qc3RsQWRyPg0KICAgICAgICA8SWQ+DQogICAgICAgICAgPE9yZ0lkPg0KICAgICAgICAgICAgPEJJQ09yQkVJPkNJVElHQjJMPC9CSUNPckJFST4NCiAgICAgICAgICA8L09yZ0lkPg0KICAgICAgICA8L0lkPg0KICAgICAgPC9EYnRyPg0KICAgICAgPERidHJBY2N0Pg0KICAgICAgICA8SWQ+DQogICAgICAgICAgPE90aHI+DQogICAgICAgICAgICA8SWQ+MTAwMTIyNjI8L0lkPg0KICAgICAgICAgIDwvT3Rocj4NCiAgICAgICAgPC9JZD4NCiAgICAgICAgPENjeT5VU0Q8L0NjeT4NCiAgICAgIDwvRGJ0ckFjY3Q+DQogICAgICA8RGJ0ckFndD4NCiAgICAgICAgPEZpbkluc3RuSWQ+DQogICAgICAgICAgPEJJQz5DSVRJR0IyTDwvQklDPg0KICAgICAgICAgIDxQc3RsQWRyPg0KICAgICAgICAgICAgPEN0cnk+R0I8L0N0cnk+DQogICAgICAgICAgPC9Qc3RsQWRyPg0KICAgICAgICA8L0Zpbkluc3RuSWQ+DQogICAgICA8L0RidHJBZ3Q+DQogICAgICA8Q2hyZ0JyPkRFQlQ8L0NocmdCcj4NCiAgICAgIDxDZHRUcmZUeEluZj4NCiAgICAgICAgPFBtdElkPg0KICAgICAgICAgIDxFbmRUb0VuZElkPlBBMjAxODIwMTkxMjwvRW5kVG9FbmRJZD4NCiAgICAgICAgPC9QbXRJZD4NCiAgICAgICAgPEFtdD4NCiAgICAgICAgICA8SW5zdGRBbXQgQ2N5PSJVU0QiPjEuMDA8L0luc3RkQW10Pg0KICAgICAgICA8L0FtdD4NCiAgICAgICAgPFVsdG10RGJ0cj4NCiAgICAgICAgICA8SWQ+DQogICAgICAgICAgICA8UHJ2dElkPg0KICAgICAgICAgICAgICA8T3Rocj4NCiAgICAgICAgICAgICAgICA8SWQ+UEFSVElDSVBBTlQgSUQgUE9CTyBVSyBCUjYwMCAwMTIzNDU8L0lkPg0KICAgICAgICAgICAgICAgIDxTY2htZU5tPg0KICAgICAgICAgICAgICAgICAgPFBydHJ5PklOU1Q8L1BydHJ5Pg0KICAgICAgICAgICAgICAgIDwvU2NobWVObT4NCiAgICAgICAgICAgICAgPC9PdGhyPg0KICAgICAgICAgICAgPC9QcnZ0SWQ+DQogICAgICAgICAgPC9JZD4NCiAgICAgICAgPC9VbHRtdERidHI+DQogICAgICAgIDxDZHRyQWd0Pg0KICAgICAgICAgIDxGaW5JbnN0bklkPg0KICAgICAgICAgICAgPEJJQz5DSVRJR0IyTDwvQklDPg0KICAgICAgICAgICAgPENsclN5c01tYklkPg0KICAgICAgICAgICAgICA8TW1iSWQ+MTg1MDA4PC9NbWJJZD4NCiAgICAgICAgICAgIDwvQ2xyU3lzTW1iSWQ+DQogICAgICAgICAgICA8Tm0+Q0lUSUJBTksoSVNPKTwvTm0+DQogICAgICAgICAgICA8UHN0bEFkcj4NCiAgICAgICAgICAgICAgPEN0cnk+R0I8L0N0cnk+DQogICAgICAgICAgICA8L1BzdGxBZHI+DQogICAgICAgICAgPC9GaW5JbnN0bklkPg0KICAgICAgICA8L0NkdHJBZ3Q+DQogICAgICAgIDxDZHRyPg0KICAgICAgICAgIDxObT44MDEwNjQzMTIyWCBYWFhYWFhYWFhYWFhYIFhYWDwvTm0+DQogICAgICAgICAgPFBzdGxBZHI+DQogICAgICAgICAgICA8Q3RyeT5HQjwvQ3RyeT4NCiAgICAgICAgICA8L1BzdGxBZHI+DQogICAgICAgICAgPEN0Y3REdGxzPg0KICAgICAgICAgICAgPE5tPldEVyAzIElOVkVTVE1FTlRTIExJTUlURUQ8L05tPg0KICAgICAgICAgIDwvQ3RjdER0bHM+DQogICAgICAgIDwvQ2R0cj4NCiAgICAgICAgPENkdHJBY2N0Pg0KICAgICAgICAgIDxJZD4NCiAgICAgICAgICA8T3Rocj4NCiAgICAgICAgICAgICAgICAgICA8SWQ+MTAwMTIyNjI8L0lkPg0KICAgICAgICAgICAgICAgICAgPC9PdGhyPg0KICAgICAgICAgIDwvSWQ+DQogICAgICAgIDwvQ2R0ckFjY3Q+DQogICAgICAgIDxSbXRJbmY+DQogICAgICAgICAgPFVzdHJkPlRSMDAyNjM4PC9Vc3RyZD4NCiAgICAgICAgPC9SbXRJbmY+DQogICAgICA8L0NkdFRyZlR4SW5mPg0KICAgIDwvUG10SW5mPg0KICA8L0NzdG1yQ2R0VHJmSW5pdG4+DQo8L0RvY3VtZW50Pg==
-      description: Object representing payment initiation request. ISO schema can be found at https://www.iso20022.org/catalogue-messages/iso-20022-messages-archive?page=4  and select Payments Initiation V03 and Payments Clearing and Settlement V09 then select more and download mdr file for detailed information on schema and  xsd schema definitions.
-      xml:
-        name: Request
-    CountryCode:
-      pattern: '[A-Z]{2,2}'
-      type: string
-      description: Nation with its own government. The code is checked against the list of country names obtained from the United Nations (ISO 3166, Alpha-2 code).
-    PersonIdentificationSchemeName1Choice:
-      type: object
-      properties:
-        Cd:
-          maxLength: 4
-          minLength: 1
-          type: string
-          description: Specifies the external person identification scheme name code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
-        Prtry:
-          maxLength: 35
-          minLength: 1
-          type: string
-          description: Description of Propreitary
-      description: Either Code or Proprietary is required
-    PaymentTypeInformation22:
-      type: object
-      properties:
-        InstrPrty:
-          $ref: '#/components/schemas/Priority2Code'
-        ClrChanl:
-          type: string
-          description: 'Specifies the clearing channel to be used to process the payment instruction.<br><br><b>RTGS</b> : Clearing channel is a real-time gross settlement system. <br><br><b>RTNS</b> : Clearing channel is a real-time net settlement system. <br><br><b>MPNS</b> : Clearing channel is a mass payment net settlement system. <br><br><b>BOOK</b> : Payment through internal book transfer.'
-          enum:
-          - RTGS
-          - RTNS
-          - MPNS
-          - BOOK
-        SvcLvl:
-          $ref: '#/components/schemas/ServiceLevel8Choice'
-        LclInstrm:
-          $ref: '#/components/schemas/LocalInstrument2Choice'
-        SeqTp:
-          type: string
-          description: 'Identifies the direct debit sequence, such as first, recurrent, final or one-off.<br><br><b>FRST</b> : First collection of a series of direct debit instructions. <br><br><b>RCUR</b> : Direct debit instruction where the debtor''s authorisation is used for regular direct debit transactions initiated by the creditor. <br><br><b>FNAL</b> : Final collection of a series of direct debit instructions. <br><br><b>OOFF</b> : Direct debit instruction where the debtor''s authorisation is used to initiate one single direct debit transaction.'
-          enum:
-          - FRST
-          - RCUR
-          - FNAL
-          - OOFF
-        CtgyPurp:
-          $ref: '#/components/schemas/CategoryPurpose1Choice'
-      description: Set of elements used to further specify the type of transaction.
-    Max105Text:
-      maxLength: 105
-      minLength: 1
-      type: string
+          properties:
+            disclosureDate:
+              type: string
+              description: The disclosure date. Format => Timestamp > yyyy-mm-dd hh:mm:ss[.fffffffff].
+            otherFees:
+              type: number
+              description: Sum of all fees calculated, including bene deduct. Between 0.00 and 9999999999999999.999
+            feeType:
+              maxLength: 1
+              type: string
+              description: Fee description Actual(A) or Estimate(E).
+              enum:
+              - A
+              - E
+            totalTaxes:
+              type: number
+              description: Sum of all taxes calculated. Between 0.00 and 9999999999999999.999.
+            deliveryDate:
+              type: string
+              description: The calculated delivery date for payment.  Format => Timestamp > yyyy-mm-dd hh:mm:ss[.fffffffff].
+            uniqueIdentifier:
+              maxLength: 15
+              type: string
+              description: API Packet identifier.
+            returnCode:
+              maxLength: 5
+              type: string
+              description: Code to show if API worked.
+            returnMessage:
+              maxLength: 100
+              type: string
+              description: Descriptive message to show if API passed, or the reason for the failure.
+            chargeCodeUsed:
+              maxLength: 3
+              type: string
+              description: Charge code calculated by Dodd-Frank application based on its rules.
+            beneDeductUsed:
+              maxLength: 1
+              type: string
+              description: Bene deduct fee indicator passed in input request field isBeneDeduct.
+            beneDeductFeeTypeUsed:
+              maxLength: 1
+              type: string
+              description: Bene deduct fee type passed in input request field beneDeductFeeType.
+          example:
+            disclosureDate: '2019-25-04T08:13:21.123-05:00'
+            otherFees: 25
+            feeType: E
+            totalTaxes: 2
+            deliveryDate: '2019-25-04T08:13:21.123-05:00'
+            uniqueIdentifier: 000000000810814
+            returnCode: '0'
+            returnMessage: SUCCESS
+            chargeCodeUsed: BEN
     ReferredDocumentType1Choice:
       type: object
       properties:
@@ -1367,60 +930,66 @@ components:
           allOf:
           - $ref: '#/components/schemas/Max35Text'
       description: Provides the type details of the referred document. Either Code or Proprietary field value should be passed on request.
-    ChargesInformation5:
-      required:
-      - Amt
-      - Pty
+    RemittanceAmount1:
       type: object
       properties:
-        Amt:
+        AdjstmntAmtAndRsn:
+          type: array
+          description: Set of elements used to provide information on the amount and reason of the document adjustment.
+          items:
+            $ref: '#/components/schemas/DocumentAdjustment1'
+        CdtNoteAmt:
           type: object
-          description: Transaction charges to be paid by the charge bearer.
+          description: Amount specified for the referred document is the amount of a credit note.
           allOf:
           - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
-        Pty:
+        DscntApldAmt:
           type: object
-          description: Party that takes the transaction charges or to which the transaction charges are due.
+          description: Amount of money that results from the application of an agreed discount to the amount due and payable to the creditor.
           allOf:
-          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
-    CreditorReferenceType2:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        DuePyblAmt:
+          type: object
+          description: Amount specified is the exact amount due and payable to the creditor.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        RmtdAmt:
+          type: object
+          description: Amount of money remitted for the referred document.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        TaxAmt:
+          type: object
+          description: Quantity of cash resulting from the calculation of the tax.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+      description: Set of elements used to provide details on the amounts of the referred document.
+    SettlementMethod1Code:
+      type: string
+      description: 'Method used to settle the (batch of) payment instructions. <br><br><b>INDA</b> : Settlement is done by the agent instructed to execute a payment instruction. <br><br><b>INGA</b> : Settlement is done by the agent instructing and forwarding the payment to the next party in the payment chain. <br><br><b>COVE</b> : Settlement is done through a cover payment. <br><br><b>CLRG</b> : Settlement is done through a payment clearing system.'
+      enum:
+      - INDA
+      - INGA
+      - COVE
+      - CLRG
+    GenericFinancialIdentification1:
       required:
-      - CdOrPrtry
+      - Id
       type: object
       properties:
-        CdOrPrtry:
-          $ref: '#/components/schemas/CreditorReferenceType1Choice'
-        Issr:
+        Id:
           type: object
-          description: Entity that assigns the credit reference type.
+          description: Unique and unambiguous identification of a person.
           allOf:
           - $ref: '#/components/schemas/Max35Text'
-      description: Specifies the type of creditor reference.
-    NamePrefix1Code:
-      type: string
-      description: 'Specifies the terms used to formally address a person.  <br><br><b>DOCT</b> : Title of the person is Doctor or Dr. <br><br><b>MIST</b> : Title of the person is Mister or Mr. <br><br><b>MISS</b> : Title of the person is Miss. <br><br><b>MADM</b> : Title of the person is Madam.'
-      enum:
-      - DOCT
-      - MIST
-      - MISS
-      - MADM
-    NumberOfTransactionsPerStatus3:
-      required:
-      - DtldNbOfTxs
-      - DtldSts
-      type: object
-      properties:
-        DtldNbOfTxs:
+        Issr:
           type: object
-          description: Number of individual transactions contained in the message, detailed per status.
+          description: Entity that assigns the identification.
           allOf:
-          - $ref: '#/components/schemas/Max15NumericText'
-        DtldCtrlSum:
-          maxLength: 18
-          type: string
-          description: Total of all individual amounts included in the message, irrespective of currencies, detailed per status. The number of fractional digits should not be more than 17
-        DtldSts:
-          $ref: '#/components/schemas/TransactionIndividualStatus3Code'
+          - $ref: '#/components/schemas/Max35Text'
+        SchmeNm:
+          $ref: '#/components/schemas/FinancialIdentificationSchemeName1Choice'
+      description: Unique identification of an agent, as assigned by an institution, using an identification scheme.
     DateAndPlaceOfBirth:
       required:
       - BirthDt
@@ -1449,25 +1018,46 @@ components:
           allOf:
           - $ref: '#/components/schemas/CountryCode'
       description: Date and place of birth of a person.
-    ActiveOrHistoricCurrencyCode:
-      pattern: '[A-Z]{3,3}'
+    CreditDebitCode:
       type: string
-    BranchData2:
+      description: 'Specifies whether the adjustment must be subtracted or added to the total amount.<br><br><b>CRDT</b> : Operation is an increase. <br><br><b>DBIT</b> : Operation is a decrease.'
+      enum:
+      - CRDT
+      - DBIT
+    DocumentType5Code:
+      type: string
+      description: 'Document type in a coded form.<br><br><b>MSIN</b> : Document is an invoice claiming payment for the supply of metered services, for example gas or electricity supplied to a fixed meter. <br><br><b>CNFA</b> : Document is a credit note for the final amount settled for a commercial transaction. <br><br><b>DNFA</b> : Document is a debit note for the final amount settled for a commercial transaction. <br><br><b>CINV</b> :   Document is an invoice. <br><br><b>CREN</b> : Document is a credit note. <br><br><b>DEBN</b> : Document is a debit note. <br><br><b>HIRI</b> : Document is an invoice for the hiring of human resources or renting goods or equipment. <br><br><b>SBIN</b> : Document is an invoice issued by the debtor. <br><br><b>SVGS</b> : Account used for savings. <br><br><b>CMCN</b> : Document is an agreement between the parties, stipulating the terms and conditions of the delivery of goods or services. <br><br><b>SOAC</b> : Document is a statement of the transactions posted to the debtor''s account at the supplier. <br><br><b>DISP</b> : Document is a dispatch advice. <br><br><b>BOLD</b> : Document is a shipping notice. <br><br><b>VCHR</b> : Document is an electronic payment document. <br><br><b>AROI</b> : Document is a payment that applies to a specific source document. <br><br><b>TSUT</b> : Document is a transaction identifier as assigned by the Trade Services Utility.'
+      enum:
+      - MSIN
+      - CNFA
+      - DNFA
+      - CINV
+      - CREN
+      - DEBN
+      - HIRI
+      - SBIN
+      - CMCN
+      - SOAC
+      - DISP
+      - BOLD
+      - VCHR
+      - AROI
+      - TSUT
+    Max15NumericText:
+      pattern: '[0-9]{1,15}'
+      type: string
+    Error-Message:
       type: object
       properties:
-        Id:
-          type: object
-          description: Unique and unambiguous identification of a branch of a financial institution.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        Nm:
-          type: object
-          description: Name by which an agent is known and which is usually used to identify that agent.
-          allOf:
-          - $ref: '#/components/schemas/Max140Text'
-        PstlAdr:
-          $ref: '#/components/schemas/PostalAddress6'
-      description: Identifies a specific branch of a financial institution.
+        correlationId:
+          type: string
+        httpCode:
+          type: string
+        httpMessage:
+          type: string
+        moreInformation:
+          type: string
+      description: Error response body.
     GenericPersonIdentification1:
       required:
       - Id
@@ -1489,24 +1079,6 @@ components:
           allOf:
           - $ref: '#/components/schemas/PersonIdentificationSchemeName1Choice'
       description: Unique identification of a person, as assigned by an institution, using an identification scheme.
-    GenericFinancialIdentification1:
-      required:
-      - Id
-      type: object
-      properties:
-        Id:
-          type: object
-          description: Unique and unambiguous identification of a person.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        Issr:
-          type: object
-          description: Entity that assigns the identification.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        SchmeNm:
-          $ref: '#/components/schemas/FinancialIdentificationSchemeName1Choice'
-      description: Unique identification of an agent, as assigned by an institution, using an identification scheme.
     ReferredDocumentInformation3:
       type: object
       properties:
@@ -1522,80 +1094,20 @@ components:
           - $ref: '#/components/schemas/ISODate'
         Tp:
           $ref: '#/components/schemas/ReferredDocumentType2'
-    DocumentType5Code:
-      type: string
-      description: 'Document type in a coded form.<br><br><b>MSIN</b> : Document is an invoice claiming payment for the supply of metered services, for example gas or electricity supplied to a fixed meter. <br><br><b>CNFA</b> : Document is a credit note for the final amount settled for a commercial transaction. <br><br><b>DNFA</b> : Document is a debit note for the final amount settled for a commercial transaction. <br><br><b>CINV</b> :   Document is an invoice. <br><br><b>CREN</b> : Document is a credit note. <br><br><b>DEBN</b> : Document is a debit note. <br><br><b>HIRI</b> : Document is an invoice for the hiring of human resources or renting goods or equipment. <br><br><b>SBIN</b> : Document is an invoice issued by the debtor. <br><br><b>SVGS</b> : Account used for savings. <br><br><b>CMCN</b> : Document is an agreement between the parties, stipulating the terms and conditions of the delivery of goods or services. <br><br><b>SOAC</b> : Document is a statement of the transactions posted to the debtor''s account at the supplier. <br><br><b>DISP</b> : Document is a dispatch advice. <br><br><b>BOLD</b> : Document is a shipping notice. <br><br><b>VCHR</b> : Document is an electronic payment document. <br><br><b>AROI</b> : Document is a payment that applies to a specific source document. <br><br><b>TSUT</b> : Document is a transaction identifier as assigned by the Trade Services Utility.'
-      enum:
-      - MSIN
-      - CNFA
-      - DNFA
-      - CINV
-      - CREN
-      - DEBN
-      - HIRI
-      - SBIN
-      - CMCN
-      - SOAC
-      - DISP
-      - BOLD
-      - VCHR
-      - AROI
-      - TSUT
-    RemittanceInformation5:
-      type: object
-      properties:
-        Strd:
-          type: array
-          description: Information supplied to enable the matching/reconciliation of an entry with the items that the payment is intended to settle, such as commercial invoices in an accounts' receivable system, in a structured form.
-          items:
-            $ref: '#/components/schemas/StructuredRemittanceInformation7'
-        Ustrd:
-          type: array
-          description: Information supplied to enable the matching/reconciliation of an entry with the items that the payment is intended to settle, such as commercial invoices in an accounts' receivable system, in an unstructured form.
-          items:
-            $ref: '#/components/schemas/Max140Text'
-    CreditorReferenceInformation2:
-      type: object
-      properties:
-        Ref:
-          type: object
-          description: Unique reference, as assigned by the creditor, to unambiguously refer to the payment transaction.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        Tp:
-          $ref: '#/components/schemas/CreditorReferenceType2'
-      description: Reference information provided by the creditor to allow the identification of the underlying documents.
-    CreditorReferenceType1Choice:
+    StatusReason6Choice:
       type: object
       properties:
         Cd:
-          $ref: '#/components/schemas/DocumentType3Code'
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Reason for the status, as published in an external reason code list.
         Prtry:
           type: object
-          description: Creditor reference type, in a proprietary form.
+          description: Reason for the status, in a proprietary form.
           allOf:
           - $ref: '#/components/schemas/Max35Text'
-      description: Coded or proprietary format creditor reference type. Either Code or Proprietary field value should be passed on request.
-    CashAccountType4Code:
-      type: string
-      description: 'Account type, in a coded form. <br><br><b>CASH</b> : Account used for the payment of cash. <br><br><b>CHAR</b> : Account used for charges if different from the account for payment. <br><br><b>COMM</b> : Account used for commission if different from the account for payment. <br><br><b>TAXE</b> : Account used for taxes if different from the account for payment. <br><br><b>CISH</b> : Account used for payment of income if different from the current cash account. <br><br><b>TRAS</b> : Account used for trading if different from the current cash account. <br><br><b>SACC</b> : Account used to post debit and credit entries, as a result of transactions cleared and settled through a specific clearing and settlement system. <br><br><b>CACC</b> : Account used to post debits and credits when no specific account has been nominated. <br><br><b>SVGS</b> : Account used for savings. <br><br><b>ONDP</b> : Account used for overnight deposits. <br><br><b>MGLD</b> : Account used for a marginal lending facility. <br><br><b>NREX</b> : Account used for non-resident external. <br><br><b>MOMA</b> : Account used for money markets if different from the cash account. <br><br><b>LOAN</b> : Account used for loans. <br><br><b>SLRY</b> : Accounts used for salary payments. <br><br><b>ODFT</b> : Account is used for overdrafts.'
-      enum:
-      - CASH
-      - CHAR
-      - COMM
-      - TAXE
-      - CISH
-      - TRAS
-      - SACC
-      - CACC
-      - SVGS
-      - ONDP
-      - MGLD
-      - NREX
-      - MOMA
-      - LOAN
-      - SLRY
-      - ODFT
+      description: Specifies the reason for the status report. Either Code or Proprietary field value should be passed on request.
     PaymentInquiryRequest:
       required:
       - EndToEndId
@@ -1653,6 +1165,401 @@ components:
               - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
           description: Partner can send either Payment Amount or Equivalent Amount and not both
       description: Payment Status Inquiries Inputs
+    ClearingSystemMemberIdentification2:
+      required:
+      - MmbId
+      type: object
+      properties:
+        ClrSysId:
+          type: object
+          properties:
+            Cd:
+              maxLength: 5
+              minLength: 1
+              type: string
+              description: It Specifies the clearing system identification code, as published in an external clearing system identification code list.
+            Prtry:
+              type: object
+              description: Identification code for a clearing system, that has not yet been identified in the list of clearing systems.
+              allOf:
+              - $ref: '#/components/schemas/Max35Text'
+          description: Specification of a pre-agreed offering between clearing agents or the channel through which the payment instruction is processed.Either from Code Or Proprietary is required
+        MmbId:
+          type: object
+          description: Identification of a member of a clearing system.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Information used to identify a member within a clearing system.
+    Max4Text:
+      maxLength: 4
+      minLength: 1
+      type: string
+    Document:
+      type: object
+      properties:
+        CstmrPmtStsRpt:
+          $ref: '#/components/schemas/CustomerPaymentStatusReportV03'
+    SettlementInformation13:
+      required:
+      - SttlmMtd
+      type: object
+      properties:
+        SttlmMtd:
+          $ref: '#/components/schemas/SettlementMethod1Code'
+        SttlmAcct:
+          type: object
+          description: A specific purpose account used to post debit and credit entries as a result of the transaction.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        InstgRmbrsmntAgtAcct:
+          type: object
+          description: Unambiguous identification of the account of the instructing reimbursement agent account at its servicing agent in the payment chain.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        InstdRmbrsmntAgtAcct:
+          type: object
+          description: Unambiguous identification of the account of the instructed reimbursement agent account at its servicing agent in the payment chain.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        ThrdRmbrsmntAgtAcct:
+          type: object
+          description: Unambiguous identification of the account of the third reimbursement agent account at its servicing agent in the payment chain.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        InstgRmbrsmntAgt:
+          type: object
+          description: Agent through which the instructing agent will reimburse the instructed agent.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        InstdRmbrsmntAgt:
+          type: object
+          description: Agent at which the instructed agent will be reimbursed.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        ThrdRmbrsmntAgt:
+          type: object
+          description: Agent at which the instructed agent will be reimbursed.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        ClrSys:
+          $ref: '#/components/schemas/ClearingSystemIdentification3Choice'
+      description: Specifies the details on how the settlement of the original transaction(s) between the instructing agent and the instructed agent was completed.
+    ActiveOrHistoricCurrencyAndAmount:
+      required:
+      - Ccy
+      type: object
+      properties:
+        Ccy:
+          type: object
+          description: Currency code. Passed as the tag attribute.The unit of currency is explicit and compliant with ISO 4217
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+        $:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount_SimpleType'
+    NamePrefix1Code:
+      type: string
+      description: 'Specifies the terms used to formally address a person.  <br><br><b>DOCT</b> : Title of the person is Doctor or Dr. <br><br><b>MIST</b> : Title of the person is Mister or Mr. <br><br><b>MISS</b> : Title of the person is Miss. <br><br><b>MADM</b> : Title of the person is Madam.'
+      enum:
+      - DOCT
+      - MIST
+      - MISS
+      - MADM
+    LocalInstrument2Choice:
+      type: object
+      properties:
+        Cd:
+          type: object
+          description: Specifies the external local instrument code in the format of character string with a maximum length of 35 characters.The list of valid codes is an external code list published separately.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        Prtry:
+          type: object
+          description: Specifies the local instrument, as a proprietary code.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: User community specific instrument. Either Code or Proprietary field value should be passed in request.
+    FinancialIdentificationSchemeName1Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Specifies the external financial institution identification scheme name code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
+        Prtry:
+          type: object
+          description: Name of the identification scheme, in a free text form.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Name of the identification scheme. Either Code or Proprietary field value should be passed on request.
+    StatusReasonInformation8:
+      type: object
+      properties:
+        Orgtr:
+          type: object
+          description: Party that issues the status.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        Rsn:
+          $ref: '#/components/schemas/StatusReason6Choice'
+        AddtlInf:
+          type: array
+          description: Further details on the status reason.
+          items:
+            $ref: '#/components/schemas/Max105Text'
+    FinancialInstitutionIdentification7:
+      type: object
+      properties:
+        BIC:
+          pattern: '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
+          type: string
+          description: Code allocated to a financial institution by the ISO 9362 Registration Authority as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".
+        ClrSysMmbId:
+          $ref: '#/components/schemas/ClearingSystemMemberIdentification2'
+        Nm:
+          type: object
+          description: Name by which an agent is known and which is usually used to identify that agent.
+          allOf:
+          - $ref: '#/components/schemas/Max140Text'
+        Othr:
+          $ref: '#/components/schemas/GenericFinancialIdentification1'
+        PstlAdr:
+          $ref: '#/components/schemas/PostalAddress6'
+      description: Unique and unambiguous identification of a financial institution, as assigned under an internationally recognised or proprietary identification scheme.
+    AmountType3Choice:
+      type: object
+      properties:
+        EqvtAmt:
+          $ref: '#/components/schemas/EquivalentAmount2'
+        InstdAmt:
+          type: object
+          description: Amount of money to be moved between the debtor and creditor, before deduction of charges, expressed in the currency as ordered by the initiating party.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+      description: Amount of money to be moved between the debtor and creditor, before deduction of charges, expressed in the currency as ordered by the initiating party. Either EqvtAmt or InstdAmt field value should be passed on request.
+    ServiceLevel8Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Specifies the external service level code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
+        Prtry:
+          type: object
+          description: Specifies a pre-agreed service or level of service between the parties, as a proprietary code.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Agreement under which or rules under which the transaction should be processed. Either code or proprietary field values should be sent in request.
+    OriginalGroupInformation20:
+      required:
+      - OrgnlMsgId
+      - OrgnlMsgNmId
+      type: object
+      properties:
+        OrgnlMsgId:
+          type: object
+          description: Point to point reference, as assigned by the original instructing party, to unambiguously identify the original message.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlMsgNmId:
+          type: object
+          description: Specifies the original message name identifier to which the message refers.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlCreDtTm:
+          type: string
+          description: Date and time at which the original message was created.
+          format: date-time
+        OrgnlNbOfTxs:
+          type: object
+          description: Number of individual transactions contained in the original message.
+          allOf:
+          - $ref: '#/components/schemas/Max15NumericText'
+        OrgnlCtrlSum:
+          maxLength: 18
+          type: string
+          description: Total of all individual amounts included in the original message, irrespective of currencies. The number of fractional digits should not be more than 17.
+        GrpSts:
+          $ref: '#/components/schemas/TransactionGroupStatus3Code'
+        StsRsnInf:
+          type: array
+          description: Set of elements used to provide detailed information on the status reason.
+          items:
+            $ref: '#/components/schemas/StatusReasonInformation8'
+        NbOfTxsPerSts:
+          type: array
+          description: Detailed information on the number of transactions for each identical transaction status.
+          items:
+            $ref: '#/components/schemas/NumberOfTransactionsPerStatus3'
+      description: Original group information concerning the group of transactions, to which the status report message refers to.
+    TransactionGroupStatus3Code:
+      type: string
+      description: 'Specifies the status of a group of transactions.<br><br><b>ACTC</b> : Authentication and syntactical and semantical validation are successful. <br><br><b>RCVD</b> : Payment initiation has been received by the receiving agent. <br><br><b>PART</b> : A number of transactions have been accepted, whereas another number of transactions have not yet achieved ''accepted'' status. <br><br><b>RJCT</b> : Payment initiation or individual transaction included in the payment initiation has been rejected.<br><br><b>PDNG</b> : Payment initiation or individual transaction included in the payment initiation is pending. Further checks and status update will be performed.<br><br><b>ACCP</b> : Preceding check of technical validation was successful. Customer profile check was also successful.<br><br><b>ACSP</b> : All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution.<br><br><b>ACSC</b> : Settlement on the debtor''s account has been completed. Usage : this can be used by the first agent to report to the debtor that the transaction has been completed. Warning : this status is provided for transaction status reasons, not for financial information. It can only be used after bilateral agreement<br><br><b>ACWC</b> : Instruction is accepted but a change will be made, such as date or remittance not sent.'
+      enum:
+      - ACTC
+      - RCVD
+      - PART
+      - RJCT
+      - PDNG
+      - ACCP
+      - ACSP
+      - ACSC
+      - ACWC
+    NumberOfTransactionsPerStatus3:
+      required:
+      - DtldNbOfTxs
+      - DtldSts
+      type: object
+      properties:
+        DtldNbOfTxs:
+          type: object
+          description: Number of individual transactions contained in the message, detailed per status.
+          allOf:
+          - $ref: '#/components/schemas/Max15NumericText'
+        DtldCtrlSum:
+          maxLength: 18
+          type: string
+          description: Total of all individual amounts included in the message, irrespective of currencies, detailed per status. The number of fractional digits should not be more than 17
+        DtldSts:
+          $ref: '#/components/schemas/TransactionIndividualStatus3Code'
+    ISODate:
+      type: string
+      format: date
+    OriginalPaymentInformation1:
+      required:
+      - OrgnlPmtInfId
+      type: object
+      properties:
+        OrgnlPmtInfId:
+          type: object
+          description: Unique identification, as assigned by the original sending party, to unambiguously identify the original payment information group.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlNbOfTxs:
+          type: object
+          description: Number of individual transactions contained in the original payment information group.
+          allOf:
+          - $ref: '#/components/schemas/Max15NumericText'
+        OrgnlCtrlSum:
+          maxLength: 18
+          type: string
+          description: Total of all individual amounts included in the original payment information group, irrespective of currencies. The number of fractional digits should not be more than 17.
+        PmtInfSts:
+          type: object
+          description: 'Specifies the status of the payment information group.<br><br><b>ACTC</b> : Authentication and syntactical and semantical validation are successful. <br><br><b>RCVD</b> : Payment initiation has been received by the receiving agent. <br><br><b>PART</b> : A number of transactions have been accepted, whereas another number of transactions have not yet achieved ''accepted'' status. <br><br><b>RJCT</b> : Payment initiation or individual transaction included in the payment initiation has been rejected.<br><br><b>PDNG</b> : Payment initiation or individual transaction included in the payment initiation is pending. Further checks and status update will be performed.<br><br><b>ACCP</b> : Preceding check of technical validation was successful. Customer profile check was also successful.<br><br><b>ACSP</b> : All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution.<br><br><b>ACSC</b> : Settlement on the debtor''s account has been completed. Usage : this can be used by the first agent to report to the debtor that the transaction has been completed. Warning : this status is provided for transaction status reasons, not for financial information. It can only be used after bilateral agreement<br><br><b>ACWC</b> : Instruction is accepted but a change will be made, such as date or remittance not sent.'
+          allOf:
+          - $ref: '#/components/schemas/TransactionGroupStatus3Code'
+        StsRsnInf:
+          type: array
+          description: Set of elements used to provide detailed information on the status reason.
+          items:
+            $ref: '#/components/schemas/StatusReasonInformation8'
+        NbOfTxsPerSts:
+          type: array
+          description: Detailed information on the number of transactions for each identical transaction status.
+          items:
+            $ref: '#/components/schemas/NumberOfTransactionsPerStatus3'
+        TxInfAndSts:
+          type: array
+          description: Payment transaction information and status.
+          items:
+            $ref: '#/components/schemas/PaymentTransactionInformation25'
+    CreditorReferenceType2:
+      required:
+      - CdOrPrtry
+      type: object
+      properties:
+        CdOrPrtry:
+          $ref: '#/components/schemas/CreditorReferenceType1Choice'
+        Issr:
+          type: object
+          description: Entity that assigns the credit reference type.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Specifies the type of creditor reference.
+    CustomerPaymentStatusReportV03:
+      required:
+      - GrpHdr
+      - OrgnlGrpInfAndSts
+      type: object
+      properties:
+        GrpHdr:
+          $ref: '#/components/schemas/GroupHeader36'
+        OrgnlGrpInfAndSts:
+          $ref: '#/components/schemas/OriginalGroupInformation20'
+        OrgnlPmtInfAndSts:
+          type: array
+          description: Information concerning the original payment information, to which the status report message refers.
+          items:
+            $ref: '#/components/schemas/OriginalPaymentInformation1'
+    EquivalentAmount2:
+      required:
+      - Amt
+      - CcyOfTrf
+      type: object
+      properties:
+        Amt:
+          type: object
+          description: Amount of money to be moved between debtor and creditor, before deduction of charges, expressed in the currency of the debtor's account, and to be moved in a different currency.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CcyOfTrf:
+          type: object
+          description: Specifies the currency of the to be transferred amount, which is different from the currency of the debtor's account.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
+      description: Amount of money to be moved between the debtor and creditor, expressed in the currency of the debtor's account, and the currency in which the amount is to be moved.
+    AmendmentInformationDetails6:
+      type: object
+      properties:
+        OrgnlMndtId:
+          type: object
+          description: Unique identification, as assigned by the creditor, to unambiguously identify the original mandate.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        OrgnlCdtrSchmeId:
+          type: object
+          description: Original creditor scheme identification that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        OrgnlDbtr:
+          type: object
+          description: Original debtor that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        OrgnlDbtrAcct:
+          type: object
+          description: Original debtor account that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        OrgnlDbtrAgt:
+          type: object
+          description: Original debtor agent that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        OrgnlDbtrAgtAcct:
+          type: object
+          description: Original debtor agent account that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        OrgnlCdtrAgt:
+          type: object
+          description: Original creditor agent that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+        OrgnlCdtrAgtAcct:
+          type: object
+          description: Original creditor agent acount that has been modified.
+          allOf:
+          - $ref: '#/components/schemas/CashAccount16'
+        OrgnlFnlColltnDt:
+          type: string
+          description: Original final collection date that has been modified.
+          format: date
+        OrgnlFrqcy:
+          $ref: '#/components/schemas/Frequency1Code'
+      description: List of mandate elements that have been modified.
     BranchAndFinancialInstitutionIdentification4:
       required:
       - FinInstnId
@@ -1662,40 +1569,59 @@ components:
           $ref: '#/components/schemas/BranchData2'
         FinInstnId:
           $ref: '#/components/schemas/FinancialInstitutionIdentification7'
-    RemittanceAmount1:
+    OrganisationIdentification4:
       type: object
       properties:
-        AdjstmntAmtAndRsn:
+        BICOrBEI:
+          pattern: '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
+          type: string
+          description: Code allocated to a financial institution or non financial institution by the ISO 9362 Registration Authority as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".
+        Othr:
           type: array
-          description: Set of elements used to provide information on the amount and reason of the document adjustment.
+          description: Unique identification of an organisation, as assigned by an institution, using an identification scheme.
           items:
-            $ref: '#/components/schemas/DocumentAdjustment1'
-        CdtNoteAmt:
+            $ref: '#/components/schemas/GenericOrganisationIdentification1'
+      description: Unique and unambiguous way to identify an organisation.
+    ChargesInformation5:
+      required:
+      - Amt
+      - Pty
+      type: object
+      properties:
+        Amt:
           type: object
-          description: Amount specified for the referred document is the amount of a credit note.
+          description: Transaction charges to be paid by the charge bearer.
           allOf:
           - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
-        DscntApldAmt:
+        Pty:
           type: object
-          description: Amount of money that results from the application of an agreed discount to the amount due and payable to the creditor.
+          description: Party that takes the transaction charges or to which the transaction charges are due.
           allOf:
-          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
-        DuePyblAmt:
+          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
+    ActiveOrHistoricCurrencyAndAmount_SimpleTypeStatusInquiry:
+      type: string
+      description: Upto 3 fraction digits allowed
+    ActiveOrHistoricCurrencyAndAmount_SimpleType:
+      maxLength: 18
+      type: string
+      description: 'The number of fractional digits (or minor unit of currency) must comply with ISO 4217. Note: The decimal separator is a dot.A number of monetary units specified in an active or a historic currency where the unit of currency is explicit and compliant with ISO 4217. The number of fractional digits should be 5.'
+    ClearingSystemIdentification3Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 3
+          minLength: 1
+          type: string
+          description: Infrastructure through which the payment instruction is processed, as published in an external clearing system identification code list.Specifies the cash clearing system, as published in an external cash clearing system code list.
+        Prtry:
           type: object
-          description: Amount specified is the exact amount due and payable to the creditor.
+          description: Clearing system identification in a proprietary form.
           allOf:
-          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
-        RmtdAmt:
-          type: object
-          description: Amount of money remitted for the referred document.
-          allOf:
-          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
-        TaxAmt:
-          type: object
-          description: Quantity of cash resulting from the calculation of the tax.
-          allOf:
-          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
-      description: Set of elements used to provide details on the amounts of the referred document.
+          - $ref: '#/components/schemas/Max35Text'
+      description: Specification of a pre-agreed offering between clearing agents or the channel through which the payment instruction is processed. Either Code or Proprietary field value should be passed in request.
+    PhoneNumber:
+      pattern: \+[0-9]{1,3}-[0-9()+\-]{1,30}
+      type: string
     OriginalTransactionReference13:
       type: object
       properties:
@@ -1784,117 +1710,126 @@ components:
           allOf:
           - $ref: '#/components/schemas/PartyIdentification32'
       description: Set of key elements used to identify the original transaction that is being referred to.
-    GroupHeader36:
-      required:
-      - CreDtTm
-      - MsgId
+    Max105Text:
+      maxLength: 105
+      minLength: 1
+      type: string
+    CategoryPurpose1Choice:
       type: object
       properties:
-        CreDtTm:
-          type: string
-          description: Date and time at which the message was created.
-          format: date-time
-        FwdgAgt:
-          type: object
-          description: Financial institution that receives the instruction from the initiating party and forwards it to the next agent in the payment chain.
-          allOf:
-          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
-        DbtrAgt:
-          type: object
-          description: Financial institution servicing an account for the debtor.
-          allOf:
-          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
-        CdtrAgt:
-          type: object
-          description: Financial institution servicing an account for the creditor.
-          allOf:
-          - $ref: '#/components/schemas/BranchAndFinancialInstitutionIdentification4'
-        InitgPty:
-          type: object
-          description: Party that initiates the status message.
-          allOf:
-          - $ref: '#/components/schemas/PartyIdentification32'
-        MsgId:
-          maxLength: 35
+        Cd:
+          maxLength: 4
           minLength: 1
           type: string
-          description: Point to point reference, as assigned by the instructing party, and sent to the next party in the chain to unambiguously identify the message.
-      description: Set of characteristics shared by all individual transactions included in the message.
-    OriginalGroupInformation20:
-      required:
-      - OrgnlMsgId
-      - OrgnlMsgNmId
-      type: object
-      properties:
-        OrgnlMsgId:
+          description: Category purpose, as published in an external category purpose code list.
+        Prtry:
           type: object
-          description: Point to point reference, as assigned by the original instructing party, to unambiguously identify the original message.
+          description: Category purpose, in a proprietary form.
           allOf:
           - $ref: '#/components/schemas/Max35Text'
-        OrgnlMsgNmId:
-          type: object
-          description: Specifies the original message name identifier to which the message refers.
-          allOf:
-          - $ref: '#/components/schemas/Max35Text'
-        OrgnlCreDtTm:
-          type: string
-          description: Date and time at which the original message was created.
-          format: date-time
-        OrgnlNbOfTxs:
-          type: object
-          description: Number of individual transactions contained in the original message.
-          allOf:
-          - $ref: '#/components/schemas/Max15NumericText'
-        OrgnlCtrlSum:
-          maxLength: 18
-          type: string
-          description: Total of all individual amounts included in the original message, irrespective of currencies. The number of fractional digits should not be more than 17.
-        GrpSts:
-          $ref: '#/components/schemas/TransactionGroupStatus3Code'
-        StsRsnInf:
-          type: array
-          description: Set of elements used to provide detailed information on the status reason.
-          items:
-            $ref: '#/components/schemas/StatusReasonInformation8'
-        NbOfTxsPerSts:
-          type: array
-          description: Detailed information on the number of transactions for each identical transaction status.
-          items:
-            $ref: '#/components/schemas/NumberOfTransactionsPerStatus3'
-      description: Original group information concerning the group of transactions, to which the status report message refers to.
-    Error-Message:
-      type: object
-      properties:
-        correlationId:
-          type: string
-        httpCode:
-          type: string
-        httpMessage:
-          type: string
-        moreInformation:
-          type: string
-      description: Error response body.
-    PaymentMethod4Code:
+      description: Specifies the high level purpose of the instruction based on a set of pre-defined categories. Either Code or Proprietary field value should be passed in request.
+    Priority2Code:
       type: string
-      description: 'Specifies the means of payment that will be used to move the amount of money.<br><br><b>CHK</b> : Written order to a bank to pay a certain amount of money from one person to another person. <br><br><b>TRF</b> : Transfer of an amount of money in the books of the account servicer. <br><br><b>DD</b> : Collection of an amount of money from the debtor''s bank account by the creditor. The amount of money and dates of collections may vary. <br><br><b>TRA</b> : Transfer of an amount of money in the books of the account servicer. An advice should be sent back to the account owner.'
+      description: 'Indicator of the urgency or order of importance that the instructing party would like the instructed party to apply to the processing of the instruction.<br><br><b>HIGH</b> : Priority level is high. <br><br><b>NORM</b> : Priority level is normal.'
       enum:
-      - CHK
-      - TRF
-      - DD
-      - TRA
-    ReferredDocumentType2:
+      - HIGH
+      - NORM
+    DocumentAdjustment1:
       required:
-      - CdOrPrtry
+      - Amt
       type: object
       properties:
-        CdOrPrtry:
-          $ref: '#/components/schemas/ReferredDocumentType1Choice'
-        Issr:
+        AddtlInf:
           type: object
-          description: Identification of the issuer of the reference document type.
+          description: Provides further details on the document adjustment.
+          allOf:
+          - $ref: '#/components/schemas/Max140Text'
+        Amt:
+          type: object
+          description: Amount of money of the document adjustment.
+          allOf:
+          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
+        CdtDbtInd:
+          $ref: '#/components/schemas/CreditDebitCode'
+        Rsn:
+          type: object
+          description: Specifies the reason for the adjustment.
+          allOf:
+          - $ref: '#/components/schemas/Max4Text'
+    StructuredRemittanceInformation7:
+      type: object
+      properties:
+        AddtlRmtInf:
+          maxItems: 3
+          type: array
+          description: Additional information, in free text form, to complement the structured remittance information.
+          items:
+            $ref: '#/components/schemas/Max140Text'
+        CdtrRefInf:
+          $ref: '#/components/schemas/CreditorReferenceInformation2'
+        Invcee:
+          type: object
+          description: Identification of the party to whom an invoice is issued, when it is different from the debtor or ultimate debtor.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        Invcr:
+          type: object
+          description: Identification of the organisation issuing the invoice, when it is different from the creditor or ultimate creditor.
+          allOf:
+          - $ref: '#/components/schemas/PartyIdentification32'
+        RfrdDocAmt:
+          $ref: '#/components/schemas/RemittanceAmount1'
+        RfrdDocInf:
+          type: array
+          description: Set of elements used to identify the documents referred to in the remittance information.
+          items:
+            $ref: '#/components/schemas/ReferredDocumentInformation3'
+    CashAccountType2:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/CashAccountType4Code'
+        Prtry:
+          type: object
+          description: Nature or use of the account in a proprietary form.
           allOf:
           - $ref: '#/components/schemas/Max35Text'
-      description: Specifies the type of referred document.
+      description: Specifies the nature, or use of the account. Either Code or Proprietary field value should be passed on request.
+    ValidationRequest:
+      required:
+      - paymentBase64
+      type: object
+      properties:
+        paymentBase64:
+          type: string
+          description: 'paymentBase64: ISO XML V3 (pain.001.001.03) file has to be converted to Base64 format and passed in <Request><paymentBase64> tags. Based on the use case, you should use one of the ISO schema. Use PACS schema for financial institutions and PAIN format for non-financial clients. ISO schema can be refered from below URL
+
+            pain.001.001.03 - https://www.iso20022.org/message/14316/download or #/definitions/Pain001
+
+            '
+          example: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjxEb2N1bWVudCB4bWxuczp4c2k9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4bWxucz0idXJuOmlzbzpzdGQ6aXNvOjIwMDIyOnRlY2g6eHNkOnBhaW4uMDAxLjAwMS4wMyI+DQogIDxDc3RtckNkdFRyZkluaXRuPg0KICAgIDxHcnBIZHI+DQogICAgICA8TXNnSWQ+R0JQMTYxMTE0Njk0ODY5PC9Nc2dJZD4NCiAgICAgIDxDcmVEdFRtPjIwMTctMDYtMDJUMTA6MTc6NTU8L0NyZUR0VG0+DQogICAgICA8TmJPZlR4cz4xPC9OYk9mVHhzPg0KICAgICAgPEN0cmxTdW0+MS4wMDwvQ3RybFN1bT4NCiAgICAgIDxJbml0Z1B0eT4NCiAgICAgICAgPE5tPkh1ZHNvbiBBZHZpc29ycyBFdXJvcGUgTHRkPC9ObT4NCiAgICAgIDwvSW5pdGdQdHk+DQogICAgPC9HcnBIZHI+DQogICAgPFBtdEluZj4NCiAgICAgIDxQbXRJbmZJZD4xNDAxNzQ5OCBGdW5kIFRyYW5zZmVyIERvbWVzdGljPC9QbXRJbmZJZD4NCiAgICAgIDxQbXRNdGQ+VFJGPC9QbXRNdGQ+DQogICAgICA8TmJPZlR4cz4xPC9OYk9mVHhzPg0KICAgICAgPEN0cmxTdW0+MS4wMDwvQ3RybFN1bT4NCiAgICAgIDxQbXRUcEluZj4NCiAgICAgICAgPFN2Y0x2bD4NCiAgICAgICAgICA8Q2Q+VVJHUDwvQ2Q+DQogICAgICAgIDwvU3ZjTHZsPg0KICAgICAgPC9QbXRUcEluZj4NCiAgICAgIDxSZXFkRXhjdG5EdD4yMDE5LTA4LTIwPC9SZXFkRXhjdG5EdD4NCiAgICAgIDxEYnRyPg0KICAgICAgICA8Tm0+Q0lUSUJBTksgRS1CVVNJTkVTUyBFVVIgRFVNIERFTU88L05tPg0KICAgICAgICA8UHN0bEFkcj4NCiAgICAgICAgICA8Q3RyeT5HQjwvQ3RyeT4NCiAgICAgICAgPC9Qc3RsQWRyPg0KICAgICAgICA8SWQ+DQogICAgICAgICAgPE9yZ0lkPg0KICAgICAgICAgICAgPEJJQ09yQkVJPkNJVElHQjJMPC9CSUNPckJFST4NCiAgICAgICAgICA8L09yZ0lkPg0KICAgICAgICA8L0lkPg0KICAgICAgPC9EYnRyPg0KICAgICAgPERidHJBY2N0Pg0KICAgICAgICA8SWQ+DQogICAgICAgICAgPE90aHI+DQogICAgICAgICAgICA8SWQ+MTAwMTIyNjI8L0lkPg0KICAgICAgICAgIDwvT3Rocj4NCiAgICAgICAgPC9JZD4NCiAgICAgICAgPENjeT5VU0Q8L0NjeT4NCiAgICAgIDwvRGJ0ckFjY3Q+DQogICAgICA8RGJ0ckFndD4NCiAgICAgICAgPEZpbkluc3RuSWQ+DQogICAgICAgICAgPEJJQz5DSVRJR0IyTDwvQklDPg0KICAgICAgICAgIDxQc3RsQWRyPg0KICAgICAgICAgICAgPEN0cnk+R0I8L0N0cnk+DQogICAgICAgICAgPC9Qc3RsQWRyPg0KICAgICAgICA8L0Zpbkluc3RuSWQ+DQogICAgICA8L0RidHJBZ3Q+DQogICAgICA8Q2hyZ0JyPkRFQlQ8L0NocmdCcj4NCiAgICAgIDxDZHRUcmZUeEluZj4NCiAgICAgICAgPFBtdElkPg0KICAgICAgICAgIDxFbmRUb0VuZElkPlBBMjAxODIwMTkxMjwvRW5kVG9FbmRJZD4NCiAgICAgICAgPC9QbXRJZD4NCiAgICAgICAgPEFtdD4NCiAgICAgICAgICA8SW5zdGRBbXQgQ2N5PSJVU0QiPjEuMDA8L0luc3RkQW10Pg0KICAgICAgICA8L0FtdD4NCiAgICAgICAgPFVsdG10RGJ0cj4NCiAgICAgICAgICA8SWQ+DQogICAgICAgICAgICA8UHJ2dElkPg0KICAgICAgICAgICAgICA8T3Rocj4NCiAgICAgICAgICAgICAgICA8SWQ+UEFSVElDSVBBTlQgSUQgUE9CTyBVSyBCUjYwMCAwMTIzNDU8L0lkPg0KICAgICAgICAgICAgICAgIDxTY2htZU5tPg0KICAgICAgICAgICAgICAgICAgPFBydHJ5PklOU1Q8L1BydHJ5Pg0KICAgICAgICAgICAgICAgIDwvU2NobWVObT4NCiAgICAgICAgICAgICAgPC9PdGhyPg0KICAgICAgICAgICAgPC9QcnZ0SWQ+DQogICAgICAgICAgPC9JZD4NCiAgICAgICAgPC9VbHRtdERidHI+DQogICAgICAgIDxDZHRyQWd0Pg0KICAgICAgICAgIDxGaW5JbnN0bklkPg0KICAgICAgICAgICAgPEJJQz5DSVRJR0IyTDwvQklDPg0KICAgICAgICAgICAgPENsclN5c01tYklkPg0KICAgICAgICAgICAgICA8TW1iSWQ+MTg1MDA4PC9NbWJJZD4NCiAgICAgICAgICAgIDwvQ2xyU3lzTW1iSWQ+DQogICAgICAgICAgICA8Tm0+Q0lUSUJBTksoSVNPKTwvTm0+DQogICAgICAgICAgICA8UHN0bEFkcj4NCiAgICAgICAgICAgICAgPEN0cnk+R0I8L0N0cnk+DQogICAgICAgICAgICA8L1BzdGxBZHI+DQogICAgICAgICAgPC9GaW5JbnN0bklkPg0KICAgICAgICA8L0NkdHJBZ3Q+DQogICAgICAgIDxDZHRyPg0KICAgICAgICAgIDxObT44MDEwNjQzMTIyWCBYWFhYWFhYWFhYWFhYIFhYWDwvTm0+DQogICAgICAgICAgPFBzdGxBZHI+DQogICAgICAgICAgICA8Q3RyeT5HQjwvQ3RyeT4NCiAgICAgICAgICA8L1BzdGxBZHI+DQogICAgICAgICAgPEN0Y3REdGxzPg0KICAgICAgICAgICAgPE5tPldEVyAzIElOVkVTVE1FTlRTIExJTUlURUQ8L05tPg0KICAgICAgICAgIDwvQ3RjdER0bHM+DQogICAgICAgIDwvQ2R0cj4NCiAgICAgICAgPENkdHJBY2N0Pg0KICAgICAgICAgIDxJZD4NCiAgICAgICAgICA8T3Rocj4NCiAgICAgICAgICAgICAgICAgICA8SWQ+MTAwMTIyNjI8L0lkPg0KICAgICAgICAgICAgICAgICAgPC9PdGhyPg0KICAgICAgICAgIDwvSWQ+DQogICAgICAgIDwvQ2R0ckFjY3Q+DQogICAgICAgIDxSbXRJbmY+DQogICAgICAgICAgPFVzdHJkPlRSMDAyNjM4PC9Vc3RyZD4NCiAgICAgICAgPC9SbXRJbmY+DQogICAgICA8L0NkdFRyZlR4SW5mPg0KICAgIDwvUG10SW5mPg0KICA8L0NzdG1yQ2R0VHJmSW5pdG4+DQo8L0RvY3VtZW50Pg==
+      description: Object representing payment initiation request. ISO schema can be found at https://www.iso20022.org/catalogue-messages/iso-20022-messages-archive?page=4  and select Payments Initiation V03 and Payments Clearing and Settlement V09 then select more and download mdr file for detailed information on schema and  xsd schema definitions.
+      xml:
+        name: Request
+    BranchData2:
+      type: object
+      properties:
+        Id:
+          type: object
+          description: Unique and unambiguous identification of a branch of a financial institution.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        Nm:
+          type: object
+          description: Name by which an agent is known and which is usually used to identify that agent.
+          allOf:
+          - $ref: '#/components/schemas/Max140Text'
+        PstlAdr:
+          $ref: '#/components/schemas/PostalAddress6'
+      description: Identifies a specific branch of a financial institution.
+    ActiveOrHistoricCurrencyCode:
+      pattern: '[A-Z]{3,3}'
+      type: string
     MandateRelatedInformation6:
       type: object
       properties:
@@ -1928,184 +1863,249 @@ components:
         Frqcy:
           $ref: '#/components/schemas/Frequency1Code'
       description: Set of elements used to provide further details of the mandate signed between the creditor and the debtor.
-    disclosure_response:
+    CashAccountType4Code:
+      type: string
+      description: 'Account type, in a coded form. <br><br><b>CASH</b> : Account used for the payment of cash. <br><br><b>CHAR</b> : Account used for charges if different from the account for payment. <br><br><b>COMM</b> : Account used for commission if different from the account for payment. <br><br><b>TAXE</b> : Account used for taxes if different from the account for payment. <br><br><b>CISH</b> : Account used for payment of income if different from the current cash account. <br><br><b>TRAS</b> : Account used for trading if different from the current cash account. <br><br><b>SACC</b> : Account used to post debit and credit entries, as a result of transactions cleared and settled through a specific clearing and settlement system. <br><br><b>CACC</b> : Account used to post debits and credits when no specific account has been nominated. <br><br><b>SVGS</b> : Account used for savings. <br><br><b>ONDP</b> : Account used for overnight deposits. <br><br><b>MGLD</b> : Account used for a marginal lending facility. <br><br><b>NREX</b> : Account used for non-resident external. <br><br><b>MOMA</b> : Account used for money markets if different from the cash account. <br><br><b>LOAN</b> : Account used for loans. <br><br><b>SLRY</b> : Accounts used for salary payments. <br><br><b>ODFT</b> : Account is used for overdrafts.'
+      enum:
+      - CASH
+      - CHAR
+      - COMM
+      - TAXE
+      - CISH
+      - TRAS
+      - SACC
+      - CACC
+      - SVGS
+      - ONDP
+      - MGLD
+      - NREX
+      - MOMA
+      - LOAN
+      - SLRY
+      - ODFT
+    PaymentTypeInformation22:
       type: object
       properties:
-        out:
-          required:
-          - deliveryDate
-          - disclosureDate
-          - feeType
-          - otherFees
-          - returnCode
-          - returnMessage
-          - totalTaxes
-          - uniqueIdentifier
-          type: object
-          properties:
-            disclosureDate:
-              type: string
-              description: The disclosure date. Format => Timestamp > yyyy-mm-dd hh:mm:ss[.fffffffff].
-            otherFees:
-              type: number
-              description: Sum of all fees calculated, including bene deduct. Between 0.00 and 9999999999999999.999
-            feeType:
-              maxLength: 1
-              type: string
-              description: Fee description Actual(A) or Estimate(E).
-              enum:
-              - A
-              - E
-            totalTaxes:
-              type: number
-              description: Sum of all taxes calculated. Between 0.00 and 9999999999999999.999.
-            deliveryDate:
-              type: string
-              description: The calculated delivery date for payment.  Format => Timestamp > yyyy-mm-dd hh:mm:ss[.fffffffff].
-            uniqueIdentifier:
-              maxLength: 15
-              type: string
-              description: API Packet identifier.
-            returnCode:
-              maxLength: 5
-              type: string
-              description: Code to show if API worked.
-            returnMessage:
-              maxLength: 100
-              type: string
-              description: Descriptive message to show if API passed, or the reason for the failure.
-            chargeCodeUsed:
-              maxLength: 3
-              type: string
-              description: Charge code calculated by Dodd-Frank application based on its rules.
-            beneDeductUsed:
-              maxLength: 1
-              type: string
-              description: Bene deduct fee indicator passed in input request field isBeneDeduct.
-            beneDeductFeeTypeUsed:
-              maxLength: 1
-              type: string
-              description: Bene deduct fee type passed in input request field beneDeductFeeType.
-          example:
-            disclosureDate: '2019-25-04T08:13:21.123-05:00'
-            otherFees: 25
-            feeType: E
-            totalTaxes: 2
-            deliveryDate: '2019-25-04T08:13:21.123-05:00'
-            uniqueIdentifier: 000000000810814
-            returnCode: '0'
-            returnMessage: SUCCESS
-            chargeCodeUsed: BEN
-    EquivalentAmount2:
-      required:
-      - Amt
-      - CcyOfTrf
+        InstrPrty:
+          $ref: '#/components/schemas/Priority2Code'
+        ClrChanl:
+          type: string
+          description: 'Specifies the clearing channel to be used to process the payment instruction.<br><br><b>RTGS</b> : Clearing channel is a real-time gross settlement system. <br><br><b>RTNS</b> : Clearing channel is a real-time net settlement system. <br><br><b>MPNS</b> : Clearing channel is a mass payment net settlement system. <br><br><b>BOOK</b> : Payment through internal book transfer.'
+          enum:
+          - RTGS
+          - RTNS
+          - MPNS
+          - BOOK
+        SvcLvl:
+          $ref: '#/components/schemas/ServiceLevel8Choice'
+        LclInstrm:
+          $ref: '#/components/schemas/LocalInstrument2Choice'
+        SeqTp:
+          type: string
+          description: 'Identifies the direct debit sequence, such as first, recurrent, final or one-off.<br><br><b>FRST</b> : First collection of a series of direct debit instructions. <br><br><b>RCUR</b> : Direct debit instruction where the debtor''s authorisation is used for regular direct debit transactions initiated by the creditor. <br><br><b>FNAL</b> : Final collection of a series of direct debit instructions. <br><br><b>OOFF</b> : Direct debit instruction where the debtor''s authorisation is used to initiate one single direct debit transaction.'
+          enum:
+          - FRST
+          - RCUR
+          - FNAL
+          - OOFF
+        CtgyPurp:
+          $ref: '#/components/schemas/CategoryPurpose1Choice'
+      description: Set of elements used to further specify the type of transaction.
+    CreditorReferenceInformation2:
       type: object
       properties:
-        Amt:
+        Ref:
           type: object
-          description: Amount of money to be moved between debtor and creditor, before deduction of charges, expressed in the currency of the debtor's account, and to be moved in a different currency.
+          description: Unique reference, as assigned by the creditor, to unambiguously refer to the payment transaction.
           allOf:
-          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount'
-        CcyOfTrf:
-          type: object
-          description: Specifies the currency of the to be transferred amount, which is different from the currency of the debtor's account.
-          allOf:
-          - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
-      description: Amount of money to be moved between the debtor and creditor, expressed in the currency of the debtor's account, and the currency in which the amount is to be moved.
-    StructuredRemittanceInformation7:
-      type: object
-      properties:
-        AddtlRmtInf:
-          maxItems: 3
-          type: array
-          description: Additional information, in free text form, to complement the structured remittance information.
-          items:
-            $ref: '#/components/schemas/Max140Text'
-        CdtrRefInf:
-          $ref: '#/components/schemas/CreditorReferenceInformation2'
-        Invcee:
-          type: object
-          description: Identification of the party to whom an invoice is issued, when it is different from the debtor or ultimate debtor.
-          allOf:
-          - $ref: '#/components/schemas/PartyIdentification32'
-        Invcr:
-          type: object
-          description: Identification of the organisation issuing the invoice, when it is different from the creditor or ultimate creditor.
-          allOf:
-          - $ref: '#/components/schemas/PartyIdentification32'
-        RfrdDocAmt:
-          $ref: '#/components/schemas/RemittanceAmount1'
-        RfrdDocInf:
-          type: array
-          description: Set of elements used to identify the documents referred to in the remittance information.
-          items:
-            $ref: '#/components/schemas/ReferredDocumentInformation3'
-    Max2048Text:
-      maxLength: 2048
+          - $ref: '#/components/schemas/Max35Text'
+        Tp:
+          $ref: '#/components/schemas/CreditorReferenceType2'
+      description: Reference information provided by the creditor to allow the identification of the underlying documents.
+    Max70Text:
+      maxLength: 70
       minLength: 1
       type: string
-    CashAccount16:
+    ActiveOrHistoricCurrencyAndAmountStatusInquiry:
       required:
-      - Id
+      - Amt
+      - Ccy
       type: object
       properties:
         Ccy:
           type: object
-          description: Identification of the currency in which the account is held.
+          description: Currency code.
           allOf:
           - $ref: '#/components/schemas/ActiveOrHistoricCurrencyCode'
-        Id:
-          $ref: '#/components/schemas/AccountIdentification4Choice'
-        Nm:
-          type: object
-          description: Name of the account, as assigned by the account servicing institution, in agreement with the account owner in order to provide an additional means of identification of the account.
-          allOf:
-          - $ref: '#/components/schemas/Max70Text'
-        Tp:
-          $ref: '#/components/schemas/CashAccountType2'
-    OriginalPaymentInformation1:
-      required:
-      - OrgnlPmtInfId
+        Amt:
+          $ref: '#/components/schemas/ActiveOrHistoricCurrencyAndAmount_SimpleTypeStatusInquiry'
+    RemittanceInformation5:
       type: object
       properties:
-        OrgnlPmtInfId:
+        Strd:
+          type: array
+          description: Information supplied to enable the matching/reconciliation of an entry with the items that the payment is intended to settle, such as commercial invoices in an accounts' receivable system, in a structured form.
+          items:
+            $ref: '#/components/schemas/StructuredRemittanceInformation7'
+        Ustrd:
+          type: array
+          description: Information supplied to enable the matching/reconciliation of an entry with the items that the payment is intended to settle, such as commercial invoices in an accounts' receivable system, in an unstructured form.
+          items:
+            $ref: '#/components/schemas/Max140Text'
+    ContactDetails2:
+      type: object
+      properties:
+        EmailAdr:
           type: object
-          description: Unique identification, as assigned by the original sending party, to unambiguously identify the original payment information group.
+          description: Address for electronic mail (e-mail).
+          allOf:
+          - $ref: '#/components/schemas/Max2048Text'
+        FaxNb:
+          type: object
+          description: Collection of information that identifies a FAX number, as defined by telecom services.
+          allOf:
+          - $ref: '#/components/schemas/PhoneNumber'
+        MobNb:
+          type: object
+          description: Collection of information that identifies a mobile phone number, as defined by telecom services.
+          allOf:
+          - $ref: '#/components/schemas/PhoneNumber'
+        Nm:
+          type: object
+          description: Name by which a party is known and which is usually used to identify that party.
+          allOf:
+          - $ref: '#/components/schemas/Max140Text'
+        NmPrfx:
+          $ref: '#/components/schemas/NamePrefix1Code'
+        Othr:
+          type: object
+          description: Contact details in another form.
           allOf:
           - $ref: '#/components/schemas/Max35Text'
-        OrgnlNbOfTxs:
+        PhneNb:
           type: object
-          description: Number of individual transactions contained in the original payment information group.
+          description: Collection of information that identifies a phone number, as defined by telecom services.
           allOf:
-          - $ref: '#/components/schemas/Max15NumericText'
-        OrgnlCtrlSum:
-          maxLength: 18
+          - $ref: '#/components/schemas/PhoneNumber'
+      description: Set of elements used to indicate how to contact the party.
+    PostalAddress6:
+      type: object
+      properties:
+        AdrLine:
+          maxItems: 7
+          type: array
+          description: Information that locates and identifies a specific address, as defined by postal services, presented in free format text.
+          items:
+            $ref: '#/components/schemas/Max70Text'
+        AdrTp:
           type: string
-          description: Total of all individual amounts included in the original payment information group, irrespective of currencies. The number of fractional digits should not be more than 17.
-        PmtInfSts:
+          description: 'Identifies the nature of the postal address.<br><br><b>ADDR</b> : Address is the complete postal address. <br><br><b>PBOX</b> : Address is a postal office (PO) box. <br><br><b>HOME</b> : Address is the home address. <br><br><b>BIZZ</b> : Address is the business address.<br><br><b>MLTO</b> : Address is the address to which mail is sent.<br><br><b>DLVY</b> : Address is the address to which delivery is to take place.'
+          enum:
+          - ADDR
+          - PBOX
+          - HOME
+          - BIZZ
+          - MLTO
+          - DLVY
+        BldgNb:
           type: object
-          description: 'Specifies the status of the payment information group.<br><br><b>ACTC</b> : Authentication and syntactical and semantical validation are successful. <br><br><b>RCVD</b> : Payment initiation has been received by the receiving agent. <br><br><b>PART</b> : A number of transactions have been accepted, whereas another number of transactions have not yet achieved ''accepted'' status. <br><br><b>RJCT</b> : Payment initiation or individual transaction included in the payment initiation has been rejected.<br><br><b>PDNG</b> : Payment initiation or individual transaction included in the payment initiation is pending. Further checks and status update will be performed.<br><br><b>ACCP</b> : Preceding check of technical validation was successful. Customer profile check was also successful.<br><br><b>ACSP</b> : All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution.<br><br><b>ACSC</b> : Settlement on the debtor''s account has been completed. Usage : this can be used by the first agent to report to the debtor that the transaction has been completed. Warning : this status is provided for transaction status reasons, not for financial information. It can only be used after bilateral agreement<br><br><b>ACWC</b> : Instruction is accepted but a change will be made, such as date or remittance not sent.'
+          description: Number that identifies the position of a building on a street.
           allOf:
-          - $ref: '#/components/schemas/TransactionGroupStatus3Code'
-        StsRsnInf:
-          type: array
-          description: Set of elements used to provide detailed information on the status reason.
-          items:
-            $ref: '#/components/schemas/StatusReasonInformation8'
-        NbOfTxsPerSts:
-          type: array
-          description: Detailed information on the number of transactions for each identical transaction status.
-          items:
-            $ref: '#/components/schemas/NumberOfTransactionsPerStatus3'
-        TxInfAndSts:
-          type: array
-          description: Payment transaction information and status.
-          items:
-            $ref: '#/components/schemas/PaymentTransactionInformation25'
-    Max15NumericText:
-      pattern: '[0-9]{1,15}'
+          - $ref: '#/components/schemas/Max16Text'
+        Ctry:
+          $ref: '#/components/schemas/CountryCode'
+        CtrySubDvsn:
+          type: object
+          description: Identifies a subdivision of a country such as state, region, county.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+        Dept:
+          type: object
+          description: Identification of a division of a large organisation or building.
+          allOf:
+          - $ref: '#/components/schemas/Max70Text'
+        PstCd:
+          type: object
+          description: Identifier consisting of a group of letters and/or numbers that is added to a postal address to assist the sorting of mail.
+          allOf:
+          - $ref: '#/components/schemas/Max16Text'
+        StrtNm:
+          type: object
+          description: Name of a street or thoroughfare.
+          allOf:
+          - $ref: '#/components/schemas/Max70Text'
+        SubDept:
+          type: object
+          description: Identification of a sub-division of a large organisation or building.
+          allOf:
+          - $ref: '#/components/schemas/Max70Text'
+        TwnNm:
+          type: object
+          description: Name of a built-up area, with defined boundaries, and a local government.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Information that locates and identifies a specific address, as defined by postal services.
+    CreditorReferenceType1Choice:
+      type: object
+      properties:
+        Cd:
+          $ref: '#/components/schemas/DocumentType3Code'
+        Prtry:
+          type: object
+          description: Creditor reference type, in a proprietary form.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Coded or proprietary format creditor reference type. Either Code or Proprietary field value should be passed on request.
+    OrganisationIdentificationSchemeName1Choice:
+      type: object
+      properties:
+        Cd:
+          maxLength: 4
+          minLength: 1
+          type: string
+          description: Specifies the external organisation identification scheme name code in the format of character string with a maximum length of 4 characters.The list of valid codes is an external code list published separately.
+        Prtry:
+          maxLength: 35
+          minLength: 1
+          type: string
+          description: Description for Proprietary
+      description: Name of the identification scheme.Sets of elements to identify a name of the organisation identification scheme. Either Code or Proprietary is required
+    paymentStatusInquiryResponse:
       type: string
+      description: 'Base64 encoded string of ISO XML the response follows ISOXML urn:iso:std:iso:20022:tech:xsd:pain.002.001.03   https://www.iso20022.org/message/14361/download or #/definitions/Pain002'
+      format: byte
+      example: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxEb2N1bWVudCB4bWxucz0idXJuOmlzbzpzdGQ6aXNvOjIwMDIyOnRlY2g6eHNkOnBhaW4uMDAyLjAwMS4wMyI+DQoJPENzdG1yUG10U3RzUnB0Pg0KCQk8R3JwSGRyPg0KCQkJPE1zZ0lkPkNJVElCQU5LLzIwMTkxMjExLVBTUi85NDE0MTYxNzc8L01zZ0lkPg0KCQkJPENyZUR0VG0+MjAxOS0xMi0xMVQwNjoyNDo1MjwvQ3JlRHRUbT4NCgkJCTxJbml0Z1B0eT4NCgkJCQk8SWQ+DQoJCQkJCTxPcmdJZD48QklDT3JCRUk+Q0lUSVVTMzM8L0JJQ09yQkVJPjwvT3JnSWQ+DQoJCQkJPC9JZD4NCgkJCTwvSW5pdGdQdHk+DQoJCTwvR3JwSGRyPg0KCQk8T3JnbmxHcnBJbmZBbmRTdHM+DQoJCQk8T3JnbmxNc2dJZD5Nc2dJZGZmZ2g8L09yZ25sTXNnSWQ+DQoJCQk8T3JnbmxNc2dObUlkPnBhaW4uMDA3LjAwMS4wOTwvT3JnbmxNc2dObUlkPg0KCQkJPE9yZ25sQ3JlRHRUbT4yMDE5LTEyLTExVDEyOjAwOjAwPC9PcmdubENyZUR0VG0+DQoJCQk8T3JnbmxOYk9mVHhzPjE8L09yZ25sTmJPZlR4cz4NCgkJPC9PcmdubEdycEluZkFuZFN0cz4NCgkJPE9yZ25sUG10SW5mQW5kU3RzPg0KCQkJPE9yZ25sUG10SW5mSWQ+NDU2ODc5NjwvT3JnbmxQbXRJbmZJZD4NCgkJCTxUeEluZkFuZFN0cz4NCgkJCQk8T3JnbmxFbmRUb0VuZElkPjIwMTkxMjA5Q0lUSVNHUzBCUlQyMTAxNjMwPC9PcmdubEVuZFRvRW5kSWQ+DQoJCQkJPFR4U3RzPkFDVEM8L1R4U3RzPg0KCQkJPC9UeEluZkFuZFN0cz4NCgkJPC9PcmdubFBtdEluZkFuZFN0cz4NCgk8L0NzdG1yUG10U3RzUnB0Pg0KPC9Eb2N1bWVudD4=
+      xml:
+        name: paymentStatusInquiryResponse
+    Max35Text:
+      maxLength: 35
+      minLength: 1
+      type: string
+    ReferredDocumentType2:
+      required:
+      - CdOrPrtry
+      type: object
+      properties:
+        CdOrPrtry:
+          $ref: '#/components/schemas/ReferredDocumentType1Choice'
+        Issr:
+          type: object
+          description: Identification of the issuer of the reference document type.
+          allOf:
+          - $ref: '#/components/schemas/Max35Text'
+      description: Specifies the type of referred document.
+    Max2048Text:
+      maxLength: 2048
+      minLength: 1
+      type: string
+    PaymentMethod4Code:
+      type: string
+      description: 'Specifies the means of payment that will be used to move the amount of money.<br><br><b>CHK</b> : Written order to a bank to pay a certain amount of money from one person to another person. <br><br><b>TRF</b> : Transfer of an amount of money in the books of the account servicer. <br><br><b>DD</b> : Collection of an amount of money from the debtor''s bank account by the creditor. The amount of money and dates of collections may vary. <br><br><b>TRA</b> : Transfer of an amount of money in the books of the account servicer. An advice should be sent back to the account owner.'
+      enum:
+      - CHK
+      - TRF
+      - DD
+      - TRA
   examples:
     Payment-Status-Inquiry-Response-Json:
       value:

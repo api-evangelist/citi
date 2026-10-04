@@ -366,7 +366,7 @@ paths:
         required: true
 components:
   schemas:
-    InvalidTokenActivationResponse:
+    InvalidSendPassCodeResponse:
       type: object
       required:
       - errors
@@ -393,6 +393,67 @@ components:
           minLength: 1
           maxLength: 255
       description: List of error code and description to be sent to the client.
+    InitialEligibilityCheckResponse:
+      type: object
+      required:
+      - issuer_decision_reason
+      - issuer_eligibility_decision
+      properties:
+        issuer_eligibility_decision:
+          type: string
+          description: The outcome of the decision for the provision request.
+          enum:
+          - APPROVE
+          - DECLINE
+        issuer_decision_reason:
+          type: string
+          description: The reason for the outcome of the decision for the provision request.
+          maxLength: 255
+          enum:
+          - APPROVED
+          - DECLINE_NOTELIGIBLE
+          - DECLINE_CARDEXPIRED
+          - DECLINE_INVALIDPAN
+          - DECLINE_INVALID_CVV2
+          - DECLINE_INVALID_EXPIRY_DATE
+          - DECLINE_ADDRESS_VERIFICATION_FAILED
+          - DECLINE_OTHER, DECLINE_GATEWAY_ERROR
+          - DECLINE_CONFIG
+        card_art_id:
+          type: string
+          example: Token Activation
+          description: Optional card_art_id which will specify subsequent metadata to be used during the request (T+C, card art, etc). Known as `profileID` by Visa.
+          maxLength: 255
+    InvalidTokenActivationResponse:
+      type: object
+      required:
+      - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+          minItems: 1
+    InternalServerErrorResponse:
+      type: object
+      required:
+      - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+          minItems: 1
+    InvalidInitialEligibilityCheckResponse:
+      type: object
+      required:
+      - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorMessage'
+          minItems: 1
     MethodNotAllowedResponse:
       type: object
       required:
@@ -418,26 +479,6 @@ components:
           description: More details related to the error to be sent to the client.
           minLength: 1
           maxLength: 255
-    InternalServerErrorResponse:
-      type: object
-      required:
-      - errors
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorMessage'
-          minItems: 1
-    InvalidSendPassCodeResponse:
-      type: object
-      required:
-      - errors
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorMessage'
-          minItems: 1
     TokenActivationResponse:
       type: object
       required:
@@ -529,16 +570,25 @@ components:
             required:
             - stepup_type
             - stepup_value
-    InvalidInitialEligibilityCheckResponse:
+    TokenActivationRequest:
       type: object
       required:
-      - errors
+      - digital_wallet_token
+      - encrypted_data
+      - issuer_risk_assessment
+      - wallet_provider_profile
       properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorMessage'
-          minItems: 1
+        digital_wallet_token:
+          $ref: '#/components/schemas/digital%5fwallet%5ftoken%5fhash'
+        issuer_risk_assessment:
+          $ref: '#/components/schemas/issuer%5frisk%5fassessment'
+        wallet_provider_profile:
+          $ref: '#/components/schemas/wallet%5fprovider%5fprofile'
+        encrypted_data:
+          type: string
+          description: Encrypted data for token activation (encrypted value should align with card_details schema) using JWE/JWS algorithim.
+        card_details:
+          $ref: '#/components/schemas/card%5fdetails'
     SendPassCodeMarqetaRequest:
       type: object
       required:
@@ -565,6 +615,30 @@ components:
           description: Pseudo customer friendly name for the token requestor. For programmatic purposes, use token requestor ID which is not subject to change.<br>Possible values are <br><br>APPLE_PAY<br>GOOGLE_PAY
         selected_option:
           $ref: '#/components/schemas/SelectedStepUpOption'
+    SelectedStepUpOption:
+      type: object
+      required:
+      - stepup_type
+      - stepup_value
+      properties:
+        token:
+          type: string
+          example: 12514e5a-0072-43f5-bc52-9f79377f27cc
+          description: Customer provided identifier for a specific step-up option. For simplicity, the value can be the same as the stepup_type while sending unique stepup_type(s) (like user has only one phone number, one email-id etc).
+          minLength: 1
+          maxLength: 36
+        stepup_type:
+          type: string
+          example: OTP_SMS
+          description: Type of step-up options. Possible values are <br><br>OTP_SMS.
+          minLength: 1
+          maxLength: 255
+        stepup_value:
+          type: string
+          example: 1-800-555-1212
+          description: Specific value for the step-up option. Phone/email should be masked if customer will be sending out SMS. For call center, an example is +1-800-555-1212. For OTP_SMS an example is +1******3175. For OTP_Email, m******e@marqeta.com, for IOS, 4RA9TRQ7CL.com.marqeta.dwdemo and for Android com.marqeta.dwdemo
+          minLength: 1
+          maxLength: 100
     UnAuthorizedResponse:
       type: object
       required:
@@ -590,59 +664,6 @@ components:
           description: More details related to the error to be sent to the client.
           minLength: 1
           maxLength: 255
-    WalletProviderProfile:
-      type: object
-      required:
-      - pan_source
-      properties:
-        pan_source:
-          type: string
-          example: MOBILE_BANKING_APP
-          description: Possible values are <br><br>KEY_ENTERED<br>ON_FILE<br>MOBILE_BANKING_APP
-      description: Wallet Provider profile data for initial eligibility check
-    SelectedStepUpOption:
-      type: object
-      required:
-      - stepup_type
-      - stepup_value
-      properties:
-        token:
-          type: string
-          example: 12514e5a-0072-43f5-bc52-9f79377f27cc
-          description: Customer provided identifier for a specific step-up option. For simplicity, the value can be the same as the stepup_type while sending unique stepup_type(s) (like user has only one phone number, one email-id etc).
-          minLength: 1
-          maxLength: 36
-        stepup_type:
-          type: string
-          example: OTP_SMS
-          description: Type of step-up options. Possible values are <br><br>OTP_SMS.
-          minLength: 1
-          maxLength: 255
-        stepup_value:
-          type: string
-          example: 1-800-555-1212
-          description: Specific value for the step-up option. Phone/email should be masked if customer will be sending out SMS. For call center, an example is +1-800-555-1212. For OTP_SMS an example is +1******3175. For OTP_Email, m******e@marqeta.com, for IOS, 4RA9TRQ7CL.com.marqeta.dwdemo and for Android com.marqeta.dwdemo
-          minLength: 1
-          maxLength: 100
-    TokenActivationRequest:
-      type: object
-      required:
-      - digital_wallet_token
-      - encrypted_data
-      - issuer_risk_assessment
-      - wallet_provider_profile
-      properties:
-        digital_wallet_token:
-          $ref: '#/components/schemas/digital%5fwallet%5ftoken%5fhash'
-        issuer_risk_assessment:
-          $ref: '#/components/schemas/issuer%5frisk%5fassessment'
-        wallet_provider_profile:
-          $ref: '#/components/schemas/wallet%5fprovider%5fprofile'
-        encrypted_data:
-          type: string
-          description: Encrypted data for token activation (encrypted value should align with card_details schema) using JWE/JWS algorithim.
-        card_details:
-          $ref: '#/components/schemas/card%5fdetails'
     InitialEligibilityCheckRequest:
       type: object
       required:
@@ -656,37 +677,16 @@ components:
           $ref: '#/components/schemas/card%5ftoken%5fservice%5fprovider%5fdtls'
         wallet_provider_profile:
           $ref: '#/components/schemas/WalletProviderProfile'
-    InitialEligibilityCheckResponse:
+    WalletProviderProfile:
       type: object
       required:
-      - issuer_decision_reason
-      - issuer_eligibility_decision
+      - pan_source
       properties:
-        issuer_eligibility_decision:
+        pan_source:
           type: string
-          description: The outcome of the decision for the provision request.
-          enum:
-          - APPROVE
-          - DECLINE
-        issuer_decision_reason:
-          type: string
-          description: The reason for the outcome of the decision for the provision request.
-          maxLength: 255
-          enum:
-          - APPROVED
-          - DECLINE_NOTELIGIBLE
-          - DECLINE_CARDEXPIRED
-          - DECLINE_INVALIDPAN
-          - DECLINE_INVALID_CVV2
-          - DECLINE_INVALID_EXPIRY_DATE
-          - DECLINE_ADDRESS_VERIFICATION_FAILED
-          - DECLINE_OTHER, DECLINE_GATEWAY_ERROR
-          - DECLINE_CONFIG
-        card_art_id:
-          type: string
-          example: Token Activation
-          description: Optional card_art_id which will specify subsequent metadata to be used during the request (T+C, card art, etc). Known as `profileID` by Visa.
-          maxLength: 255
+          example: MOBILE_BANKING_APP
+          description: Possible values are <br><br>KEY_ENTERED<br>ON_FILE<br>MOBILE_BANKING_APP
+      description: Wallet Provider profile data for initial eligibility check
   securitySchemes:
     clientCredentials:
       type: oauth2

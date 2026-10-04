@@ -134,100 +134,22 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    DadosBancarios:
-      type: object
-      required:
-      - conta
-      - ispbParticipante
-      properties:
-        conta:
-          type: string
-          title: Conta do Usuário Pagador
-          description: Número da conta do usuário pagador.
-          minLength: 1
-          maxLength: 20
-        ispbParticipante:
-          type: string
-          title: ISPB do usuário pagador.
-          description: ISPB do usuário pagador.
-          pattern: \d{8}
-        agencia:
-          type: string
-          title: Agência do Usuário Pagador
-          description: Número da agência do usuário pagador.
-          minLength: 1
-          maxLength: 4
-    RecConfiguracao:
-      type: object
-      title: Configuração da Recorrência
-      required:
-      - politicaRetentativa
-      properties:
-        politicaRetentativa:
-          type: string
-          title: Política de retentativa pós vencimento da recorrência
-          enum:
-          - NAO_PERMITE
-          - PERMITE_3R_7D
-    SolicRecRevisada:
-      type: object
-      title: Solicitação de Recorrência
-      description: Dados alterados da solicitação da recorrência
-      required:
-      - status
-      properties:
-        status:
-          type: string
-          title: Status do registro da solicitação de recorrência
-          enum:
-          - CANCELADA
-    CNPJ:
-      type: object
-      required:
-      - cnpj
-      title: Pessoa Jurídica
-      properties:
-        cnpj:
-          type: string
-          title: CNPJ
-          pattern: /^\d{14}$/
-          description: CNPJ do usuário.
-    PessoaJuridicaRecorrencia:
-      type: object
-      required:
-      - cnpj
-      - nome
-      title: Pessoa Jurídica
-      properties:
-        cnpj:
-          type: string
-          title: CNPJ
-          pattern: /^\d{14}$/
-          example: '45164632481234'
-          description: CNPJ do usuário.
-        nome:
-          type: string
-          title: Nome
-          description: Nome do usuário.
-          minLength: 1
-          maxLength: 140
-          example: Fulano de Tal
     SolicRecSolicitada:
       type: object
       title: Solicitação de Recorrência
       description: Dados criados ou alterados da solicitação da recorrência
       allOf:
       - $ref: '#/components/schemas/SolicRecBase'
-    SolicRecAtualizacao:
+    RecAtualizacao:
       type: object
-      title: Histórico de Status da Solicitação de Recorrência
+      title: Histórico de atualização da recorrência.
       required:
       - atualizacao
       properties:
         atualizacao:
           type: array
-          title: Histórico de Status da Solicitação de Recorrência
-          description: ''
+          title: Histórico de Status
+          description: Histórico das mudanças de status da recorrência.
           items:
             type: object
             required:
@@ -236,57 +158,80 @@ components:
             properties:
               status:
                 type: string
-                title: Status do registro da solicitação de recorrência
+                title: Status da recorrência
+                description: Status da recorrência.
                 enum:
                 - CRIADA
-                - ENVIADA
-                - RECEBIDA
+                - APROVADA
                 - REJEITADA
-                - ACEITA
                 - EXPIRADA
                 - CANCELADA
               data:
                 type: string
                 format: date-time
                 description: Data e hora do registro de status atualizado. Respeita RFC 3339.
-    SolicRecBase:
+    SolicRecStatus:
       type: object
-      title: Solicitação de Recorrência Base
+      title: Status da Solicitação de Recorrência
       required:
-      - calendario
-      - pagador
-      - idRec
-      - destinatario
+      - status
+      properties:
+        status:
+          type: string
+          title: Status do registro da solicitação de recorrência
+          enum:
+          - CRIADA
+          - ENVIADA
+          - RECEBIDA
+          - REJEITADA
+          - ACEITA
+          - EXPIRADA
+          - CANCELADA
+    SolicRecId:
+      type: object
+      title: Id da Solicitação de recorrência
+      required:
+      - idSolicRec
       description: Dados criados ou alterados da cobrança recorrente via API Pix
       properties:
-        idRec:
-          $ref: '#/components/schemas/RecId'
-        calendario:
-          type: object
-          title: Informações de Calendário da Solicitação da Recorrência
-          required:
-          - dataExpiracaoSolicitacao
-          properties:
-            dataExpiracaoSolicitacao:
-              type: string
-              format: date-time
-              title: Data da expiração da solicitação enviada ao usuário pagador.
-              description: Data da expiração da solicitação enviada ao usuário pagador. Respeita RFC 3339.
-        destinatario:
-          title: Destinatario
-          allOf:
-          - $ref: '#/components/schemas/DadosBancarios'
-          oneOf:
-          - $ref: '#/components/schemas/CPF'
-          - $ref: '#/components/schemas/CNPJ'
-    RecId:
-      type: string
-      title: ID Recorrência
-      description: "# Identificador da Recorrência\n\nRegra de formação:\n- RAxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; \"case sensitive\", isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - \"R\":  fixo (1 caractere). \"R\" para a recorrência criada dentro do Pix;\n  - \"A\": identificação da possibilidade de novas tentativas, sendo possíveis os valores \"R\" ou \"N\" (1 caractere). \"R\" caso a recorrência permita novas tentativas de pagamento pós vencimento, ou \"N\" caso não permita novas tentativas.\n  - \"xxxxxxxx\":  identificação do agente que presta serviço para o usuário recebedor que gerou o <Id>, podendo ser: o ISPB do participante direto, o ISPB do participante indireto ou os 8 primeiros dígitos do CNPJ do prestador de serviço de iniciação (8 caracteres numéricos [0-9]);\n  - \"yyyyMMdd\":  data (8 caracteres) de criação da recorrência;\n  - \"kkkkkkkkkkk\": sequencial criado pelo agente que gerou o <Id> (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada \"yyyyMMdd\".\n\nDessa forma, o ID da recorrência deve ser formado de acordo com um dos tipos a seguir:\n- \"RRxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que permite novas tentativas de pagamento pós vencimento; ou\n- \"RNxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que não permite novas tentativas de pagamento pós vencimento.”\n"
-      pattern: '[a-zA-Z0-9]{29}'
-      minLength: 29
-      maxLength: 29
-      example: RR1234567820240115abcdefghijk
+        idSolicRec:
+          type: string
+          title: ID Solicitação da Recorrência
+          description: "# Identificador da Solicitação da Recorrência\n\nRegra de formação:\n- SCxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; “case sensitive”, isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - SC - fixo (2 caracteres);\n  - xxxxxxxx – ISPB do agente que envia a mensagem pain.009 de solicitação de confirmação da recorrência;\n  - yyyyMMdd – data (8 caracteres) de criação da mensagem pain.009 de solicitação de confirmação da recorrência;\n  - kkkkkkkkkkk – sequencial criado pelo agente que gerou a mensagem de solicitação de confirmação da recorrência (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada “yyyyMMdd”.\n"
+          pattern: '[a-zA-Z0-9]{29}'
+          minLength: 29
+          maxLength: 29
+          example: SC1234567820240115abcdefghijk
+    Problema:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
+          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title:
+          type: string
+          description: Descrição resumida do problema.
+          example: Not found
+        status:
+          type: integer
+          description: Código HTTP do status retornado.
+          example: 404
+        detail:
+          type: string
+          description: Descrição completa do problema.
+        correlationId:
+          type: string
+          description: Identificador de correlação do problema para fins de suporte
+        violacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violacao'
     RecPayload:
       type: object
       title: Payload da Recorrência
@@ -318,21 +263,74 @@ components:
                   pattern: \d{8}
       - $ref: '#/components/schemas/RecConfiguracao'
       - $ref: '#/components/schemas/RecAtualizacao'
-    SolicRecId:
+    SolicRecBase:
       type: object
-      title: Id da Solicitação de recorrência
+      title: Solicitação de Recorrência Base
       required:
-      - idSolicRec
+      - calendario
+      - pagador
+      - idRec
+      - destinatario
       description: Dados criados ou alterados da cobrança recorrente via API Pix
       properties:
-        idSolicRec:
+        idRec:
+          $ref: '#/components/schemas/RecId'
+        calendario:
+          type: object
+          title: Informações de Calendário da Solicitação da Recorrência
+          required:
+          - dataExpiracaoSolicitacao
+          properties:
+            dataExpiracaoSolicitacao:
+              type: string
+              format: date-time
+              title: Data da expiração da solicitação enviada ao usuário pagador.
+              description: Data da expiração da solicitação enviada ao usuário pagador. Respeita RFC 3339.
+        destinatario:
+          title: Destinatario
+          allOf:
+          - $ref: '#/components/schemas/DadosBancarios'
+          oneOf:
+          - $ref: '#/components/schemas/CPF'
+          - $ref: '#/components/schemas/CNPJ'
+    DadosBancarios:
+      type: object
+      required:
+      - conta
+      - ispbParticipante
+      properties:
+        conta:
           type: string
-          title: ID Solicitação da Recorrência
-          description: "# Identificador da Solicitação da Recorrência\n\nRegra de formação:\n- SCxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; “case sensitive”, isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - SC - fixo (2 caracteres);\n  - xxxxxxxx – ISPB do agente que envia a mensagem pain.009 de solicitação de confirmação da recorrência;\n  - yyyyMMdd – data (8 caracteres) de criação da mensagem pain.009 de solicitação de confirmação da recorrência;\n  - kkkkkkkkkkk – sequencial criado pelo agente que gerou a mensagem de solicitação de confirmação da recorrência (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada “yyyyMMdd”.\n"
-          pattern: '[a-zA-Z0-9]{29}'
-          minLength: 29
-          maxLength: 29
-          example: SC1234567820240115abcdefghijk
+          title: Conta do Usuário Pagador
+          description: Número da conta do usuário pagador.
+          minLength: 1
+          maxLength: 20
+        ispbParticipante:
+          type: string
+          title: ISPB do usuário pagador.
+          description: ISPB do usuário pagador.
+          pattern: \d{8}
+        agencia:
+          type: string
+          title: Agência do Usuário Pagador
+          description: Número da agência do usuário pagador.
+          minLength: 1
+          maxLength: 4
+    SolicRecCompleta:
+      type: object
+      title: Solicitação de Recorrência Completa
+      required:
+      - rec
+      description: Dados criados ou alterados da solicitação da recorrência
+      allOf:
+      - $ref: '#/components/schemas/SolicRecId'
+      - $ref: '#/components/schemas/SolicRecBase'
+      - $ref: '#/components/schemas/SolicRecStatus'
+      - $ref: '#/components/schemas/SolicRecAtualizacao'
+      - type: object
+        properties:
+          recPayload:
+            $ref: '#/components/schemas/RecPayload'
     RecBase:
       title: Recorrência Base
       type: object
@@ -419,49 +417,26 @@ components:
               example: '5000.00'
               title: Valor mínimo da recorrência
               description: Campo opcional. Valor definido pelo usuário recebedor. Se o usuário pagador atribuir um valor máximo para os pagamentos daquela autorização, ele não poderá ser inferior ao piso definido pelo usuário recebedor. Não pode ser preenchido nas autorizações de valor fixo, ou seja, com campo valor preenchido.
-    SolicRecStatus:
+    RecId:
+      type: string
+      title: ID Recorrência
+      description: "# Identificador da Recorrência\n\nRegra de formação:\n- RAxxxxxxxxyyyyMMddkkkkkkkkkkk (29 caracteres; \"case sensitive\", isso é, diferencia letras maiúsculas e minúsculas), sendo:\n  - \"R\":  fixo (1 caractere). \"R\" para a recorrência criada dentro do Pix;\n  - \"A\": identificação da possibilidade de novas tentativas, sendo possíveis os valores \"R\" ou \"N\" (1 caractere). \"R\" caso a recorrência permita novas tentativas de pagamento pós vencimento, ou \"N\" caso não permita novas tentativas.\n  - \"xxxxxxxx\":  identificação do agente que presta serviço para o usuário recebedor que gerou o <Id>, podendo ser: o ISPB do participante direto, o ISPB do participante indireto ou os 8 primeiros dígitos do CNPJ do prestador de serviço de iniciação (8 caracteres numéricos [0-9]);\n  - \"yyyyMMdd\":  data (8 caracteres) de criação da recorrência;\n  - \"kkkkkkkkkkk\": sequencial criado pelo agente que gerou o <Id> (11 caracteres alfanuméricos [a-z|A-Z|0-9]). Deve ser único dentro de cada \"yyyyMMdd\".\n\nDessa forma, o ID da recorrência deve ser formado de acordo com um dos tipos a seguir:\n- \"RRxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que permite novas tentativas de pagamento pós vencimento; ou\n- \"RNxxxxxxxxyyyyMMddkkkkkkkkkkk\"; para recorrência criada dentro do Pix e que não permite novas tentativas de pagamento pós vencimento.”\n"
+      pattern: '[a-zA-Z0-9]{29}'
+      minLength: 29
+      maxLength: 29
+      example: RR1234567820240115abcdefghijk
+    RecConfiguracao:
       type: object
-      title: Status da Solicitação de Recorrência
+      title: Configuração da Recorrência
       required:
-      - status
+      - politicaRetentativa
       properties:
-        status:
+        politicaRetentativa:
           type: string
-          title: Status do registro da solicitação de recorrência
+          title: Política de retentativa pós vencimento da recorrência
           enum:
-          - CRIADA
-          - ENVIADA
-          - RECEBIDA
-          - REJEITADA
-          - ACEITA
-          - EXPIRADA
-          - CANCELADA
-    CPF:
-      type: object
-      required:
-      - cpf
-      title: Pessoa Física
-      properties:
-        cpf:
-          type: string
-          title: CPF
-          pattern: /^\d{11}$/
-          description: CPF do usuário.
-    SolicRecCompleta:
-      type: object
-      title: Solicitação de Recorrência Completa
-      required:
-      - rec
-      description: Dados criados ou alterados da solicitação da recorrência
-      allOf:
-      - $ref: '#/components/schemas/SolicRecId'
-      - $ref: '#/components/schemas/SolicRecBase'
-      - $ref: '#/components/schemas/SolicRecStatus'
-      - $ref: '#/components/schemas/SolicRecAtualizacao'
-      - type: object
-        properties:
-          recPayload:
-            $ref: '#/components/schemas/RecPayload'
+          - NAO_PERMITE
+          - PERMITE_3R_7D
     Violacao:
       type: object
       title: Violações
@@ -481,66 +456,38 @@ components:
           title: Valor da propriedade
           description: Valor da propriedade
           example: 061996671234
-    RecAtualizacao:
+    SolicRecRevisada:
       type: object
-      title: Histórico de atualização da recorrência.
+      title: Solicitação de Recorrência
+      description: Dados alterados da solicitação da recorrência
       required:
-      - atualizacao
-      properties:
-        atualizacao:
-          type: array
-          title: Histórico de Status
-          description: Histórico das mudanças de status da recorrência.
-          items:
-            type: object
-            required:
-            - status
-            - data
-            properties:
-              status:
-                type: string
-                title: Status da recorrência
-                description: Status da recorrência.
-                enum:
-                - CRIADA
-                - APROVADA
-                - REJEITADA
-                - EXPIRADA
-                - CANCELADA
-              data:
-                type: string
-                format: date-time
-                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
-    Problema:
-      type: object
-      required:
-      - type
-      - title
       - status
       properties:
-        type:
-          type: string
-          format: uri
-          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
-          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title:
-          type: string
-          description: Descrição resumida do problema.
-          example: Not found
         status:
-          type: integer
-          description: Código HTTP do status retornado.
-          example: 404
-        detail:
           type: string
-          description: Descrição completa do problema.
-        correlationId:
+          title: Status do registro da solicitação de recorrência
+          enum:
+          - CANCELADA
+    PessoaJuridicaRecorrencia:
+      type: object
+      required:
+      - cnpj
+      - nome
+      title: Pessoa Jurídica
+      properties:
+        cnpj:
           type: string
-          description: Identificador de correlação do problema para fins de suporte
-        violacoes:
-          type: array
-          items:
-            $ref: '#/components/schemas/Violacao'
+          title: CNPJ
+          pattern: /^\d{14}$/
+          example: '45164632481234'
+          description: CNPJ do usuário.
+        nome:
+          type: string
+          title: Nome
+          description: Nome do usuário.
+          minLength: 1
+          maxLength: 140
+          example: Fulano de Tal
     PessoaFisicaRecorrencia:
       type: object
       required:
@@ -561,16 +508,60 @@ components:
           minLength: 1
           maxLength: 140
           example: Fulano de Tal
+    CPF:
+      type: object
+      required:
+      - cpf
+      title: Pessoa Física
+      properties:
+        cpf:
+          type: string
+          title: CPF
+          pattern: /^\d{11}$/
+          description: CPF do usuário.
+    SolicRecAtualizacao:
+      type: object
+      title: Histórico de Status da Solicitação de Recorrência
+      required:
+      - atualizacao
+      properties:
+        atualizacao:
+          type: array
+          title: Histórico de Status da Solicitação de Recorrência
+          description: ''
+          items:
+            type: object
+            required:
+            - status
+            - data
+            properties:
+              status:
+                type: string
+                title: Status do registro da solicitação de recorrência
+                enum:
+                - CRIADA
+                - ENVIADA
+                - RECEBIDA
+                - REJEITADA
+                - ACEITA
+                - EXPIRADA
+                - CANCELADA
+              data:
+                type: string
+                format: date-time
+                description: Data e hora do registro de status atualizado. Respeita RFC 3339.
+    CNPJ:
+      type: object
+      required:
+      - cnpj
+      title: Pessoa Jurídica
+      properties:
+        cnpj:
+          type: string
+          title: CNPJ
+          pattern: /^\d{14}$/
+          description: CNPJ do usuário.
   responses:
-    NaoEncontrado:
-      description: Recurso solicitado não foi encontrado.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/NaoEncontradoExample1'
     AcessoNegado:
       description: Requisição de participante autenticado que viola alguma regra de autorização.
       content:
@@ -580,6 +571,15 @@ components:
           examples:
             exemplo1:
               $ref: '#/components/examples/AcessoNegadoExample1'
+    NaoEncontrado:
+      description: Recurso solicitado não foi encontrado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/NaoEncontradoExample1'
     ServicoIndisponivel:
       description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
       content:
@@ -590,56 +590,6 @@ components:
             exemplo1:
               $ref: '#/components/examples/ServicoIndisponivelExample1'
   examples:
-    NaoEncontradoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title: Não Encontrado
-        status: 404
-        detail: Entidade não encontrada.
-    AcessoNegadoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 403
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
-    solicRecResponse1:
-      summary: Exemplo de solicitação de confirmação de recorrência 1
-      value:
-        idSolicRec: SC876456782024021577825445312
-        idRec: RN123456782024011577825445612
-        calendario:
-          dataExpiracaoSolicitacao: '2023-12-20T12:17:11.926Z'
-        status: CRIADA
-        destinatario:
-          agencia: '2569'
-          conta: '550689'
-          cpf: '15231470190'
-          ispbParticipante: '91193552'
-        atualizacao:
-        - data: '2023-12-20T12:18:18.618Z'
-          status: CRIADA
-        recPayload:
-          idRec: RN123456782024011577825445612
-          vinculo:
-            contrato: '561238008'
-            devedor:
-              cpf: '15231470190'
-              nome: Fulano de Tal
-            objeto: Serviços de Telecomunicações
-          calendario:
-            dataFinal: '2023-12-01'
-            dataInicial: '2024-04-01'
-            periodicidade: MENSAL
-          recebedor:
-            cnpj: '94370926517368'
-            nome: Empresa de Serviços SA
-          valor:
-            valorRec: '1200.09'
-          atualizacao:
-          - data: '2023-12-15T08:30:07.115Z'
-            status: CRIADA
     solicRecResponse2:
       summary: Exemplo de solicitação de confirmação de recorrência 2
       value:
@@ -680,17 +630,6 @@ components:
           atualizacao:
           - data: '2023-12-08T16:24:35.233Z'
             status: CRIADA
-    solicRecBody2:
-      summary: Exemplo de revisão de solicitação de confirmação de recorrência 1
-      value:
-        status: CANCELADA
-    OperacaoInvalidaSolicRecExample2:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/SolicRecOperacaoInvalida
-        title: Operação inválida.
-        status: 400
-        detail: Não é possível cancelar uma solicitação de recorrência com o status diferente de CRIADA ou RECEBIDA.
     OperacaoInvalidaSolicRecExample1:
       summary: Exemplo de erro da requisição 1
       value:
@@ -701,6 +640,53 @@ components:
         violacoes:
         - razao: O objeto solicrec.destinatario não respeita o schema.
           propriedade: solicrec.destinatario
+    solicRecResponse1:
+      summary: Exemplo de solicitação de confirmação de recorrência 1
+      value:
+        idSolicRec: SC876456782024021577825445312
+        idRec: RN123456782024011577825445612
+        calendario:
+          dataExpiracaoSolicitacao: '2023-12-20T12:17:11.926Z'
+        status: CRIADA
+        destinatario:
+          agencia: '2569'
+          conta: '550689'
+          cpf: '15231470190'
+          ispbParticipante: '91193552'
+        atualizacao:
+        - data: '2023-12-20T12:18:18.618Z'
+          status: CRIADA
+        recPayload:
+          idRec: RN123456782024011577825445612
+          vinculo:
+            contrato: '561238008'
+            devedor:
+              cpf: '15231470190'
+              nome: Fulano de Tal
+            objeto: Serviços de Telecomunicações
+          calendario:
+            dataFinal: '2023-12-01'
+            dataInicial: '2024-04-01'
+            periodicidade: MENSAL
+          recebedor:
+            cnpj: '94370926517368'
+            nome: Empresa de Serviços SA
+          valor:
+            valorRec: '1200.09'
+          atualizacao:
+          - data: '2023-12-15T08:30:07.115Z'
+            status: CRIADA
+    NaoEncontradoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title: Não Encontrado
+        status: 404
+        detail: Entidade não encontrada.
+    solicRecBody2:
+      summary: Exemplo de revisão de solicitação de confirmação de recorrência 1
+      value:
+        status: CANCELADA
     solicRecResponse3:
       summary: Exemplo de solicitação de confirmação de recorrência 1
       value:
@@ -739,13 +725,13 @@ components:
           atualizacao:
           - data: '2023-12-08T16:24:35.233Z'
             status: CRIADA
-    ServicoIndisponivelExample1:
+    OperacaoInvalidaSolicRecExample2:
       summary: Exemplo de erro da requisição 1
       value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 503
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+        type: https://pix.bcb.gov.br/api/v2/error/SolicRecOperacaoInvalida
+        title: Operação inválida.
+        status: 400
+        detail: Não é possível cancelar uma solicitação de recorrência com o status diferente de CRIADA ou RECEBIDA.
     solicRecBody1:
       summary: Exemplo de criação de solicitação de confirmação de recorrência 1
       value:
@@ -757,25 +743,20 @@ components:
           conta: '550689'
           cpf: '15231470190'
           ispbParticipante: '91193552'
-  requestBodies:
-    SolicRecBodyRevisada:
-      description: Dados para revisão da solicitação da recorrência.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SolicRecRevisada'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/solicRecBody2'
-    SolicRecBody:
-      description: Dados para geração da solicitação da recorrência.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SolicRecSolicitada'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/solicRecBody1'
+    ServicoIndisponivelExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+    AcessoNegadoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
   parameters:
     Client-Id:
       in: query
@@ -786,6 +767,25 @@ components:
         type: string
         description: Sua identificação exclusiva, a mesma que você usa para geração de token OAuth, o Citi compartilhou com você durante a integração da API do CitiConnect
         example: 9a10a5d6-63d4-4885-b6bd-19e79629496d
+  requestBodies:
+    SolicRecBody:
+      description: Dados para geração da solicitação da recorrência.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SolicRecSolicitada'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/solicRecBody1'
+    SolicRecBodyRevisada:
+      description: Dados para revisão da solicitação da recorrência.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SolicRecRevisada'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/solicRecBody2'
   securitySchemes:
     OAuth2:
       type: oauth2

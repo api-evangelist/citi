@@ -246,16 +246,59 @@ paths:
                 $ref: '#/components/schemas/ResponseCode500'
 components:
   schemas:
-    ResponseCode:
+    ResponseCodes400:
       properties:
-        errorCode:
-          description: which indicates the error code
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseCodes'
+        vcaId:
+          description: A reference number that uniquely identifies the virtual card account.
           type: string
-          example: GRC0014
-        errorDescription:
-          description: which indicates the error description
+          format: long
+          example: '900497'
+          maxLength: 19
+        virtualCardAccountNumber:
+          description: The virtual card account number to use for transactions.
           type: string
-          example: We have encountered an error and couldnot receive your request. Please try again, or contact Citi support if you have any further questions or comments
+          format: alphanumeric
+          example: '5555000075555000'
+          maxLength: 19
+        messageId:
+          description: Unique ID of the API message sent. The messageId will be provided back in the corresponding response. The ID can be used for investigation and troubleshooting. The ID must be unique per request.
+          type: string
+          format: alphanumeric
+          example: CITI00002022122818090320221228180903
+          maxLength: 36
+        programId:
+          description: Returned based on what client passes in the request
+          type: string
+          format: long
+          example: '233191'
+          maxLength: 19
+    CurfewTime:
+      properties:
+        startTime:
+          description: Specifies the start time from when the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>`Format:` hh:mm
+          type: string
+          format: alphanumeric
+          example: 01:00
+          maxLength: 5
+        endTime:
+          description: Specifies the end time until which the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>`Format:` hh:mm
+          type: string
+          format: alphanumeric
+          example: '22:00'
+          maxLength: 5
+        weekdaysEffective:
+          description: Listing of days to which the time curfew applies.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN<br>
+          type: array
+          items:
+            type: string
+          format: alphanumeric
+          example:
+          - MON
+          - TUE
     MerchantId:
       properties:
         merchantId:
@@ -480,50 +523,6 @@ components:
       - programId
       - expiryDate
       - timeZone
-    ResponseCodes400:
-      properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResponseCodes'
-        vcaId:
-          description: A reference number that uniquely identifies the virtual card account.
-          type: string
-          format: long
-          example: '900497'
-          maxLength: 19
-        virtualCardAccountNumber:
-          description: The virtual card account number to use for transactions.
-          type: string
-          format: alphanumeric
-          example: '5555000075555000'
-          maxLength: 19
-        messageId:
-          description: Unique ID of the API message sent. The messageId will be provided back in the corresponding response. The ID can be used for investigation and troubleshooting. The ID must be unique per request.
-          type: string
-          format: alphanumeric
-          example: CITI00002022122818090320221228180903
-          maxLength: 36
-        programId:
-          description: Returned based on what client passes in the request
-          type: string
-          format: long
-          example: '233191'
-          maxLength: 19
-    CustomReference:
-      properties:
-        customReferenceLabel:
-          description: Specifies the label of a custom reference field.
-          type: string
-          format: alphanumeric
-          example: Purchase Type
-          maxLength: 50
-        customReferenceValue:
-          description: Specifies the value of a custom reference field.<br><br>Mastercard - Max Length - 80 characters<br>Visa - Max Length - 100 characters'
-          type: string
-          format: alphanumeric
-          example: Airlines
-          maxLength: 100
     SpendVelocity:
       properties:
         cumulativeSpendLimit:
@@ -578,54 +577,12 @@ components:
           format: long
           example: '1222'
           maxLength: 19
-    ResponseCodes:
+    ResponseCode500:
       properties:
-        errorCode:
-          description: which indicates the error code
-          type: string
-          format: alphanumeric
-          example: ERS0061
-          maxLength: 30
-        errorDescription:
-          description: which indicates the error description
-          type: string
-          format: alphanumeric
-          example: VCA ID is not present in our system
-          maxLength: 300
-      required:
-      - errorCode
-      - errorDescription
-    MerchantInfo:
-      properties:
-        allowed:
-          description: Indicate whether the values in merchantId and acquirerId are allowed or disallowed.<br> True = values provided in merchantId and acquirerId are allowed<br> False = values provided in merchantId and acquirerId are not allowed
-          type: string
-          format: boolean
-          example: 'true'
-        merchantIds:
+        errors:
           type: array
           items:
-            $ref: '#/components/schemas/MerchantId'
-    TimeOfDay:
-      properties:
-        startTime:
-          description: Specifies the start time from when the card can be used each of the specified days.t<br><br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only<br><br>`Format:` hh:mm
-          type: string
-          format: alphanumeric
-          example: 01:00
-          maxLength: 5
-        endTime:
-          description: Specifies the end time until which the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only<br><br>`Format:` hh:mm
-          type: string
-          format: alphanumeric
-          example: '22:00'
-          maxLength: 5
-        weekdayEffective:
-          description: Specifies the day applicable to the start and end times defined.<br>Mastercard - Optional<br>Visa - Optional<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN<br>
-          type: string
-          format: alphanumeric
-          example: WED
-          maxLength: 3
+            $ref: '#/components/schemas/ResponseCode'
     GetVcaDetailsInboundRequest:
       properties:
         messageId:
@@ -664,35 +621,78 @@ components:
       required:
       - messageId
       - programId
-    ResponseCode500:
+    CustomReference:
       properties:
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResponseCode'
-    CurfewTime:
+        customReferenceLabel:
+          description: Specifies the label of a custom reference field.
+          type: string
+          format: alphanumeric
+          example: Purchase Type
+          maxLength: 50
+        customReferenceValue:
+          description: Specifies the value of a custom reference field.<br><br>Mastercard - Max Length - 80 characters<br>Visa - Max Length - 100 characters'
+          type: string
+          format: alphanumeric
+          example: Airlines
+          maxLength: 100
+    ResponseCode:
+      properties:
+        errorCode:
+          description: which indicates the error code
+          type: string
+          example: GRC0014
+        errorDescription:
+          description: which indicates the error description
+          type: string
+          example: We have encountered an error and couldnot receive your request. Please try again, or contact Citi support if you have any further questions or comments
+    ResponseCodes:
+      properties:
+        errorCode:
+          description: which indicates the error code
+          type: string
+          format: alphanumeric
+          example: ERS0061
+          maxLength: 30
+        errorDescription:
+          description: which indicates the error description
+          type: string
+          format: alphanumeric
+          example: VCA ID is not present in our system
+          maxLength: 300
+      required:
+      - errorCode
+      - errorDescription
+    TimeOfDay:
       properties:
         startTime:
-          description: Specifies the start time from when the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>`Format:` hh:mm
+          description: Specifies the start time from when the card can be used each of the specified days.t<br><br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only<br><br>`Format:` hh:mm
           type: string
           format: alphanumeric
           example: 01:00
           maxLength: 5
         endTime:
-          description: Specifies the end time until which the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>`Format:` hh:mm
+          description: Specifies the end time until which the card can be used each of the specified days.<br><br>Mastercard - Optional<br>Visa - Optional. The minutes digit must be populated with zero only<br><br>`Format:` hh:mm
           type: string
           format: alphanumeric
           example: '22:00'
           maxLength: 5
-        weekdaysEffective:
-          description: Listing of days to which the time curfew applies.<br><br>Mastercard - Optional<br>Visa - Not applicaable<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN<br>
+        weekdayEffective:
+          description: Specifies the day applicable to the start and end times defined.<br>Mastercard - Optional<br>Visa - Optional<br><br>Possible Values:<br><br>MON<br>TUE<br>WED<br>THU<br>FRI<br>SAT<br>SUN<br>
+          type: string
+          format: alphanumeric
+          example: WED
+          maxLength: 3
+    MerchantInfo:
+      properties:
+        allowed:
+          description: Indicate whether the values in merchantId and acquirerId are allowed or disallowed.<br> True = values provided in merchantId and acquirerId are allowed<br> False = values provided in merchantId and acquirerId are not allowed
+          type: string
+          format: boolean
+          example: 'true'
+        merchantIds:
           type: array
           items:
-            type: string
-          format: alphanumeric
-          example:
-          - MON
-          - TUE
+            $ref: '#/components/schemas/MerchantId'
   securitySchemes:
     clientCredentials:
       type: oauth2
