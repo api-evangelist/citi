@@ -1,0 +1,309 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/citi/main/json-schema/citi-cash-account-schema.json",
+  "title": "CashAccount",
+  "description": "Specifies the details of the cash account.",
+  "x-generated": "2026-10-12",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/citi-balance-api-openapi.yml#/components/schemas/CashAccount",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "account_identification",
+    "name",
+    "currency",
+    "balances"
+  ],
+  "properties": {
+    "account_identification": {
+      "description": "Identification of the account as defined by the account service provider. It can be in IBAN or proprietary format.\n\nRECOMMENDATION IN ORDER OF PREFERENCE:\nIBAN - When available IBAN must be specified for instance endpoint or hyper link to work.\nOther - In the absence of IBAN, this must be an unique account identification used for routing of the payment to the account via clearing system. A format which is agreed between the account owner and the account servicer. For example a SWIFT BIC/Branch Code and Account number.\n",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 34
+    },
+    "account_servicer": {
+      "$ref": "#/$defs/BICFIDec2014Identifier"
+    },
+    "name": {
+      "$ref": "#/$defs/Max70Text"
+    },
+    "owner_name": {
+      "$ref": "#/$defs/Max70Text"
+    },
+    "currency": {
+      "$ref": "#/$defs/ActiveCurrencyCode"
+    },
+    "linked_account": {
+      "$ref": "#/$defs/Max70Text"
+    },
+    "balances": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BalancesList3"
+      }
+    },
+    "status": {
+      "$ref": "#/$defs/Max35Text"
+    },
+    "credit_limit": {
+      "$ref": "#/$defs/ActiveCurrencyAndAmount"
+    },
+    "links": {
+      "$ref": "#/$defs/Links"
+    }
+  },
+  "$defs": {
+    "ActiveCurrencyAndAmount": {
+      "type": "object",
+      "description": "A number of monetary units specified in an active currency where the unit of currency is explicit and compliant with ISO 4217.",
+      "properties": {
+        "currency": {
+          "$ref": "#/$defs/ActiveCurrencyCode"
+        },
+        "amount": {
+          "type": "string",
+          "maxLength": 19,
+          "pattern": "^0*(([0-9]{0,13}\\.[0-9]{1,5})|([0-9]{0,14}\\.[0-9]{1,4})|([0-9]{0,15}\\.[0-9]{1,3})|([0-9]{0,16}\\.[0-9]{1,2})|([0-9]{0,17}\\.[0-9]{1,1})|0*|([0-9]{0,18}))$"
+        }
+      }
+    },
+    "ActiveCurrencyCode": {
+      "type": "string",
+      "pattern": "^[A-Z]{3,3}$",
+      "description": "The code allocated to a currency by a Maintenance Agency under an international identification scheme as described in the latest edition of the international standard ISO 4217 Codes for the Representation of Currencies and Funds\n"
+    },
+    "AmountAndDirection52": {
+      "type": "object",
+      "description": "Posting of an item to a cash account, in the context of a cash transaction, that results in an increase or decrease to the balance of the account.",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "$ref": "#/$defs/ActiveCurrencyAndAmount"
+        },
+        "credit_debit_indicator": {
+          "$ref": "#/$defs/CreditDebitCode"
+        }
+      },
+      "required": [
+        "amount",
+        "credit_debit_indicator"
+      ]
+    },
+    "BICFIDec2014Identifier": {
+      "type": "string",
+      "description": "Code allocated to a financial institution by the ISO 9362 Registration Authority as described in ISO 9362 - 2014 - Banking - Banking telecommunication messages - Business identifier code (BIC)\n",
+      "pattern": "^[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}$"
+    },
+    "BalancesList3": {
+      "type": "object",
+      "description": "List of the balances that can be retrieved on a given account",
+      "additionalProperties": false,
+      "properties": {
+        "current_balance": {
+          "$ref": "#/$defs/CashCurrentBalance1"
+        },
+        "available_balance": {
+          "$ref": "#/$defs/CashAvailableBalance1"
+        },
+        "forward_available_balance": {
+          "type": "array",
+          "description": "Provides detailed information of the forward available balance of a specific cash account. Subject to the service provided by the Account Servicer, forward avaialble balance can be presented with multiple times for multiple reference dates.\n",
+          "items": {
+            "$ref": "#/$defs/CashForwardAvailableBalance1"
+          }
+        }
+      },
+      "required": [
+        "current_balance"
+      ]
+    },
+    "CashAvailableBalance1": {
+      "type": "object",
+      "description": "Individual available balance details on a given cash account.\\r\\nIt can either be in a balance type of closing available or interim available, subject to the agreement between the account servicer and its consumer.\\r\\n\\r\\nFor closing available, it is the closing balance of amount of money that is at the disposal of the account owner on the date specified. \\r\\n\\r\\nFor interim avaialble, it is the available balance calculated in the course of the account servicer's business day, at the time specified, and subject to further changes during the business day. The interim balance is calculated on the basis of booked credit and debit items during the calculation time/period specified. '\n",
+      "additionalProperties": false,
+      "properties": {
+        "balance_amount": {
+          "$ref": "#/$defs/AmountAndDirection52"
+        },
+        "balance_type": {
+          "$ref": "#/$defs/CashBalanceType4Code"
+        },
+        "availability_date": {
+          "$ref": "#/$defs/ISONormalisedDateTime"
+        }
+      },
+      "required": [
+        "balance_amount",
+        "balance_type",
+        "availability_date"
+      ]
+    },
+    "CashBalanceType3Code": {
+      "type": "string",
+      "description": "Specifies the nature of the balance.\n*`CLBD_closing_booked`-Balance of the account at the end of the pre-agreed account reporting period. It is the sum of the opening booked balance at the beginning of the period and all entries booked to the account during the pre-agreed account reporting period.\n*`ITBD_interim_booked`-Balance calculated in the course of the account servicer's business day, at the time specified, and subject to further changes during the business day. The interim balance is calculated on the basis of booked credit and debit items during the calculation time/period specified.\n*`OPBD_opening_booked`-Book balance of the account at the beginning of the account reporting period. It always equals the closing book balance from the previous report\n",
+      "enum": [
+        "CLBD",
+        "ITBD",
+        "OPBD"
+      ]
+    },
+    "CashBalanceType4Code": {
+      "type": "string",
+      "description": "Specifies the nature of the balance.\n*`ITAV_interim_available`-Available balance calculated in the course of the account servicer's business day, at the time specified, and subject to further changes during the business day. The interim balance is calculated on the basis of booked credit and debit items during the calculation time/period specified.\n*`CLAV_closing_available`-Closing balance of amount of money that is at the disposal of the account owner on the date specified.\n*`OPAV_opening_available`-Opening balance of amount of money that is at the disposal of the account owner on the date specified.\n",
+      "enum": [
+        "ITAV",
+        "CLAV",
+        "OPAV"
+      ]
+    },
+    "CashBalanceType5Code": {
+      "type": "string",
+      "description": "Specifies the nature of the balance.\n*`FWAV_forward_available`-Forward available balance of money that is at the disposal of the account owner on the date specified.\n",
+      "enum": [
+        "FWAV"
+      ]
+    },
+    "CashCurrentBalance1": {
+      "type": "object",
+      "description": "'Individual current balance details on a given cash account.\\r\\nIt can either be in a balance type of closing booked or interim booked, subject to the agreement between the account servicer and its consumer.\\r\\n\\r\\nFor closing booked, it is the balance of the account at the end of the pre-agreed account reporting period. It is the sum of the opening booked balance at the beginning of the period and all entries booked to the account during the pre-agreed account reporting period. \\r\\n\\r\\nFor interim booked, it is the balance calculated in the course of the account servicer's business day, at the time specified, and subject to further changes during the business day. The interim balance is calculated on the basis of booked credit and debit items during the calculation time/period specified. '\n",
+      "additionalProperties": false,
+      "properties": {
+        "balance_amount": {
+          "$ref": "#/$defs/AmountAndDirection52"
+        },
+        "balance_type": {
+          "$ref": "#/$defs/CashBalanceType3Code"
+        },
+        "last_change_date_time": {
+          "$ref": "#/$defs/ISONormalisedDateTime"
+        },
+        "date_time": {
+          "$ref": "#/$defs/ISONormalisedDateTime"
+        },
+        "last_committed_transaction_identification": {
+          "$ref": "#/$defs/Max40Text"
+        },
+        "credit_line": {
+          "type": "array",
+          "description": "Provides details on the credit line linked to the account.",
+          "items": {
+            "$ref": "#/$defs/CreditLine6"
+          }
+        }
+      },
+      "required": [
+        "balance_amount",
+        "balance_type"
+      ]
+    },
+    "CashForwardAvailableBalance1": {
+      "type": "object",
+      "description": "Individual forward available balance details on a given cash account. It is the forward available balance of money that is at the disposal of the account owner on the date specified.\n",
+      "additionalProperties": false,
+      "properties": {
+        "balance_amount": {
+          "$ref": "#/$defs/AmountAndDirection52"
+        },
+        "balance_type": {
+          "$ref": "#/$defs/CashBalanceType5Code"
+        },
+        "availability_date": {
+          "$ref": "#/$defs/ISODate"
+        }
+      },
+      "required": [
+        "balance_amount",
+        "balance_type"
+      ]
+    },
+    "CreditDebitCode": {
+      "type": "string",
+      "description": "Specifies if an operation is an increase or a decrease.\n*`CRDT_credit`-Operation is an increase.\n*`DBIT_debit`-Operation is a decrease.\n",
+      "enum": [
+        "CRDT",
+        "DBIT"
+      ]
+    },
+    "CreditLine6": {
+      "type": "object",
+      "description": "Specifies the details of a credit line.",
+      "additionalProperties": false,
+      "properties": {
+        "included": {
+          "description": "Indicates whether or not the credit line is included in the balance.",
+          "type": "boolean"
+        },
+        "type": {
+          "$ref": "#/$defs/Max35Text"
+        },
+        "amount": {
+          "$ref": "#/$defs/ActiveCurrencyAndAmount"
+        }
+      },
+      "required": [
+        "included"
+      ]
+    },
+    "ISODate": {
+      "type": "string",
+      "description": "A particular point in the progression of time in a calendar year expressed in the YYYY-MM-DD format. This representation is defined in \"XML Schema Part 2: Datatypes Second Edition - W3C Recommendation 28 October 2004\" which is aligned with ISO 8601.",
+      "pattern": "^(?:[1-9]\\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)$"
+    },
+    "ISONormalisedDateTime": {
+      "type": "string",
+      "description": "an ISODateTime whereby all timezoned dateTime values are UTC.",
+      "pattern": "^(?:[1-9]\\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.[0-9]+)?(?:Z)$"
+    },
+    "Link": {
+      "type": "object",
+      "readOnly": true,
+      "description": "Contains a generic structure to support hyperlinking (REST level 3).",
+      "additionalProperties": false,
+      "required": [
+        "href"
+      ],
+      "properties": {
+        "href": {
+          "description": "Specifies the link as a url. The href member identifies the target IRI location of the resource.",
+          "type": "string",
+          "maxLength": 256
+        },
+        "rel": {
+          "description": "Specifies the operation. The value of this property MUST be a string. This property is required except self. The self reference contains the URI of the same resource.",
+          "type": "string",
+          "maxLength": 35
+        },
+        "type": {
+          "description": "The value containing the HTTP verb used for the URL. If the type element is not included then the link MUST be available using GET.",
+          "type": "string",
+          "maxLength": 35
+        }
+      }
+    },
+    "Links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Link"
+      }
+    },
+    "Max35Text": {
+      "type": "string",
+      "description": "Specifies a character string with a maximum length of 35 characters.",
+      "minLength": 1,
+      "maxLength": 35
+    },
+    "Max40Text": {
+      "type": "string",
+      "description": "Specifies a character string with a maximum length of 40 characters.",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "Max70Text": {
+      "type": "string",
+      "description": "Specifies a character string with a maximum length of 70characters.",
+      "minLength": 1,
+      "maxLength": 70
+    }
+  }
+}
