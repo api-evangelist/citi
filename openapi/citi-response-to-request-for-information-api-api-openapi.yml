@@ -131,88 +131,167 @@ paths:
         default:
           $ref: '#/components/responses/Internal-Server-Error'
 components:
-  parameters:
-    Event-Type:
-      name: Event-Type
-      in: header
-      required: true
-      description: Event Type
-      schema:
-        type: string
-    Event-Name:
-      name: Event-Name
-      in: header
-      required: true
-      description: Event Name
-      schema:
-        type: string
-  responses:
-    Internal-Server-Error:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Internal-Server-Error-Example:
-              $ref: '#/components/examples/Internal-Server-Error-Example'
-    Unsupported-Media-Type:
-      description: Unsupported Media Type
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Un-Supported-Media-Type-Example:
-              $ref: '#/components/examples/Un-Supported-Media-Type-Example'
-    Bad-Request:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Bad-Request-Example:
-              $ref: '#/components/examples/Bad-Request-Example'
-    Method-Not-Allowed:
-      description: Method Not Allowed
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Method-Not-Allowed-Example:
-              $ref: '#/components/examples/Method-Not-Allowed-Example'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Unauthorized-Example:
-              $ref: '#/components/examples/Unauthorized-Example'
-    Not-Found:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Not-Found-Example:
-              $ref: '#/components/examples/Not-Found-Example'
-    Conflict:
-      description: Conflict
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error-Response'
-          examples:
-            Idempotency-Id-Conflict-Example:
-              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
-            Duplicate-Payment-Conflict-Example:
-              $ref: '#/components/examples/Duplicate-Payment-Conflict-Example'
   schemas:
+    Response-To-Request-For-Information:
+      title: Response-To-Request-For-Information
+      type: object
+      description: Response to Request for Information
+      properties:
+        rfi_id:
+          type: string
+          description: RFI ID.
+          minLength: 1
+          maxLength: 100
+          title: rfi_id
+        fieldlevel_requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field-Level-Requests-With-Answers'
+          description: ' Field level requests for which response is requested'
+          maxItems: 30
+          title: fieldlevel_requests
+      required:
+      - rfi_id
+      - alert_id
+      - request_data
+    Field-Details:
+      type: object
+      description: Field details can have one or more questions requested from client.
+      title: Field-Details
+      properties:
+        question_name:
+          type: string
+          description: Data requested from client.
+          minLength: 1
+          maxLength: 250
+          title: question_name
+        datatype:
+          type: string
+          description: Data format type which client needs to return in the response.
+          minLength: 1
+          maxLength: 25
+          title: datatype
+        description:
+          type: string
+          description: Description of the requested data.
+          minLength: 1
+          maxLength: 500
+          title: description
+      required:
+      - question_name
+      - datatype
+      - description
+    Field-Level-Requests-With-Answers:
+      type: object
+      description: Request can have one or more match level requests.
+      title: Field-Level-Requests-With-Answers
+      properties:
+        field_id:
+          type: number
+          description: Unique ID for each match.
+          title: field_id
+        field_name:
+          type: string
+          description: Name of the field where match has occurred.
+          minLength: 1
+          maxLength: 250
+          title: field_name
+        field_value:
+          type: string
+          description: Entire content of the field having the match.
+          minLength: 1
+          maxLength: 500
+          title: field_value
+        clarification_required_for:
+          type: string
+          description: Exact match.
+          minLength: 1
+          maxLength: 500
+          title: clarification_required_for
+        input_type:
+          type: string
+          description: "The Input type or template to provide the response against the field. It will be one the following - individual / entity / aircraft / vessel / unknown / others. \n If requested input type is unknown, populate fields from any of the other 4 input types in the response."
+          minLength: 1
+          maxLength: 16
+          title: input_type
+        field_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field-Details-with-answers'
+          description: Field details with questions requested from client.
+          maxItems: 30
+          title: field_details
+      required:
+      - field_id
+      - field_name
+      - field_value
+      - input_type
+    Request-For-Information:
+      title: Request-For-Information
+      type: object
+      description: Request For Information Compliance
+      properties:
+        rfi_id:
+          type: string
+          description: 'RFI ID '
+          minLength: 1
+          maxLength: 100
+          title: rfi_id
+        alert_id:
+          type: string
+          description: Alert ID.
+          minLength: 1
+          maxLength: 100
+          title: alert_id
+        request_data:
+          type: object
+          description: Source data
+          discriminator:
+            propertyName: type
+            mapping:
+              entity: '#/components/schemas/Request-Data-Entity'
+              transaction: '#/components/schemas/Request-Data-Transaction'
+          oneOf:
+          - $ref: '#/components/schemas/Request-Data-Entity'
+          - $ref: '#/components/schemas/Request-Data-Transaction'
+          title: request_data
+        fieldlevel_requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/Field-Level-Requests'
+          description: ' Field level requests for which response is requested'
+          maxItems: 30
+          title: fieldlevel_requests
+      required:
+      - rfi_id
+      - alert_id
+      - request_data
+    Request-For-Information-Closure:
+      title: Request-For-Information-Closure
+      type: object
+      description: Request For Information Closure
+      properties:
+        alert_id:
+          type: string
+          description: Alert ID
+          minLength: 1
+          maxLength: 100
+          title: alert_id
+        rfi_ids:
+          type: array
+          description: RFI IDs
+          minLength: 1
+          maxLength: 30
+          title: rfi_ids
+          items:
+            type: string
+            description: 'RFI ID '
+            minLength: 1
+            maxLength: 100
+            title: rfi_id
+      required:
+      - rfi_ids
+      - alert_id
     Request-Data-Entity:
       type: object
       description: Request Data Entity.
@@ -262,275 +341,6 @@ components:
           example: John
       required:
       - type
-    Request-For-Information:
-      title: Request-For-Information
-      type: object
-      description: Request For Information Compliance
-      properties:
-        rfi_id:
-          type: string
-          description: 'RFI ID '
-          minLength: 1
-          maxLength: 100
-          title: rfi_id
-        alert_id:
-          type: string
-          description: Alert ID.
-          minLength: 1
-          maxLength: 100
-          title: alert_id
-        request_data:
-          type: object
-          description: Source data
-          discriminator:
-            propertyName: type
-            mapping:
-              entity: '#/components/schemas/Request-Data-Entity'
-              transaction: '#/components/schemas/Request-Data-Transaction'
-          oneOf:
-          - $ref: '#/components/schemas/Request-Data-Entity'
-          - $ref: '#/components/schemas/Request-Data-Transaction'
-          title: request_data
-        fieldlevel_requests:
-          type: array
-          items:
-            $ref: '#/components/schemas/Field-Level-Requests'
-          description: ' Field level requests for which response is requested'
-          maxItems: 30
-          title: fieldlevel_requests
-      required:
-      - rfi_id
-      - alert_id
-      - request_data
-    Field-Level-Requests-With-Answers:
-      type: object
-      description: Request can have one or more match level requests.
-      title: Field-Level-Requests-With-Answers
-      properties:
-        field_id:
-          type: number
-          description: Unique ID for each match.
-          title: field_id
-        field_name:
-          type: string
-          description: Name of the field where match has occurred.
-          minLength: 1
-          maxLength: 250
-          title: field_name
-        field_value:
-          type: string
-          description: Entire content of the field having the match.
-          minLength: 1
-          maxLength: 500
-          title: field_value
-        clarification_required_for:
-          type: string
-          description: Exact match.
-          minLength: 1
-          maxLength: 500
-          title: clarification_required_for
-        input_type:
-          type: string
-          description: "The Input type or template to provide the response against the field. It will be one the following - individual / entity / aircraft / vessel / unknown / others. \n If requested input type is unknown, populate fields from any of the other 4 input types in the response."
-          minLength: 1
-          maxLength: 16
-          title: input_type
-        field_details:
-          type: array
-          items:
-            $ref: '#/components/schemas/Field-Details-with-answers'
-          description: Field details with questions requested from client.
-          maxItems: 30
-          title: field_details
-      required:
-      - field_id
-      - field_name
-      - field_value
-      - input_type
-    Field-Details-with-answers:
-      type: object
-      description: Field details can have one or more questions requested from client.
-      title: Field-Details-with-answers
-      properties:
-        question_name:
-          type: string
-          description: Data requested from client.
-          minLength: 1
-          maxLength: 250
-          title: question_name
-        answer:
-          type: string
-          description: Client answer to the question.
-          minLength: 1
-          maxLength: 2000
-          title: answer
-      required:
-      - question_name
-      - answer
-    Response-To-Request-For-Information:
-      title: Response-To-Request-For-Information
-      type: object
-      description: Response to Request for Information
-      properties:
-        rfi_id:
-          type: string
-          description: RFI ID.
-          minLength: 1
-          maxLength: 100
-          title: rfi_id
-        fieldlevel_requests:
-          type: array
-          items:
-            $ref: '#/components/schemas/Field-Level-Requests-With-Answers'
-          description: ' Field level requests for which response is requested'
-          maxItems: 30
-          title: fieldlevel_requests
-      required:
-      - rfi_id
-      - alert_id
-      - request_data
-    Initial-Response-To-Request-For-Information:
-      title: InitialResponseToRequestForInformation
-      type: object
-      description: Initial Response To Request For Information
-      properties:
-        rfi_id:
-          type: string
-          description: 'RFI ID '
-          minLength: 1
-          maxLength: 100
-          title: rfi_id
-        status:
-          type: object
-          title: status
-          properties:
-            date_time:
-              type: string
-              format: date-time
-              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
-              title: date_time
-            code:
-              type: string
-              description: ISO 20022 acknowledgement status code
-              enum:
-              - PDNG
-              title: code
-            description:
-              type: string
-              description: "Status code description \n- PDNG - Pending"
-              title: description
-          required:
-          - code
-          - description
-          - date_time
-      required:
-      - rfi_id
-      - status
-    Request-For-Information-Closure:
-      title: Request-For-Information-Closure
-      type: object
-      description: Request For Information Closure
-      properties:
-        alert_id:
-          type: string
-          description: Alert ID
-          minLength: 1
-          maxLength: 100
-          title: alert_id
-        rfi_ids:
-          type: array
-          description: RFI IDs
-          minLength: 1
-          maxLength: 30
-          title: rfi_ids
-          items:
-            type: string
-            description: 'RFI ID '
-            minLength: 1
-            maxLength: 100
-            title: rfi_id
-      required:
-      - rfi_ids
-      - alert_id
-    Field-Level-Requests:
-      type: object
-      description: Request can have one or more match level requests.
-      title: Field-Level-Requests
-      properties:
-        field_id:
-          type: number
-          description: Unique ID for each match.
-          title: field_id
-        field_name:
-          type: string
-          description: Name of the field where match has occurred.
-          minLength: 1
-          maxLength: 250
-          title: field_name
-        field_value:
-          type: string
-          description: Entire content of the field having the match.
-          minLength: 1
-          maxLength: 500
-          title: field_value
-        clarification_required_for:
-          type: string
-          description: Exact match.
-          minLength: 1
-          maxLength: 500
-          title: clarification_required_for
-        input_type:
-          type: string
-          description: The input type will be one the following - individual / entity / aircraft / vessel / unknown / others.
-          minLength: 1
-          maxLength: 16
-          title: input_type
-        additional_clarification:
-          type: string
-          description: Additional clarification.
-          minLength: 1
-          maxLength: 150
-          title: additional_clarification
-        field_details:
-          type: array
-          items:
-            $ref: '#/components/schemas/Field-Details'
-          description: Field details with questions requested from client.
-          maxItems: 30
-          title: field_details
-      required:
-      - field_id
-      - field_name
-      - field_value
-      - input_type
-      - field_details
-    Field-Details:
-      type: object
-      description: Field details can have one or more questions requested from client.
-      title: Field-Details
-      properties:
-        question_name:
-          type: string
-          description: Data requested from client.
-          minLength: 1
-          maxLength: 250
-          title: question_name
-        datatype:
-          type: string
-          description: Data format type which client needs to return in the response.
-          minLength: 1
-          maxLength: 25
-          title: datatype
-        description:
-          type: string
-          description: Description of the requested data.
-          minLength: 1
-          maxLength: 500
-          title: description
-      required:
-      - question_name
-      - datatype
-      - description
     Error-Detail:
       type: object
       title: ErrorDetail
@@ -550,6 +360,20 @@ components:
           maxLength: 8
           description: unique code representing the issue
           title: code
+    Error-Response:
+      type: object
+      title: ErrorResponse
+      properties:
+        ref_id:
+          type: string
+          maxLength: 60
+          description: Unique ID for the Transaction
+          title: ref_id
+        error_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error-Detail'
+          title: error_details
     Request-Data-Transaction:
       type: object
       description: Request Data Transaction.
@@ -683,54 +507,188 @@ components:
           example: INR
       required:
       - type
-    Error-Response:
+    Initial-Response-To-Request-For-Information:
+      title: InitialResponseToRequestForInformation
       type: object
-      title: ErrorResponse
+      description: Initial Response To Request For Information
       properties:
-        ref_id:
+        rfi_id:
           type: string
-          maxLength: 60
-          description: Unique ID for the Transaction
-          title: ref_id
-        error_details:
+          description: 'RFI ID '
+          minLength: 1
+          maxLength: 100
+          title: rfi_id
+        status:
+          type: object
+          title: status
+          properties:
+            date_time:
+              type: string
+              format: date-time
+              description: "UTC (ISO 8601 YYYY-MM-DDTHH:MM:SS.sssZ) \n- Status change date time"
+              title: date_time
+            code:
+              type: string
+              description: ISO 20022 acknowledgement status code
+              enum:
+              - PDNG
+              title: code
+            description:
+              type: string
+              description: "Status code description \n- PDNG - Pending"
+              title: description
+          required:
+          - code
+          - description
+          - date_time
+      required:
+      - rfi_id
+      - status
+    Field-Level-Requests:
+      type: object
+      description: Request can have one or more match level requests.
+      title: Field-Level-Requests
+      properties:
+        field_id:
+          type: number
+          description: Unique ID for each match.
+          title: field_id
+        field_name:
+          type: string
+          description: Name of the field where match has occurred.
+          minLength: 1
+          maxLength: 250
+          title: field_name
+        field_value:
+          type: string
+          description: Entire content of the field having the match.
+          minLength: 1
+          maxLength: 500
+          title: field_value
+        clarification_required_for:
+          type: string
+          description: Exact match.
+          minLength: 1
+          maxLength: 500
+          title: clarification_required_for
+        input_type:
+          type: string
+          description: The input type will be one the following - individual / entity / aircraft / vessel / unknown / others.
+          minLength: 1
+          maxLength: 16
+          title: input_type
+        additional_clarification:
+          type: string
+          description: Additional clarification.
+          minLength: 1
+          maxLength: 150
+          title: additional_clarification
+        field_details:
           type: array
           items:
-            $ref: '#/components/schemas/Error-Detail'
-          title: error_details
+            $ref: '#/components/schemas/Field-Details'
+          description: Field details with questions requested from client.
+          maxItems: 30
+          title: field_details
+      required:
+      - field_id
+      - field_name
+      - field_value
+      - input_type
+      - field_details
+    Field-Details-with-answers:
+      type: object
+      description: Field details can have one or more questions requested from client.
+      title: Field-Details-with-answers
+      properties:
+        question_name:
+          type: string
+          description: Data requested from client.
+          minLength: 1
+          maxLength: 250
+          title: question_name
+        answer:
+          type: string
+          description: Client answer to the question.
+          minLength: 1
+          maxLength: 2000
+          title: answer
+      required:
+      - question_name
+      - answer
+  responses:
+    Internal-Server-Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Internal-Server-Error-Example:
+              $ref: '#/components/examples/Internal-Server-Error-Example'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Unauthorized-Example:
+              $ref: '#/components/examples/Unauthorized-Example'
+    Method-Not-Allowed:
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Method-Not-Allowed-Example:
+              $ref: '#/components/examples/Method-Not-Allowed-Example'
+    Not-Found:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Not-Found-Example:
+              $ref: '#/components/examples/Not-Found-Example'
+    Bad-Request:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Bad-Request-Example:
+              $ref: '#/components/examples/Bad-Request-Example'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Idempotency-Id-Conflict-Example:
+              $ref: '#/components/examples/Idempotency-Id-Conflict-Example'
+            Duplicate-Payment-Conflict-Example:
+              $ref: '#/components/examples/Duplicate-Payment-Conflict-Example'
+    Unsupported-Media-Type:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error-Response'
+          examples:
+            Un-Supported-Media-Type-Example:
+              $ref: '#/components/examples/Un-Supported-Media-Type-Example'
   examples:
-    Request-For-Information-Closure:
-      value:
-        alert_id: '209339209123'
-        rfi_ids:
-        - RFI-36345954-RFICSAWTNAM1
-        - RFI-36345954-RFICSAWTNAM2
-    Bad-Request-Example:
-      value:
-        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
-        error_details:
-        - issue: instructed_amount is missing
-          action: Provide valid instructed_amount
-          code: VC00010
     Internal-Server-Error-Example:
       value:
         ref_id: ec689822-9864-4c4d-9d68-222467627902
         error_details:
         - issue: Request was not processed
           code: CC00004
-    Duplicate-Payment-Conflict-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: duplicate request. same request is being processed in another request
-          action: please do not repeat the same request again
-          code: VC00017
-    Method-Not-Allowed-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627902
-        error_details:
-        - issue: HTTP method is not supported
-          action: Provide valid HTTP method
-          code: CC00001
     Un-Supported-Media-Type-Example:
       value:
         ref_id: ec689822-9864-4c4d-9d68-222467627902
@@ -738,6 +696,20 @@ components:
         - issue: Media type is invalid
           action: Provide valid media type
           code: CC00002
+    Bad-Request-Example:
+      value:
+        ref_id: 444d0f3f-4x55-7g99-8b2c-0cf2a921a5ab
+        error_details:
+        - issue: instructed_amount is missing
+          action: Provide valid instructed_amount
+          code: VC00010
+    Duplicate-Payment-Conflict-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: duplicate request. same request is being processed in another request
+          action: please do not repeat the same request again
+          code: VC00017
     Unauthorized-Example:
       value:
         ref_id: ec689822-9864-4c4d-9d68-222467627902
@@ -745,13 +717,6 @@ components:
         - issue: Request is not authorized
           action: Try again with valid credentials
           code: CC00007
-    Not-Found-Example:
-      value:
-        ref_id: ec689822-9864-4c4d-9d68-222467627702
-        error_details:
-        - issue: Resource that you are searching is not found
-          action: Please use valid resource details
-          code: CC00006
     Idempotency-Id-Conflict-Example:
       value:
         ref_id: ec689822-9864-4c4d-9d68-222467627902
@@ -759,7 +724,46 @@ components:
         - issue: Idempotency-Id provided is currently being used in another request
           action: please do not repeat the same request again
           code: VC00016
+    Request-For-Information-Closure:
+      value:
+        alert_id: '209339209123'
+        rfi_ids:
+        - RFI-36345954-RFICSAWTNAM1
+        - RFI-36345954-RFICSAWTNAM2
+    Not-Found-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627702
+        error_details:
+        - issue: Resource that you are searching is not found
+          action: Please use valid resource details
+          code: CC00006
+    Method-Not-Allowed-Example:
+      value:
+        ref_id: ec689822-9864-4c4d-9d68-222467627902
+        error_details:
+        - issue: HTTP method is not supported
+          action: Provide valid HTTP method
+          code: CC00001
   callbacks:
+    Request-For-Information-Notification:
+      /request-for-information-notification:
+        post:
+          parameters:
+          - $ref: '#/components/parameters/Event-Type'
+          - $ref: '#/components/parameters/Event-Name'
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Request-For-Information'
+          responses:
+            '202':
+              description: Accepted
+              content:
+                application/json:
+                  schema:
+                    type: object
     Request-For-Information-Closure-Notification:
       /request-for-information-closure-notification:
         post:
@@ -782,25 +786,21 @@ components:
                 application/json:
                   schema:
                     type: object
-    Request-For-Information-Notification:
-      /request-for-information-notification:
-        post:
-          parameters:
-          - $ref: '#/components/parameters/Event-Type'
-          - $ref: '#/components/parameters/Event-Name'
-          requestBody:
-            required: true
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Request-For-Information'
-          responses:
-            '202':
-              description: Accepted
-              content:
-                application/json:
-                  schema:
-                    type: object
+  parameters:
+    Event-Type:
+      name: Event-Type
+      in: header
+      required: true
+      description: Event Type
+      schema:
+        type: string
+    Event-Name:
+      name: Event-Name
+      in: header
+      required: true
+      description: Event Name
+      schema:
+        type: string
   securitySchemes:
     clientCredentials:
       description: 'All CitiConnect APIs use the oAuth2 authentication scheme, which requires a bearer token to authenticate your API call. The Token URL includes the version of authentication used by this API. See <a href="../../authentication/authentication-api-reference/" target="_blank">the Citi Authentication API reference</a> for information on requesting a token.

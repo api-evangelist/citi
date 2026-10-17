@@ -97,7 +97,129 @@ paths:
       operationId: putWebhookByChave
       x-operation-id-source: derived
 components:
+  examples:
+    webhookBody1:
+      summary: Exemplo de configuração de Webhook 1
+      value:
+        webhookUrl: https://pix.example.com/api/webhook/
+    RequisicaoInvalidaWebhookExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/WebhookOperacaoInvalida
+        title: Webhook inválido.
+        status: 400
+        detail: A presente requisição busca criar um webhook sem respeitar o _schema_ ou, ainda, com sentido semanticamente inválido.
+    ServicoIndisponivelExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
+        title: Serviço Indisponível
+        status: 503
+        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
+    AcessoNegadoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
+        title: Acesso Negado
+        status: 403
+        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+    pixWebhook2:
+      summary: Exemplo de Webhook Pix 2
+      value:
+        endToEndId: E87654321202009091221dfghi123456
+        txid: 971122d8f37211eaadc10242ac120002
+        valor: '110.00'
+        horario: '2020-09-09T20:15:00.358Z'
+        infoPagador: 0123456789
+    pixWebhook1:
+      summary: Exemplo de Webhook Pix 1
+      value:
+        endToEndId: E12345678202009091221kkkkkkkkkkk
+        txid: c3e0e7a4e7f1469a9f782d3d4999343c
+        valor: '110.00'
+        horario: '2020-09-09T20:15:00.358Z'
+        infoPagador: 0123456789
+        devolucoes:
+          id: 123ABC
+          rtrId: D12345678202009091221abcdf098765
+          valor: '10.00'
+          horario:
+            solicitacao: '2020-09-09T20:15:00.358Z'
+          status: EM_PROCESSAMENTO
+    NaoEncontradoExample1:
+      summary: Exemplo de erro da requisição 1
+      value:
+        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title: Não Encontrado
+        status: 404
+        detail: Entidade não encontrada.
   schemas:
+    PixValorOriginal:
+      type: object
+      properties:
+        original:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor original
+              description: Valor original do Pix.
+              pattern: \d{1,10}\.\d{2}
+    PixValorJuros:
+      type: object
+      properties:
+        juros:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo aos juros.
+              description: Valor dos juros.
+              pattern: \d{1,10}\.\d{2}
+    Problema:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
+          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
+        title:
+          type: string
+          description: Descrição resumida do problema.
+          example: Not found
+        status:
+          type: integer
+          description: Código HTTP do status retornado.
+          example: 404
+        detail:
+          type: string
+          description: Descrição completa do problema.
+        correlationId:
+          type: string
+          description: Identificador de correlação do problema para fins de suporte
+        violacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violacao'
+    WebhookSolicitado:
+      type: object
+      required:
+      - webhookUrl
+      title: Webhook
+      properties:
+        webhookUrl:
+          type: string
+          format: uri
+          example: https://pix.example.com/api/webhook/
     Pix:
       type: object
       title: Pix
@@ -157,59 +279,6 @@ components:
           title: Devoluções
           items:
             $ref: '#/components/schemas/Devolucao'
-    PixValorAbatimento:
-      type: object
-      properties:
-        abatimento:
-          type: object
-          required:
-          - valor
-          properties:
-            valor:
-              type: string
-              title: Valor relativo a abatimento.
-              description: Valor do abatimento.
-              pattern: \d{1,10}\.\d{2}
-    DevolucaoNatureza:
-      type: string
-      title: Natureza da Devolução
-      description: "Indica qual é a natureza da devolução. Uma devolução pode ser relacionada a um Pix comum (com códigos possíveis: `MD06`, `BE08` e `FR01` da pacs.004 e `REFU` da pacs.008), \nou a um Pix de Saque ou Troco (com códigos possíveis:  `MD06` e `SL02` da pacs.004). Na ausência deste campo a natureza deve ser interpretada como \nsendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n  - `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum ou ao valor da compra em um Pix Troco (`MD06`);\n  - `RETIRADA`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix Saque ou ao valor do troco em um Pix Troco (`SL02`);\n  - `MED_OPERACIONAL`: quando a devolução ocorre no âmbito do MED por motivo de falha operacional e se refere a um Pix comum (`BE08`);\n  - `MED_FRAUDE`: quando a devolução ocorre no âmbito do MED por fundada suspeita de fraude e se refere a um Pix comum (`FR01`).\n  - `MED_PIX_AUTOMATICO`: reembolso total ou parcial ao participante do usuário pagador no âmbito do MED (Mecanismo Especial de Devolução) para o Pix Automático pela utilização de recursos próprios para ressarcimento do usuário pagador.(`REFU`);\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso pode ser: ORIGINAL, MED_OPERACIONAL ou MED_FRAUDE);\n- Pix Saque: o valor da devolução é limitado ao valor da retirada (a natureza nesse caso deve ser: RETIRADA); e\n- Pix Troco: o valor da devolução é limitado ao valor relativo à compra ou ao troco:\n  - Quando a devolução for referente à compra, o valor limita-se ao valor da compra (a natureza nesse caso deve ser ORIGINAL); e\n  - Quando a devolução for referente ao troco, o valor limita-se ao valor do troco (a natureza nesse caso deve ser RETIRADA).\n"
-      enum:
-      - ORIGINAL
-      - RETIRADA
-      - MED_OPERACIONAL
-      - MED_FRAUDE
-      - MED_PIX_AUTOMATICO
-    Problema:
-      type: object
-      required:
-      - type
-      - title
-      - status
-      properties:
-        type:
-          type: string
-          format: uri
-          description: URI de referência que identifica o tipo de problema. De acordo com a RFC 7807.
-          example: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title:
-          type: string
-          description: Descrição resumida do problema.
-          example: Not found
-        status:
-          type: integer
-          description: Código HTTP do status retornado.
-          example: 404
-        detail:
-          type: string
-          description: Descrição completa do problema.
-        correlationId:
-          type: string
-          description: Identificador de correlação do problema para fins de suporte
-        violacoes:
-          type: array
-          items:
-            $ref: '#/components/schemas/Violacao'
     Devolucao:
       type: object
       title: Devolução
@@ -277,37 +346,57 @@ components:
 
             '
           maxLength: 140
-    PixValorJuros:
+    PixValorMulta:
       type: object
       properties:
-        juros:
+        multa:
           type: object
           required:
           - valor
           properties:
             valor:
               type: string
-              title: Valor relativo aos juros.
-              description: Valor dos juros.
+              title: Valor relativo a multa.
+              description: Valor da multa.
               pattern: \d{1,10}\.\d{2}
     DevolucaoId:
       type: string
       title: Id da Devolução
       description: Id gerado pelo cliente para representar unicamente uma devolução.
       pattern: '[a-zA-Z0-9]{1,35}'
-    PixValorDesconto:
+    EndToEndId:
+      type: string
+      title: Id fim a fim da transação
+      description: EndToEndIdentification que transita na PACS002, PACS004 e PACS008
+      pattern: '[a-zA-Z0-9]{32}'
+      minLength: 32
+      maxLength: 32
+    TxId:
+      type: string
+      title: Id da Transação
+      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
+      pattern: '[a-zA-Z0-9]{26,35}'
+      minLength: 26
+      maxLength: 35
+    Violacao:
       type: object
+      title: Violações
       properties:
-        desconto:
-          type: object
-          required:
-          - valor
-          properties:
-            valor:
-              type: string
-              title: Valor relativo a desconto.
-              description: Valor do desconto.
-              pattern: \d{1,10}\.\d{2}
+        razao:
+          type: string
+          title: Descrição do erro
+          description: Descrição do erro
+          example: Valor da cobrança não pode ser 0.00
+        propriedade:
+          type: string
+          title: Nome da propriedade
+          description: Nome da propriedade
+          example: cob.chave
+        valor:
+          type: string
+          title: Valor da propriedade
+          description: Valor da propriedade
+          example: 061996671234
     PixValorSaque:
       type: object
       properties:
@@ -340,13 +429,32 @@ components:
               title: Facilitador de Serviço de Saque
               pattern: \d{8}
               description: ISPB do Facilitador de Serviço de Saque
-    EndToEndId:
-      type: string
-      title: Id fim a fim da transação
-      description: EndToEndIdentification que transita na PACS002, PACS004 e PACS008
-      pattern: '[a-zA-Z0-9]{32}'
-      minLength: 32
-      maxLength: 32
+    PixValorDesconto:
+      type: object
+      properties:
+        desconto:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo a desconto.
+              description: Valor do desconto.
+              pattern: \d{1,10}\.\d{2}
+    PixValorAbatimento:
+      type: object
+      properties:
+        abatimento:
+          type: object
+          required:
+          - valor
+          properties:
+            valor:
+              type: string
+              title: Valor relativo a abatimento.
+              description: Valor do abatimento.
+              pattern: \d{1,10}\.\d{2}
     PixValorTroco:
       type: object
       properties:
@@ -378,134 +486,17 @@ components:
               title: Facilitador de Serviço de Saque
               pattern: \d{8}
               description: ISPB do Facilitador de Serviço de Saque
-    Violacao:
-      type: object
-      title: Violações
-      properties:
-        razao:
-          type: string
-          title: Descrição do erro
-          description: Descrição do erro
-          example: Valor da cobrança não pode ser 0.00
-        propriedade:
-          type: string
-          title: Nome da propriedade
-          description: Nome da propriedade
-          example: cob.chave
-        valor:
-          type: string
-          title: Valor da propriedade
-          description: Valor da propriedade
-          example: 061996671234
-    WebhookSolicitado:
-      type: object
-      required:
-      - webhookUrl
-      title: Webhook
-      properties:
-        webhookUrl:
-          type: string
-          format: uri
-          example: https://pix.example.com/api/webhook/
-    TxId:
+    DevolucaoNatureza:
       type: string
-      title: Id da Transação
-      description: "# Identificador da transação\n\nO campo `txid` determina o identificador da transação.\nO objetivo desse campo é ser um elemento que possibilite ao PSP do recebedor apresentar ao usuário recebedor a funcionalidade de conciliação de pagamentos.\n\nNa pacs.008, é referenciado como `TransactionIdentification <txId>` ou `idConciliacaoRecebedor`.\n\nEm termos de fluxo de funcionamento, o txid é lido pelo aplicativo do PSP do pagador e, \ndepois de confirmado o pagamento, é enviado para o SPI via pacs.008. \nUma pacs.008 também é enviada ao PSP do recebedor, contendo, além de todas as informações usuais \ndo pagamento, o txid.\nAo perceber um recebimento dotado de txid, o PSP do recebedor está apto a se comunicar com o usuário recebedor, \ninformando que um pagamento específico foi liquidado.\n\nO txid é criado exclusivamente pelo usuário recebedor e está sob sua responsabilidade.\nO txid, no contexto de representação de uma cobrança, é único por CPF/CNPJ do usuário recebedor. Cabe ao \nPSP recebedor validar essa regra na API Pix.\n"
-      pattern: '[a-zA-Z0-9]{26,35}'
-      minLength: 26
-      maxLength: 35
-    PixValorOriginal:
-      type: object
-      properties:
-        original:
-          type: object
-          required:
-          - valor
-          properties:
-            valor:
-              type: string
-              title: Valor original
-              description: Valor original do Pix.
-              pattern: \d{1,10}\.\d{2}
-    PixValorMulta:
-      type: object
-      properties:
-        multa:
-          type: object
-          required:
-          - valor
-          properties:
-            valor:
-              type: string
-              title: Valor relativo a multa.
-              description: Valor da multa.
-              pattern: \d{1,10}\.\d{2}
-  examples:
-    RequisicaoInvalidaWebhookExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/WebhookOperacaoInvalida
-        title: Webhook inválido.
-        status: 400
-        detail: A presente requisição busca criar um webhook sem respeitar o _schema_ ou, ainda, com sentido semanticamente inválido.
-    webhookBody1:
-      summary: Exemplo de configuração de Webhook 1
-      value:
-        webhookUrl: https://pix.example.com/api/webhook/
-    pixWebhook2:
-      summary: Exemplo de Webhook Pix 2
-      value:
-        endToEndId: E87654321202009091221dfghi123456
-        txid: 971122d8f37211eaadc10242ac120002
-        valor: '110.00'
-        horario: '2020-09-09T20:15:00.358Z'
-        infoPagador: 0123456789
-    pixWebhook1:
-      summary: Exemplo de Webhook Pix 1
-      value:
-        endToEndId: E12345678202009091221kkkkkkkkkkk
-        txid: c3e0e7a4e7f1469a9f782d3d4999343c
-        valor: '110.00'
-        horario: '2020-09-09T20:15:00.358Z'
-        infoPagador: 0123456789
-        devolucoes:
-          id: 123ABC
-          rtrId: D12345678202009091221abcdf098765
-          valor: '10.00'
-          horario:
-            solicitacao: '2020-09-09T20:15:00.358Z'
-          status: EM_PROCESSAMENTO
-    NaoEncontradoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/NaoEncontrado
-        title: Não Encontrado
-        status: 404
-        detail: Entidade não encontrada.
-    ServicoIndisponivelExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/ServicoIndisponivel
-        title: Serviço Indisponível
-        status: 503
-        detail: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
-    AcessoNegadoExample1:
-      summary: Exemplo de erro da requisição 1
-      value:
-        type: https://pix.bcb.gov.br/api/v2/error/AcessoNegado
-        title: Acesso Negado
-        status: 403
-        detail: Requisição de participante autenticado que viola alguma regra de autorização.
+      title: Natureza da Devolução
+      description: "Indica qual é a natureza da devolução. Uma devolução pode ser relacionada a um Pix comum (com códigos possíveis: `MD06`, `BE08` e `FR01` da pacs.004 e `REFU` da pacs.008), \nou a um Pix de Saque ou Troco (com códigos possíveis:  `MD06` e `SL02` da pacs.004). Na ausência deste campo a natureza deve ser interpretada como \nsendo de um Pix comum (`ORIGINAL`).\n\nAs naturezas são assim definidas:\n  - `ORIGINAL`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix comum ou ao valor da compra em um Pix Troco (`MD06`);\n  - `RETIRADA`: quando a devolução é solicitada pelo usuário recebedor e se refere a um Pix Saque ou ao valor do troco em um Pix Troco (`SL02`);\n  - `MED_OPERACIONAL`: quando a devolução ocorre no âmbito do MED por motivo de falha operacional e se refere a um Pix comum (`BE08`);\n  - `MED_FRAUDE`: quando a devolução ocorre no âmbito do MED por fundada suspeita de fraude e se refere a um Pix comum (`FR01`).\n  - `MED_PIX_AUTOMATICO`: reembolso total ou parcial ao participante do usuário pagador no âmbito do MED (Mecanismo Especial de Devolução) para o Pix Automático pela utilização de recursos próprios para ressarcimento do usuário pagador.(`REFU`);\n\nOs valores de devoluções são sempre limitados aos valores máximos a seguir:\n- Pix comum: o valor da devolução é limitado ao valor do próprio Pix (a natureza nesse caso pode ser: ORIGINAL, MED_OPERACIONAL ou MED_FRAUDE);\n- Pix Saque: o valor da devolução é limitado ao valor da retirada (a natureza nesse caso deve ser: RETIRADA); e\n- Pix Troco: o valor da devolução é limitado ao valor relativo à compra ou ao troco:\n  - Quando a devolução for referente à compra, o valor limita-se ao valor da compra (a natureza nesse caso deve ser ORIGINAL); e\n  - Quando a devolução for referente ao troco, o valor limita-se ao valor do troco (a natureza nesse caso deve ser RETIRADA).\n"
+      enum:
+      - ORIGINAL
+      - RETIRADA
+      - MED_OPERACIONAL
+      - MED_FRAUDE
+      - MED_PIX_AUTOMATICO
   responses:
-    AcessoNegado:
-      description: Requisição de participante autenticado que viola alguma regra de autorização.
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problema'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/AcessoNegadoExample1'
     NaoEncontrado:
       description: Recurso solicitado não foi encontrado.
       content:
@@ -515,6 +506,15 @@ components:
           examples:
             exemplo1:
               $ref: '#/components/examples/NaoEncontradoExample1'
+    AcessoNegado:
+      description: Requisição de participante autenticado que viola alguma regra de autorização.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/AcessoNegadoExample1'
     ServicoIndisponivel:
       description: Serviço não está disponível no momento. Serviço solicitado pode estar em manutenção ou fora da janela de funcionamento.
       content:
@@ -525,15 +525,6 @@ components:
             exemplo1:
               $ref: '#/components/examples/ServicoIndisponivelExample1'
   requestBodies:
-    WebhookConfigBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/WebhookSolicitado'
-          examples:
-            exemplo1:
-              $ref: '#/components/examples/webhookBody1'
     WebhookPixBody:
       description: Dados para notificação dos Pix.
       required: true
@@ -550,6 +541,15 @@ components:
                   - $ref: '#/components/examples/pixWebhook1/value'
                 - allOf:
                   - $ref: '#/components/examples/pixWebhook2/value'
+    WebhookConfigBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WebhookSolicitado'
+          examples:
+            exemplo1:
+              $ref: '#/components/examples/webhookBody1'
   securitySchemes:
     OAuth2:
       type: oauth2
